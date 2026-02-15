@@ -1,0 +1,264 @@
+import { useEffect, useState } from 'react';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+import { salonApi, settingsApi, usersApi } from '@/lib/api';
+
+export default function Settings() {
+  const { user } = useAuth();
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [salonName, setSalonName] = useState('');
+  const [salonPhone, setSalonPhone] = useState('');
+  const [salonEmail, setSalonEmail] = useState('');
+  const [salonDescription, setSalonDescription] = useState('');
+
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [smsNotifications, setSmsNotifications] = useState(true);
+  const [whatsappNotifications, setWhatsappNotifications] = useState(true);
+  const [reminderHours, setReminderHours] = useState('24');
+
+  const [businessHours, setBusinessHours] = useState({
+    monday: { open: '09:00', close: '19:00', enabled: true },
+    tuesday: { open: '09:00', close: '19:00', enabled: true },
+    wednesday: { open: '09:00', close: '19:00', enabled: true },
+    thursday: { open: '09:00', close: '19:00', enabled: true },
+    friday: { open: '09:00', close: '19:00', enabled: true },
+    saturday: { open: '09:00', close: '17:00', enabled: true },
+    sunday: { open: '09:00', close: '13:00', enabled: false },
+  });
+
+  const [userName, setUserName] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  useEffect(() => {
+    setUserName(user?.name || '');
+    setUserEmail(user?.email || '');
+  }, [user]);
+
+  useEffect(() => {
+    settingsApi
+      .get()
+      .then((data) => {
+        setEmailNotifications(data.notifications.emailNotifications);
+        setSmsNotifications(data.notifications.smsNotifications);
+        setWhatsappNotifications(data.notifications.whatsappNotifications);
+        setReminderHours(String(data.notifications.reminderHours));
+        setBusinessHours(data.businessHours as any);
+      })
+      .catch(() => undefined);
+
+    salonApi
+      .getProfile()
+      .then((profile) => {
+        setSalonName(profile.salonName || '');
+        setSalonPhone(profile.salonPhone || '');
+        setSalonEmail(profile.salonEmail || '');
+        setSalonDescription(profile.salonDescription || '');
+      })
+      .catch(() => undefined);
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      await Promise.all([
+        settingsApi.update({
+          notifications: {
+            emailNotifications,
+            smsNotifications,
+            whatsappNotifications,
+            reminderHours: Number(reminderHours || 0),
+          },
+          businessHours: businessHours as any,
+        }),
+        salonApi.updateProfile({
+          salonName,
+          salonPhone,
+          salonEmail,
+          salonDescription,
+        }),
+        usersApi.updateMe({
+          name: userName,
+          email: userEmail,
+        }),
+      ]);
+      toast.success('Configuracoes salvas com sucesso!');
+    } catch {
+      toast.error('Erro ao salvar configuracoes');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error('Preencha todos os campos de senha');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await usersApi.updatePassword({ currentPassword, newPassword, confirmPassword });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      toast.success('Senha alterada com sucesso');
+    } catch {
+      toast.error('Erro ao alterar senha');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <MainLayout title="Configuracoes" subtitle="Gerencie as configuracoes do seu salao">
+      <Tabs defaultValue="salon" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="salon">Salao</TabsTrigger>
+          <TabsTrigger value="notifications">Notificacoes</TabsTrigger>
+          <TabsTrigger value="hours">Horarios</TabsTrigger>
+          <TabsTrigger value="account">Conta</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="salon">
+          <Card>
+            <CardHeader>
+              <CardTitle>Informacoes do Salao</CardTitle>
+              <CardDescription>Dados principais do estabelecimento.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Nome</Label>
+                  <Input value={salonName} onChange={(e) => setSalonName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Telefone</Label>
+                  <Input value={salonPhone} onChange={(e) => setSalonPhone(e.target.value)} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input value={salonEmail} onChange={(e) => setSalonEmail(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Descricao</Label>
+                <Textarea value={salonDescription} onChange={(e) => setSalonDescription(e.target.value)} rows={4} />
+              </div>
+              <Button onClick={handleSave} disabled={isSaving}>Salvar</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="notifications">
+          <Card>
+            <CardHeader>
+              <CardTitle>Notificacoes</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>Email</Label>
+                <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>SMS</Label>
+                <Switch checked={smsNotifications} onCheckedChange={setSmsNotifications} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>WhatsApp</Label>
+                <Switch checked={whatsappNotifications} onCheckedChange={setWhatsappNotifications} />
+              </div>
+              <div className="space-y-2">
+                <Label>Lembrete (horas)</Label>
+                <Input type="number" value={reminderHours} onChange={(e) => setReminderHours(e.target.value)} />
+              </div>
+              <Button onClick={handleSave} disabled={isSaving}>Salvar</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="hours">
+          <Card>
+            <CardHeader>
+              <CardTitle>Horarios de Funcionamento</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {Object.entries(businessHours).map(([day, hours]) => (
+                <div key={day} className="grid grid-cols-4 gap-2 items-center">
+                  <Label className="capitalize">{day}</Label>
+                  <Switch
+                    checked={hours.enabled}
+                    onCheckedChange={(checked) =>
+                      setBusinessHours((prev) => ({ ...prev, [day]: { ...prev[day as keyof typeof prev], enabled: checked } }))
+                    }
+                  />
+                  <Input
+                    type="time"
+                    value={hours.open}
+                    disabled={!hours.enabled}
+                    onChange={(e) =>
+                      setBusinessHours((prev) => ({ ...prev, [day]: { ...prev[day as keyof typeof prev], open: e.target.value } }))
+                    }
+                  />
+                  <Input
+                    type="time"
+                    value={hours.close}
+                    disabled={!hours.enabled}
+                    onChange={(e) =>
+                      setBusinessHours((prev) => ({ ...prev, [day]: { ...prev[day as keyof typeof prev], close: e.target.value } }))
+                    }
+                  />
+                </div>
+              ))}
+              <Button onClick={handleSave} disabled={isSaving}>Salvar</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="account">
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Dados da Conta</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Nome</Label>
+                  <Input value={userName} onChange={(e) => setUserName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input type="email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} />
+                </div>
+              </div>
+              <Button onClick={handleSave} disabled={isSaving}>Salvar</Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Alterar Senha</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Input type="password" placeholder="Senha atual" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+              <Input type="password" placeholder="Nova senha" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+              <Input type="password" placeholder="Confirmar nova senha" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+              <Button variant="outline" onClick={handleChangePassword} disabled={isSaving}>Alterar senha</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </MainLayout>
+  );
+}

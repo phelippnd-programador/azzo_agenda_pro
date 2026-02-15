@@ -1,0 +1,81 @@
+import { useState, useEffect, useCallback } from 'react';
+import { appointmentsApi, Appointment } from '@/lib/api';
+import { toast } from 'sonner';
+
+export function useAppointments() {
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchAppointments = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const data = await appointmentsApi.getAll();
+      setAppointments(data);
+      setError(null);
+    } catch (err) {
+      setError('Erro ao carregar agendamentos');
+      toast.error('Erro ao carregar agendamentos');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
+
+  const createAppointment = async (data: Omit<Appointment, 'id' | 'createdAt'>) => {
+    try {
+      const newAppointment = await appointmentsApi.create(data);
+      setAppointments(prev => [...prev, newAppointment]);
+      toast.success('Agendamento criado com sucesso!');
+      return newAppointment;
+    } catch (err) {
+      toast.error('Erro ao criar agendamento');
+      throw err;
+    }
+  };
+
+  const updateAppointmentStatus = async (id: string, status: Appointment['status']) => {
+    try {
+      const updated = await appointmentsApi.updateStatus(id, status);
+      setAppointments(prev => prev.map(a => a.id === id ? updated : a));
+      
+      const statusMessages: Record<string, string> = {
+        CONFIRMED: 'Agendamento confirmado!',
+        IN_PROGRESS: 'Atendimento iniciado!',
+        COMPLETED: 'Atendimento concluído!',
+        CANCELLED: 'Agendamento cancelado.',
+        NO_SHOW: 'Cliente não compareceu.',
+      };
+      
+      toast.success(statusMessages[status] || 'Status atualizado!');
+      return updated;
+    } catch (err) {
+      toast.error('Erro ao atualizar status');
+      throw err;
+    }
+  };
+
+  const deleteAppointment = async (id: string) => {
+    try {
+      await appointmentsApi.delete(id);
+      setAppointments(prev => prev.filter(a => a.id !== id));
+      toast.success('Agendamento excluído!');
+    } catch (err) {
+      toast.error('Erro ao excluir agendamento');
+      throw err;
+    }
+  };
+
+  return {
+    appointments,
+    isLoading,
+    error,
+    refetch: fetchAppointments,
+    createAppointment,
+    updateAppointmentStatus,
+    deleteAppointment,
+  };
+}
