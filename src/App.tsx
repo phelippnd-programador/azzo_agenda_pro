@@ -18,6 +18,7 @@ import TaxConfig from "./pages/TaxConfig";
 import InvoicePreview from "./pages/InvoicePreview";
 import InvoiceEmission from "./pages/InvoiceEmission";
 import ApuracaoMensal from "./pages/ApuracaoMensal";
+import WhatsAppIntegration from "./pages/WhatsAppIntegration";
 
 const queryClient = new QueryClient();
 
@@ -175,6 +176,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ApuracaoMensal />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/configuracoes/integracoes/whatsapp"
+        element={
+          <ProtectedRoute>
+            <WhatsAppIntegration />
           </ProtectedRoute>
         }
       />

@@ -18,6 +18,9 @@ export function ApuracaoCard({ apuracao, showDetails = true }: ApuracaoCardProps
     };
   const statusLabel = STATUS_LABELS[apuracao.status] ?? apuracao.status ?? 'Desconhecido';
   const mesNome = MESES_PT[apuracao.mes] ?? `Mês ${apuracao.mes}`;
+  const regimeLabel = apuracao.regimeTributario
+    ? apuracao.regimeTributario.replaceAll('_', ' ')
+    : 'Nao informado';
 
   return (
     <Card className="w-full">
@@ -78,7 +81,7 @@ export function ApuracaoCard({ apuracao, showDetails = true }: ApuracaoCardProps
           <div className="mt-4 pt-4 border-t">
             <div className="flex items-center justify-between text-sm text-gray-500">
               <span>
-                Regime: <strong>{apuracao.regimeTributario.replace('_', ' ')}</strong>
+                Regime: <strong>{regimeLabel}</strong>
               </span>
               {apuracao.dataFechamento && (
                 <span>

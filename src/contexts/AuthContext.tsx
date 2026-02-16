@@ -26,6 +26,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeDemoData();
 
     const token = localStorage.getItem('token');
+    const storedUser = authApi.getCurrentUser();
+
+    if (storedUser) {
+      setUser(storedUser);
+    }
+
     if (!token) {
       setIsLoading(false);
       return;
@@ -34,7 +40,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     authApi
       .me()
       .then((currentUser) => setUser(currentUser))
-      .catch(() => setUser(null))
+      .catch(() => {
+        // Mantém sessão hidratada com o usuário salvo localmente
+        // quando houver falha transitória no /auth/me.
+        if (!storedUser) {
+          setUser(null);
+        }
+      })
       .finally(() => setIsLoading(false));
   }, []);
 

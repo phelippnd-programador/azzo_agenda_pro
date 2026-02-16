@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { salonApi, settingsApi, usersApi } from '@/lib/api';
+import { Link } from 'react-router-dom';
+import { PlugZap } from 'lucide-react';
 
 export default function Settings() {
   const { user } = useAuth();
@@ -124,11 +126,12 @@ export default function Settings() {
   return (
     <MainLayout title="Configuracoes" subtitle="Gerencie as configuracoes do seu salao">
       <Tabs defaultValue="salon" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-2 h-auto">
           <TabsTrigger value="salon">Salao</TabsTrigger>
           <TabsTrigger value="notifications">Notificacoes</TabsTrigger>
           <TabsTrigger value="hours">Horarios</TabsTrigger>
           <TabsTrigger value="account">Conta</TabsTrigger>
+          <TabsTrigger value="integrations">Integracoes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="salon">
@@ -255,6 +258,35 @@ export default function Settings() {
               <Input type="password" placeholder="Nova senha" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
               <Input type="password" placeholder="Confirmar nova senha" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
               <Button variant="outline" onClick={handleChangePassword} disabled={isSaving}>Alterar senha</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="integrations">
+          <Card>
+            <CardHeader>
+              <CardTitle>Integracoes</CardTitle>
+              <CardDescription>
+                Configure integrações externas da sua operação.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <p className="font-medium flex items-center gap-2">
+                    <PlugZap className="h-4 w-4 text-violet-600" />
+                    WhatsApp Cloud API
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Defina credenciais por tenant e valide conexão.
+                  </p>
+                </div>
+                <Button asChild>
+                  <Link to="/configuracoes/integracoes/whatsapp">
+                    Abrir Configuração
+                  </Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

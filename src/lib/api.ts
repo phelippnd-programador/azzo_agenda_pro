@@ -10,6 +10,11 @@ import type {
 import type { Invoice, InvoiceFormData } from "@/types/invoice";
 import type { ApuracaoMensal, ApuracaoResumo } from "@/types/apuracao";
 import type { TaxRegime } from "@/types/fiscal";
+import type {
+  WhatsAppConfigRequest,
+  WhatsAppConfigResponse,
+  WhatsAppTestResponse,
+} from "@/types/whatsapp";
 
 export type {
   Appointment,
@@ -396,6 +401,18 @@ export const usersApi = {
     request<void>("/users/me/password", {
       method: "PUT",
       body: JSON.stringify(data),
+    }),
+};
+
+export const tenantApi = {
+  saveWhatsAppConfig: (data: WhatsAppConfigRequest) =>
+    request<WhatsAppConfigResponse>("/tenant/whatsapp", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  testWhatsAppConnection: () =>
+    request<WhatsAppTestResponse>("/tenant/whatsapp/test", {
+      method: "POST",
     }),
 };
 
