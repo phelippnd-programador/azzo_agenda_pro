@@ -17,6 +17,7 @@ export interface User {
   phone: string;
   role: 'OWNER' | 'PROFESSIONAL' | 'CLIENT';
   avatar?: string;
+  salonName?: string | null;
   createdAt: Date;
 }
 

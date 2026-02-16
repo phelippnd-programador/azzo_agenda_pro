@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface HeaderProps {
   title: string;
@@ -18,6 +19,15 @@ interface HeaderProps {
 }
 
 export function Header({ title, subtitle }: HeaderProps) {
+  const { user } = useAuth();
+  const displayName = user?.salonName || user?.name || 'Azzo';
+  const initials = displayName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || 'AZ';
+
   return (
     <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-sm border-b border-gray-200">
       <div className="flex items-center justify-between h-14 sm:h-16 px-3 sm:px-4 lg:px-8">
@@ -79,11 +89,11 @@ export function Header({ title, subtitle }: HeaderProps) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="gap-1 sm:gap-2 px-1 sm:px-2 h-8 sm:h-9">
                 <Avatar className="w-6 h-6 sm:w-8 sm:h-8">
-                  <AvatarImage src="https://mgx-backend-cdn.metadl.com/generate/images/968095/2026-02-12/6c476f2a-8002-4ffb-8394-c90ae976f88c.png" />
-                  <AvatarFallback>BS</AvatarFallback>
+                  <AvatarImage src={user?.avatar || undefined} />
+                  <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
                 <span className="hidden md:inline text-xs sm:text-sm font-medium truncate max-w-[80px] lg:max-w-none">
-                  Bella Studio
+                  {displayName}
                 </span>
               </Button>
             </DropdownMenuTrigger>
