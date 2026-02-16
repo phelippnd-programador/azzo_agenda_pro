@@ -81,10 +81,11 @@ export function MenuPermissionsProvider({ children }: { children: ReactNode }) {
       setAllowedRoutes(normalizedRoutes);
       setIsEnforced(true);
     } catch {
-      // Fallback permissivo para não bloquear navegação por indisponibilidade do endpoint.
-      setRole(null);
-      setAllowedRoutes(null);
-      setIsEnforced(false);
+      // Mantém o estado atual quando a sessão já tinha permissões carregadas.
+      // Isso evita trocar menu/guard por fallback em falhas transitórias (ex.: 404 temporário).
+      setRole((prev) => prev);
+      setAllowedRoutes((prev) => prev);
+      setIsEnforced((prev) => prev);
     } finally {
       setIsLoading(false);
     }
