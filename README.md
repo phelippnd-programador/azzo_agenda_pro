@@ -699,3 +699,37 @@ Mesmo que o frontend atual aceite texto, recomenda-se padronizar JSON:
 ```
 
 Status sugeridos: `400`, `401`, `403`, `404`, `409`, `422`, `500`.
+
+## 6) Controle de Menus por Permissao (Frontend)
+
+### Endpoint utilizado
+
+### `GET /config/menus/current`
+- Auth: privada (Bearer JWT)
+- Response `200`:
+```json
+{
+  "role": "PROFESSIONAL",
+  "allowedRoutes": [
+    "/dashboard",
+    "/appointments",
+    "/clients"
+  ]
+}
+```
+
+### Estrutura de permissoes no frontend
+- `role`: perfil retornado pelo backend para o usuario autenticado.
+- `allowedRoutes`: lista de rotas autorizadas para renderizacao/acesso.
+- As rotas podem ser normalizadas no frontend para os paths atuais da aplicacao.
+
+### Como funciona no frontend
+- O app busca permissoes no login/sessao ativa via `configApi.getCurrentMenus`.
+- O estado global fica no `MenuPermissionsContext`.
+- O `Sidebar` renderiza menus dinamicamente com base em `allowedRoutes`.
+- O `ProtectedRoute` valida acesso antes de renderizar cada rota protegida.
+- Acesso direto por URL sem permissao redireciona para `/unauthorized`.
+
+### Observacao importante
+- Este controle no frontend melhora UX e navegacao, mas **nao e seguranca real**.
+- A seguranca efetiva deve continuar no backend, validando autorizacao em cada endpoint.
