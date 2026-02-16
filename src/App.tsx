@@ -1,8 +1,12 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import {
+  MenuPermissionsProvider,
+  useMenuPermissions,
+} from "@/contexts/MenuPermissionsContext";
 import Index from "./pages/Index";
 import Agenda from "./pages/Agenda";
 import Services from "./pages/Services";
@@ -19,14 +23,17 @@ import InvoicePreview from "./pages/InvoicePreview";
 import InvoiceEmission from "./pages/InvoiceEmission";
 import ApuracaoMensal from "./pages/ApuracaoMensal";
 import WhatsAppIntegration from "./pages/WhatsAppIntegration";
+import Unauthorized from "./pages/Unauthorized";
 
 const queryClient = new QueryClient();
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+  const { canAccess, isLoading: isPermissionsLoading } = useMenuPermissions();
 
-  if (isLoading) {
+  if (isLoading || isPermissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600"></div>
@@ -36,6 +43,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (!canAccess(location.pathname)) {
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return <>{children}</>;
@@ -187,6 +198,14 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/unauthorized"
+        element={
+          <ProtectedRoute>
+            <Unauthorized />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }
@@ -194,12 +213,14 @@ function AppRoutes() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </TooltipProvider>
+      <MenuPermissionsProvider>
+        <TooltipProvider>
+          <Toaster />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </TooltipProvider>
+      </MenuPermissionsProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

@@ -15,6 +15,7 @@ import type {
   WhatsAppConfigResponse,
   WhatsAppTestResponse,
 } from "@/types/whatsapp";
+import type { CurrentMenuPermissionsResponse } from "@/types/menu-permissions";
 
 export type {
   Appointment,
@@ -414,6 +415,11 @@ export const tenantApi = {
     request<WhatsAppTestResponse>("/tenant/whatsapp/test", {
       method: "POST",
     }),
+};
+
+export const configApi = {
+  getCurrentMenus: () =>
+    request<CurrentMenuPermissionsResponse>("/config/menus/current"),
 };
 
 export type TaxConfig = {
