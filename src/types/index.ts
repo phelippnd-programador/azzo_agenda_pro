@@ -36,6 +36,13 @@ export interface Professional {
   createdAt: Date;
 }
 
+export interface Specialty {
+  id: string;
+  tenantId: string;
+  name: string;
+  createdAt: string | Date;
+}
+
 export interface WorkingHours {
   dayOfWeek: number;
   startTime: string;
