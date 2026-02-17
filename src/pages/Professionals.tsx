@@ -1,13 +1,14 @@
-import { useState } from 'react';
-import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Switch } from '@/components/ui/switch';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useState } from "react";
+import { MainLayout } from "@/components/layout/MainLayout";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -16,63 +17,103 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Search, Plus, MoreVertical, Phone, Mail, Percent, Users, Loader2 } from 'lucide-react';
-import { useProfessionals } from '@/hooks/useProfessionals';
-import { toast } from 'sonner';
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Search, Plus, MoreVertical, Phone, Mail, Percent, Users, Loader2 } from "lucide-react";
+import { useProfessionals } from "@/hooks/useProfessionals";
+import { useSpecialties } from "@/hooks/useSpecialties";
+import { toast } from "sonner";
 
 export default function Professionals() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [isNewProfessionalOpen, setIsNewProfessionalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingProfessional, setEditingProfessional] = useState<string | null>(null);
+  const [professionalToReset, setProfessionalToReset] = useState<{
+    id: string;
+    name: string;
+    email: string;
+  } | null>(null);
 
-  // Form state
-  const [formName, setFormName] = useState('');
-  const [formEmail, setFormEmail] = useState('');
-  const [formPhone, setFormPhone] = useState('');
-  const [formSpecialties, setFormSpecialties] = useState('');
-  const [formCommission, setFormCommission] = useState('40');
+  const [formName, setFormName] = useState("");
+  const [formEmail, setFormEmail] = useState("");
+  const [formPhone, setFormPhone] = useState("");
+  const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
+  const [formCommission, setFormCommission] = useState("40");
   const [formIsActive, setFormIsActive] = useState(true);
 
-  const { professionals, isLoading, createProfessional, updateProfessional, deleteProfessional } = useProfessionals();
+  const {
+    professionals,
+    isLoading,
+    createProfessional,
+    updateProfessional,
+    deleteProfessional,
+    resetProfessionalPassword,
+  } = useProfessionals();
 
-  const filteredProfessionals = professionals.filter((prof) =>
-    prof.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    prof.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    prof.specialties.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const {
+    specialties,
+    isLoading: isLoadingSpecialties,
+    error: specialtiesError,
+    refetch: refetchSpecialties,
+  } = useSpecialties();
+
+  const filteredProfessionals = professionals.filter((prof) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      prof.name.toLowerCase().includes(term) ||
+      prof.email.toLowerCase().includes(term) ||
+      prof.specialties.some((s) => s.toLowerCase().includes(term))
+    );
+  });
 
   const resetForm = () => {
-    setFormName('');
-    setFormEmail('');
-    setFormPhone('');
-    setFormSpecialties('');
-    setFormCommission('40');
+    setFormName("");
+    setFormEmail("");
+    setFormPhone("");
+    setSelectedSpecialties([]);
+    setFormCommission("40");
     setFormIsActive(true);
     setEditingProfessional(null);
   };
 
-  const openEditDialog = (prof: typeof professionals[0]) => {
+  const openEditDialog = (prof: (typeof professionals)[number]) => {
     setFormName(prof.name);
     setFormEmail(prof.email);
     setFormPhone(prof.phone);
-    setFormSpecialties(prof.specialties.join(', '));
+    setSelectedSpecialties(prof.specialties || []);
     setFormCommission(String(prof.commissionRate));
     setFormIsActive(prof.isActive);
     setEditingProfessional(prof.id);
     setIsNewProfessionalOpen(true);
   };
 
+  const toggleSpecialty = (specialtyName: string) => {
+    setSelectedSpecialties((prev) =>
+      prev.includes(specialtyName)
+        ? prev.filter((name) => name !== specialtyName)
+        : [...prev, specialtyName]
+    );
+  };
+
   const handleSubmit = async () => {
     if (!formName || !formEmail || !formPhone) {
-      toast.error('Preencha todos os campos obrigatórios');
+      toast.error("Preencha todos os campos obrigatorios");
       return;
     }
 
@@ -82,39 +123,39 @@ export default function Professionals() {
         name: formName,
         email: formEmail,
         phone: formPhone,
-        specialties: formSpecialties.split(',').map(s => s.trim()).filter(Boolean),
-        commissionRate: parseInt(formCommission),
+        specialties: selectedSpecialties,
+        commissionRate: parseInt(formCommission, 10),
         isActive: formIsActive,
       };
 
       if (editingProfessional) {
         await updateProfessional(editingProfessional, professionalData);
       } else {
-        await createProfessional(professionalData);
+        await createProfessional(professionalData as any);
       }
 
       setIsNewProfessionalOpen(false);
       resetForm();
-    } catch (error) {
-      // Error is handled in the hook
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    try {
-      await deleteProfessional(id);
-    } catch (error) {
-      // Error is handled in the hook
-    }
+    await deleteProfessional(id);
   };
 
   const handleToggleActive = async (id: string, isActive: boolean) => {
+    await updateProfessional(id, { isActive });
+  };
+
+  const handleResetPasswordConfirm = async () => {
+    if (!professionalToReset) return;
     try {
-      await updateProfessional(id, { isActive });
-    } catch (error) {
-      // Error is handled in the hook
+      await resetProfessionalPassword(professionalToReset.id);
+      setProfessionalToReset(null);
+    } catch {
+      // Erro tratado no hook
     }
   };
 
@@ -124,7 +165,7 @@ export default function Professionals() {
         <div className="space-y-4">
           <Skeleton className="h-12 w-full" />
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map(i => (
+            {[1, 2, 3].map((i) => (
               <Skeleton key={i} className="h-64" />
             ))}
           </div>
@@ -136,7 +177,6 @@ export default function Professionals() {
   return (
     <MainLayout title="Profissionais" subtitle="Gerencie sua equipe">
       <div className="space-y-4 sm:space-y-6">
-        {/* Header Controls */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -148,10 +188,13 @@ export default function Professionals() {
             />
           </div>
 
-          <Dialog open={isNewProfessionalOpen} onOpenChange={(open) => {
-            setIsNewProfessionalOpen(open);
-            if (!open) resetForm();
-          }}>
+          <Dialog
+            open={isNewProfessionalOpen}
+            onOpenChange={(open) => {
+              setIsNewProfessionalOpen(open);
+              if (!open) resetForm();
+            }}
+          >
             <DialogTrigger asChild>
               <Button className="gap-2 bg-violet-600 hover:bg-violet-700">
                 <Plus className="w-4 h-4" />
@@ -160,9 +203,13 @@ export default function Professionals() {
             </DialogTrigger>
             <DialogContent className="max-w-md mx-4 sm:mx-auto">
               <DialogHeader>
-                <DialogTitle>{editingProfessional ? 'Editar Profissional' : 'Novo Profissional'}</DialogTitle>
+                <DialogTitle>
+                  {editingProfessional ? "Editar Profissional" : "Novo Profissional"}
+                </DialogTitle>
                 <DialogDescription>
-                  {editingProfessional ? 'Atualize os dados do profissional' : 'Adicione um novo membro à equipe'}
+                  {editingProfessional
+                    ? "Atualize os dados do profissional"
+                    : "Adicione um novo membro a equipe"}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -183,6 +230,7 @@ export default function Professionals() {
                       placeholder="email@exemplo.com"
                       value={formEmail}
                       onChange={(e) => setFormEmail(e.target.value)}
+                      disabled={!!editingProfessional}
                     />
                   </div>
                   <div className="space-y-2">
@@ -191,21 +239,65 @@ export default function Professionals() {
                       placeholder="(11) 99999-0000"
                       value={formPhone}
                       onChange={(e) => setFormPhone(e.target.value)}
+                      disabled={!!editingProfessional}
                     />
                   </div>
                 </div>
+                {editingProfessional ? (
+                  <p className="text-xs text-gray-500">
+                    E-mail e telefone nao podem ser alterados na edicao do profissional.
+                  </p>
+                ) : null}
 
                 <div className="space-y-2">
                   <Label>Especialidades</Label>
-                  <Input
-                    placeholder="Corte, Coloração, Escova (separar por vírgula)"
-                    value={formSpecialties}
-                    onChange={(e) => setFormSpecialties(e.target.value)}
-                  />
+                  <div className="rounded-lg border p-3 space-y-3 max-h-48 overflow-y-auto">
+                    {isLoadingSpecialties && (
+                      <p className="text-sm text-gray-500">Carregando especialidades...</p>
+                    )}
+                    {specialtiesError && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-red-600">{specialtiesError}</p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={refetchSpecialties}
+                        >
+                          Tentar novamente
+                        </Button>
+                      </div>
+                    )}
+                    {!isLoadingSpecialties && !specialtiesError && !specialties.length && (
+                      <p className="text-sm text-gray-500">Nenhuma especialidade cadastrada.</p>
+                    )}
+                    {!isLoadingSpecialties &&
+                      specialties.map((specialty) => (
+                        <label
+                          key={specialty.id}
+                          className="flex items-center gap-2 text-sm cursor-pointer"
+                        >
+                          <Checkbox
+                            checked={selectedSpecialties.includes(specialty.name)}
+                            onCheckedChange={() => toggleSpecialty(specialty.name)}
+                          />
+                          <span>{specialty.name}</span>
+                        </label>
+                      ))}
+                  </div>
+                  {selectedSpecialties.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {selectedSpecialties.map((specialty) => (
+                        <Badge key={specialty} variant="secondary" className="text-xs">
+                          {specialty}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Taxa de Comissão (%)</Label>
+                  <Label>Taxa de Comissao (%)</Label>
                   <Input
                     type="number"
                     min="0"
@@ -219,29 +311,31 @@ export default function Professionals() {
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
                     <Label>Profissional Ativo</Label>
-                    <p className="text-xs text-gray-500">Disponível para agendamentos</p>
+                    <p className="text-xs text-gray-500">Disponivel para agendamentos</p>
                   </div>
-                  <Switch
-                    checked={formIsActive}
-                    onCheckedChange={setFormIsActive}
-                  />
+                  <Switch checked={formIsActive} onCheckedChange={setFormIsActive} />
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => {
-                  setIsNewProfessionalOpen(false);
-                  resetForm();
-                }}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsNewProfessionalOpen(false);
+                    resetForm();
+                  }}
+                >
                   Cancelar
                 </Button>
                 <Button onClick={handleSubmit} disabled={isSubmitting}>
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      {editingProfessional ? 'Salvando...' : 'Adicionando...'}
+                      {editingProfessional ? "Salvando..." : "Adicionando..."}
                     </>
+                  ) : editingProfessional ? (
+                    "Salvar"
                   ) : (
-                    editingProfessional ? 'Salvar' : 'Adicionar'
+                    "Adicionar"
                   )}
                 </Button>
               </DialogFooter>
@@ -249,14 +343,13 @@ export default function Professionals() {
           </Dialog>
         </div>
 
-        {/* Professionals Grid */}
         {filteredProfessionals.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500">Nenhum profissional encontrado</p>
               {searchTerm && (
-                <Button variant="link" onClick={() => setSearchTerm('')}>
+                <Button variant="link" onClick={() => setSearchTerm("")}>
                   Limpar busca
                 </Button>
               )}
@@ -267,7 +360,9 @@ export default function Professionals() {
             {filteredProfessionals.map((professional) => (
               <Card
                 key={professional.id}
-                className={`hover:shadow-md transition-shadow ${!professional.isActive && 'opacity-60'}`}
+                className={`hover:shadow-md transition-shadow ${
+                  !professional.isActive && "opacity-60"
+                }`}
               >
                 <CardContent className="p-4 sm:p-5">
                   <div className="flex items-start justify-between gap-2 mb-4">
@@ -283,10 +378,12 @@ export default function Professionals() {
                           {professional.name}
                         </h3>
                         <Badge
-                          variant={professional.isActive ? 'default' : 'secondary'}
-                          className={`text-[10px] sm:text-xs ${professional.isActive ? 'bg-green-100 text-green-700' : ''}`}
+                          variant={professional.isActive ? "default" : "secondary"}
+                          className={`text-[10px] sm:text-xs ${
+                            professional.isActive ? "bg-green-100 text-green-700" : ""
+                          }`}
                         >
-                          {professional.isActive ? 'Ativo' : 'Inativo'}
+                          {professional.isActive ? "Ativo" : "Inativo"}
                         </Badge>
                       </div>
                     </div>
@@ -300,14 +397,29 @@ export default function Professionals() {
                         <DropdownMenuItem onClick={() => openEditDialog(professional)}>
                           Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleToggleActive(professional.id, !professional.isActive)}>
-                          {professional.isActive ? 'Desativar' : 'Ativar'}
+                        <DropdownMenuItem
+                          onClick={() =>
+                            handleToggleActive(professional.id, !professional.isActive)
+                          }
+                        >
+                          {professional.isActive ? "Desativar" : "Ativar"}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-red-600"
                           onClick={() => handleDelete(professional.id)}
                         >
                           Remover
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() =>
+                            setProfessionalToReset({
+                              id: professional.id,
+                              name: professional.name,
+                              email: professional.email,
+                            })
+                          }
+                        >
+                          Resetar senha
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -338,7 +450,7 @@ export default function Professionals() {
                   </div>
 
                   <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                    <span className="text-xs sm:text-sm text-gray-500">Comissão</span>
+                    <span className="text-xs sm:text-sm text-gray-500">Comissao</span>
                     <div className="flex items-center gap-1 text-violet-600 font-semibold">
                       <Percent className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span className="text-sm sm:text-base">{professional.commissionRate}%</span>
@@ -350,6 +462,35 @@ export default function Professionals() {
           </div>
         )}
       </div>
+
+      <AlertDialog
+        open={!!professionalToReset}
+        onOpenChange={(open) => {
+          if (!open) setProfessionalToReset(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Resetar senha do profissional?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {professionalToReset ? (
+                <>
+                  Uma senha temporaria sera gerada para <strong>{professionalToReset.name}</strong>{" "}
+                  ({professionalToReset.email}).
+                </>
+              ) : (
+                "Uma senha temporaria sera gerada e enviada."
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleResetPasswordConfirm}>
+              Sim, resetar senha
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MainLayout>
   );
 }

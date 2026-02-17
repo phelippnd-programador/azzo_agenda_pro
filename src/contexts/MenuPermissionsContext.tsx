@@ -24,9 +24,12 @@ const MenuPermissionsContext = createContext<MenuPermissionsContextValue | undef
 );
 
 const ROUTE_ALIASES: Record<string, string> = {
-  "/dashboard": "/",
+  "/": "/dashboard",
+  "/dashboard": "/dashboard",
+  "/notifications": "/notificacoes",
   "/appointments": "/agenda",
   "/services": "/servicos",
+  "/specialties": "/especialidades",
   "/professionals": "/profissionais",
   "/clients": "/clientes",
   "/financial": "/financeiro",
