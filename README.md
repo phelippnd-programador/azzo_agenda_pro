@@ -733,3 +733,94 @@ Status sugeridos: `400`, `401`, `403`, `404`, `409`, `422`, `500`.
 ### Observacao importante
 - Este controle no frontend melhora UX e navegacao, mas **nao e seguranca real**.
 - A seguranca efetiva deve continuar no backend, validando autorizacao em cada endpoint.
+
+## 7) Sales Page e Checkout por Intent (Frontend)
+
+### Rota da pagina de venda
+- `GET /compras` (publica, path amigavel)
+- `GET /compras/:productId` (publica)
+- Compatibilidade legada: `GET /sale/:productId` redireciona para `/compras/:productId`
+
+### Fluxo de conversao no frontend
+- Visitante acessa `/compras` ou `/compras/:productId`.
+- CTA gera intent no backend.
+- Front exibe `intentId`, nome do produto, preco formatado e validade retornados pela API.
+- Front confirma a intent por endpoint dedicado.
+- Front redireciona para `/success` (confirmado) ou `/error` (falha).
+- Se a intent expirar, front entra em estado `expired` e solicita revalidacao com nova intent.
+
+### Contrato backend de checkout
+
+### `GET /checkout/products`
+- Auth: publica/privada conforme politica do backend
+- Response `200`:
+```json
+[
+  {
+    "id": "string",
+    "name": "string",
+    "description": "string|null",
+    "currency": "BRL",
+    "price": 0,
+    "highlight": "string|null",
+    "features": []
+  }
+]
+```
+
+### `POST /checkout/intents`
+- Auth: publica/privada conforme politica do backend
+- Request:
+```json
+{
+  "productId": "string",
+  "quantity": 1
+}
+```
+- Response `200|201`:
+```json
+{
+  "intentId": "string",
+  "productId": "string",
+  "productName": "string",
+  "quantity": 1,
+  "currency": "BRL",
+  "unitPrice": 0,
+  "totalPrice": 0,
+  "status": "PENDING|CONFIRMED|EXPIRED|CANCELLED|FAILED",
+  "expiresAt": "datetime"
+}
+```
+
+### `POST /checkout/intents/:intentId/confirm`
+- Auth: publica/privada conforme politica do backend
+- Response `200`:
+```json
+{
+  "intentId": "string",
+  "status": "PENDING|CONFIRMED|EXPIRED|CANCELLED|FAILED",
+  "redirectUrl": "string|null"
+}
+```
+
+### Pontos de integracao no frontend
+- Service: `src/services/checkoutService.ts`
+- Hook: `src/hooks/useCheckout.ts`
+- Hook: `src/hooks/useCheckoutProducts.ts`
+- Pagina: `src/pages/SalePage.tsx`
+- Componentes reutilizaveis:
+  - `src/components/sales/SalesSection.tsx`
+  - `src/components/sales/BenefitCard.tsx`
+  - `src/components/sales/CheckoutIntentPanel.tsx`
+  - `src/components/sales/ProductOfferCard.tsx`
+- Rotas adicionais:
+  - `/sale/:productId`
+  - `/success`
+  - `/error`
+
+### Boas praticas de seguranca adotadas
+- Frontend **nunca calcula preco**.
+- Frontend **nunca envia valor manual** no checkout.
+- Valor exibido vem exclusivamente da intent retornada pelo backend.
+- Confirmacao usa somente `intentId`.
+- Intent expirada exige nova geracao/revalidacao antes de confirmar.

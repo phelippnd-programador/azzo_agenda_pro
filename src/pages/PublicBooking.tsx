@@ -399,11 +399,16 @@ export default function PublicBooking() {
                             {professional.name}
                           </h3>
                           <div className="flex flex-wrap gap-1 mt-1">
-                            {professional.specialties.slice(0, 3).map((spec, i) => (
+                            {(Array.isArray(professional.specialties)
+                              ? professional.specialties
+                              : []
+                            )
+                              .slice(0, 3)
+                              .map((spec, i) => (
                               <Badge key={i} variant="outline" className="text-[10px] sm:text-xs">
                                 {spec}
                               </Badge>
-                            ))}
+                              ))}
                           </div>
                         </div>
                       </div>
