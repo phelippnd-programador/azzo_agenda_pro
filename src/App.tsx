@@ -87,9 +87,19 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AppRoutes() {
+  const { isAuthenticated, isLoading } = useAuth();
+
   function LegacySaleRedirect() {
     const { productId } = useParams();
     return <Navigate to={productId ? `/compras/${productId}` : "/compras"} replace />;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600"></div>
+      </div>
+    );
   }
 
   return (
@@ -102,7 +112,10 @@ function AppRoutes() {
     >
       <Routes>
         {/* Public routes */}
-        <Route path="/" element={<Navigate to="/compras" replace />} />
+        <Route
+          path="/"
+          element={<Navigate to={isAuthenticated ? "/dashboard" : "/compras"} replace />}
+        />
         <Route
           path="/login"
           element={

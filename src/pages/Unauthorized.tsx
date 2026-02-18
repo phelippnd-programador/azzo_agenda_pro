@@ -23,7 +23,7 @@ export default function Unauthorized() {
               O menu foi ocultado e o acesso direto por URL também foi bloqueado.
             </p>
             <Button asChild>
-              <Link to="/">Voltar ao dashboard</Link>
+              <Link to="/dashboard">Voltar ao dashboard</Link>
             </Button>
           </CardContent>
         </Card>

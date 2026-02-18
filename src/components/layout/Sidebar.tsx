@@ -1,9 +1,11 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMenuPermissions } from "@/contexts/MenuPermissionsContext";
+import { salonApi } from "@/lib/api";
 import {
   LayoutDashboard,
   Calendar,
@@ -53,6 +55,21 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const { logout } = useAuth();
   const { canAccess } = useMenuPermissions();
   const visibleMenuItems = menuItems.filter((item) => canAccess(item.path));
+  const [salonSlug, setSalonSlug] = useState("meu-salao");
+
+  useEffect(() => {
+    let mounted = true;
+    salonApi
+      .getProfile()
+      .then((profile) => {
+        if (!mounted) return;
+        if (profile.salonSlug) setSalonSlug(profile.salonSlug);
+      })
+      .catch(() => undefined);
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -129,7 +146,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                 <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">
                   Link de Agendamento
                 </p>
-                <Link to="/agendar/meu-salao">
+                <Link to={`/agendar/${salonSlug}`}>
                   <Button
                     variant="outline"
                     size="sm"
