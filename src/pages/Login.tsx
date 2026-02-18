@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Scissors, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { getCurrentBillingSubscription } from '@/services/billingService';
+import { ApiError } from '@/lib/api';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -15,6 +17,18 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const getPostLoginRoute = async (): Promise<string> => {
+    try {
+      await getCurrentBillingSubscription();
+      return '/dashboard';
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        return '/financeiro/licenca';
+      }
+      return '/dashboard';
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +43,8 @@ export default function Login() {
     try {
       await login(email, password);
       toast.success('Login realizado com sucesso!');
-      navigate('/');
+      const redirectPath = await getPostLoginRoute();
+      navigate(redirectPath);
     } catch (error) {
       toast.error('Credenciais inválidas. Tente demo@azzo.com / demo123');
     } finally {
@@ -42,7 +57,8 @@ export default function Login() {
     try {
       await login('demo@azzo.com', 'demo123');
       toast.success('Bem-vindo ao modo demonstração!');
-      navigate('/');
+      const redirectPath = await getPostLoginRoute();
+      navigate(redirectPath);
     } catch (error) {
       toast.error('Erro ao fazer login de demonstração');
     } finally {

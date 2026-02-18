@@ -1,35 +1,43 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMenuPermissions } from "@/contexts/MenuPermissionsContext";
+import { salonApi } from "@/lib/api";
 import {
   LayoutDashboard,
   Calendar,
   Scissors,
   Users,
+  Tag,
   UserCircle,
   DollarSign,
   Settings,
   LogOut,
   Menu,
   X,
+  Bell,
   ExternalLink,
   Building2,
   Receipt,
   FileText,
   Calculator,
   Eye,
+  CreditCard,
 } from "lucide-react";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+  { icon: Bell, label: "Notificacoes", path: "/notificacoes" },
   { icon: Calendar, label: "Agenda", path: "/agenda" },
   { icon: Scissors, label: "Servicos", path: "/servicos" },
+  { icon: Tag, label: "Especialidades", path: "/especialidades" },
   { icon: Users, label: "Profissionais", path: "/profissionais" },
   { icon: UserCircle, label: "Clientes", path: "/clientes" },
   { icon: DollarSign, label: "Financeiro", path: "/financeiro" },
+  { icon: CreditCard, label: "Gerenciador de Licenca", path: "/financeiro/licenca" },
   { icon: FileText, label: "Emitir Nota Fiscal", path: "/emitir-nota" },
   { icon: Eye, label: "Pre-visualizacao NF", path: "/nota-fiscal" },
   { icon: Receipt, label: "Config. Impostos", path: "/config-impostos" },
@@ -47,6 +55,21 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const { logout } = useAuth();
   const { canAccess } = useMenuPermissions();
   const visibleMenuItems = menuItems.filter((item) => canAccess(item.path));
+  const [salonSlug, setSalonSlug] = useState("meu-salao");
+
+  useEffect(() => {
+    let mounted = true;
+    salonApi
+      .getProfile()
+      .then((profile) => {
+        if (!mounted) return;
+        if (profile.salonSlug) setSalonSlug(profile.salonSlug);
+      })
+      .catch(() => undefined);
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -70,7 +93,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
       >
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between h-14 sm:h-16 px-4 sm:px-6 border-b border-gray-200">
-            <Link to="/" className="flex items-center gap-2 min-w-0">
+            <Link to="/dashboard" className="flex items-center gap-2 min-w-0">
               <div className="w-7 h-7 sm:w-8 sm:h-8 bg-violet-600 rounded-lg flex items-center justify-center flex-shrink-0">
                 <Scissors className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
@@ -123,7 +146,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                 <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">
                   Link de Agendamento
                 </p>
-                <Link to="/agendar/meu-salao">
+                <Link to={`/agendar/${salonSlug}`}>
                   <Button
                     variant="outline"
                     size="sm"

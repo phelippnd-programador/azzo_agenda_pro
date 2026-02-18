@@ -3,6 +3,7 @@ import type {
   Client,
   DashboardMetrics,
   Professional,
+  Specialty,
   Service,
   Transaction,
   User,
@@ -16,12 +17,23 @@ import type {
   WhatsAppTestResponse,
 } from "@/types/whatsapp";
 import type { CurrentMenuPermissionsResponse } from "@/types/menu-permissions";
+import type {
+  CheckoutConfirmResponse,
+  CheckoutIntentRequest,
+  CheckoutIntentResponse,
+  CheckoutProduct,
+} from "@/types/checkout";
+import type {
+  CreateBillingSubscriptionRequest,
+  CreateBillingSubscriptionResponse,
+} from "@/types/billing";
 
 export type {
   Appointment,
   Client,
   DashboardMetrics,
   Professional,
+  Specialty,
   Service,
   Transaction,
   User,
@@ -32,6 +44,18 @@ const TOKEN_KEY = "token";
 const USER_KEY = "auth_user";
 
 const getToken = () => localStorage.getItem(TOKEN_KEY);
+
+export class ApiError extends Error {
+  status: number;
+  details: unknown;
+
+  constructor(message: string, status: number, details?: unknown) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.details = details;
+  }
+}
 
 const request = async <T>(
   endpoint: string,
@@ -57,8 +81,25 @@ const request = async <T>(
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || "Erro na requisicao");
+    const contentType = response.headers.get("content-type") || "";
+    let errorMessage = "Erro na requisicao";
+    let errorDetails: unknown = null;
+
+    if (contentType.includes("application/json")) {
+      const data = await response.json().catch(() => null);
+      errorDetails = data;
+      if (data && typeof data === "object") {
+        const maybeMessage = (data as { message?: string; error?: string }).message;
+        const maybeError = (data as { message?: string; error?: string }).error;
+        errorMessage = maybeMessage || maybeError || errorMessage;
+      }
+    } else {
+      const text = await response.text();
+      errorDetails = text;
+      if (text) errorMessage = text;
+    }
+
+    throw new ApiError(errorMessage, response.status, errorDetails);
   }
 
   if (response.status === 204) return {} as T;
@@ -225,6 +266,28 @@ export const professionalsApi = {
     }),
   delete: (id: string) =>
     request<void>(`/professionals/${id}`, {
+      method: "DELETE",
+    }),
+  resetPassword: (id: string) =>
+    request<{
+      professionalId: string;
+      userId: string;
+      email: string;
+      message: string;
+    }>(`/professionals/${id}/reset-password`, {
+      method: "POST",
+    }),
+};
+
+export const specialtiesApi = {
+  getAll: () => request<Specialty[]>("/specialties"),
+  create: (data: { name: string }) =>
+    request<Specialty>("/specialties", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) =>
+    request<void>(`/specialties/${id}`, {
       method: "DELETE",
     }),
 };
@@ -420,6 +483,29 @@ export const tenantApi = {
 export const configApi = {
   getCurrentMenus: () =>
     request<CurrentMenuPermissionsResponse>("/config/menus/current"),
+};
+
+export const checkoutApi = {
+  listProducts: () => request<CheckoutProduct[]>("/checkout/products"),
+  createIntent: (data: CheckoutIntentRequest) =>
+    request<CheckoutIntentResponse>("/checkout/intents", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  confirmIntent: (intentId: string) =>
+    request<CheckoutConfirmResponse>(`/checkout/intents/${intentId}/confirm`, {
+      method: "POST",
+    }),
+};
+
+export const billingApi = {
+  createSubscription: (data: CreateBillingSubscriptionRequest) =>
+    request<CreateBillingSubscriptionResponse>("/billing/subscriptions", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  getCurrentSubscription: () =>
+    request<CreateBillingSubscriptionResponse>("/billing/subscriptions/current"),
 };
 
 export type TaxConfig = {

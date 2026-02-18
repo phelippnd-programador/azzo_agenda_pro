@@ -55,7 +55,7 @@ export default function Register() {
         phone,
       });
       toast.success('Conta criada com sucesso!');
-      navigate('/');
+      navigate('/dashboard');
     } catch (error) {
       toast.error('Erro ao criar conta. Tente novamente.');
     } finally {

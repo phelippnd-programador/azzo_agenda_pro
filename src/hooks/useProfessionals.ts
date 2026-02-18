@@ -60,6 +60,17 @@ export function useProfessionals() {
     }
   };
 
+  const resetProfessionalPassword = async (id: string) => {
+    try {
+      const response = await professionalsApi.resetPassword(id);
+      toast.success(response.message || 'Senha temporaria gerada e enviada');
+      return response;
+    } catch (err) {
+      toast.error('Erro ao resetar senha do profissional');
+      throw err;
+    }
+  };
+
   return {
     professionals,
     isLoading,
@@ -68,5 +79,6 @@ export function useProfessionals() {
     createProfessional,
     updateProfessional,
     deleteProfessional,
+    resetProfessionalPassword,
   };
 }
