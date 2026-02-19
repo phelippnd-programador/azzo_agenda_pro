@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -58,6 +58,7 @@ import { useAppointments, Appointment } from '@/hooks/useAppointments';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { useClients } from '@/hooks/useClients';
 import { useServices } from '@/hooks/useServices';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -101,6 +102,7 @@ const formatCurrency = (value: number) => {
 
 export default function Agenda() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
   const [selectedProfessional, setSelectedProfessional] = useState<string>('all');
@@ -124,6 +126,14 @@ export default function Agenda() {
   const { services } = useServices();
 
   const activeProfessionals = professionals.filter(p => p.isActive);
+  const loggedProfessional = useMemo(
+    () => activeProfessionals.find((p) => p.userId === user?.id) ?? null,
+    [activeProfessionals, user?.id]
+  );
+  const isProfessionalUser = user?.role === 'PROFESSIONAL';
+  const effectiveSelectedProfessional = isProfessionalUser
+    ? loggedProfessional?.id || ''
+    : selectedProfessional;
   const activeServices = services.filter(s => s.isActive);
 
   const navigateDate = (direction: 'prev' | 'next') => {
@@ -145,10 +155,34 @@ export default function Agenda() {
   const filteredAppointments = useMemo(() => {
     return appointments.filter(apt => {
       const matchesDate = apt.date === dateString;
-      const matchesProfessional = selectedProfessional === 'all' || apt.professionalId === selectedProfessional;
+      const matchesProfessional =
+        effectiveSelectedProfessional === 'all' ||
+        apt.professionalId === effectiveSelectedProfessional;
       return matchesDate && matchesProfessional;
     });
-  }, [appointments, dateString, selectedProfessional]);
+  }, [appointments, dateString, effectiveSelectedProfessional]);
+
+  useEffect(() => {
+    if (!isProfessionalUser) return;
+    if (!loggedProfessional?.id) return;
+    setSelectedProfessional(loggedProfessional.id);
+    setNewProfessionalId(loggedProfessional.id);
+  }, [isProfessionalUser, loggedProfessional?.id]);
+
+  useEffect(() => {
+    if (!appointments.length) return;
+    const hasAppointmentsOnCurrentDate = appointments.some((apt) => apt.date === dateString);
+    if (hasAppointmentsOnCurrentDate) return;
+
+    const latestDate = [...appointments]
+      .map((apt) => apt.date)
+      .sort((a, b) => b.localeCompare(a))[0];
+
+    if (!latestDate) return;
+    const [year, month, day] = latestDate.split('-').map(Number);
+    if (!year || !month || !day) return;
+    setCurrentDate(new Date(year, month - 1, day));
+  }, [appointments, dateString]);
 
   const handleCreateAppointment = async () => {
     if (!newClientId || !newProfessionalId || !newServiceId || !newDate || !newTime) {
@@ -277,12 +311,16 @@ export default function Agenda() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-            <Select value={selectedProfessional} onValueChange={setSelectedProfessional}>
+            <Select
+              value={effectiveSelectedProfessional || selectedProfessional}
+              onValueChange={setSelectedProfessional}
+              disabled={isProfessionalUser}
+            >
               <SelectTrigger className="w-36 sm:w-44 h-8 sm:h-9 text-xs sm:text-sm">
                 <SelectValue placeholder="Profissional" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
+                {!isProfessionalUser ? <SelectItem value="all">Todos</SelectItem> : null}
                 {activeProfessionals.map((prof) => (
                   <SelectItem key={prof.id} value={prof.id}>
                     {prof.name}
@@ -359,7 +397,11 @@ export default function Agenda() {
 
                   <div className="space-y-2">
                     <Label className="text-sm">Profissional</Label>
-                    <Select value={newProfessionalId} onValueChange={setNewProfessionalId}>
+                    <Select
+                      value={isProfessionalUser ? (loggedProfessional?.id || newProfessionalId) : newProfessionalId}
+                      onValueChange={setNewProfessionalId}
+                      disabled={isProfessionalUser}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione o profissional" />
                       </SelectTrigger>

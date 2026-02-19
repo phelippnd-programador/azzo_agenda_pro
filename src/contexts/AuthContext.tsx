@@ -25,14 +25,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     initializeDemoData();
 
-    const token = localStorage.getItem('token');
+    const hasSession = authApi.hasSession();
     const storedUser = authApi.getCurrentUser();
 
     if (storedUser) {
       setUser(storedUser);
     }
 
-    if (!token) {
+    if (!hasSession) {
       setIsLoading(false);
       return;
     }

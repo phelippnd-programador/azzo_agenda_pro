@@ -58,6 +58,14 @@ export default function PublicBooking() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
+
+  const formatDateParam = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -82,7 +90,8 @@ export default function PublicBooking() {
   useEffect(() => {
     if (!slug || !selectedDate) return;
 
-    const date = selectedDate.toISOString().split('T')[0];
+    const date = formatDateParam(selectedDate);
+    setIsLoadingAvailability(true);
     publicBookingApi
       .getAvailability({
         slug,
@@ -91,10 +100,17 @@ export default function PublicBooking() {
         professionalId: selectedProfessional || undefined,
       })
       .then((data) => {
-        const slots = data.slots.filter((slot) => slot.available).map((slot) => slot.time);
+        const slots = (data.slots || [])
+          .filter((slot) => slot.available)
+          .map((slot) => slot.time);
         setAvailableSlots(slots);
+        setSelectedTime((prev) => (prev && slots.includes(prev) ? prev : null));
       })
-      .catch(() => setAvailableSlots([]));
+      .catch(() => {
+        setAvailableSlots([]);
+        setSelectedTime(null);
+      })
+      .finally(() => setIsLoadingAvailability(false));
   }, [slug, selectedDate, selectedService, selectedProfessional]);
 
   const selectedServiceData = useMemo(() => 
@@ -140,6 +156,19 @@ export default function PublicBooking() {
     setCurrentMonth(newMonth);
   };
 
+  const getFirstSelectableDate = () => {
+    const firstAvailable = getDaysInMonth().find((date) => isDateSelectable(date));
+    return firstAvailable ?? null;
+  };
+
+  const handleNextStep = () => {
+    if (currentStep === 2 && !selectedDate) {
+      const defaultDate = getFirstSelectableDate();
+      if (defaultDate) setSelectedDate(defaultDate);
+    }
+    setCurrentStep(currentStep + 1);
+  };
+
   const canProceed = () => {
     switch (currentStep) {
       case 1:
@@ -176,7 +205,7 @@ export default function PublicBooking() {
           customerEmail,
           professionalId: selectedProfessional,
           serviceId: selectedService,
-          date: selectedDate.toISOString().split('T')[0],
+          date: formatDateParam(selectedDate),
           startTime: selectedTime,
         });
       } else {
@@ -184,7 +213,7 @@ export default function PublicBooking() {
           clientId: 'public_' + Date.now(), // fallback
           professionalId: selectedProfessional,
           serviceId: selectedService,
-          date: selectedDate.toISOString().split('T')[0],
+          date: formatDateParam(selectedDate),
           startTime: selectedTime,
           endTime,
           status: 'PENDING',
@@ -480,8 +509,16 @@ export default function PublicBooking() {
                 {selectedDate && (
                   <div>
                     <Label className="text-sm font-medium mb-3 block">Horários Disponíveis</Label>
+                    {isLoadingAvailability && slug && (
+                      <p className="text-sm text-gray-500 mb-2">Consultando disponibilidade...</p>
+                    )}
+                    {!isLoadingAvailability && slug && availableSlots.length === 0 && (
+                      <p className="text-sm text-gray-500 mb-2">
+                        Nao ha horarios disponiveis para esta data.
+                      </p>
+                    )}
                     <div className="grid grid-cols-4 gap-2">
-                      {(availableSlots.length ? availableSlots : timeSlots).map((time) => (
+                      {(slug ? availableSlots : timeSlots).map((time) => (
                         <Button
                           key={time}
                           variant={selectedTime === time ? 'default' : 'outline'}
@@ -597,7 +634,7 @@ export default function PublicBooking() {
 
             {currentStep < 4 ? (
               <Button
-                onClick={() => setCurrentStep(currentStep + 1)}
+                onClick={handleNextStep}
                 disabled={!canProceed()}
                 className="bg-violet-600 hover:bg-violet-700"
               >
