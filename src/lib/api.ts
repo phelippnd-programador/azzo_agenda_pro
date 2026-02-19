@@ -39,7 +39,9 @@ export type {
   User,
 };
 
-const API_URL = "http://localhost:8080/api/v1";
+const API_URL =
+  (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ||
+  "http://localhost:8080/api/v1";
 const TOKEN_KEY = "token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 const USER_KEY = "auth_user";
