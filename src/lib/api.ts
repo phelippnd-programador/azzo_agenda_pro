@@ -41,9 +41,13 @@ export type {
 
 const API_URL = "http://localhost:8080/api/v1";
 const TOKEN_KEY = "token";
+const REFRESH_TOKEN_KEY = "refresh_token";
 const USER_KEY = "auth_user";
 
 const getToken = () => localStorage.getItem(TOKEN_KEY);
+const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
+
+let refreshPromise: Promise<string | null> | null = null;
 
 export class ApiError extends Error {
   status: number;
@@ -57,21 +61,101 @@ export class ApiError extends Error {
   }
 }
 
+const shouldAttachAuthToken = (endpoint: string) =>
+  !endpoint.startsWith("/auth/login") &&
+  !endpoint.startsWith("/auth/register") &&
+  !endpoint.startsWith("/auth/refresh");
+
+const getErrorPayload = async (response: Response) => {
+  const contentType = response.headers.get("content-type") || "";
+  let errorMessage = "Erro na requisicao";
+  let errorDetails: unknown = null;
+
+  if (contentType.includes("application/json")) {
+    const data = await response.json().catch(() => null);
+    errorDetails = data;
+    if (data && typeof data === "object") {
+      const maybeMessage = (data as { message?: string; error?: string }).message;
+      const maybeError = (data as { message?: string; error?: string }).error;
+      errorMessage = maybeMessage || maybeError || errorMessage;
+    }
+  } else {
+    const text = await response.text();
+    errorDetails = text;
+    if (text) errorMessage = text;
+  }
+
+  return { errorMessage, errorDetails };
+};
+
+const saveSession = (
+  token?: string,
+  user?: User | null,
+  refreshToken?: string
+) => {
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+  if (refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+};
+
+const clearSession = () => {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+};
+
+const refreshAccessToken = async (): Promise<string | null> => {
+  const storedRefreshToken = getRefreshToken();
+  if (!storedRefreshToken) return null;
+
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      const response = await fetch(`${API_URL}/auth/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ refresh_token: storedRefreshToken }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Falha ao renovar token");
+      }
+
+      const data = (await response.json()) as AuthResponse;
+      const nextAccessToken = data.access_token || data.token || null;
+      const nextRefreshToken = data.refresh_token || data.refreshToken;
+
+      if (!nextAccessToken) {
+        throw new Error("Resposta de refresh sem access token");
+      }
+
+      saveSession(nextAccessToken, undefined, nextRefreshToken);
+      return nextAccessToken;
+    })()
+      .catch(() => {
+        clearSession();
+        return null;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+
+  return refreshPromise;
+};
+
 const request = async <T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  retryOnAuthError = true
 ): Promise<T> => {
   const token = getToken();
 
   const headers = new Headers(options.headers || {});
   headers.set("Content-Type", "application/json");
 
-  // 🚨 NÃO enviar token no login/register
-  if (
-    token &&
-    !endpoint.startsWith("/auth/login") &&
-    !endpoint.startsWith("/auth/register")
-  ) {
+  if (token && shouldAttachAuthToken(endpoint)) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
@@ -81,24 +165,20 @@ const request = async <T>(
   });
 
   if (!response.ok) {
-    const contentType = response.headers.get("content-type") || "";
-    let errorMessage = "Erro na requisicao";
-    let errorDetails: unknown = null;
-
-    if (contentType.includes("application/json")) {
-      const data = await response.json().catch(() => null);
-      errorDetails = data;
-      if (data && typeof data === "object") {
-        const maybeMessage = (data as { message?: string; error?: string }).message;
-        const maybeError = (data as { message?: string; error?: string }).error;
-        errorMessage = maybeMessage || maybeError || errorMessage;
+    if (
+      response.status === 401 &&
+      retryOnAuthError &&
+      endpoint !== "/auth/refresh" &&
+      endpoint !== "/auth/login" &&
+      endpoint !== "/auth/register"
+    ) {
+      const refreshedToken = await refreshAccessToken();
+      if (refreshedToken) {
+        return request<T>(endpoint, options, false);
       }
-    } else {
-      const text = await response.text();
-      errorDetails = text;
-      if (text) errorMessage = text;
     }
 
+    const { errorMessage, errorDetails } = await getErrorPayload(response);
     throw new ApiError(errorMessage, response.status, errorDetails);
   }
 
@@ -108,16 +188,13 @@ const request = async <T>(
 
 const requestBlob = async (
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  retryOnAuthError = true
 ): Promise<Blob> => {
   const token = getToken();
   const headers = new Headers(options.headers || {});
 
-  if (
-    token &&
-    !endpoint.startsWith("/auth/login") &&
-    !endpoint.startsWith("/auth/register")
-  ) {
+  if (token && shouldAttachAuthToken(endpoint)) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
@@ -127,22 +204,24 @@ const requestBlob = async (
   });
 
   if (!response.ok) {
+    if (
+      response.status === 401 &&
+      retryOnAuthError &&
+      endpoint !== "/auth/refresh" &&
+      endpoint !== "/auth/login" &&
+      endpoint !== "/auth/register"
+    ) {
+      const refreshedToken = await refreshAccessToken();
+      if (refreshedToken) {
+        return requestBlob(endpoint, options, false);
+      }
+    }
+
     const error = await response.text();
     throw new Error(error || "Erro na requisicao");
   }
 
   return response.blob();
-};
-
-
-const saveSession = (token?: string, user?: User | null) => {
-  if (token) localStorage.setItem(TOKEN_KEY, token);
-  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
-};
-
-const clearSession = () => {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
 };
 
 const readStoredUser = (): User | null => {
@@ -163,6 +242,8 @@ export const initializeDemoData = () => {
 type AuthResponse = {
   access_token?: string;
   token?: string;
+  refresh_token?: string;
+  refreshToken?: string;
   user?: User;
 };
 
@@ -174,7 +255,7 @@ export const authApi = {
     });
 
     const token = data.access_token || data.token;
-    saveSession(token, data.user || null);
+    saveSession(token, data.user || null, data.refresh_token || data.refreshToken);
 
     return {
       ...data,
@@ -195,7 +276,7 @@ export const authApi = {
     });
 
     const token = response.access_token || response.token;
-    saveSession(token, response.user || null);
+    saveSession(token, response.user || null, response.refresh_token || response.refreshToken);
 
     return {
       ...response,
@@ -215,6 +296,10 @@ export const authApi = {
 
   async logout() {
     clearSession();
+  },
+
+  hasSession() {
+    return !!getToken() || !!getRefreshToken();
   },
 };
 
@@ -612,3 +697,4 @@ export const publicBookingApi = {
       }
     ),
 };
+
