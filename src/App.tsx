@@ -23,6 +23,7 @@ import Professionals from "./pages/Professionals";
 import Clients from "./pages/Clients";
 import Financial from "./pages/Financial";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
 import Register from "./pages/Register";
 import Notifications from "./pages/Notifications";
 import PublicBooking from "./pages/PublicBooking";
@@ -121,6 +122,14 @@ function AppRoutes() {
           element={
             <PublicRoute>
               <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/recuperar-senha"
+          element={
+            <PublicRoute>
+              <ForgotPassword />
             </PublicRoute>
           }
         />

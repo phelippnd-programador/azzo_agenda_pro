@@ -1,4 +1,4 @@
-import { Bell, Search, User } from "lucide-react";
+import { Bell, CreditCard, LogOut, Search, Settings, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,7 @@ interface HeaderProps {
 
 export function Header({ title, subtitle }: HeaderProps) {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { notifications, unreadCount, markAsRead } = useNotifications();
   const displayName = user?.salonName || user?.name || "Azzo";
   const initials =
@@ -32,6 +32,11 @@ export function Header({ title, subtitle }: HeaderProps) {
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase())
       .join("") || "AZ";
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
 
   return (
     <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-sm border-b border-gray-200">
@@ -112,14 +117,23 @@ export function Header({ title, subtitle }: HeaderProps) {
             <DropdownMenuContent align="end" className="w-48 sm:w-56">
               <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/perfil-salao")}>
                 <User className="w-4 h-4 mr-2" />
                 Perfil do Salao
               </DropdownMenuItem>
-              <DropdownMenuItem>Configuracoes</DropdownMenuItem>
-              <DropdownMenuItem>Plano e Faturamento</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/configuracoes")}>
+                <Settings className="w-4 h-4 mr-2" />
+                Configuracoes
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/financeiro/licenca")}>
+                <CreditCard className="w-4 h-4 mr-2" />
+                Plano e Faturamento
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600">Sair</DropdownMenuItem>
+              <DropdownMenuItem className="text-red-600" onClick={handleLogout}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

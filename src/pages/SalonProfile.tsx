@@ -27,6 +27,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { salonApi, utilsApi } from '@/lib/api';
 
+const PUBLIC_BOOKING_BASE_URL =
+  (import.meta.env.VITE_PUBLIC_BOOKING_BASE_URL as string | undefined)?.replace(/\/$/, '') ||
+  window.location.origin;
+
 interface BusinessHours {
   day: string;
   enabled: boolean;
@@ -97,37 +101,11 @@ export default function SalonProfile() {
     });
   };
 
-  // Load saved data
   useEffect(() => {
-    const savedProfile = localStorage.getItem('azzo_salon_profile');
-    if (savedProfile) {
-      const data = JSON.parse(savedProfile);
-      setSalonName(data.salonName || user?.salonName || '');
-      setSalonSlug(data.salonSlug || 'meu-salao');
-      setSalonDescription(data.salonDescription || '');
-      setSalonPhone(data.salonPhone || user?.phone || '');
-      setSalonWhatsapp(data.salonWhatsapp || '');
-      setSalonEmail(data.salonEmail || user?.email || '');
-      setSalonWebsite(data.salonWebsite || '');
-      setSalonInstagram(data.salonInstagram || '');
-      setSalonFacebook(data.salonFacebook || '');
-      setStreet(data.street || '');
-      setNumber(data.number || '');
-      setComplement(data.complement || '');
-      setNeighborhood(data.neighborhood || '');
-      setCity(data.city || '');
-      setState(data.state || '');
-      setZipCode(data.zipCode || '');
-      if (data.businessHours) {
-        setBusinessHours(data.businessHours);
-      }
-    } else {
-      setSalonName(user?.salonName || '');
-      setSalonEmail(user?.email || '');
-      setSalonPhone(user?.phone || '');
-    }
-  }, [user]);
-  useEffect(() => {
+    setSalonName(user?.salonName || '');
+    setSalonEmail(user?.email || '');
+    setSalonPhone(user?.phone || '');
+
     salonApi
       .getProfile()
       .then((data) => {
@@ -152,7 +130,7 @@ export default function SalonProfile() {
         }
       })
       .catch(() => undefined);
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     const cep = normalizeCep(zipCode);
@@ -216,9 +194,6 @@ export default function SalonProfile() {
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
       const profileData = {
         salonName,
         salonSlug,
@@ -240,7 +215,6 @@ export default function SalonProfile() {
       };
 
       await salonApi.updateProfile(profileData as any);
-      localStorage.setItem('azzo_salon_profile', JSON.stringify(profileData));
       toast.success('Perfil do salão atualizado com sucesso!');
     } catch (error) {
       toast.error('Erro ao salvar perfil');
@@ -256,7 +230,7 @@ export default function SalonProfile() {
   };
 
   const copyBookingLink = () => {
-    const link = `${window.location.origin}/agendar/${salonSlug}`;
+    const link = `${PUBLIC_BOOKING_BASE_URL}/agendar/${salonSlug}`;
     navigator.clipboard.writeText(link);
     toast.success('Link copiado para a área de transferência!');
   };
@@ -313,7 +287,7 @@ export default function SalonProfile() {
                   Compartilhe este link com seus clientes para agendamento online
                 </p>
                 <code className="text-xs sm:text-sm bg-white/50 px-2 py-1 rounded mt-2 inline-block text-violet-700">
-                  {window.location.origin}{bookingLink}
+                  {PUBLIC_BOOKING_BASE_URL}{bookingLink}
                 </code>
               </div>
               <div className="flex gap-2">
@@ -618,4 +592,5 @@ export default function SalonProfile() {
     </MainLayout>
   );
 }
+
 

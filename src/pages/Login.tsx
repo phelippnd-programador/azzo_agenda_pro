@@ -10,6 +10,9 @@ import { toast } from 'sonner';
 import { getCurrentBillingSubscription } from '@/services/billingService';
 import { ApiError } from '@/lib/api';
 
+const isDemoLoginEnabled =
+  String(import.meta.env.VITE_ENABLE_DEMO_LOGIN ?? 'false').toLowerCase() === 'true';
+
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -32,35 +35,41 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast.error('Preencha todos os campos');
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
       await login(email, password);
       toast.success('Login realizado com sucesso!');
       const redirectPath = await getPostLoginRoute();
       navigate(redirectPath);
     } catch (error) {
-      toast.error('Credenciais inválidas. Tente demo@azzo.com / demo123');
+      toast.error(
+        isDemoLoginEnabled
+          ? 'Credenciais invalidas. Tente demo@azzo.com / demo123'
+          : 'Credenciais invalidas.'
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDemoLogin = async () => {
+    if (!isDemoLoginEnabled) return;
+
     setIsLoading(true);
     try {
       await login('demo@azzo.com', 'demo123');
-      toast.success('Bem-vindo ao modo demonstração!');
+      toast.success('Bem-vindo ao modo demonstracao!');
       const redirectPath = await getPostLoginRoute();
       navigate(redirectPath);
     } catch (error) {
-      toast.error('Erro ao fazer login de demonstração');
+      toast.error('Erro ao fazer login de demonstracao');
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +78,6 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 via-white to-pink-50 p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-6 sm:mb-8">
           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-violet-600 to-pink-500 rounded-xl flex items-center justify-center">
             <Scissors className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -83,9 +91,7 @@ export default function Login() {
         <Card className="shadow-xl border-0">
           <CardHeader className="text-center pb-2 sm:pb-4">
             <CardTitle className="text-xl sm:text-2xl">Bem-vindo de volta!</CardTitle>
-            <CardDescription className="text-sm">
-              Entre na sua conta para continuar
-            </CardDescription>
+            <CardDescription className="text-sm">Entre na sua conta para continuar</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -116,7 +122,7 @@ export default function Login() {
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
+                    placeholder="........"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading}
@@ -154,39 +160,43 @@ export default function Login() {
               </Button>
             </form>
 
-            <div className="relative my-4 sm:my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
-              </div>
-              <div className="relative flex justify-center text-xs sm:text-sm">
-                <span className="bg-white px-2 text-gray-500">ou</span>
-              </div>
-            </div>
+            {isDemoLoginEnabled ? (
+              <>
+                <div className="relative my-4 sm:my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-200" />
+                  </div>
+                  <div className="relative flex justify-center text-xs sm:text-sm">
+                    <span className="bg-white px-2 text-gray-500">ou</span>
+                  </div>
+                </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-10 sm:h-11"
-              onClick={handleDemoLogin}
-              disabled={isLoading}
-            >
-              Acessar Demonstração
-            </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-10 sm:h-11"
+                  onClick={handleDemoLogin}
+                  disabled={isLoading}
+                >
+                  Acessar Demonstracao
+                </Button>
+              </>
+            ) : null}
 
             <p className="text-center text-xs sm:text-sm text-gray-600 mt-4 sm:mt-6">
-              Não tem uma conta?{' '}
+              Nao tem uma conta?{' '}
               <Link to="/cadastro" className="text-violet-600 hover:text-violet-700 font-medium">
-                Cadastre-se grátis
+                Cadastre-se gratis
               </Link>
             </p>
           </CardContent>
         </Card>
 
         <p className="text-center text-xs text-gray-500 mt-4 sm:mt-6">
-          Ao entrar, você concorda com nossos{' '}
+          Ao entrar, voce concorda com nossos{' '}
           <a href="#" className="text-violet-600 hover:underline">Termos de Uso</a>
           {' '}e{' '}
-          <a href="#" className="text-violet-600 hover:underline">Política de Privacidade</a>
+          <a href="#" className="text-violet-600 hover:underline">Politica de Privacidade</a>
         </p>
       </div>
     </div>
