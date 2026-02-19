@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { TaxPreview } from "@/components/fiscal/TaxPreview";
 import { FiscalValidation } from "@/components/fiscal/FiscalValidation";
@@ -33,6 +34,7 @@ export default function InvoicePreview() {
   const [customerDocument, setCustomerDocument] = useState<string>("");
   const [calculation, setCalculation] = useState<TaxCalculation | undefined>(undefined);
   const [rates, setRates] = useState(DEFAULT_RATES);
+  const [isTaxConfigLoaded, setIsTaxConfigLoaded] = useState(false);
 
   // Load tax rates from storage
   useEffect(() => {
@@ -52,8 +54,9 @@ export default function InvoicePreview() {
             cofins: config.regime === TaxRegime.LUCRO_PRESUMIDO ? config.cofinsRate : DEFAULT_RATES[TaxRegime.LUCRO_PRESUMIDO].cofins,
           },
         });
+        setIsTaxConfigLoaded(true);
       })
-      .catch(() => undefined);
+      .catch(() => setIsTaxConfigLoaded(false));
   }, []);
 
   // Recalculate when values change
@@ -124,11 +127,8 @@ export default function InvoicePreview() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="regime">Regime Tributário</Label>
-                    <Select
-                      value={regime}
-                      onValueChange={(value) => setRegime(value as TaxRegime)}
-                    >
-                      <SelectTrigger>
+                    <Select value={regime}>
+                      <SelectTrigger disabled>
                         <SelectValue placeholder="Selecione o regime" />
                       </SelectTrigger>
                       <SelectContent>
@@ -140,6 +140,13 @@ export default function InvoicePreview() {
                         </SelectItem>
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Regime definido em{" "}
+                      <Link to="/config-impostos" className="text-violet-600 hover:underline">
+                        Config. Impostos
+                      </Link>
+                      .
+                    </p>
                   </div>
                 </div>
 
@@ -244,7 +251,9 @@ export default function InvoicePreview() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-4">
-                Configure as alíquotas em "Config. Impostos"
+                {isTaxConfigLoaded
+                  ? 'Alíquotas carregadas de "Config. Impostos".'
+                  : "Usando alíquotas padrão até carregar a configuração fiscal."}
               </p>
             </Card>
           </div>
