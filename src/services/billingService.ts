@@ -1,5 +1,6 @@
 import { ApiError, billingApi } from "@/lib/api";
 import type {
+  BillingPaymentsResponse,
   CreateBillingSubscriptionRequest,
   CreateBillingSubscriptionResponse,
 } from "@/types/billing";
@@ -27,4 +28,8 @@ export async function createBillingSubscription(
 
 export async function getCurrentBillingSubscription(): Promise<CreateBillingSubscriptionResponse> {
   return billingApi.getCurrentSubscription();
+}
+
+export async function getBillingPayments(): Promise<BillingPaymentsResponse> {
+  return billingApi.getPayments();
 }

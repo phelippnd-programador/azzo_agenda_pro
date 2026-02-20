@@ -26,6 +26,7 @@ import type {
 import type {
   CreateBillingSubscriptionRequest,
   CreateBillingSubscriptionResponse,
+  BillingPaymentsResponse,
 } from "@/types/billing";
 
 export type {
@@ -37,6 +38,12 @@ export type {
   Service,
   Transaction,
   User,
+};
+
+export type ProfessionalLimits = {
+  currentProfessionals: number;
+  maxProfessionals: number;
+  remaining: number;
 };
 
 const API_URL =
@@ -341,6 +348,7 @@ export const servicesApi = {
 
 export const professionalsApi = {
   getAll: () => request<Professional[]>("/professionals"),
+  getLimits: () => request<ProfessionalLimits>("/professionals/limits"),
   create: (data: Partial<Professional>) =>
     request<Professional>("/professionals", {
       method: "POST",
@@ -592,7 +600,8 @@ export const billingApi = {
       body: JSON.stringify(data),
     }),
   getCurrentSubscription: () =>
-    request<CreateBillingSubscriptionResponse>("/billing/subscriptions/current"),
+  request<CreateBillingSubscriptionResponse>("/billing/subscriptions/current"),
+  getPayments: () => request<BillingPaymentsResponse>("/billing/payments"),
 };
 
 export type TaxConfig = {

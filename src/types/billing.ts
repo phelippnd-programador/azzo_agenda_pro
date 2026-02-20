@@ -45,7 +45,7 @@ export interface CreateBillingSubscriptionRequest {
 export interface CreateBillingSubscriptionResponse {
   tenantId: string;
   customerId: string;
-  subscriptionId: string;
+  subscriptionId: string | null;
   planCode?: string | null;
   status: BillingSubscriptionStatus | string;
   billingType: BillingType;
@@ -55,6 +55,37 @@ export interface CreateBillingSubscriptionResponse {
   paymentStatus?: BillingPaymentStatus | string | null;
   invoiceUrl?: string | null;
   bankSlipUrl?: string | null;
+  boletoIdentificationField?: string | null;
+  boletoBarCode?: string | null;
+  boletoNossoNumero?: string | null;
   pixQrCodeBase64?: string | null;
   pixPayload?: string | null;
+}
+
+export interface BillingPaymentItem {
+  id: string;
+  tenantId: string;
+  asaasPaymentId?: string | null;
+  asaasSubscriptionId?: string | null;
+  referenceMonth?: string | null;
+  billingType: BillingType | string;
+  status: BillingPaymentStatus | string;
+  amountCents: number;
+  netAmountCents?: number | null;
+  dueDate?: string | null;
+  paidAt?: string | null;
+  expiresAt?: string | null;
+  invoiceUrl?: string | null;
+  bankSlipUrl?: string | null;
+  boletoIdentificationField?: string | null;
+  boletoBarCode?: string | null;
+  boletoNossoNumero?: string | null;
+  pixQrCodeBase64?: string | null;
+  pixPayload?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface BillingPaymentsResponse {
+  items: BillingPaymentItem[];
 }

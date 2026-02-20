@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { professionalsApi, Professional } from '@/lib/api';
+import { professionalsApi, Professional, ProfessionalLimits } from '@/lib/api';
 import { toast } from 'sonner';
 
 export function useProfessionals() {
   const [professionals, setProfessionals] = useState<Professional[]>([]);
+  const [professionalLimits, setProfessionalLimits] = useState<ProfessionalLimits | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLimitsLoading, setIsLimitsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchProfessionals = useCallback(async () => {
@@ -21,14 +23,28 @@ export function useProfessionals() {
     }
   }, []);
 
+  const fetchProfessionalLimits = useCallback(async () => {
+    try {
+      setIsLimitsLoading(true);
+      const data = await professionalsApi.getLimits();
+      setProfessionalLimits(data);
+    } catch {
+      setProfessionalLimits(null);
+    } finally {
+      setIsLimitsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchProfessionals();
-  }, [fetchProfessionals]);
+    fetchProfessionalLimits();
+  }, [fetchProfessionals, fetchProfessionalLimits]);
 
   const createProfessional = async (data: Omit<Professional, 'id' | 'createdAt'>) => {
     try {
       const newProfessional = await professionalsApi.create(data);
       setProfessionals(prev => [...prev, newProfessional]);
+      await fetchProfessionalLimits();
       toast.success('Profissional adicionado com sucesso!');
       return newProfessional;
     } catch (err) {
@@ -53,6 +69,7 @@ export function useProfessionals() {
     try {
       await professionalsApi.delete(id);
       setProfessionals(prev => prev.filter(p => p.id !== id));
+      await fetchProfessionalLimits();
       toast.success('Profissional removido com sucesso!');
     } catch (err) {
       toast.error('Erro ao remover profissional');
@@ -73,9 +90,12 @@ export function useProfessionals() {
 
   return {
     professionals,
+    professionalLimits,
     isLoading,
+    isLimitsLoading,
     error,
     refetch: fetchProfessionals,
+    refetchProfessionalLimits: fetchProfessionalLimits,
     createProfessional,
     updateProfessional,
     deleteProfessional,
