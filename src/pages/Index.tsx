@@ -25,7 +25,10 @@ const formatCurrency = (value: number) => {
 export default function Dashboard() {
   const { metrics, isLoading: metricsLoading, refetch: refetchMetrics } = useDashboard();
   const { appointments, isLoading: appointmentsLoading } = useAppointments();
-  const { professionals, isLoading: professionalsLoading } = useProfessionals();
+  const {
+    professionals,
+    isLoading: professionalsLoading,
+  } = useProfessionals();
   const { clients } = useClients();
   const { services } = useServices();
 

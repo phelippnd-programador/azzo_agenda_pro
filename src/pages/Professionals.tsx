@@ -38,6 +38,7 @@ import { Search, Plus, MoreVertical, Phone, Mail, Percent, Users, Loader2 } from
 import { useProfessionals } from "@/hooks/useProfessionals";
 import { useSpecialties } from "@/hooks/useSpecialties";
 import { toast } from "sonner";
+import { ProfessionalLimitMeter } from "@/components/professionals/ProfessionalLimitMeter";
 
 export default function Professionals() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -59,7 +60,9 @@ export default function Professionals() {
 
   const {
     professionals,
+    professionalLimits,
     isLoading,
+    isLimitsLoading,
     createProfessional,
     updateProfessional,
     deleteProfessional,
@@ -163,6 +166,7 @@ export default function Professionals() {
     return (
       <MainLayout title="Profissionais" subtitle="Gerencie sua equipe">
         <div className="space-y-4">
+          <ProfessionalLimitMeter limits={null} isLoading />
           <Skeleton className="h-12 w-full" />
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
@@ -177,6 +181,11 @@ export default function Professionals() {
   return (
     <MainLayout title="Profissionais" subtitle="Gerencie sua equipe">
       <div className="space-y-4 sm:space-y-6">
+        <ProfessionalLimitMeter
+          limits={professionalLimits}
+          isLoading={isLimitsLoading}
+        />
+
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
