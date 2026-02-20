@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CircleCheckBig, Clock3, Loader2, RefreshCw } from "lucide-react";
+import { CircleCheckBig, Clock3, Eye, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,13 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -24,9 +31,13 @@ import { PlanSelector } from "@/components/billing/PlanSelector";
 import { PixPaymentView } from "@/components/billing/PixPaymentView";
 import { BoletoPaymentView } from "@/components/billing/BoletoPaymentView";
 import type { BillingPlanOption, LicenseFormValues } from "@/components/billing/types";
-import type { CreateBillingSubscriptionResponse } from "@/types/billing";
+import type {
+  BillingPaymentItem,
+  CreateBillingSubscriptionResponse,
+} from "@/types/billing";
 import {
   createBillingSubscription,
+  getBillingPayments,
   getBillingErrorMessage,
   getCurrentBillingSubscription,
 } from "@/services/billingService";
@@ -101,6 +112,17 @@ function formatDate(value?: string | null) {
   return new Intl.DateTimeFormat("pt-BR").format(date);
 }
 
+function formatReferenceMonth(value?: string | null) {
+  if (!value) return "Nao informado";
+  const normalized = value.length === 7 ? `${value}-01` : value;
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("pt-BR", {
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+}
+
 function isOverdue(result: CreateBillingSubscriptionResponse) {
   const subscriptionStatus = String(result.status || "").toUpperCase();
   const paymentStatus = String(result.paymentStatus || "").toUpperCase();
@@ -159,6 +181,8 @@ export default function LicensePage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastCardDigits, setLastCardDigits] = useState<string | null>(null);
   const [actionMode, setActionMode] = useState<ActionMode>("IDLE");
+  const [paymentHistory, setPaymentHistory] = useState<BillingPaymentItem[]>([]);
+  const [selectedPayment, setSelectedPayment] = useState<BillingPaymentItem | null>(null);
 
   const plans = useMemo<BillingPlanOption[]>(
     () =>
@@ -172,6 +196,15 @@ export default function LicensePage() {
       })),
     [products]
   );
+
+  const loadPaymentHistory = useCallback(async () => {
+    try {
+      const response = await getBillingPayments();
+      setPaymentHistory(response.items || []);
+    } catch {
+      setPaymentHistory([]);
+    }
+  }, []);
 
   const form = useForm<LicenseFormValues>({
     resolver: zodResolver(formSchema),
@@ -224,14 +257,14 @@ export default function LicensePage() {
     let mounted = true;
     const load = async () => {
       setIsLoadingCurrent(true);
-      await loadCurrentSubscription();
+      await Promise.all([loadCurrentSubscription(), loadPaymentHistory()]);
       if (mounted) setIsLoadingCurrent(false);
     };
     load();
     return () => {
       mounted = false;
     };
-  }, [loadCurrentSubscription]);
+  }, [loadCurrentSubscription, loadPaymentHistory]);
 
   const billingType = form.watch("billingType");
   const selectedPlanCode = form.watch("planCode");
@@ -247,6 +280,15 @@ export default function LicensePage() {
   const licenseState = useMemo(
     () => (result ? resolveLicenseState(result) : null),
     [result]
+  );
+  const orderedHistory = useMemo(
+    () =>
+      [...paymentHistory].sort(
+        (a, b) =>
+          new Date(b.createdAt || b.updatedAt || b.dueDate || 0).getTime() -
+          new Date(a.createdAt || a.updatedAt || a.dueDate || 0).getTime()
+      ),
+    [paymentHistory]
   );
 
   const canPayNow = useMemo(() => {
@@ -276,23 +318,22 @@ export default function LicensePage() {
   const refreshStatus = async () => {
     try {
       setIsRefreshing(true);
-      await loadCurrentSubscription();
+      await Promise.all([loadCurrentSubscription(), loadPaymentHistory()]);
       toast.success("Status da assinatura atualizado.");
     } finally {
       setIsRefreshing(false);
     }
   };
 
-  const handleCopyPix = async () => {
-    const payload = result?.pixPayload;
-    if (!payload) {
-      toast.error("Codigo PIX indisponivel.");
+  const handleCopyText = async (value?: string | null, label = "Codigo") => {
+    if (!value) {
+      toast.error(`${label} indisponivel.`);
       return;
     }
 
     try {
-      await navigator.clipboard.writeText(payload);
-      toast.success("Codigo PIX copiado.");
+      await navigator.clipboard.writeText(value);
+      toast.success(`${label} copiado.`);
     } catch {
       toast.error("Nao foi possivel copiar automaticamente.");
     }
@@ -347,7 +388,7 @@ export default function LicensePage() {
           ? toDigits(values.creditCardNumber).slice(-4)
           : null
       );
-      await loadCurrentSubscription();
+      await Promise.all([loadCurrentSubscription(), loadPaymentHistory()]);
       setActionMode("IDLE");
       toast.success(resolveLicenseState(response).title);
     } catch (error) {
@@ -600,13 +641,133 @@ export default function LicensePage() {
           <PixPaymentView
             pixQrCodeBase64={result.pixQrCodeBase64}
             pixPayload={result.pixPayload}
-            onCopyPix={handleCopyPix}
+            onCopyPix={() => handleCopyText(result.pixPayload, "Codigo PIX")}
           />
         ) : null}
 
         {result?.billingType === "BOLETO" ? (
-          <BoletoPaymentView bankSlipUrl={result.bankSlipUrl} />
+          <BoletoPaymentView
+            bankSlipUrl={result.bankSlipUrl}
+            boletoIdentificationField={result.boletoIdentificationField}
+            boletoBarCode={result.boletoBarCode}
+            boletoNossoNumero={result.boletoNossoNumero}
+          />
         ) : null}
+
+        <Card className="border-slate-200">
+          <CardHeader>
+            <CardTitle>Historico de pagamentos</CardTitle>
+            <CardDescription>
+              Consulte os pagamentos gerados e abra detalhes para pagar quando necessario.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {!orderedHistory.length ? (
+              <p className="text-sm text-slate-600">Nenhum pagamento registrado ainda.</p>
+            ) : (
+              orderedHistory.map((payment) => (
+                <div
+                  key={payment.id}
+                  className="flex items-center justify-between gap-2 rounded-lg border p-3"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-slate-900">
+                      {formatCurrency(payment.amountCents)} • {payment.billingType}
+                    </p>
+                    <p className="text-xs text-slate-600">
+                      Status: {payment.status} • Competencia:{" "}
+                      {formatReferenceMonth(payment.referenceMonth)} • Vencimento:{" "}
+                      {formatDate(payment.dueDate)}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setSelectedPayment(payment)}
+                    aria-label="Ver detalhes do pagamento"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        <Dialog
+          open={!!selectedPayment}
+          onOpenChange={(open) => {
+            if (!open) setSelectedPayment(null);
+          }}
+        >
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Detalhes do pagamento</DialogTitle>
+              <DialogDescription>
+                Acompanhe os dados de cobranca e use os atalhos para concluir o pagamento.
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedPayment ? (
+              <div className="space-y-4">
+                <div className="grid gap-2 text-sm sm:grid-cols-2">
+                  <p>
+                    <strong>Valor:</strong> {formatCurrency(selectedPayment.amountCents)}
+                  </p>
+                  <p>
+                    <strong>Metodo:</strong> {selectedPayment.billingType}
+                  </p>
+                  <p>
+                    <strong>Status:</strong> {selectedPayment.status}
+                  </p>
+                  <p>
+                    <strong>ID pagamento:</strong>{" "}
+                    {selectedPayment.asaasPaymentId || selectedPayment.id}
+                  </p>
+                  <p>
+                    <strong>Vencimento:</strong> {formatDate(selectedPayment.dueDate)}
+                  </p>
+                  <p>
+                    <strong>Competencia:</strong>{" "}
+                    {formatReferenceMonth(selectedPayment.referenceMonth)}
+                  </p>
+                  <p>
+                    <strong>Gerado em:</strong>{" "}
+                    {formatDate(selectedPayment.createdAt || selectedPayment.updatedAt)}
+                  </p>
+                </div>
+
+                {selectedPayment.billingType === "PIX" ? (
+                  <PixPaymentView
+                    pixQrCodeBase64={selectedPayment.pixQrCodeBase64}
+                    pixPayload={selectedPayment.pixPayload}
+                    onCopyPix={() =>
+                      handleCopyText(selectedPayment.pixPayload, "Codigo PIX")
+                    }
+                  />
+                ) : null}
+
+                {selectedPayment.billingType === "BOLETO" ? (
+                  <BoletoPaymentView
+                    bankSlipUrl={selectedPayment.bankSlipUrl}
+                    boletoIdentificationField={selectedPayment.boletoIdentificationField}
+                    boletoBarCode={selectedPayment.boletoBarCode}
+                    boletoNossoNumero={selectedPayment.boletoNossoNumero}
+                  />
+                ) : null}
+
+                {selectedPayment.invoiceUrl ? (
+                  <Button type="button" variant="outline" asChild>
+                    <a href={selectedPayment.invoiceUrl} target="_blank" rel="noreferrer">
+                      Abrir fatura
+                    </a>
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
+          </DialogContent>
+        </Dialog>
 
         {result?.billingType === "CREDIT_CARD" && lastCardDigits ? (
           <Card className="border-slate-200">
