@@ -28,6 +28,7 @@ import type {
   CreateBillingSubscriptionResponse,
   BillingPaymentsResponse,
 } from "@/types/billing";
+import { toast } from "sonner";
 
 export type {
   Appointment,
@@ -57,6 +58,8 @@ const getToken = () => localStorage.getItem(TOKEN_KEY);
 const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
 
 let refreshPromise: Promise<string | null> | null = null;
+let lastPlanExpiredToastAt = 0;
+let lastPlanExpiredRedirectAt = 0;
 
 export class ApiError extends Error {
   status: number;
@@ -69,6 +72,13 @@ export class ApiError extends Error {
     this.details = details;
   }
 }
+
+export const isPlanExpiredApiError = (error: unknown) =>
+  error instanceof ApiError &&
+  error.status === 402 &&
+  !!error.details &&
+  typeof error.details === "object" &&
+  (error.details as { error?: string }).error === "PLAN_EXPIRED";
 
 const shouldAttachAuthToken = (endpoint: string) =>
   !endpoint.startsWith("/auth/login") &&
@@ -95,6 +105,24 @@ const getErrorPayload = async (response: Response) => {
   }
 
   return { errorMessage, errorDetails };
+};
+
+const notifyPlanExpired = (message: string) => {
+  const now = Date.now();
+  if (now - lastPlanExpiredToastAt < 8000) return;
+  lastPlanExpiredToastAt = now;
+  toast.error(message);
+};
+
+const redirectToLicensePage = () => {
+  if (typeof window === "undefined") return;
+  if (window.location.pathname === "/financeiro/licenca") return;
+
+  const now = Date.now();
+  if (now - lastPlanExpiredRedirectAt < 1500) return;
+  lastPlanExpiredRedirectAt = now;
+
+  window.location.replace("/financeiro/licenca");
 };
 
 const saveSession = (
@@ -188,6 +216,17 @@ const request = async <T>(
     }
 
     const { errorMessage, errorDetails } = await getErrorPayload(response);
+
+    if (
+      response.status === 402 &&
+      errorDetails &&
+      typeof errorDetails === "object" &&
+      (errorDetails as { error?: string }).error === "PLAN_EXPIRED"
+    ) {
+      notifyPlanExpired(errorMessage);
+      redirectToLicensePage();
+    }
+
     throw new ApiError(errorMessage, response.status, errorDetails);
   }
 
@@ -226,8 +265,30 @@ const requestBlob = async (
       }
     }
 
-    const error = await response.text();
-    throw new Error(error || "Erro na requisicao");
+    const contentType = response.headers.get("content-type") || "";
+    let errorMessage = "Erro na requisicao";
+    let errorCode: string | undefined;
+
+    if (contentType.includes("application/json")) {
+      const data = await response.json().catch(() => null);
+      if (data && typeof data === "object") {
+        errorMessage =
+          (data as { message?: string; error?: string }).message ||
+          (data as { message?: string; error?: string }).error ||
+          errorMessage;
+        errorCode = (data as { error?: string }).error;
+      }
+    } else {
+      const text = await response.text();
+      if (text) errorMessage = text;
+    }
+
+    if (response.status === 402 && errorCode === "PLAN_EXPIRED") {
+      notifyPlanExpired(errorMessage);
+      redirectToLicensePage();
+    }
+
+    throw new Error(errorMessage);
   }
 
   return response.blob();

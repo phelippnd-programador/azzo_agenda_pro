@@ -35,7 +35,8 @@ export interface CreditCardHolderInfo {
 }
 
 export interface CreateBillingSubscriptionRequest {
-  planCode: string;
+  productId: string;
+  planCode?: string;
   billingType: BillingType;
   cpfCnpj: string;
   creditCard?: CreditCardData;
@@ -43,14 +44,21 @@ export interface CreateBillingSubscriptionRequest {
 }
 
 export interface CreateBillingSubscriptionResponse {
+  id?: string;
   tenantId: string;
   customerId: string;
   subscriptionId: string | null;
+  productId?: string | null;
   planCode?: string | null;
   status: BillingSubscriptionStatus | string;
   billingType: BillingType;
+  cycle?: string | null;
   nextDueDate: string;
   amountCents: number;
+  paymentLink?: string | null;
+  cancelledAt?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
   paymentId?: string | null;
   paymentStatus?: BillingPaymentStatus | string | null;
   invoiceUrl?: string | null;

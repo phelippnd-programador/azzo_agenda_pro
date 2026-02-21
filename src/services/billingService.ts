@@ -7,7 +7,9 @@ import type {
 
 export function getBillingErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    if (error.status === 400) return "Revise os dados enviados antes de continuar.";
+    if (error.status === 400) {
+      return error.message || "Revise os dados enviados antes de continuar.";
+    }
     if (error.status === 401) return "Sua sessao expirou. Entre novamente para assinar.";
     if (error.status === 403) return "Sua conta nao tem permissao para criar assinatura.";
     if (error.status === 404) return "Plano ou recurso de cobranca nao encontrado.";
