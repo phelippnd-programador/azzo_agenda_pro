@@ -1,6 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
-import { professionalsApi, Professional, ProfessionalLimits } from '@/lib/api';
-import { toast } from 'sonner';
+﻿import { useState, useEffect, useCallback } from "react";
+import {
+  professionalsApi,
+  type Professional,
+  type ProfessionalLimits,
+  isPlanExpiredApiError,
+} from "@/lib/api";
+import { toast } from "sonner";
 
 export function useProfessionals() {
   const [professionals, setProfessionals] = useState<Professional[]>([]);
@@ -16,8 +21,12 @@ export function useProfessionals() {
       setProfessionals(data);
       setError(null);
     } catch (err) {
-      setError('Erro ao carregar profissionais');
-      toast.error('Erro ao carregar profissionais');
+      if (isPlanExpiredApiError(err)) {
+        setError(null);
+        return;
+      }
+      setError("Erro ao carregar profissionais");
+      toast.error("Erro ao carregar profissionais");
     } finally {
       setIsLoading(false);
     }
@@ -28,8 +37,10 @@ export function useProfessionals() {
       setIsLimitsLoading(true);
       const data = await professionalsApi.getLimits();
       setProfessionalLimits(data);
-    } catch {
-      setProfessionalLimits(null);
+    } catch (err) {
+      if (!isPlanExpiredApiError(err)) {
+        setProfessionalLimits(null);
+      }
     } finally {
       setIsLimitsLoading(false);
     }
@@ -40,15 +51,17 @@ export function useProfessionals() {
     fetchProfessionalLimits();
   }, [fetchProfessionals, fetchProfessionalLimits]);
 
-  const createProfessional = async (data: Omit<Professional, 'id' | 'createdAt'>) => {
+  const createProfessional = async (data: Omit<Professional, "id" | "createdAt">) => {
     try {
       const newProfessional = await professionalsApi.create(data);
-      setProfessionals(prev => [...prev, newProfessional]);
+      setProfessionals((prev) => [...prev, newProfessional]);
       await fetchProfessionalLimits();
-      toast.success('Profissional adicionado com sucesso!');
+      toast.success("Profissional adicionado com sucesso!");
       return newProfessional;
     } catch (err) {
-      toast.error('Erro ao adicionar profissional');
+      if (!isPlanExpiredApiError(err)) {
+        toast.error("Erro ao adicionar profissional");
+      }
       throw err;
     }
   };
@@ -56,11 +69,13 @@ export function useProfessionals() {
   const updateProfessional = async (id: string, data: Partial<Professional>) => {
     try {
       const updated = await professionalsApi.update(id, data);
-      setProfessionals(prev => prev.map(p => p.id === id ? updated : p));
-      toast.success('Profissional atualizado com sucesso!');
+      setProfessionals((prev) => prev.map((p) => (p.id === id ? updated : p)));
+      toast.success("Profissional atualizado com sucesso!");
       return updated;
     } catch (err) {
-      toast.error('Erro ao atualizar profissional');
+      if (!isPlanExpiredApiError(err)) {
+        toast.error("Erro ao atualizar profissional");
+      }
       throw err;
     }
   };
@@ -68,11 +83,13 @@ export function useProfessionals() {
   const deleteProfessional = async (id: string) => {
     try {
       await professionalsApi.delete(id);
-      setProfessionals(prev => prev.filter(p => p.id !== id));
+      setProfessionals((prev) => prev.filter((p) => p.id !== id));
       await fetchProfessionalLimits();
-      toast.success('Profissional removido com sucesso!');
+      toast.success("Profissional removido com sucesso!");
     } catch (err) {
-      toast.error('Erro ao remover profissional');
+      if (!isPlanExpiredApiError(err)) {
+        toast.error("Erro ao remover profissional");
+      }
       throw err;
     }
   };
@@ -80,10 +97,12 @@ export function useProfessionals() {
   const resetProfessionalPassword = async (id: string) => {
     try {
       const response = await professionalsApi.resetPassword(id);
-      toast.success(response.message || 'Senha temporaria gerada e enviada');
+      toast.success(response.message || "Senha temporaria gerada e enviada");
       return response;
     } catch (err) {
-      toast.error('Erro ao resetar senha do profissional');
+      if (!isPlanExpiredApiError(err)) {
+        toast.error("Erro ao resetar senha do profissional");
+      }
       throw err;
     }
   };

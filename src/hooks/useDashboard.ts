@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { dashboardApi } from '@/lib/api';
-import { toast } from 'sonner';
+﻿import { useState, useEffect, useCallback } from "react";
+import { dashboardApi, isPlanExpiredApiError } from "@/lib/api";
+import { toast } from "sonner";
 
 interface DashboardMetrics {
   todayAppointments: number;
@@ -30,8 +30,12 @@ export function useDashboard() {
       setMetrics(data);
       setError(null);
     } catch (err) {
-      setError('Erro ao carregar métricas');
-      toast.error('Erro ao carregar métricas');
+      if (isPlanExpiredApiError(err)) {
+        setError(null);
+        return;
+      }
+      setError("Erro ao carregar metricas");
+      toast.error("Erro ao carregar metricas");
     } finally {
       setIsLoading(false);
     }
