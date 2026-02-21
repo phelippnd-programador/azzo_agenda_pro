@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { transactionsApi, Transaction } from '@/lib/api';
-import { toast } from 'sonner';
+﻿import { useState, useEffect, useCallback } from "react";
+import { transactionsApi, type Transaction, isPlanExpiredApiError } from "@/lib/api";
+import { toast } from "sonner";
 
 export function useTransactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -19,8 +19,12 @@ export function useTransactions() {
       setSummary(summaryData);
       setError(null);
     } catch (err) {
-      setError('Erro ao carregar transações');
-      toast.error('Erro ao carregar transações');
+      if (isPlanExpiredApiError(err)) {
+        setError(null);
+        return;
+      }
+      setError("Erro ao carregar transacoes");
+      toast.error("Erro ao carregar transacoes");
     } finally {
       setIsLoading(false);
     }
@@ -30,60 +34,62 @@ export function useTransactions() {
     fetchTransactions();
   }, [fetchTransactions]);
 
-  const createTransaction = async (data: Omit<Transaction, 'id' | 'createdAt'>) => {
+  const createTransaction = async (data: Omit<Transaction, "id" | "createdAt">) => {
     try {
       const newTransaction = await transactionsApi.create(data);
-      setTransactions(prev => [...prev, newTransaction]);
-      
-      // Update summary
-      if (data.type === 'INCOME') {
-        setSummary(prev => ({
+      setTransactions((prev) => [...prev, newTransaction]);
+
+      if (data.type === "INCOME") {
+        setSummary((prev) => ({
           ...prev,
           totalIncome: prev.totalIncome + data.amount,
           balance: prev.balance + data.amount,
         }));
       } else {
-        setSummary(prev => ({
+        setSummary((prev) => ({
           ...prev,
           totalExpenses: prev.totalExpenses + data.amount,
           balance: prev.balance - data.amount,
         }));
       }
-      
-      toast.success(data.type === 'INCOME' ? 'Entrada registrada!' : 'Saída registrada!');
+
+      toast.success(data.type === "INCOME" ? "Entrada registrada!" : "Saida registrada!");
       return newTransaction;
     } catch (err) {
-      toast.error('Erro ao registrar transação');
+      if (!isPlanExpiredApiError(err)) {
+        toast.error("Erro ao registrar transacao");
+      }
       throw err;
     }
   };
 
   const deleteTransaction = async (id: string) => {
     try {
-      const transaction = transactions.find(t => t.id === id);
+      const transaction = transactions.find((item) => item.id === id);
       await transactionsApi.delete(id);
-      setTransactions(prev => prev.filter(t => t.id !== id));
-      
-      // Update summary
+      setTransactions((prev) => prev.filter((item) => item.id !== id));
+
       if (transaction) {
-        if (transaction.type === 'INCOME') {
-          setSummary(prev => ({
+        if (transaction.type === "INCOME") {
+          setSummary((prev) => ({
             ...prev,
             totalIncome: prev.totalIncome - transaction.amount,
             balance: prev.balance - transaction.amount,
           }));
         } else {
-          setSummary(prev => ({
+          setSummary((prev) => ({
             ...prev,
             totalExpenses: prev.totalExpenses - transaction.amount,
             balance: prev.balance + transaction.amount,
           }));
         }
       }
-      
-      toast.success('Transação excluída!');
+
+      toast.success("Transacao excluida!");
     } catch (err) {
-      toast.error('Erro ao excluir transação');
+      if (!isPlanExpiredApiError(err)) {
+        toast.error("Erro ao excluir transacao");
+      }
       throw err;
     }
   };

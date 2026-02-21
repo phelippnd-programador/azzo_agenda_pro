@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { appointmentsApi, Appointment } from '@/lib/api';
-import { toast } from 'sonner';
+﻿import { useState, useEffect, useCallback } from "react";
+import { appointmentsApi, type Appointment, isPlanExpiredApiError } from "@/lib/api";
+import { toast } from "sonner";
 
 export function useAppointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -14,8 +14,12 @@ export function useAppointments() {
       setAppointments(data);
       setError(null);
     } catch (err) {
-      setError('Erro ao carregar agendamentos');
-      toast.error('Erro ao carregar agendamentos');
+      if (isPlanExpiredApiError(err)) {
+        setError(null);
+        return;
+      }
+      setError("Erro ao carregar agendamentos");
+      toast.error("Erro ao carregar agendamentos");
     } finally {
       setIsLoading(false);
     }
@@ -25,35 +29,39 @@ export function useAppointments() {
     fetchAppointments();
   }, [fetchAppointments]);
 
-  const createAppointment = async (data: Omit<Appointment, 'id' | 'createdAt'>) => {
+  const createAppointment = async (data: Omit<Appointment, "id" | "createdAt">) => {
     try {
       const newAppointment = await appointmentsApi.create(data);
-      setAppointments(prev => [...prev, newAppointment]);
-      toast.success('Agendamento criado com sucesso!');
+      setAppointments((prev) => [...prev, newAppointment]);
+      toast.success("Agendamento criado com sucesso!");
       return newAppointment;
     } catch (err) {
-      toast.error('Erro ao criar agendamento');
+      if (!isPlanExpiredApiError(err)) {
+        toast.error("Erro ao criar agendamento");
+      }
       throw err;
     }
   };
 
-  const updateAppointmentStatus = async (id: string, status: Appointment['status']) => {
+  const updateAppointmentStatus = async (id: string, status: Appointment["status"]) => {
     try {
       const updated = await appointmentsApi.updateStatus(id, status);
-      setAppointments(prev => prev.map(a => a.id === id ? updated : a));
-      
+      setAppointments((prev) => prev.map((appointment) => (appointment.id === id ? updated : appointment)));
+
       const statusMessages: Record<string, string> = {
-        CONFIRMED: 'Agendamento confirmado!',
-        IN_PROGRESS: 'Atendimento iniciado!',
-        COMPLETED: 'Atendimento concluído!',
-        CANCELLED: 'Agendamento cancelado.',
-        NO_SHOW: 'Cliente não compareceu.',
+        CONFIRMED: "Agendamento confirmado!",
+        IN_PROGRESS: "Atendimento iniciado!",
+        COMPLETED: "Atendimento concluido!",
+        CANCELLED: "Agendamento cancelado.",
+        NO_SHOW: "Cliente nao compareceu.",
       };
-      
-      toast.success(statusMessages[status] || 'Status atualizado!');
+
+      toast.success(statusMessages[status] || "Status atualizado!");
       return updated;
     } catch (err) {
-      toast.error('Erro ao atualizar status');
+      if (!isPlanExpiredApiError(err)) {
+        toast.error("Erro ao atualizar status");
+      }
       throw err;
     }
   };
@@ -61,10 +69,12 @@ export function useAppointments() {
   const deleteAppointment = async (id: string) => {
     try {
       await appointmentsApi.delete(id);
-      setAppointments(prev => prev.filter(a => a.id !== id));
-      toast.success('Agendamento excluído!');
+      setAppointments((prev) => prev.filter((appointment) => appointment.id !== id));
+      toast.success("Agendamento excluido!");
     } catch (err) {
-      toast.error('Erro ao excluir agendamento');
+      if (!isPlanExpiredApiError(err)) {
+        toast.error("Erro ao excluir agendamento");
+      }
       throw err;
     }
   };

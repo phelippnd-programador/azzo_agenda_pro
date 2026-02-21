@@ -2,37 +2,33 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { BadgeCheck, MousePointerClick, Shield, Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
 import { BenefitCard } from "@/components/sales/BenefitCard";
-import { CheckoutIntentPanel } from "@/components/sales/CheckoutIntentPanel";
 import { ProductOfferCard } from "@/components/sales/ProductOfferCard";
 import { SalesSection } from "@/components/sales/SalesSection";
-import { useCheckout } from "@/hooks/useCheckout";
 import { useCheckoutProducts } from "@/hooks/useCheckoutProducts";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export default function SalePage() {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const { productId } = useParams();
   const routeProductId = useMemo(() => productId ?? "", [productId]);
   const queryProductId = searchParams.get("product");
   const selectedProductId = queryProductId || routeProductId;
-  const [lastActionAt, setLastActionAt] = useState<number | null>(null);
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [accountName, setAccountName] = useState("");
+  const [accountEmail, setAccountEmail] = useState("");
+  const [accountPassword, setAccountPassword] = useState("");
+  const [accountSalonName, setAccountSalonName] = useState("");
+  const [accountPhone, setAccountPhone] = useState("");
   const { products, isLoading: isLoadingProducts, error: productsError } =
     useCheckoutProducts();
-
-  const {
-    state,
-    intent,
-    error,
-    isConfirming,
-    createIntent,
-    confirmIntent,
-    revalidateIntent,
-    formattedTotalPrice,
-    isExpired,
-  } = useCheckout(selectedProductId);
 
   const selectedProduct = useMemo(
     () => products.find((item) => item.id === selectedProductId) ?? null,
@@ -70,20 +66,50 @@ export default function SalePage() {
     setSearchParams({ product: nextProductId }, { replace: true });
   };
 
-  const handleStartCheckout = async () => {
-    setLastActionAt(Date.now());
-    await createIntent();
-  };
-
-  const handleConfirmCheckout = async () => {
-    const response = await confirmIntent();
-    if (!response) return;
-
-    if (response.status === "CONFIRMED") {
-      navigate("/success", { replace: true });
+  const handleCreateAccountAndContinue = async () => {
+    if (!selectedProductId) {
+      toast.error("Selecione um produto antes de continuar.");
       return;
     }
-    navigate("/error", { replace: true });
+
+    if (
+      !accountName.trim() ||
+      !accountEmail.trim() ||
+      !accountPassword.trim() ||
+      !accountSalonName.trim() ||
+      !accountPhone.trim()
+    ) {
+      toast.error("Preencha todos os campos para criar sua conta.");
+      return;
+    }
+
+    if (accountPassword.trim().length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
+
+    try {
+      setIsCreatingAccount(true);
+      await register({
+        name: accountName.trim(),
+        email: accountEmail.trim(),
+        password: accountPassword.trim(),
+        salonName: accountSalonName.trim(),
+        phone: accountPhone.trim(),
+      });
+
+      toast.success("Conta criada. Continue com o pagamento do plano.");
+      navigate(
+        `/financeiro/licenca?plan=${encodeURIComponent(
+          selectedProductId
+        )}&mode=CHANGE`,
+        { replace: true }
+      );
+    } catch {
+      toast.error("Nao foi possivel criar sua conta agora.");
+    } finally {
+      setIsCreatingAccount(false);
+    }
   };
 
   return (
@@ -99,17 +125,10 @@ export default function SalePage() {
               Fature mais com um ERP pensado para a rotina real do seu salao
             </h1>
             <p className="mt-4 text-base text-slate-600 md:text-lg">
-              Automatize agenda, financeiro e equipe com fluxo simples e checkout
-              seguro por intent no backend.
+              Automatize agenda, financeiro e equipe com fluxo simples de cadastro
+              e pagamento interno da licenca.
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
-              <Button
-                size="lg"
-                className="bg-emerald-600 hover:bg-emerald-700"
-                onClick={handleStartCheckout}
-              >
-                Quero ativar meu plano agora
-              </Button>
               <Button size="lg" variant="outline" asChild>
                 <Link to="/login">Entrar no sistema</Link>
               </Button>
@@ -123,12 +142,12 @@ export default function SalePage() {
               </p>
               <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-lg bg-slate-50 p-3">
-                  <p className="text-slate-500">Checkout</p>
-                  <p className="font-semibold text-slate-900">Intent segura</p>
+                  <p className="text-slate-500">Cadastro</p>
+                  <p className="font-semibold text-slate-900">Conta em minutos</p>
                 </div>
                 <div className="rounded-lg bg-slate-50 p-3">
-                  <p className="text-slate-500">Risco</p>
-                  <p className="font-semibold text-slate-900">Preco blindado</p>
+                  <p className="text-slate-500">Pagamento</p>
+                  <p className="font-semibold text-slate-900">100% dentro do sistema</p>
                 </div>
               </div>
             </CardContent>
@@ -171,8 +190,8 @@ export default function SalePage() {
           />
           <BenefitCard
             icon={<Shield className="h-5 w-5" />}
-            title="Checkout seguro"
-            description="Preco e validade definidos exclusivamente no backend por intent."
+            title="Pagamento interno"
+            description="Licenca paga no proprio sistema com PIX, boleto ou cartao."
           />
           <BenefitCard
             icon={<MousePointerClick className="h-5 w-5" />}
@@ -214,7 +233,7 @@ export default function SalePage() {
       <SalesSection
         className="bg-white"
         title="Produtos disponiveis no app"
-        subtitle="Escolha um produto real retornado pelo backend para criar a intent."
+        subtitle="Escolha um plano real retornado pelo backend para seguir ao pagamento interno."
       >
         {isLoadingProducts ? (
           <Alert className="border-slate-200 bg-slate-50">
@@ -253,30 +272,6 @@ export default function SalePage() {
       </SalesSection>
 
       <SalesSection id="offer" className="bg-white" title="Plano recomendado">
-        {state === "loading" ? (
-          <Alert className="mb-4 border-slate-200 bg-slate-50">
-            <AlertTitle>Gerando checkout</AlertTitle>
-            <AlertDescription>
-              Estamos validando o produto e carregando os valores diretamente do backend.
-            </AlertDescription>
-          </Alert>
-        ) : null}
-        {state === "expired" ? (
-          <Alert className="mb-4 border-amber-200 bg-amber-50 text-amber-900">
-            <AlertTitle>Intent expirada</AlertTitle>
-            <AlertDescription>
-              Clique em revalidar para gerar uma nova intent antes de confirmar o pagamento.
-            </AlertDescription>
-          </Alert>
-        ) : null}
-        {state === "success" && intent ? (
-          <Alert className="mb-4 border-emerald-200 bg-emerald-50 text-emerald-900">
-            <AlertTitle>Intent pronta para confirmacao</AlertTitle>
-            <AlertDescription>
-              Checkout seguro criado com sucesso para {intent.productName}.
-            </AlertDescription>
-          </Alert>
-        ) : null}
         <Card className="border-emerald-200 shadow-lg">
           <CardContent className="grid gap-6 p-6 md:grid-cols-2 md:p-8">
             <div>
@@ -286,7 +281,7 @@ export default function SalePage() {
               </h3>
               <p className="mt-3 text-sm text-slate-600">
                 {selectedProduct?.description ||
-                  "Inclui agenda inteligente, CRM de clientes, financeiro consolidado e checkout com intent segura."}
+                  "Inclui agenda inteligente, CRM de clientes, financeiro consolidado e pagamento interno da licenca."}
               </p>
               <ul className="mt-4 space-y-2 text-sm text-slate-700">
                 <li>- Usuarios ilimitados da equipe</li>
@@ -294,40 +289,99 @@ export default function SalePage() {
                 <li>- Suporte prioritario</li>
               </ul>
             </div>
+            <Card className="border-dashed border-slate-300">
+              <CardContent className="p-6">
+                <p className="text-sm text-slate-600">
+                  Selecione o plano e crie sua conta para continuar no pagamento interno.
+                </p>
+                <Button
+                  className="mt-4 w-full bg-emerald-600 hover:bg-emerald-700"
+                  onClick={() => {
+                    const section = document.getElementById("account-signup");
+                    section?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                >
+                  Continuar para cadastro
+                </Button>
+              </CardContent>
+            </Card>
+          </CardContent>
+        </Card>
 
-            {intent && formattedTotalPrice ? (
-              <CheckoutIntentPanel
-                intent={intent}
-                formattedPrice={formattedTotalPrice}
-                isConfirming={isConfirming}
-                expired={isExpired || state === "expired"}
-                error={error}
-                onRefreshIntent={revalidateIntent}
-                onConfirm={handleConfirmCheckout}
-              />
-            ) : (
-              <Card className="border-dashed border-slate-300">
-                <CardContent className="p-6">
-                  <p className="text-sm text-slate-600">
-                    Clique no CTA para criar sua intent de checkout e ver preco/validade
-                    vindos do backend.
-                  </p>
-                  <Button
-                    className="mt-4 w-full bg-emerald-600 hover:bg-emerald-700"
-                    onClick={handleStartCheckout}
-                    disabled={state === "loading"}
-                  >
-                    {state === "loading" ? "Carregando oferta..." : "Gerar checkout seguro"}
-                  </Button>
-                  {state === "error" && error ? (
-                    <Alert variant="destructive" className="mt-4">
-                      <AlertTitle>Erro ao gerar intent</AlertTitle>
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  ) : null}
-                </CardContent>
-              </Card>
-            )}
+        <Card id="account-signup" className="mt-6 border-emerald-200 shadow-sm">
+          <CardContent className="p-6 space-y-4">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">
+                Crie sua conta para seguir ao pagamento
+              </p>
+              <p className="text-sm text-slate-600">
+                Depois do cadastro, voce sera levado direto para pagar a licenca do plano selecionado.
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="sale-account-name">Nome completo</Label>
+                <Input
+                  id="sale-account-name"
+                  value={accountName}
+                  onChange={(event) => setAccountName(event.target.value)}
+                  placeholder="Seu nome"
+                  disabled={isCreatingAccount}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sale-account-email">E-mail</Label>
+                <Input
+                  id="sale-account-email"
+                  type="email"
+                  value={accountEmail}
+                  onChange={(event) => setAccountEmail(event.target.value)}
+                  placeholder="seu@email.com"
+                  disabled={isCreatingAccount}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sale-account-password">Senha</Label>
+                <Input
+                  id="sale-account-password"
+                  type="password"
+                  value={accountPassword}
+                  onChange={(event) => setAccountPassword(event.target.value)}
+                  placeholder="Minimo 6 caracteres"
+                  disabled={isCreatingAccount}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sale-account-phone">Telefone / WhatsApp</Label>
+                <Input
+                  id="sale-account-phone"
+                  value={accountPhone}
+                  onChange={(event) => setAccountPhone(event.target.value)}
+                  placeholder="(11) 99999-0000"
+                  disabled={isCreatingAccount}
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="sale-account-salon">Nome do salao</Label>
+                <Input
+                  id="sale-account-salon"
+                  value={accountSalonName}
+                  onChange={(event) => setAccountSalonName(event.target.value)}
+                  placeholder="Ex.: Bella Studio"
+                  disabled={isCreatingAccount}
+                />
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              className="w-full bg-emerald-600 hover:bg-emerald-700"
+              onClick={handleCreateAccountAndContinue}
+              disabled={isCreatingAccount || !selectedProductId}
+            >
+              {isCreatingAccount ? "Criando conta..." : "Criar conta e ir para pagamento"}
+            </Button>
           </CardContent>
         </Card>
       </SalesSection>
@@ -338,21 +392,18 @@ export default function SalePage() {
             Pronto para vender mais com menos friccao?
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-200 md:text-base">
-            Ative agora e confirme com checkout validado no servidor para garantir
-            consistencia de preco e confianca no fechamento.
+            Ative agora, conclua seu cadastro e finalize o pagamento sem sair do sistema.
           </p>
           <Button
             size="lg"
             className="mt-6 bg-emerald-500 text-slate-900 hover:bg-emerald-400"
-            onClick={handleStartCheckout}
+            onClick={() => {
+              const section = document.getElementById("account-signup");
+              section?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
           >
-            Ativar plano com checkout seguro
+            Ativar plano agora
           </Button>
-          {lastActionAt ? (
-            <p className="mt-3 text-xs text-slate-300">
-              Ultima tentativa: {new Date(lastActionAt).toLocaleTimeString("pt-BR")}
-            </p>
-          ) : null}
         </div>
       </SalesSection>
     </div>

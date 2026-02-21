@@ -3,6 +3,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CircleCheckBig, Clock3, Eye, Loader2, RefreshCw } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -166,8 +167,19 @@ function resolveLicenseState(result: CreateBillingSubscriptionResponse) {
   };
 }
 
+function isSubscriptionActive(result: CreateBillingSubscriptionResponse) {
+  const normalizedStatus = String(result.status).toUpperCase();
+  const normalizedPayment = String(result.paymentStatus || "").toUpperCase();
+  return (
+    normalizedStatus === "ACTIVE" ||
+    normalizedPayment === "CONFIRMED" ||
+    normalizedPayment === "RECEIVED"
+  );
+}
+
 export default function LicensePage() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const {
     products,
     isLoading: isLoadingPlans,
@@ -183,6 +195,11 @@ export default function LicensePage() {
   const [actionMode, setActionMode] = useState<ActionMode>("IDLE");
   const [paymentHistory, setPaymentHistory] = useState<BillingPaymentItem[]>([]);
   const [selectedPayment, setSelectedPayment] = useState<BillingPaymentItem | null>(null);
+  const [hasAppliedQueryDefaults, setHasAppliedQueryDefaults] = useState(false);
+  const hasActiveSubscription = useMemo(
+    () => (result ? isSubscriptionActive(result) : false),
+    [result]
+  );
 
   const plans = useMemo<BillingPlanOption[]>(
     () =>
@@ -233,13 +250,41 @@ export default function LicensePage() {
     form.setValue("planCode", plans[0].code, { shouldValidate: true });
   }, [form, plans]);
 
+  useEffect(() => {
+    if (hasAppliedQueryDefaults || !plans.length) return;
+
+    const planFromQuery = searchParams.get("plan");
+    const modeFromQuery = (searchParams.get("mode") || "").toUpperCase();
+
+    if (planFromQuery && plans.some((plan) => plan.code === planFromQuery)) {
+      form.setValue("planCode", planFromQuery, { shouldValidate: true });
+    }
+
+    if (modeFromQuery === "PAY") {
+      setActionMode("PAY");
+    }
+
+    if (modeFromQuery === "CHANGE" && !hasActiveSubscription) {
+      setActionMode("CHANGE");
+    }
+
+    setHasAppliedQueryDefaults(true);
+  }, [form, hasActiveSubscription, hasAppliedQueryDefaults, plans, searchParams]);
+
   const loadCurrentSubscription = useCallback(async () => {
     try {
       setFetchError(null);
       const current = await getCurrentBillingSubscription();
       setResult(current);
-      if (current.planCode) {
-        form.setValue("planCode", current.planCode);
+      const currentProductCode =
+        current.productId && plans.some((plan) => plan.code === current.productId)
+          ? current.productId
+          : current.planCode && plans.some((plan) => plan.code === current.planCode)
+            ? current.planCode
+            : null;
+
+      if (currentProductCode) {
+        form.setValue("planCode", currentProductCode);
       }
       if (current.billingType) {
         form.setValue("billingType", current.billingType);
@@ -251,7 +296,7 @@ export default function LicensePage() {
       }
       setFetchError(getBillingErrorMessage(error));
     }
-  }, [form]);
+  }, [form, plans]);
 
   useEffect(() => {
     let mounted = true;
@@ -273,8 +318,11 @@ export default function LicensePage() {
     [plans, selectedPlanCode]
   );
   const managedPlan = useMemo(
-    () => plans.find((plan) => plan.code === result?.planCode) ?? null,
-    [plans, result?.planCode]
+    () =>
+      plans.find(
+        (plan) => plan.code === (result?.productId || result?.planCode || "")
+      ) ?? null,
+    [plans, result?.planCode, result?.productId]
   );
   const hasOverdue = useMemo(() => (result ? isOverdue(result) : false), [result]);
   const licenseState = useMemo(
@@ -306,12 +354,17 @@ export default function LicensePage() {
 
   const openPayNow = () => {
     if (!result) return;
-    if (result.planCode) form.setValue("planCode", result.planCode);
+    const currentProductCode = result.productId || result.planCode;
+    if (currentProductCode) form.setValue("planCode", currentProductCode);
     if (result.billingType) form.setValue("billingType", result.billingType);
     setActionMode("PAY");
   };
 
   const openChangePlan = () => {
+    if (hasActiveSubscription) {
+      toast.info("Plano ativo nao pode ser alterado no momento.");
+      return;
+    }
     setActionMode("CHANGE");
   };
 
@@ -340,9 +393,14 @@ export default function LicensePage() {
   };
 
   const onSubmit = form.handleSubmit(async (values) => {
+    if (actionMode === "CHANGE" && hasActiveSubscription) {
+      toast.error("Nao e possivel trocar de plano com assinatura ativa.");
+      return;
+    }
+
     const targetPlanCode =
       actionMode === "PAY"
-        ? result?.planCode || managedPlan?.code || selectedPlan?.code
+        ? result?.productId || result?.planCode || managedPlan?.code || selectedPlan?.code
         : selectedPlan?.code;
 
     if (!targetPlanCode) {
@@ -353,6 +411,7 @@ export default function LicensePage() {
     try {
       setIsSubmitting(true);
       const payload = {
+        productId: targetPlanCode,
         planCode: targetPlanCode,
         billingType: values.billingType,
         cpfCnpj: toDigits(values.cpfCnpj),
@@ -474,7 +533,12 @@ export default function LicensePage() {
               >
                 Pagar agora
               </Button>
-              <Button type="button" variant="outline" onClick={openChangePlan}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={openChangePlan}
+                disabled={hasActiveSubscription}
+              >
                 Alterar plano
               </Button>
               <Button
