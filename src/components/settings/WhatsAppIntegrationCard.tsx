@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, CheckCircle2, Loader2, PlugZap } from "lucide-react";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  getWhatsAppConfig,
   saveWhatsAppConfig,
   testWhatsAppConnection,
 } from "@/services/whatsappService";
@@ -39,16 +40,42 @@ export function WhatsAppIntegrationCard() {
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
 
-  const isConnected = Boolean(configStatus?.whatsappEnabled);
+  const isConnected = Boolean(configStatus?.whatsappEnabled || configStatus?.enabled);
+  const isTokenConfigured = Boolean(configStatus?.accessTokenConfigured);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadConfig = async () => {
+      try {
+        const config = await getWhatsAppConfig();
+        if (!mounted) return;
+
+        setConfigStatus(config);
+        setActivateIntegration(Boolean(config.whatsappEnabled || config.enabled));
+        setPhoneNumberId(config.phoneNumberId || "");
+        setBusinessAccountId(config.businessAccountId || "");
+        setWebhookVerifyToken(config.webhookVerifyToken || "");
+      } catch {
+        if (!mounted) return;
+        setConfigStatus(null);
+      }
+    };
+
+    loadConfig();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleSave = async () => {
-    if (!activateIntegration) {
-      toast.error("Ative a integração para salvar a configuração");
+    if (activateIntegration && !phoneNumberId.trim()) {
+      toast.error("Phone Number ID e obrigatorio");
       return;
     }
 
-    if (!accessToken.trim() || !phoneNumberId.trim()) {
-      toast.error("Access Token e Phone Number ID são obrigatórios");
+    if (activateIntegration && !isTokenConfigured && !accessToken.trim()) {
+      toast.error("Access Token e obrigatorio na primeira configuracao");
       return;
     }
 
@@ -57,20 +84,27 @@ export function WhatsAppIntegrationCard() {
       setTestResult(EMPTY_RESULT);
 
       const response = await saveWhatsAppConfig({
-        accessToken: accessToken.trim(),
+        whatsappEnabled: activateIntegration,
+        enabled: activateIntegration,
+        accessToken: accessToken.trim() || undefined,
         phoneNumberId: phoneNumberId.trim(),
         businessAccountId: businessAccountId.trim() || undefined,
         webhookVerifyToken: webhookVerifyToken.trim() || undefined,
       });
 
       setConfigStatus(response);
+      setActivateIntegration(Boolean(response.whatsappEnabled || response.enabled));
       setAccessToken("");
-      toast.success("Token configurado com sucesso");
+      toast.success(
+        activateIntegration
+          ? "Configuracao do WhatsApp salva com sucesso"
+          : "Integracao do WhatsApp desativada com sucesso"
+      );
 
       await queryClient.invalidateQueries({ queryKey: ["tenant"] });
       await queryClient.invalidateQueries({ queryKey: ["whatsapp-config"] });
     } catch {
-      toast.error("Erro ao salvar configuração do WhatsApp");
+      toast.error("Erro ao salvar configuracao do WhatsApp");
     } finally {
       setIsSaving(false);
     }
@@ -78,7 +112,7 @@ export function WhatsAppIntegrationCard() {
 
   const handleTest = async () => {
     if (!activateIntegration) {
-      toast.error("Ative a integração para testar a conexão");
+      toast.error("Ative a integracao para testar a conexao");
       return;
     }
 
@@ -86,10 +120,10 @@ export function WhatsAppIntegrationCard() {
       setIsTesting(true);
       const result = await testWhatsAppConnection();
       setTestResult(result.message);
-      toast.success(result.success ? "Conexão validada" : "Conexão não validada");
+      toast.success(result.success ? "Conexao validada" : "Conexao nao validada");
     } catch {
-      setTestResult("Não foi possível testar a conexão no momento.");
-      toast.error("Erro ao testar conexão com WhatsApp");
+      setTestResult("Nao foi possivel testar a conexao no momento.");
+      toast.error("Erro ao testar conexao com WhatsApp");
     } finally {
       setIsTesting(false);
     }
@@ -102,10 +136,10 @@ export function WhatsAppIntegrationCard() {
           <div>
             <CardTitle className="text-xl flex items-center gap-2">
               <PlugZap className="h-5 w-5 text-violet-600" />
-              Integração WhatsApp
+              Integracao WhatsApp
             </CardTitle>
             <CardDescription className="mt-1">
-              Configure sua conexão com WhatsApp Cloud API por tenant.
+              Configure sua conexao com WhatsApp Cloud API por tenant.
             </CardDescription>
           </div>
           {isConnected ? (
@@ -118,9 +152,9 @@ export function WhatsAppIntegrationCard() {
         {!isConnected && (
           <Alert className="border-yellow-200 bg-yellow-50 text-yellow-900">
             <AlertCircle className="h-4 w-4 !text-yellow-700" />
-            <AlertTitle>Integração não ativa</AlertTitle>
+            <AlertTitle>Integracao nao ativa</AlertTitle>
             <AlertDescription>
-              Salve uma configuração válida para habilitar o envio via WhatsApp.
+              Salve uma configuracao valida para habilitar o envio via WhatsApp.
             </AlertDescription>
           </Alert>
         )}
@@ -129,15 +163,22 @@ export function WhatsAppIntegrationCard() {
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between rounded-lg border p-3">
           <div>
-            <p className="text-sm font-medium">Ativar integração</p>
+            <p className="text-sm font-medium">Ativar integracao</p>
             <p className="text-xs text-muted-foreground">
-              Habilita ações de salvar e testar conexão.
+              Habilita acoes de salvar e testar conexao.
             </p>
           </div>
           <Switch
             checked={activateIntegration}
             onCheckedChange={setActivateIntegration}
           />
+        </div>
+
+        <div className="rounded-lg border p-3">
+          <p className="text-sm font-medium">Status do token</p>
+          <p className="text-xs text-muted-foreground">
+            Token configurado no backend: {isTokenConfigured ? "Sim" : "Nao"}.
+          </p>
         </div>
 
         <div className="space-y-2">
@@ -151,7 +192,7 @@ export function WhatsAppIntegrationCard() {
             rows={4}
           />
           <p className="text-xs text-muted-foreground">
-            Por segurança, o token não é exibido após salvar.
+            Por seguranca, o token nao e exibido apos salvar.
           </p>
         </div>
 
@@ -197,7 +238,7 @@ export function WhatsAppIntegrationCard() {
             className="sm:w-auto"
           >
             {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-            Salvar Configuração
+            Salvar Configuracao
           </Button>
           <Button
             type="button"
@@ -207,7 +248,7 @@ export function WhatsAppIntegrationCard() {
             className="sm:w-auto"
           >
             {isTesting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-            Testar Conexão
+            Testar Conexao
           </Button>
         </div>
 

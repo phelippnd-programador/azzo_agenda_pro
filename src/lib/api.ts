@@ -625,6 +625,8 @@ export const usersApi = {
 };
 
 export const tenantApi = {
+  getWhatsAppConfig: () =>
+    request<WhatsAppConfigResponse>("/tenant/whatsapp"),
   saveWhatsAppConfig: (data: WhatsAppConfigRequest) =>
     request<WhatsAppConfigResponse>("/tenant/whatsapp", {
       method: "PUT",

@@ -11,6 +11,10 @@ export async function saveWhatsAppConfig(
   return tenantApi.saveWhatsAppConfig(data);
 }
 
+export async function getWhatsAppConfig(): Promise<WhatsAppConfigResponse> {
+  return tenantApi.getWhatsAppConfig();
+}
+
 export async function testWhatsAppConnection(): Promise<WhatsAppTestResponse> {
   return tenantApi.testWhatsAppConnection();
 }
