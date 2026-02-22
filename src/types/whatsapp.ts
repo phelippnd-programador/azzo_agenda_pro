@@ -5,6 +5,9 @@ export interface WhatsAppConfigRequest {
   phoneNumberId: string;
   businessAccountId?: string;
   webhookVerifyToken?: string;
+  canSchedule?: boolean;
+  canCancel?: boolean;
+  canReschedule?: boolean;
 }
 
 export interface WhatsAppConfigResponse {
@@ -14,6 +17,9 @@ export interface WhatsAppConfigResponse {
   phoneNumberId?: string;
   businessAccountId?: string;
   webhookVerifyToken?: string;
+  canSchedule?: boolean;
+  canCancel?: boolean;
+  canReschedule?: boolean;
 }
 
 export interface WhatsAppTestResponse {
