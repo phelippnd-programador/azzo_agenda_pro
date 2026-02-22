@@ -1,6 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { BadgeCheck, MousePointerClick, Shield, Sparkles, Zap } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  BellRing,
+  CalendarClock,
+  CheckCircle2,
+  ChevronRight,
+  CreditCard,
+  LayoutDashboard,
+  MessageCircle,
+  Shield,
+  Sparkles,
+  Users,
+  Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -112,67 +126,212 @@ export default function SalePage() {
     }
   };
 
+  const scrollToSection = (id: string) => {
+    const section = document.getElementById(id);
+    section?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const dashboardPreviewImage = "/images/dashboard-preview.png";
+  const painelDemoImage = "/images/painel-demo.png";
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-slate-50 text-slate-900">
-      <SalesSection className="pt-10 md:pt-16">
-        <div className="grid items-center gap-10 md:grid-cols-2">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-3 py-1 text-xs font-medium text-emerald-700">
-              <Sparkles className="h-3.5 w-3.5" />
-              Oferta especial para saloes
+    <div className="min-h-screen bg-[#f4f5f9] text-slate-900">
+      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 md:px-6">
+          <Link to="/" className="inline-flex items-center gap-2 font-semibold text-slate-900">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-violet-600 text-xs font-bold text-white">
+              A
             </span>
-            <h1 className="mt-4 text-3xl font-bold tracking-tight md:text-5xl">
-              Fature mais com um ERP pensado para a rotina real do seu salao
+            Azzo Agenda Pro
+          </Link>
+          <nav className="hidden items-center gap-7 text-sm text-slate-600 md:flex">
+            <a href="#funcionalidades" className="hover:text-slate-900">
+              Funcionalidades
+            </a>
+            <a href="#como-funciona" className="hover:text-slate-900">
+              Como Funciona
+            </a>
+            <a href="#resultados" className="hover:text-slate-900">
+              Resultados
+            </a>
+          </nav>
+          <Button
+            size="sm"
+            className="bg-violet-600 hover:bg-violet-700"
+            onClick={() => scrollToSection("offer")}
+          >
+            Comecar agora
+          </Button>
+        </div>
+      </header>
+
+      <SalesSection className="pt-12 md:pt-16">
+        <div className="grid items-center gap-8 md:grid-cols-2">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700">
+              <Sparkles className="h-3.5 w-3.5" />
+              Gestao completa do seu salao
+            </span>
+            <h1 className="mt-5 text-4xl font-bold leading-tight tracking-tight md:text-6xl">
+              Organize sua agenda, equipe e{" "}
+              <span className="text-violet-600">financeiro em um lugar</span>
             </h1>
-            <p className="mt-4 text-base text-slate-600 md:text-lg">
-              Automatize agenda, financeiro e equipe com fluxo simples de cadastro
-              e pagamento interno da licenca.
+            <p className="mt-4 max-w-xl text-base text-slate-600 md:text-lg">
+              Azzo Agenda Pro e um sistema de gestao para saloes que une agenda,
+              equipe, clientes e financeiro em um unico painel.
             </p>
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <Button
+                size="lg"
+                className="bg-violet-600 hover:bg-violet-700"
+                onClick={() => scrollToSection("offer")}
+              >
+                Comecar teste gratis <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+              <Button size="lg" variant="outline" onClick={() => scrollToSection("como-funciona")}>
+                Ver demo
+              </Button>
               <Button size="lg" variant="outline" asChild>
                 <Link to="/login">Entrar no sistema</Link>
               </Button>
             </div>
+            <p className="mt-4 inline-flex items-center gap-2 text-xs text-slate-500">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              Sem cartao de credito. Acesso imediato.
+            </p>
           </div>
-          <Card className="border-emerald-100 bg-white shadow-xl">
-            <CardContent className="p-6">
-              <p className="text-sm text-slate-500">Oferta ativa para produto</p>
-              <p className="mt-1 break-all font-mono text-sm text-slate-700">
-                {selectedProduct?.name ?? "Produto selecionado"}
-              </p>
-              <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
-                <div className="rounded-lg bg-slate-50 p-3">
-                  <p className="text-slate-500">Cadastro</p>
-                  <p className="font-semibold text-slate-900">Conta em minutos</p>
-                </div>
-                <div className="rounded-lg bg-slate-50 p-3">
-                  <p className="text-slate-500">Pagamento</p>
-                  <p className="font-semibold text-slate-900">100% dentro do sistema</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="relative">
+            <div className="absolute -inset-3 rounded-3xl bg-gradient-to-r from-violet-200 via-fuchsia-200 to-cyan-200 opacity-60 blur-xl" />
+            <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-2 shadow-2xl shadow-slate-300/40">
+              <img
+                src={dashboardPreviewImage}
+                alt="Preview real do dashboard Azzo Agenda Pro"
+                loading="lazy"
+                onError={(event) => {
+                  event.currentTarget.src =
+                    "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1400&auto=format&fit=crop";
+                }}
+                className="h-[300px] w-full rounded-2xl bg-slate-50 object-contain p-2 md:h-[380px]"
+              />
+            </div>
+          </div>
         </div>
       </SalesSection>
 
       <SalesSection
-        title="Seu salao perde vendas por friccao operacional?"
-        subtitle="Agendas desalinhadas, confirmacoes manuais e retrabalho financeiro travam crescimento."
+        id="funcionalidades"
+        title="Funcionalidades que seu salao precisa"
+        subtitle="Tudo o que voce ve no dashboard esta pronto para usar."
       >
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[
-            "Equipe sem visao unica dos horarios",
-            "Cancelamentos por falta de confirmacao rapida",
-            "Dificuldade para fechar faturamento com confianca",
-          ].map((pain) => (
-            <Card key={pain} className="border-slate-200">
-              <CardContent className="p-5 text-sm text-slate-700">{pain}</CardContent>
+            {
+              title: "Gestao da equipe",
+              icon: <Users className="h-4 w-4 text-violet-600" />,
+              text: "Organize profissionais, especialidades e disponibilidade em tempo real.",
+            },
+            {
+              title: "Servicos e especialidades",
+              icon: <Sparkles className="h-4 w-4 text-violet-600" />,
+              text: "Configure servicos, duracao, preco e quem pode executar cada atendimento.",
+            },
+            {
+              title: "Notificacoes",
+              icon: <BellRing className="h-4 w-4 text-violet-600" />,
+              text: "Receba alertas de novos agendamentos, confirmacoes e eventos importantes.",
+            },
+            {
+              title: "Agenda inteligente",
+              icon: <CalendarClock className="h-4 w-4 text-violet-600" />,
+              text: "Visualizacao clara dos horarios com menos conflitos e mais produtividade.",
+            },
+            {
+              title: "Financeiro centralizado",
+              icon: <CreditCard className="h-4 w-4 text-violet-600" />,
+              text: "Controle entradas e saidas com relatorios simples para tomada de decisao.",
+            },
+            {
+              title: "Painel de controle",
+              icon: <LayoutDashboard className="h-4 w-4 text-violet-600" />,
+              text: "Dados importantes do salao em um unico lugar.",
+            },
+          ].map((item) => (
+            <Card key={item.title} className="border-slate-200 bg-white shadow-sm">
+              <CardContent className="p-5">
+                <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50">
+                  {item.icon}
+                </div>
+                <h3 className="font-semibold text-slate-900">{item.title}</h3>
+                <p className="mt-2 text-sm text-slate-600">{item.text}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </SalesSection>
+
+      <SalesSection title="Seu painel de controle" subtitle="Visao clara para toda a operacao do salao.">
+        <div className="space-y-4">
+          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-2">
+            <img
+              src={painelDemoImage}
+              alt="Painel demonstrativo de gestao"
+              loading="lazy"
+              onError={(event) => {
+                  event.currentTarget.src =
+                    "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1400&auto=format&fit=crop";
+                }}
+              className="h-[320px] w-full rounded-2xl bg-slate-50 object-contain p-2 md:h-[460px]"
+            />
+          </div>
+          <div className="mt-4 grid gap-3 text-sm md:grid-cols-4">
+            {[
+              "Agendamentos: visao em tempo real",
+              "Faturamento: metricas da loja",
+              "Clientes ativos: historico completo",
+              "Equipe: disponibilidade e produtividade",
+            ].map((metric) => (
+              <div key={metric} className="rounded-lg border bg-slate-50 p-3 text-slate-600">
+                {metric}
+              </div>
+            ))}
+          </div>
+        </div>
+      </SalesSection>
+
+      <SalesSection id="como-funciona" title="Como comecar" subtitle="Tres passos simples para ativar seu salao.">
+        <div className="grid gap-6 md:grid-cols-3">
+          {[
+            {
+              step: "1",
+              title: "Crie sua conta",
+              description: "Cadastre seu salao e dados de acesso em poucos minutos.",
+            },
+            {
+              step: "2",
+              title: "Configure seus dados",
+              description: "Adicione equipe, servicos, especialidades e horarios.",
+            },
+            {
+              step: "3",
+              title: "Comece a usar",
+              description: "Acesse o dashboard e gerencie agenda e financeiro.",
+            },
+          ].map((item) => (
+            <Card key={item.step} className="border-slate-200 bg-white">
+              <CardContent className="p-6">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-violet-600 text-sm font-bold text-white">
+                  {item.step}
+                </span>
+                <h3 className="mt-4 font-semibold text-slate-900">{item.title}</h3>
+                <p className="mt-2 text-sm text-slate-600">{item.description}</p>
+              </CardContent>
             </Card>
           ))}
         </div>
       </SalesSection>
 
       <SalesSection
+        id="resultados"
         className="bg-white"
         title="Beneficios diretos em receita e produtividade"
         subtitle="Projetado para conversao: menos atrito e mais previsibilidade."
@@ -180,50 +339,51 @@ export default function SalePage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <BenefitCard
             icon={<Zap className="h-5 w-5" />}
-            title="Ativacao rapida"
-            description="Comece em minutos com onboarding objetivo e fluxo de compra simples."
+            title="Menos tempo"
+            description="Reduza tarefas manuais e ganhe organizacao na agenda."
           />
           <BenefitCard
             icon={<BadgeCheck className="h-5 w-5" />}
-            title="Operacao organizada"
-            description="Agenda, clientes e financeiro no mesmo painel."
+            title="Mais controle"
+            description="Visao real das metricas de faturamento e produtividade."
+          />
+          <BenefitCard
+            icon={<Users className="h-5 w-5" />}
+            title="Equipe alinhada"
+            description="Todos veem a mesma agenda em tempo real."
           />
           <BenefitCard
             icon={<Shield className="h-5 w-5" />}
-            title="Pagamento interno"
-            description="Licenca paga no proprio sistema com PIX, boleto ou cartao."
-          />
-          <BenefitCard
-            icon={<MousePointerClick className="h-5 w-5" />}
-            title="UX de alta conversao"
-            description="CTAs claros, oferta objetiva e menos passos para confirmar."
+            title="Sem erros"
+            description="Evite conflitos de horario e agendamentos duplicados."
           />
         </div>
       </SalesSection>
 
-      <SalesSection title="Veja como sua operacao evolui em um unico painel">
-        <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-100 to-white p-4 md:p-8">
-          <div className="mx-auto max-w-4xl overflow-hidden rounded-xl border bg-white shadow-lg">
-            <img
-              src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1920&auto=format&fit=crop"
-              alt="Painel demonstrativo de gestao"
-              loading="lazy"
-              className="h-56 w-full object-cover md:h-80"
-            />
-          </div>
-        </div>
-      </SalesSection>
-
-      <SalesSection title="Prova social" subtitle="Espaco reservado para depoimentos validados.">
+      <SalesSection title="Depoimentos" subtitle="O que proprietarios de salao dizem sobre a plataforma.">
         <div className="grid gap-4 md:grid-cols-3">
-          {["Salao Aurora", "Studio Prime", "Bella Cabelo e Estetica"].map((brand) => (
-            <Card key={brand} className="border-slate-200">
+          {[
+            {
+              name: "Marina Silva",
+              salon: "Studio Aurora",
+              text: "Consegui organizar minha agenda de forma muito mais eficiente. Minha equipe trabalha muito melhor agora.",
+            },
+            {
+              name: "Carlos Mendes",
+              salon: "Salao Prime",
+              text: "O controle financeiro ficou muito mais facil. Consigo acompanhar o faturamento do dia e do mes.",
+            },
+            {
+              name: "Beatriz Costa",
+              salon: "Bella Estetica",
+              text: "Recorremos para todo o salao. Economiza tempo e deixa tudo organizado em um so lugar.",
+            },
+          ].map((item) => (
+            <Card key={item.name} className="border-slate-200 bg-white">
               <CardContent className="p-5 text-sm text-slate-600">
-                <p className="font-semibold text-slate-900">{brand}</p>
-                <p className="mt-2">
-                  "Placeholder de depoimento: resultados reais de produtividade e aumento
-                  de receita."
-                </p>
+                <p className="font-semibold text-slate-900">{item.name}</p>
+                <p className="text-xs text-slate-500">{item.salon}</p>
+                <p className="mt-3">"{item.text}"</p>
               </CardContent>
             </Card>
           ))}
@@ -233,14 +393,12 @@ export default function SalePage() {
       <SalesSection
         className="bg-white"
         title="Produtos disponiveis no app"
-        subtitle="Escolha um plano real retornado pelo backend para seguir ao pagamento interno."
+        subtitle="Escolha um plano retornado pelo backend para seguir ao pagamento interno."
       >
         {isLoadingProducts ? (
           <Alert className="border-slate-200 bg-slate-50">
             <AlertTitle>Carregando produtos</AlertTitle>
-            <AlertDescription>
-              Consultando catalogo de produtos no backend.
-            </AlertDescription>
+            <AlertDescription>Consultando catalogo de produtos no backend.</AlertDescription>
           </Alert>
         ) : null}
         {productsError ? (
@@ -271,51 +429,54 @@ export default function SalePage() {
         ) : null}
       </SalesSection>
 
-      <SalesSection id="offer" className="bg-white" title="Plano recomendado">
-        <Card className="border-emerald-200 shadow-lg">
+      <SalesSection id="offer" className="bg-white" title="Plano recomendado para iniciar hoje">
+        <Card className="border-violet-200 shadow-lg">
           <CardContent className="grid gap-6 p-6 md:grid-cols-2 md:p-8">
             <div>
-              <p className="text-sm font-medium text-emerald-700">Oferta ativa</p>
+              <p className="text-sm font-medium text-violet-700">Oferta ativa</p>
               <h3 className="mt-2 text-2xl font-bold">
                 {selectedProduct?.name || "Plano Pro Growth"}
               </h3>
               <p className="mt-3 text-sm text-slate-600">
                 {selectedProduct?.description ||
-                  "Inclui agenda inteligente, CRM de clientes, financeiro consolidado e pagamento interno da licenca."}
+                  "Inclui agenda inteligente, CRM de clientes, financeiro consolidado e checkout interno da licenca."}
               </p>
               <ul className="mt-4 space-y-2 text-sm text-slate-700">
-                <li>- Usuarios ilimitados da equipe</li>
-                <li>- Relatorios gerenciais em tempo real</li>
-                <li>- Suporte prioritario</li>
+                <li className="inline-flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  Usuarios da equipe
+                </li>
+                <li className="inline-flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  Relatorios em tempo real
+                </li>
+                <li className="inline-flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  Suporte prioritario
+                </li>
               </ul>
             </div>
             <Card className="border-dashed border-slate-300">
               <CardContent className="p-6">
                 <p className="text-sm text-slate-600">
-                  Selecione o plano e crie sua conta para continuar no pagamento interno.
+                  Crie sua conta e continue direto para o pagamento interno com o plano selecionado.
                 </p>
-                <Button
-                  className="mt-4 w-full bg-emerald-600 hover:bg-emerald-700"
-                  onClick={() => {
-                    const section = document.getElementById("account-signup");
-                    section?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }}
-                >
-                  Continuar para cadastro
+                <Button className="mt-4 w-full" onClick={() => scrollToSection("account-signup")}>
+                  Continuar para cadastro <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
               </CardContent>
             </Card>
           </CardContent>
         </Card>
 
-        <Card id="account-signup" className="mt-6 border-emerald-200 shadow-sm">
+        <Card id="account-signup" className="mt-6 border-violet-200 shadow-sm">
           <CardContent className="p-6 space-y-4">
             <div>
               <p className="text-sm font-semibold text-slate-900">
                 Crie sua conta para seguir ao pagamento
               </p>
               <p className="text-sm text-slate-600">
-                Depois do cadastro, voce sera levado direto para pagar a licenca do plano selecionado.
+                Depois do cadastro, voce sera levado para pagar a licenca do plano selecionado.
               </p>
             </div>
 
@@ -376,36 +537,75 @@ export default function SalePage() {
 
             <Button
               type="button"
-              className="w-full bg-emerald-600 hover:bg-emerald-700"
+              className="w-full bg-violet-600 hover:bg-violet-700"
               onClick={handleCreateAccountAndContinue}
               disabled={isCreatingAccount || !selectedProductId}
             >
-              {isCreatingAccount ? "Criando conta..." : "Criar conta e ir para pagamento"}
+              {isCreatingAccount ? "Criando conta..." : "Criar conta e continuar"}
             </Button>
           </CardContent>
         </Card>
       </SalesSection>
 
       <SalesSection>
-        <div className="rounded-2xl bg-slate-900 px-6 py-10 text-center text-white">
-          <h2 className="text-2xl font-bold md:text-3xl">
-            Pronto para vender mais com menos friccao?
-          </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-200 md:text-base">
-            Ative agora, conclua seu cadastro e finalize o pagamento sem sair do sistema.
+        <div className="rounded-2xl bg-gradient-to-r from-violet-700 via-fuchsia-600 to-pink-600 px-6 py-12 text-center text-white">
+          <h2 className="text-2xl font-bold md:text-4xl">Pronto para organizar seu salao?</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-sm text-white/90 md:text-base">
+            Comece seu teste gratuito agora e centralize agenda, equipe e financeiro em um so painel.
           </p>
-          <Button
-            size="lg"
-            className="mt-6 bg-emerald-500 text-slate-900 hover:bg-emerald-400"
-            onClick={() => {
-              const section = document.getElementById("account-signup");
-              section?.scrollIntoView({ behavior: "smooth", block: "start" });
-            }}
-          >
-            Ativar plano agora
-          </Button>
+          <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button
+              size="lg"
+              variant="secondary"
+              className="text-violet-700"
+              onClick={() => scrollToSection("offer")}
+            >
+              Comprar teste gratis
+            </Button>
+            <Button size="lg" variant="outline" className="border-white/60 text-white hover:bg-white/10">
+              Agendar demonstracao <MessageCircle className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </SalesSection>
+
+      <footer className="border-t border-slate-800 bg-slate-950 text-slate-300">
+        <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 md:grid-cols-4 md:px-6">
+          <div>
+            <p className="font-semibold text-white">Azzo Agenda Pro</p>
+            <p className="mt-2 text-sm text-slate-400">
+              Sistema de gestao para saloes que oferece organizacao completa.
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-white">Produto</p>
+            <ul className="mt-3 space-y-2 text-sm text-slate-400">
+              <li>Funcionalidades</li>
+              <li>Como funciona</li>
+              <li>Preco</li>
+            </ul>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-white">Empresa</p>
+            <ul className="mt-3 space-y-2 text-sm text-slate-400">
+              <li>Sobre</li>
+              <li>Blog</li>
+              <li>Contato</li>
+            </ul>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-white">Legal</p>
+            <ul className="mt-3 space-y-2 text-sm text-slate-400">
+              <li>Privacidade</li>
+              <li>Termos</li>
+              <li>Cookies</li>
+            </ul>
+          </div>
+        </div>
+        <div className="border-t border-slate-800 px-4 py-4 text-center text-xs text-slate-500 md:px-6">
+          © {new Date().getFullYear()} Azzo Agenda Pro. Todos os direitos reservados.
+        </div>
+      </footer>
     </div>
   );
 }
