@@ -36,6 +36,7 @@ import InvoiceEmission from "./pages/InvoiceEmission";
 import ApuracaoMensal from "./pages/ApuracaoMensal";
 import WhatsAppIntegration from "./pages/WhatsAppIntegration";
 import Unauthorized from "./pages/Unauthorized";
+import { NotificationsProvider } from "@/providers/NotificationsProvider";
 
 const SalePage = lazy(() => import("./pages/SalePage"));
 const CheckoutSuccess = lazy(() => import("./pages/CheckoutSuccess"));
@@ -294,12 +295,14 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <MenuPermissionsProvider>
-        <TooltipProvider>
-          <Toaster />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </TooltipProvider>
+        <NotificationsProvider>
+          <TooltipProvider>
+            <Toaster />
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </TooltipProvider>
+        </NotificationsProvider>
       </MenuPermissionsProvider>
     </AuthProvider>
   </QueryClientProvider>

@@ -28,6 +28,9 @@ const EMPTY_RESULT = "";
 export function WhatsAppIntegrationCard() {
   const queryClient = useQueryClient();
   const [activateIntegration, setActivateIntegration] = useState(false);
+  const [canSchedule, setCanSchedule] = useState(true);
+  const [canCancel, setCanCancel] = useState(true);
+  const [canReschedule, setCanReschedule] = useState(true);
   const [accessToken, setAccessToken] = useState("");
   const [phoneNumberId, setPhoneNumberId] = useState("");
   const [businessAccountId, setBusinessAccountId] = useState("");
@@ -53,6 +56,9 @@ export function WhatsAppIntegrationCard() {
 
         setConfigStatus(config);
         setActivateIntegration(Boolean(config.whatsappEnabled || config.enabled));
+        setCanSchedule(config.canSchedule ?? true);
+        setCanCancel(config.canCancel ?? true);
+        setCanReschedule(config.canReschedule ?? true);
         setPhoneNumberId(config.phoneNumberId || "");
         setBusinessAccountId(config.businessAccountId || "");
         setWebhookVerifyToken(config.webhookVerifyToken || "");
@@ -90,10 +96,16 @@ export function WhatsAppIntegrationCard() {
         phoneNumberId: phoneNumberId.trim(),
         businessAccountId: businessAccountId.trim() || undefined,
         webhookVerifyToken: webhookVerifyToken.trim() || undefined,
+        canSchedule,
+        canCancel,
+        canReschedule,
       });
 
       setConfigStatus(response);
       setActivateIntegration(Boolean(response.whatsappEnabled || response.enabled));
+      setCanSchedule(response.canSchedule ?? canSchedule);
+      setCanCancel(response.canCancel ?? canCancel);
+      setCanReschedule(response.canReschedule ?? canReschedule);
       setAccessToken("");
       toast.success(
         activateIntegration
@@ -179,6 +191,52 @@ export function WhatsAppIntegrationCard() {
           <p className="text-xs text-muted-foreground">
             Token configurado no backend: {isTokenConfigured ? "Sim" : "Nao"}.
           </p>
+        </div>
+
+        <div className="rounded-lg border p-3 space-y-3">
+          <p className="text-sm font-medium">Permissoes de acao via WhatsApp</p>
+          <p className="text-xs text-muted-foreground">
+            Defina quais operacoes o cliente pode executar pelo WhatsApp.
+          </p>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium">Permitir agendamento</p>
+              <p className="text-xs text-muted-foreground">
+                Autoriza criar novos agendamentos.
+              </p>
+            </div>
+            <Switch
+              checked={canSchedule}
+              onCheckedChange={setCanSchedule}
+              disabled={!activateIntegration || isSaving}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium">Permitir cancelamento</p>
+              <p className="text-xs text-muted-foreground">
+                Autoriza cancelar agendamentos existentes.
+              </p>
+            </div>
+            <Switch
+              checked={canCancel}
+              onCheckedChange={setCanCancel}
+              disabled={!activateIntegration || isSaving}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium">Permitir remarcacao</p>
+              <p className="text-xs text-muted-foreground">
+                Autoriza remarcar agendamentos existentes.
+              </p>
+            </div>
+            <Switch
+              checked={canReschedule}
+              onCheckedChange={setCanReschedule}
+              disabled={!activateIntegration || isSaving}
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
