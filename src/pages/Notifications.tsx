@@ -1,11 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { Bell, Trash2 } from "lucide-react";
+import { Bell, CheckCheck, RefreshCw, Trash2 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { NotificationsFilters } from "@/components/notifications/NotificationsFilters";
+import { NotificationsList } from "@/components/notifications/NotificationsList";
 import { useNotifications } from "@/hooks/useNotifications";
+import type { NotificationsFilters as NotificationFilters } from "@/types/notification";
+import type { AppNotification } from "@/types/notification";
 
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -19,83 +24,157 @@ export default function Notifications() {
   const {
     notifications,
     unreadCount,
-    markAsRead,
-    markAllAsRead,
+    loading,
+    error,
+    lastFetchAt,
+    hasMore,
+    currentFilters,
+    fetchAll,
+    fetchNextPage,
     removeNotification,
-    clearNotifications,
+    clearAllNotifications,
+    markAllAsRead,
   } = useNotifications();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  const [filters, setFilters] = useState<NotificationFilters>({
+    failedOnly: false,
+    limit: 20,
+  });
+
   useEffect(() => {
     const selectedFromUrl = searchParams.get("id");
-    if (!selectedFromUrl) return;
-    setSelectedId(selectedFromUrl);
-    markAsRead(selectedFromUrl);
-  }, [markAsRead, searchParams]);
+    if (selectedFromUrl) {
+      setSelectedId(selectedFromUrl);
+    }
+  }, [searchParams]);
+
+  // Ao entrar na pagina de notificacao, busca no backend.
+  useEffect(() => {
+    void fetchAll(filters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const applyFilters = async () => {
+    await fetchAll(filters);
+  };
+
+  const loadMore = async () => {
+    await fetchNextPage();
+  };
+
+  const handleRefresh = async () => {
+    await fetchAll(currentFilters);
+  };
+
+  const handleMarkAllAsRead = () => {
+    markAllAsRead();
+  };
+
+  const handleClearAll = () => {
+    clearAllNotifications();
+    setSelectedId(null);
+  };
+
+  const handleRemoveSelected = async () => {
+    if (!selected) return;
+    const removed = await removeNotification(selected.id);
+    if (removed) {
+      setSelectedId(null);
+    }
+  };
+
+  useEffect(() => {
+    if (!notifications.length) {
+      setSelectedId(null);
+      return;
+    }
+
+    if (selectedId && notifications.some((item) => item.id === selectedId)) {
+      return;
+    }
+
+    setSelectedId(notifications[0].id);
+  }, [notifications, selectedId]);
 
   const selected = useMemo(
     () => notifications.find((item) => item.id === selectedId) ?? null,
     [notifications, selectedId]
   );
 
-  const handleSelect = (id: string) => {
-    setSelectedId(id);
-    markAsRead(id);
+  const getStatusBadgeClass = (status?: AppNotification["status"]) => {
+    if (status === "FAILED") return "bg-red-100 text-red-700";
+    if (status === "PENDING") return "bg-amber-100 text-amber-700";
+    return "bg-emerald-100 text-emerald-700";
   };
 
   return (
     <MainLayout
       title="Notificacoes"
-      subtitle="Visualize, marque como lida e remova suas notificacoes."
+      subtitle="Consulta ao backend ao entrar na pagina e a cada 20 minutos."
     >
       <div className="space-y-4">
         <Card>
-          <CardContent className="py-4 flex flex-wrap items-center justify-between gap-2">
+          <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-violet-600" />
               <span className="text-sm">
-                {unreadCount} nao lida{unreadCount === 1 ? "" : "s"}
+                {unreadCount} pendente/falha{unreadCount === 1 ? "" : "s"}
               </span>
+              {lastFetchAt ? (
+                <span className="text-xs text-gray-500">
+                  (Atualizado em {formatDate(lastFetchAt)})
+                </span>
+              ) : null}
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={markAllAsRead}>
-                Marcar todas como lidas
-              </Button>
-              <Button variant="outline" size="sm" onClick={clearNotifications}>
-                Limpar tudo
-              </Button>
-            </div>
+            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Filtros</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <NotificationsFilters filters={filters} onChange={setFilters} onApply={applyFilters} />
+          </CardContent>
+        </Card>
+
+        {error ? (
+          <Alert className="border-red-200 bg-red-50">
+            <AlertTitle>Erro ao carregar notificacoes</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
 
         <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
           <Card>
             <CardHeader>
               <CardTitle>Lista</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              {!notifications.length ? (
-                <p className="text-sm text-gray-500">Nenhuma notificacao encontrada.</p>
-              ) : null}
+            <CardContent className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={handleMarkAllAsRead} disabled={!notifications.length}>
+                  <CheckCheck className="w-4 h-4 mr-2" />
+                  Marcar todas como lidas
+                </Button>
+                <Button variant="outline" onClick={handleClearAll} disabled={!notifications.length}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Limpar tudo
+                </Button>
+              </div>
 
-              {notifications.map((item) => (
-                <div
-                  key={item.id}
-                  className={`rounded-md border p-3 cursor-pointer ${
-                    selectedId === item.id ? "border-violet-400 bg-violet-50" : "border-gray-200"
-                  }`}
-                  onClick={() => handleSelect(item.id)}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-medium text-sm">{item.title}</p>
-                      <p className="text-xs text-gray-500 mt-1">{formatDate(item.createdAt)}</p>
-                    </div>
-                    {!item.readAt ? <Badge className="bg-pink-500">Nova</Badge> : null}
-                  </div>
-                  <p className="text-sm text-gray-600 mt-2 line-clamp-2">{item.message}</p>
-                </div>
-              ))}
+              <NotificationsList
+                items={notifications}
+                loading={loading}
+                hasMore={hasMore}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+                onLoadMore={loadMore}
+              />
             </CardContent>
           </Card>
 
@@ -110,22 +189,30 @@ export default function Notifications() {
                 </p>
               ) : (
                 <>
-                  <p className="font-semibold">{selected.title}</p>
-                  <p className="text-xs text-gray-500">{formatDate(selected.createdAt)}</p>
-                  <p className="text-sm text-gray-700">{selected.message}</p>
-                  <div className="pt-2">
-                    <Button
-                      variant="outline"
-                      className="text-red-600 border-red-200 hover:bg-red-50"
-                      onClick={() => {
-                        removeNotification(selected.id);
-                        setSelectedId(null);
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Remover notificacao
-                    </Button>
+                  <div className="flex items-center gap-2">
+                    <Badge className={getStatusBadgeClass(selected.status)}>{selected.status}</Badge>
+                    <span className="text-xs text-gray-500">{selected.channel || "Notificacao"}</span>
                   </div>
+                  <p className="font-semibold text-lg">{selected.channel || "Notificacao"}</p>
+                  <p className="text-xs text-gray-500">
+                    {formatDate(selected.sentAt || selected.createdAt)}
+                  </p>
+                  <p className="text-sm text-gray-700">{selected.message}</p>
+                  <p className="text-xs text-gray-500">Destino: {selected.destination || "-"}</p>
+                  <Button
+                    variant="outline"
+                    className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                    onClick={() => void handleRemoveSelected()}
+                    disabled={loading}
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Remover notificacao
+                  </Button>
+                  {selected.errorMessage ? (
+                    <div className="rounded-md border border-red-200 bg-red-50 p-2 text-xs text-red-700">
+                      {selected.errorMessage}
+                    </div>
+                  ) : null}
                 </>
               )}
             </CardContent>

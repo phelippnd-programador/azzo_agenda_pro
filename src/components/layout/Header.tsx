@@ -23,7 +23,7 @@ interface HeaderProps {
 export function Header({ title, subtitle }: HeaderProps) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { notifications, unreadCount, markAsRead } = useNotifications();
+  const { summaryItems, unreadCount, refreshSummary } = useNotifications();
   const displayName = user?.salonName || user?.name || "Azzo";
   const initials =
     displayName
@@ -61,7 +61,13 @@ export function Header({ title, subtitle }: HeaderProps) {
             />
           </div>
 
-          <DropdownMenu>
+          <DropdownMenu
+            onOpenChange={(open) => {
+              if (open) {
+                void refreshSummary();
+              }
+            }}
+          >
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-9 sm:w-9">
                 <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -75,21 +81,20 @@ export function Header({ title, subtitle }: HeaderProps) {
             <DropdownMenuContent align="end" className="w-72 sm:w-80">
               <DropdownMenuLabel>Notificacoes</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {!notifications.length ? (
+              {!summaryItems.length ? (
                 <DropdownMenuItem className="text-sm text-gray-500">
                   Nenhuma notificacao
                 </DropdownMenuItem>
               ) : null}
-              {notifications.slice(0, 3).map((item) => (
+              {summaryItems.slice(0, 5).map((item) => (
                 <DropdownMenuItem
                   key={item.id}
                   className="flex flex-col items-start gap-1 py-2 sm:py-3"
                   onClick={() => {
-                    markAsRead(item.id);
                     navigate(`/notificacoes?id=${item.id}`);
                   }}
                 >
-                  <span className="font-medium text-sm">{item.title}</span>
+                  <span className="font-medium text-sm">{item.channel || "Notificacao"}</span>
                   <span className="text-xs sm:text-sm text-gray-500 line-clamp-2">
                     {item.message}
                   </span>
