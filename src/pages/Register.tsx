@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Scissors, Eye, EyeOff, ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { ApiError } from '@/lib/api';
 import { toast } from 'sonner';
 
 export default function Register() {
@@ -23,6 +24,7 @@ export default function Register() {
   // Step 2 - Salon data
   const [salonName, setSalonName] = useState('');
   const [phone, setPhone] = useState('');
+  const [cpfCnpj, setCpfCnpj] = useState('');
 
   const handleNextStep = () => {
     if (!name || !email || !password) {
@@ -39,8 +41,13 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!salonName || !phone) {
+    const cpfCnpjDigits = cpfCnpj.replace(/\D/g, "");
+    if (!salonName || !phone || !cpfCnpjDigits) {
       toast.error('Preencha todos os campos');
+      return;
+    }
+    if (![11, 14].includes(cpfCnpjDigits.length)) {
+      toast.error('Informe um CPF ou CNPJ valido');
       return;
     }
 
@@ -53,11 +60,16 @@ export default function Register() {
         password,
         salonName,
         phone,
+        cpfCnpj: cpfCnpjDigits,
       });
       toast.success('Conta criada com sucesso!');
       navigate('/dashboard');
     } catch (error) {
-      toast.error('Erro ao criar conta. Tente novamente.');
+      if (error instanceof ApiError && error.status === 429) {
+        toast.error('Muitas tentativas. Aguarde um momento e tente novamente.');
+      } else {
+        toast.error('Erro ao criar conta. Tente novamente.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -182,6 +194,18 @@ export default function Register() {
                     placeholder="(11) 99999-0000"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
+                    disabled={isLoading}
+                    className="h-10 sm:h-11"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cpfCnpj" className="text-sm">CPF/CNPJ</Label>
+                  <Input
+                    id="cpfCnpj"
+                    placeholder="Somente numeros"
+                    value={cpfCnpj}
+                    onChange={(e) => setCpfCnpj(e.target.value)}
                     disabled={isLoading}
                     className="h-10 sm:h-11"
                   />

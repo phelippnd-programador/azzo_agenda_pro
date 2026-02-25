@@ -8,6 +8,7 @@ import {
   confirmCheckoutIntent,
   createCheckoutIntent,
 } from "@/services/checkoutService";
+import { ApiError } from "@/lib/api";
 
 type CheckoutViewState = "idle" | "loading" | "success" | "error" | "expired";
 
@@ -41,10 +42,15 @@ export function useCheckout(productId: string) {
       setState("success");
       return nextIntent;
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao iniciar checkout";
+      const message =
+        err instanceof ApiError && err.status === 404
+          ? "Plano indisponivel no momento."
+          : err instanceof Error
+            ? err.message
+            : "Erro ao iniciar checkout";
       setError(message);
       setState("error");
-      toast.error("Nao foi possivel iniciar o checkout");
+      toast.error(message);
       return null;
     }
   }, [productId]);
@@ -72,10 +78,15 @@ export function useCheckout(productId: string) {
       const response = await confirmCheckoutIntent(intent.intentId);
       return response;
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao confirmar checkout";
+      const message =
+        err instanceof ApiError && err.status === 422
+          ? "O produto ficou indisponivel. Gere uma nova intent."
+          : err instanceof Error
+            ? err.message
+            : "Erro ao confirmar checkout";
       setError(message);
       setState("error");
-      toast.error("Erro ao confirmar pagamento");
+      toast.error(message);
       return null;
     } finally {
       setIsConfirming(false);

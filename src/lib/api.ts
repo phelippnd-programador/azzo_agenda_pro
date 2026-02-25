@@ -343,8 +343,9 @@ export const authApi = {
     name: string;
     email: string;
     password: string;
-    salonName?: string;
-    phone?: string;
+    salonName: string;
+    phone: string;
+    cpfCnpj: string;
   }) {
     const response = await request<AuthResponse>("/auth/register", {
       method: "POST",

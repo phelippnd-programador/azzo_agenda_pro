@@ -12,6 +12,7 @@ interface AuthContextType {
     password: string;
     salonName: string;
     phone: string;
+    cpfCnpj: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -67,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string;
     salonName: string;
     phone: string;
+    cpfCnpj: string;
   }) => {
     const response = await authApi.register(data);
     if (response.user) {

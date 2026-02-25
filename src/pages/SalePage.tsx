@@ -25,6 +25,7 @@ import { ProductOfferCard } from "@/components/sales/ProductOfferCard";
 import { SalesSection } from "@/components/sales/SalesSection";
 import { useCheckoutProducts } from "@/hooks/useCheckoutProducts";
 import { useAuth } from "@/contexts/AuthContext";
+import { ApiError } from "@/lib/api";
 import { toast } from "sonner";
 
 export default function SalePage() {
@@ -41,6 +42,7 @@ export default function SalePage() {
   const [accountPassword, setAccountPassword] = useState("");
   const [accountSalonName, setAccountSalonName] = useState("");
   const [accountPhone, setAccountPhone] = useState("");
+  const [accountCpfCnpj, setAccountCpfCnpj] = useState("");
   const { products, isLoading: isLoadingProducts, error: productsError } =
     useCheckoutProducts();
   const defaultProductId = products[0]?.id ?? "";
@@ -88,14 +90,20 @@ export default function SalePage() {
       return;
     }
 
+    const accountCpfCnpjDigits = accountCpfCnpj.replace(/\D/g, "");
     if (
       !accountName.trim() ||
       !accountEmail.trim() ||
       !accountPassword.trim() ||
       !accountSalonName.trim() ||
-      !accountPhone.trim()
+      !accountPhone.trim() ||
+      !accountCpfCnpjDigits
     ) {
       toast.error("Preencha todos os campos para criar sua conta.");
+      return;
+    }
+    if (![11, 14].includes(accountCpfCnpjDigits.length)) {
+      toast.error("Informe um CPF ou CNPJ valido.");
       return;
     }
 
@@ -112,6 +120,7 @@ export default function SalePage() {
         password: accountPassword.trim(),
         salonName: accountSalonName.trim(),
         phone: accountPhone.trim(),
+        cpfCnpj: accountCpfCnpjDigits,
       });
 
       toast.success("Conta criada. Continue com o pagamento do plano.");
@@ -121,8 +130,12 @@ export default function SalePage() {
         )}&mode=CHANGE`,
         { replace: true }
       );
-    } catch {
-      toast.error("Nao foi possivel criar sua conta agora.");
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 429) {
+        toast.error("Muitas tentativas. Aguarde um momento e tente novamente.");
+      } else {
+        toast.error("Nao foi possivel criar sua conta agora.");
+      }
     } finally {
       setIsCreatingAccount(false);
     }
@@ -522,6 +535,16 @@ export default function SalePage() {
                   value={accountPhone}
                   onChange={(event) => setAccountPhone(event.target.value)}
                   placeholder="(11) 99999-0000"
+                  disabled={isCreatingAccount}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sale-account-cpf-cnpj">CPF/CNPJ</Label>
+                <Input
+                  id="sale-account-cpf-cnpj"
+                  value={accountCpfCnpj}
+                  onChange={(event) => setAccountCpfCnpj(event.target.value)}
+                  placeholder="Somente numeros"
                   disabled={isCreatingAccount}
                 />
               </div>

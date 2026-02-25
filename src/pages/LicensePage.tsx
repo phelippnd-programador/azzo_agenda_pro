@@ -410,11 +410,14 @@ export default function LicensePage() {
 
     try {
       setIsSubmitting(true);
+      const planNameForDescription =
+        selectedPlan?.name || managedPlan?.name || result?.planCode || "plano";
       const payload = {
         productId: targetPlanCode,
         planCode: targetPlanCode,
         billingType: values.billingType,
         cpfCnpj: toDigits(values.cpfCnpj),
+        description: `Assinatura ${planNameForDescription}`,
       } as const;
 
       const requestBody =

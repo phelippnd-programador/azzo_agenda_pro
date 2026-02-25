@@ -39,6 +39,7 @@ export interface CreateBillingSubscriptionRequest {
   planCode?: string;
   billingType: BillingType;
   cpfCnpj: string;
+  description?: string;
   creditCard?: CreditCardData;
   creditCardHolderInfo?: CreditCardHolderInfo;
 }
