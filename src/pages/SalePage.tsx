@@ -43,10 +43,12 @@ export default function SalePage() {
   const [accountPhone, setAccountPhone] = useState("");
   const { products, isLoading: isLoadingProducts, error: productsError } =
     useCheckoutProducts();
+  const defaultProductId = products[0]?.id ?? "";
+  const effectiveProductId = selectedProductId || defaultProductId;
 
   const selectedProduct = useMemo(
-    () => products.find((item) => item.id === selectedProductId) ?? null,
-    [products, selectedProductId]
+    () => products.find((item) => item.id === effectiveProductId) ?? null,
+    [effectiveProductId, products]
   );
 
   useEffect(() => {
@@ -81,8 +83,8 @@ export default function SalePage() {
   };
 
   const handleCreateAccountAndContinue = async () => {
-    if (!selectedProductId) {
-      toast.error("Selecione um produto antes de continuar.");
+    if (!effectiveProductId) {
+      toast.error("Nenhum produto disponivel para continuar no momento.");
       return;
     }
 
@@ -115,7 +117,7 @@ export default function SalePage() {
       toast.success("Conta criada. Continue com o pagamento do plano.");
       navigate(
         `/financeiro/licenca?plan=${encodeURIComponent(
-          selectedProductId
+          effectiveProductId
         )}&mode=CHANGE`,
         { replace: true }
       );
@@ -421,7 +423,7 @@ export default function SalePage() {
               <ProductOfferCard
                 key={item.id}
                 product={item}
-                selected={item.id === selectedProductId}
+                selected={item.id === effectiveProductId}
                 onSelect={handleSelectProduct}
               />
             ))}
@@ -539,7 +541,7 @@ export default function SalePage() {
               type="button"
               className="w-full bg-violet-600 hover:bg-violet-700"
               onClick={handleCreateAccountAndContinue}
-              disabled={isCreatingAccount || !selectedProductId}
+              disabled={isCreatingAccount}
             >
               {isCreatingAccount ? "Criando conta..." : "Criar conta e continuar"}
             </Button>
