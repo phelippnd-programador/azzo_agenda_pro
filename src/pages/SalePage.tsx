@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   BadgeCheck,
@@ -21,7 +21,6 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
 import { BenefitCard } from "@/components/sales/BenefitCard";
-import { ProductOfferCard } from "@/components/sales/ProductOfferCard";
 import { SalesSection } from "@/components/sales/SalesSection";
 import { useCheckoutProducts } from "@/hooks/useCheckoutProducts";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,11 +30,6 @@ import { toast } from "sonner";
 export default function SalePage() {
   const navigate = useNavigate();
   const { register } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { productId } = useParams();
-  const routeProductId = useMemo(() => productId ?? "", [productId]);
-  const queryProductId = searchParams.get("product");
-  const selectedProductId = queryProductId || routeProductId;
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [accountName, setAccountName] = useState("");
   const [accountEmail, setAccountEmail] = useState("");
@@ -43,10 +37,9 @@ export default function SalePage() {
   const [accountSalonName, setAccountSalonName] = useState("");
   const [accountPhone, setAccountPhone] = useState("");
   const [accountCpfCnpj, setAccountCpfCnpj] = useState("");
-  const { products, isLoading: isLoadingProducts, error: productsError } =
-    useCheckoutProducts();
+  const { products } = useCheckoutProducts();
   const defaultProductId = products[0]?.id ?? "";
-  const effectiveProductId = selectedProductId || defaultProductId;
+  const effectiveProductId = defaultProductId;
 
   const selectedProduct = useMemo(
     () => products.find((item) => item.id === effectiveProductId) ?? null,
@@ -70,19 +63,6 @@ export default function SalePage() {
     }
     meta.content = description;
   }, []);
-
-  useEffect(() => {
-    if (!products.length) return;
-    if (selectedProductId && products.some((item) => item.id === selectedProductId)) {
-      return;
-    }
-    const first = products[0];
-    setSearchParams({ product: first.id }, { replace: true });
-  }, [products, selectedProductId, setSearchParams]);
-
-  const handleSelectProduct = (nextProductId: string) => {
-    setSearchParams({ product: nextProductId }, { replace: true });
-  };
 
   const handleCreateAccountAndContinue = async () => {
     if (!effectiveProductId) {
@@ -403,45 +383,6 @@ export default function SalePage() {
             </Card>
           ))}
         </div>
-      </SalesSection>
-
-      <SalesSection
-        className="bg-white"
-        title="Produtos disponiveis no app"
-        subtitle="Escolha um plano retornado pelo backend para seguir ao pagamento interno."
-      >
-        {isLoadingProducts ? (
-          <Alert className="border-slate-200 bg-slate-50">
-            <AlertTitle>Carregando produtos</AlertTitle>
-            <AlertDescription>Consultando catalogo de produtos no backend.</AlertDescription>
-          </Alert>
-        ) : null}
-        {productsError ? (
-          <Alert variant="destructive" className="mb-4">
-            <AlertTitle>Falha ao listar produtos</AlertTitle>
-            <AlertDescription>{productsError}</AlertDescription>
-          </Alert>
-        ) : null}
-        {!isLoadingProducts && !products.length && !productsError ? (
-          <Alert className="border-amber-200 bg-amber-50 text-amber-900">
-            <AlertTitle>Nenhum produto encontrado</AlertTitle>
-            <AlertDescription>
-              O backend nao retornou produtos para venda neste momento.
-            </AlertDescription>
-          </Alert>
-        ) : null}
-        {products.length ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {products.map((item) => (
-              <ProductOfferCard
-                key={item.id}
-                product={item}
-                selected={item.id === effectiveProductId}
-                onSelect={handleSelectProduct}
-              />
-            ))}
-          </div>
-        ) : null}
       </SalesSection>
 
       <SalesSection id="offer" className="bg-white" title="Plano recomendado para iniciar hoje">
