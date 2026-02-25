@@ -124,14 +124,47 @@ function formatReferenceMonth(value?: string | null) {
   }).format(date);
 }
 
+function getLicenseStatus(result: CreateBillingSubscriptionResponse) {
+  const licenseStatus = String(result.licenseStatus || "").toUpperCase();
+  if (licenseStatus === "ACTIVE" || licenseStatus === "EXPIRED") return licenseStatus;
+  return String(result.status || "").toUpperCase();
+}
+
+function getCurrentPaymentStatus(result: CreateBillingSubscriptionResponse) {
+  return String(result.currentPaymentStatus || result.paymentStatus || "").toUpperCase();
+}
+
+function getCurrentPaymentDueDate(result: CreateBillingSubscriptionResponse) {
+  return result.currentPaymentDueDate || result.nextDueDate || null;
+}
+
+function isPaymentConfirmed(result: CreateBillingSubscriptionResponse) {
+  const paymentStatus = getCurrentPaymentStatus(result);
+  return paymentStatus === "RECEIVED" || paymentStatus === "CONFIRMED";
+}
+
+function hasPaidFeaturesAccess(result: CreateBillingSubscriptionResponse) {
+  const licenseStatus = getLicenseStatus(result);
+  if (licenseStatus !== "ACTIVE") return false;
+  if (String(result.billingType || "").toUpperCase() === "TRIAL") return true;
+  return isPaymentConfirmed(result);
+}
+
+function isSupportedBillingType(
+  billingType?: string | null
+): billingType is "PIX" | "BOLETO" | "CREDIT_CARD" {
+  return billingType === "PIX" || billingType === "BOLETO" || billingType === "CREDIT_CARD";
+}
+
 function isOverdue(result: CreateBillingSubscriptionResponse) {
-  const subscriptionStatus = String(result.status || "").toUpperCase();
-  const paymentStatus = String(result.paymentStatus || "").toUpperCase();
+  const subscriptionStatus = getLicenseStatus(result);
+  const paymentStatus = getCurrentPaymentStatus(result);
 
   if (subscriptionStatus === "OVERDUE" || paymentStatus === "OVERDUE") return true;
-  if (!result.nextDueDate) return false;
+  const dueDateValue = getCurrentPaymentDueDate(result);
+  if (!dueDateValue) return false;
 
-  const dueDate = new Date(result.nextDueDate);
+  const dueDate = new Date(dueDateValue);
   if (Number.isNaN(dueDate.getTime())) return false;
 
   const today = new Date();
@@ -145,12 +178,25 @@ function isOverdue(result: CreateBillingSubscriptionResponse) {
 }
 
 function resolveLicenseState(result: CreateBillingSubscriptionResponse) {
-  const normalizedStatus = String(result.status).toUpperCase();
-  const normalizedPayment = String(result.paymentStatus || "").toUpperCase();
-  const isActive =
-    normalizedStatus === "ACTIVE" ||
-    normalizedPayment === "CONFIRMED" ||
-    normalizedPayment === "RECEIVED";
+  const normalizedLicenseStatus = getLicenseStatus(result);
+  const normalizedPayment = getCurrentPaymentStatus(result);
+  const isActive = hasPaidFeaturesAccess(result);
+
+  if (normalizedLicenseStatus === "EXPIRED") {
+    return {
+      variant: "expired" as const,
+      title: "Licenca expirada",
+      description: "Funcionalidades pagas bloqueadas ate a regularizacao do pagamento.",
+    };
+  }
+
+  if (normalizedPayment === "PENDING") {
+    return {
+      variant: "pending" as const,
+      title: "Pagamento pendente",
+      description: "Aguardando compensacao do pagamento atual.",
+    };
+  }
 
   if (isActive) {
     return {
@@ -168,13 +214,7 @@ function resolveLicenseState(result: CreateBillingSubscriptionResponse) {
 }
 
 function isSubscriptionActive(result: CreateBillingSubscriptionResponse) {
-  const normalizedStatus = String(result.status).toUpperCase();
-  const normalizedPayment = String(result.paymentStatus || "").toUpperCase();
-  return (
-    normalizedStatus === "ACTIVE" ||
-    normalizedPayment === "CONFIRMED" ||
-    normalizedPayment === "RECEIVED"
-  );
+  return hasPaidFeaturesAccess(result);
 }
 
 export default function LicensePage() {
@@ -196,8 +236,12 @@ export default function LicensePage() {
   const [paymentHistory, setPaymentHistory] = useState<BillingPaymentItem[]>([]);
   const [selectedPayment, setSelectedPayment] = useState<BillingPaymentItem | null>(null);
   const [hasAppliedQueryDefaults, setHasAppliedQueryDefaults] = useState(false);
-  const hasActiveSubscription = useMemo(
+  const hasPaidAccess = useMemo(
     () => (result ? isSubscriptionActive(result) : false),
+    [result]
+  );
+  const isLicenseExpired = useMemo(
+    () => (result ? getLicenseStatus(result) === "EXPIRED" : false),
     [result]
   );
 
@@ -264,12 +308,12 @@ export default function LicensePage() {
       setActionMode("PAY");
     }
 
-    if (modeFromQuery === "CHANGE" && !hasActiveSubscription) {
+    if (modeFromQuery === "CHANGE" && !hasPaidAccess) {
       setActionMode("CHANGE");
     }
 
     setHasAppliedQueryDefaults(true);
-  }, [form, hasActiveSubscription, hasAppliedQueryDefaults, plans, searchParams]);
+  }, [form, hasAppliedQueryDefaults, hasPaidAccess, plans, searchParams]);
 
   const loadCurrentSubscription = useCallback(async () => {
     try {
@@ -286,7 +330,7 @@ export default function LicensePage() {
       if (currentProductCode) {
         form.setValue("planCode", currentProductCode);
       }
-      if (current.billingType) {
+      if (isSupportedBillingType(current.billingType)) {
         form.setValue("billingType", current.billingType);
       }
     } catch (error) {
@@ -341,10 +385,11 @@ export default function LicensePage() {
 
   const canPayNow = useMemo(() => {
     if (!result) return false;
-    const subStatus = String(result.status || "").toUpperCase();
-    const payStatus = String(result.paymentStatus || "").toUpperCase();
+    const subStatus = getLicenseStatus(result);
+    const payStatus = getCurrentPaymentStatus(result);
     return (
       hasOverdue ||
+      subStatus === "EXPIRED" ||
       subStatus === "PENDING" ||
       subStatus === "OVERDUE" ||
       payStatus === "PENDING" ||
@@ -356,12 +401,14 @@ export default function LicensePage() {
     if (!result) return;
     const currentProductCode = result.productId || result.planCode;
     if (currentProductCode) form.setValue("planCode", currentProductCode);
-    if (result.billingType) form.setValue("billingType", result.billingType);
+    if (isSupportedBillingType(result.billingType)) {
+      form.setValue("billingType", result.billingType);
+    }
     setActionMode("PAY");
   };
 
   const openChangePlan = () => {
-    if (hasActiveSubscription) {
+    if (hasPaidAccess) {
       toast.info("Plano ativo nao pode ser alterado no momento.");
       return;
     }
@@ -393,7 +440,7 @@ export default function LicensePage() {
   };
 
   const onSubmit = form.handleSubmit(async (values) => {
-    if (actionMode === "CHANGE" && hasActiveSubscription) {
+    if (actionMode === "CHANGE" && hasPaidAccess) {
       toast.error("Nao e possivel trocar de plano com assinatura ativa.");
       return;
     }
@@ -507,22 +554,34 @@ export default function LicensePage() {
                 <strong>Status do plano:</strong> {result?.status || "Sem assinatura"}
               </p>
               <p>
-                <strong>Pagamento:</strong> {result?.paymentStatus || "Nao informado"}
+                <strong>Pagamento:</strong>{" "}
+                {result ? getCurrentPaymentStatus(result) || "Nao informado" : "Nao informado"}
               </p>
               <p>
-                <strong>Proximo vencimento:</strong> {formatDate(result?.nextDueDate)}
+                <strong>Proximo vencimento:</strong>{" "}
+                {result ? formatDate(getCurrentPaymentDueDate(result)) : "Nao informado"}
               </p>
               <p>
                 <strong>Metodo atual:</strong> {result?.billingType || "Nao informado"}
               </p>
+              <p>
+                <strong>ID pagamento atual:</strong>{" "}
+                {result?.currentPaymentId || result?.paymentId || "Nao informado"}
+              </p>
             </div>
 
             <Badge
-              variant={!result ? "secondary" : hasOverdue ? "destructive" : "outline"}
-              className={result && !hasOverdue ? "border-emerald-500 text-emerald-700" : ""}
+              variant={
+                !result ? "secondary" : hasOverdue || isLicenseExpired ? "destructive" : "outline"
+              }
+              className={result && !hasOverdue && !isLicenseExpired ? "border-emerald-500 text-emerald-700" : ""}
             >
               {!result
                 ? "Sem assinatura"
+                : result && getCurrentPaymentStatus(result) === "PENDING"
+                  ? "Pagamento pendente"
+                  : isLicenseExpired
+                    ? "Licenca expirada"
                 : hasOverdue
                   ? "Pagamento em atraso"
                   : "Pagamento regular"}
@@ -540,7 +599,7 @@ export default function LicensePage() {
                 type="button"
                 variant="outline"
                 onClick={openChangePlan}
-                disabled={hasActiveSubscription}
+                disabled={hasPaidAccess}
               >
                 Alterar plano
               </Button>
@@ -574,12 +633,16 @@ export default function LicensePage() {
                 className={
                   licenseState.variant === "active"
                     ? "border-emerald-300 bg-emerald-50"
+                    : licenseState.variant === "expired"
+                      ? "border-red-300 bg-red-50"
                     : "border-amber-300 bg-amber-50"
                 }
               >
                 <div className="flex items-start gap-2">
                   {licenseState.variant === "active" ? (
                     <CircleCheckBig className="mt-0.5 h-4 w-4 text-emerald-700" />
+                  ) : licenseState.variant === "expired" ? (
+                    <Clock3 className="mt-0.5 h-4 w-4 text-red-700" />
                   ) : (
                     <Clock3 className="mt-0.5 h-4 w-4 text-amber-700" />
                   )}
@@ -846,7 +909,7 @@ export default function LicensePage() {
                   <strong>Status do plano:</strong> {result.status}
                 </p>
                 <p>
-                  <strong>Pagamento:</strong> {result.paymentStatus || "N/A"}
+                  <strong>Pagamento:</strong> {getCurrentPaymentStatus(result) || "N/A"}
                 </p>
               <p>
                 <strong>Cartao:</strong> final {lastCardDigits}
