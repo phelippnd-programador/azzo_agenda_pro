@@ -22,6 +22,7 @@ import Specialties from "./pages/Specialties";
 import Professionals from "./pages/Professionals";
 import Clients from "./pages/Clients";
 import Financial from "./pages/Financial";
+import ProfessionalFinancial from "./pages/ProfessionalFinancial";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import Register from "./pages/Register";
@@ -211,6 +212,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Financial />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/financeiro/profissionais"
+          element={
+            <ProtectedRoute>
+              <ProfessionalFinancial />
             </ProtectedRoute>
           }
         />

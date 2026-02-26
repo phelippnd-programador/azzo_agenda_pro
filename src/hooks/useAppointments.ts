@@ -79,6 +79,20 @@ export function useAppointments() {
     }
   };
 
+  const reassignAppointmentProfessional = async (id: string, professionalId: string) => {
+    try {
+      const updated = await appointmentsApi.reassignProfessional(id, professionalId);
+      setAppointments((prev) => prev.map((appointment) => (appointment.id === id ? updated : appointment)));
+      toast.success("Agendamento realocado com sucesso!");
+      return updated;
+    } catch (err) {
+      if (!isPlanExpiredApiError(err)) {
+        toast.error("Erro ao realocar agendamento");
+      }
+      throw err;
+    }
+  };
+
   return {
     appointments,
     isLoading,
@@ -87,5 +101,6 @@ export function useAppointments() {
     createAppointment,
     updateAppointmentStatus,
     deleteAppointment,
+    reassignAppointmentProfessional,
   };
 }

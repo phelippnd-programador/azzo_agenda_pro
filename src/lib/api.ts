@@ -23,6 +23,7 @@ import type {
   NotificationsFilters,
   NotificationsListResponse,
 } from "@/types/notification";
+import type { AvailableSlotsParams, TimeSlotResponse } from "@/types/available-slots";
 import type {
   CheckoutConfirmResponse,
   CheckoutIntentRequest,
@@ -484,10 +485,26 @@ export const appointmentsApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  getAvailableSlots: (params: AvailableSlotsParams) => {
+    const query = new URLSearchParams({
+      professionalId: params.professionalId,
+      date: params.date,
+      serviceDurationMinutes: String(params.serviceDurationMinutes),
+      bufferMinutes: String(params.bufferMinutes ?? 0),
+    });
+    return request<TimeSlotResponse[]>(`/appointments/available-slots?${query.toString()}`);
+  },
   updateStatus: (id: string, status: string) =>
     request<Appointment>(`/appointments/${id}/status?value=${status}`, {
       method: "PATCH",
     }),
+  reassignProfessional: (appointmentId: string, professionalId: string) =>
+    request<Appointment>(
+      `/appointments/${appointmentId}/reassign-professional?professionalId=${encodeURIComponent(professionalId)}`,
+      {
+        method: "PATCH",
+      }
+    ),
   delete: (id: string) =>
     request<void>(`/appointments/${id}`, {
       method: "DELETE",

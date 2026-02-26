@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,8 +37,45 @@ import {
 import { Search, Plus, MoreVertical, Phone, Mail, Percent, Users, Loader2 } from "lucide-react";
 import { useProfessionals } from "@/hooks/useProfessionals";
 import { useSpecialties } from "@/hooks/useSpecialties";
+import { useAppointments } from "@/hooks/useAppointments";
+import type { WorkingHours } from "@/types";
 import { toast } from "sonner";
 import { ProfessionalLimitMeter } from "@/components/professionals/ProfessionalLimitMeter";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+const defaultWorkingHours: WorkingHours[] = [
+  { dayOfWeek: 1, startTime: "09:00", endTime: "18:00", isWorking: true },
+  { dayOfWeek: 2, startTime: "09:00", endTime: "18:00", isWorking: true },
+  { dayOfWeek: 3, startTime: "09:00", endTime: "18:00", isWorking: true },
+  { dayOfWeek: 4, startTime: "09:00", endTime: "18:00", isWorking: true },
+  { dayOfWeek: 5, startTime: "09:00", endTime: "18:00", isWorking: true },
+  { dayOfWeek: 6, startTime: "09:00", endTime: "13:00", isWorking: true },
+  { dayOfWeek: 0, startTime: "00:00", endTime: "00:00", isWorking: false },
+];
+
+const weekdayLabels: Record<number, string> = {
+  0: "Domingo",
+  1: "Segunda",
+  2: "Terca",
+  3: "Quarta",
+  4: "Quinta",
+  5: "Sexta",
+  6: "Sabado",
+};
+
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value);
 
 export default function Professionals() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -57,6 +94,10 @@ export default function Professionals() {
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
   const [formCommission, setFormCommission] = useState("40");
   const [formIsActive, setFormIsActive] = useState(true);
+  const [formWorkingHours, setFormWorkingHours] = useState<WorkingHours[]>(
+    defaultWorkingHours
+  );
+  const [isWorkingHoursDisabled, setIsWorkingHoursDisabled] = useState(false);
 
   const {
     professionals,
@@ -68,6 +109,7 @@ export default function Professionals() {
     deleteProfessional,
     resetProfessionalPassword,
   } = useProfessionals();
+  const { appointments, isLoading: isLoadingAppointments } = useAppointments();
 
   const {
     specialties,
@@ -85,6 +127,55 @@ export default function Professionals() {
     );
   });
 
+  const monthlyProfessionalStats = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const completedThisMonth = appointments.filter((appointment) => {
+      if (appointment.status !== "COMPLETED") return false;
+      const date = new Date(`${appointment.date}T12:00:00`);
+      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    });
+
+    const statsMap = new Map<
+      string,
+      { revenue: number; clients: Set<string>; appointments: number }
+    >();
+
+    completedThisMonth.forEach((appointment) => {
+      const current = statsMap.get(appointment.professionalId) ?? {
+        revenue: 0,
+        clients: new Set<string>(),
+        appointments: 0,
+      };
+      current.revenue += Number(appointment.totalPrice || 0);
+      current.appointments += 1;
+      if (appointment.clientId) current.clients.add(appointment.clientId);
+      statsMap.set(appointment.professionalId, current);
+    });
+
+    return professionals
+      .map((professional) => {
+        const stats = statsMap.get(professional.id);
+        const nameParts = professional.name.trim().split(/\s+/).filter(Boolean);
+        const displayName =
+          nameParts.length >= 2
+            ? `${nameParts[0]} ${nameParts[1]}`
+            : professional.name;
+        return {
+          id: professional.id,
+          name: professional.name,
+          displayName,
+          revenue: stats?.revenue || 0,
+          clientsCount: stats?.clients.size || 0,
+          appointmentsCount: stats?.appointments || 0,
+        };
+      })
+      .filter((item) => item.revenue > 0 || item.clientsCount > 0)
+      .sort((a, b) => b.revenue - a.revenue);
+  }, [appointments, professionals]);
+
   const resetForm = () => {
     setFormName("");
     setFormEmail("");
@@ -92,6 +183,8 @@ export default function Professionals() {
     setSelectedSpecialties([]);
     setFormCommission("40");
     setFormIsActive(true);
+    setFormWorkingHours(defaultWorkingHours);
+    setIsWorkingHoursDisabled(false);
     setEditingProfessional(null);
   };
 
@@ -102,6 +195,32 @@ export default function Professionals() {
     setSelectedSpecialties(prof.specialties || []);
     setFormCommission(String(prof.commissionRate));
     setFormIsActive(prof.isActive);
+    const hasWorkingHours = Array.isArray(prof.workingHours) && prof.workingHours.length > 0;
+    if (!hasWorkingHours) {
+      setFormWorkingHours(
+        defaultWorkingHours.map((item) => ({
+          ...item,
+          startTime: "00:00",
+          endTime: "00:00",
+          isWorking: false,
+        }))
+      );
+      setIsWorkingHoursDisabled(true);
+    } else {
+      const normalized = defaultWorkingHours.map((defaultHour) => {
+        const current = prof.workingHours.find((item) => item.dayOfWeek === defaultHour.dayOfWeek);
+        return current
+          ? {
+              dayOfWeek: current.dayOfWeek,
+              startTime: current.startTime || defaultHour.startTime,
+              endTime: current.endTime || defaultHour.endTime,
+              isWorking: !!current.isWorking,
+            }
+          : defaultHour;
+      });
+      setFormWorkingHours(normalized);
+      setIsWorkingHoursDisabled(false);
+    }
     setEditingProfessional(prof.id);
     setIsNewProfessionalOpen(true);
   };
@@ -114,9 +233,29 @@ export default function Professionals() {
     );
   };
 
+  const updateWorkingHour = (
+    dayOfWeek: number,
+    field: "startTime" | "endTime" | "isWorking",
+    value: string | boolean
+  ) => {
+    setFormWorkingHours((prev) =>
+      prev.map((item) =>
+        item.dayOfWeek === dayOfWeek ? { ...item, [field]: value } : item
+      )
+    );
+  };
+
   const handleSubmit = async () => {
     if (!formName || !formEmail || !formPhone) {
       toast.error("Preencha todos os campos obrigatorios");
+      return;
+    }
+
+    const invalidWorkingRange = formWorkingHours.some(
+      (item) => item.isWorking && item.startTime >= item.endTime
+    );
+    if (invalidWorkingRange) {
+      toast.error("Revise os horarios: o inicio deve ser menor que o fim.");
       return;
     }
 
@@ -129,6 +268,7 @@ export default function Professionals() {
         specialties: selectedSpecialties,
         commissionRate: parseInt(formCommission, 10),
         isActive: formIsActive,
+        workingHours: formWorkingHours,
       };
 
       if (editingProfessional) {
@@ -210,7 +350,7 @@ export default function Professionals() {
                 Novo Profissional
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md mx-4 sm:mx-auto">
+            <DialogContent className="max-w-md mx-4 sm:mx-auto max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
                   {editingProfessional ? "Editar Profissional" : "Novo Profissional"}
@@ -317,6 +457,53 @@ export default function Professionals() {
                   />
                 </div>
 
+                <div className="space-y-2">
+                  <Label>Horario de trabalho</Label>
+                  <div className="rounded-lg border p-3 space-y-2">
+                    {formWorkingHours
+                      .slice()
+                      .sort((a, b) => a.dayOfWeek - b.dayOfWeek)
+                      .map((hour) => (
+                        <div
+                          key={hour.dayOfWeek}
+                          className="grid grid-cols-[80px_1fr_1fr_auto] items-center gap-2"
+                        >
+                          <span className="text-xs text-gray-600">
+                            {weekdayLabels[hour.dayOfWeek]}
+                          </span>
+                          <Input
+                            type="time"
+                            value={hour.startTime}
+                            onChange={(event) =>
+                              updateWorkingHour(hour.dayOfWeek, "startTime", event.target.value)
+                            }
+                            disabled={isWorkingHoursDisabled || !hour.isWorking}
+                          />
+                          <Input
+                            type="time"
+                            value={hour.endTime}
+                            onChange={(event) =>
+                              updateWorkingHour(hour.dayOfWeek, "endTime", event.target.value)
+                            }
+                            disabled={isWorkingHoursDisabled || !hour.isWorking}
+                          />
+                          <Switch
+                            checked={hour.isWorking}
+                            onCheckedChange={(checked) =>
+                              updateWorkingHour(hour.dayOfWeek, "isWorking", checked)
+                            }
+                            disabled={isWorkingHoursDisabled}
+                          />
+                        </div>
+                      ))}
+                  </div>
+                  {isWorkingHoursDisabled ? (
+                    <p className="text-xs text-amber-700">
+                      Horarios de trabalho nao informados pelo backend. Edicao desativada.
+                    </p>
+                  ) : null}
+                </div>
+
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
                     <Label>Profissional Ativo</Label>
@@ -350,6 +537,79 @@ export default function Professionals() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base sm:text-lg">
+                Faturamento por profissional (mes atual)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoadingAppointments ? (
+                <Skeleton className="h-56 w-full" />
+              ) : !monthlyProfessionalStats.length ? (
+                <p className="text-sm text-gray-500">
+                  Nenhum faturamento concluido registrado neste mes.
+                </p>
+              ) : (
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={monthlyProfessionalStats}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="displayName" />
+                      <YAxis
+                        tickFormatter={(value) =>
+                          new Intl.NumberFormat("pt-BR", {
+                            notation: "compact",
+                            compactDisplay: "short",
+                          }).format(Number(value))
+                        }
+                      />
+                      <Tooltip
+                        formatter={(value) => formatCurrency(Number(value))}
+                        labelFormatter={(label) => `Profissional: ${label}`}
+                      />
+                      <Bar dataKey="revenue" fill="#7c3aed" radius={[6, 6, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base sm:text-lg">
+                Clientes atendidos (mes atual)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoadingAppointments ? (
+                <Skeleton className="h-56 w-full" />
+              ) : !monthlyProfessionalStats.length ? (
+                <p className="text-sm text-gray-500">
+                  Sem atendimentos concluidos para comparar neste mes.
+                </p>
+              ) : (
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={monthlyProfessionalStats}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="displayName" />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip
+                        formatter={(value) => [`${value} clientes`, "Clientes"]}
+                        labelFormatter={(label) => `Profissional: ${label}`}
+                      />
+                      <Bar dataKey="clientsCount" fill="#16a34a" radius={[6, 6, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {filteredProfessionals.length === 0 ? (

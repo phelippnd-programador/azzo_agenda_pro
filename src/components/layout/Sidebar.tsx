@@ -26,6 +26,7 @@ import {
   Calculator,
   Eye,
   CreditCard,
+  BarChart3,
 } from "lucide-react";
 
 const menuItems = [
@@ -37,6 +38,7 @@ const menuItems = [
   { icon: Users, label: "Profissionais", path: "/profissionais" },
   { icon: UserCircle, label: "Clientes", path: "/clientes" },
   { icon: DollarSign, label: "Financeiro", path: "/financeiro" },
+  { icon: BarChart3, label: "Financeiro Profissionais", path: "/financeiro/profissionais" },
   { icon: CreditCard, label: "Gerenciador de Licenca", path: "/financeiro/licenca" },
   { icon: FileText, label: "Emitir Nota Fiscal", path: "/emitir-nota" },
   { icon: Eye, label: "Pre-visualizacao NF", path: "/nota-fiscal" },

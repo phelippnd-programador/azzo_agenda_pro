@@ -3,6 +3,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { UpcomingAppointments } from '@/components/dashboard/UpcomingAppointments';
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
+import { MonthlyRevenueLineChart } from '@/components/dashboard/MonthlyRevenueLineChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -218,8 +219,11 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Revenue Chart */}
-        <RevenueChart />
+        {/* Revenue Charts */}
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
+          <RevenueChart />
+          <MonthlyRevenueLineChart />
+        </div>
       </div>
     </MainLayout>
   );

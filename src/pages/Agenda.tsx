@@ -58,7 +58,9 @@ import { useAppointments, Appointment } from '@/hooks/useAppointments';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { useClients } from '@/hooks/useClients';
 import { useServices } from '@/hooks/useServices';
+import { useAvailableSlots } from '@/hooks/useAvailableSlots';
 import { useAuth } from '@/contexts/AuthContext';
+import { AvailableSlotsList } from '@/components/appointments/AvailableSlotsList';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -68,6 +70,18 @@ const timeSlots = [
   '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
   '17:00', '17:30', '18:00', '18:30', '19:00', '19:30',
 ];
+
+const normalizeTimeToHourMinute = (value?: string | null) => {
+  if (!value) return '';
+  const [hours = '', minutes = ''] = value.split(':');
+  if (!hours || !minutes) return value;
+  return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+};
+
+const toMinutes = (time: string) => {
+  const [hours = '0', minutes = '0'] = time.split(':');
+  return Number(hours) * 60 + Number(minutes);
+};
 
 const getStatusColor = (status: string) => {
   const colors: Record<string, string> = {
@@ -106,26 +120,40 @@ export default function Agenda() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
   const [selectedProfessional, setSelectedProfessional] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // View appointment details
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
+  const [isReassignDialogOpen, setIsReassignDialogOpen] = useState(false);
+  const [appointmentToReassign, setAppointmentToReassign] = useState<Appointment | null>(null);
+  const [reassignProfessionalId, setReassignProfessionalId] = useState('');
+  const [isReassigning, setIsReassigning] = useState(false);
 
   // Form state
   const [newClientId, setNewClientId] = useState('');
   const [newProfessionalId, setNewProfessionalId] = useState('');
   const [newServiceId, setNewServiceId] = useState('');
   const [newDate, setNewDate] = useState(currentDate.toISOString().split('T')[0]);
-  const [newTime, setNewTime] = useState('');
+  const [newStartTime, setNewStartTime] = useState('');
+  const [newEndTime, setNewEndTime] = useState('');
 
-  const { appointments, isLoading, createAppointment, updateAppointmentStatus, deleteAppointment } = useAppointments();
+  const {
+    appointments,
+    isLoading,
+    createAppointment,
+    updateAppointmentStatus,
+    deleteAppointment,
+    reassignAppointmentProfessional,
+  } = useAppointments();
   const { professionals } = useProfessionals();
   const { clients } = useClients();
   const { services } = useServices();
 
   const activeProfessionals = professionals.filter(p => p.isActive);
+  const canReassignAppointments = activeProfessionals.length > 1;
   const loggedProfessional = useMemo(
     () => activeProfessionals.find((p) => p.userId === user?.id) ?? null,
     [activeProfessionals, user?.id]
@@ -135,6 +163,21 @@ export default function Agenda() {
     ? loggedProfessional?.id || ''
     : selectedProfessional;
   const activeServices = services.filter(s => s.isActive);
+  const newServiceData = useMemo(
+    () => services.find((service) => service.id === newServiceId) ?? null,
+    [services, newServiceId]
+  );
+  const {
+    slots: availableSlots,
+    isLoading: isLoadingAvailableSlots,
+    error: availableSlotsError,
+    canFetch: canFetchAvailableSlots,
+  } = useAvailableSlots({
+    professionalId: newProfessionalId || undefined,
+    date: newDate || undefined,
+    serviceDurationMinutes: newServiceData?.duration,
+    bufferMinutes: 0,
+  });
 
   const navigateDate = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
@@ -158,9 +201,18 @@ export default function Agenda() {
       const matchesProfessional =
         effectiveSelectedProfessional === 'all' ||
         apt.professionalId === effectiveSelectedProfessional;
-      return matchesDate && matchesProfessional;
+      const matchesStatus = selectedStatus === 'all' || apt.status === selectedStatus;
+      return matchesDate && matchesProfessional && matchesStatus;
     });
-  }, [appointments, dateString, effectiveSelectedProfessional]);
+  }, [appointments, dateString, effectiveSelectedProfessional, selectedStatus]);
+
+  const displayedTimeSlots = useMemo(() => {
+    const appointmentTimes = filteredAppointments
+      .map((appointment) => normalizeTimeToHourMinute(appointment.startTime))
+      .filter(Boolean);
+    const uniqueTimes = new Set([...timeSlots, ...appointmentTimes]);
+    return Array.from(uniqueTimes).sort((left, right) => toMinutes(left) - toMinutes(right));
+  }, [filteredAppointments]);
 
   useEffect(() => {
     if (!isProfessionalUser) return;
@@ -184,8 +236,13 @@ export default function Agenda() {
     setCurrentDate(new Date(year, month - 1, day));
   }, [appointments, dateString]);
 
+  useEffect(() => {
+    setNewStartTime('');
+    setNewEndTime('');
+  }, [newDate, newProfessionalId, newServiceId]);
+
   const handleCreateAppointment = async () => {
-    if (!newClientId || !newProfessionalId || !newServiceId || !newDate || !newTime) {
+    if (!newClientId || !newProfessionalId || !newServiceId || !newDate || !newStartTime || !newEndTime) {
       toast.error('Preencha todos os campos');
       return;
     }
@@ -196,12 +253,6 @@ export default function Agenda() {
       return;
     }
 
-    // Calculate end time based on service duration
-    const [hours, minutes] = newTime.split(':').map(Number);
-    const endDate = new Date();
-    endDate.setHours(hours, minutes + service.duration);
-    const endTime = `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
-
     setIsSubmitting(true);
     try {
       await createAppointment({
@@ -209,8 +260,8 @@ export default function Agenda() {
         professionalId: newProfessionalId,
         serviceId: newServiceId,
         date: newDate,
-        startTime: newTime,
-        endTime,
+        startTime: newStartTime,
+        endTime: newEndTime,
         status: 'PENDING',
         totalPrice: service.price,
       });
@@ -220,7 +271,8 @@ export default function Agenda() {
       setNewClientId('');
       setNewProfessionalId('');
       setNewServiceId('');
-      setNewTime('');
+      setNewStartTime('');
+      setNewEndTime('');
     } catch (error) {
       // Error is handled in the hook
     } finally {
@@ -247,6 +299,38 @@ export default function Agenda() {
       setSelectedAppointment(null);
     } catch (error) {
       // Error is handled in the hook
+    }
+  };
+
+  const openReassignDialog = (appointment: Appointment) => {
+    if (isProfessionalUser || !canReassignAppointments) return;
+    setAppointmentToReassign(appointment);
+    setReassignProfessionalId('');
+    setIsReassignDialogOpen(true);
+  };
+
+  const handleReassignAppointment = async () => {
+    if (!appointmentToReassign?.id || !reassignProfessionalId) {
+      toast.error('Selecione o novo profissional');
+      return;
+    }
+
+    setIsReassigning(true);
+    try {
+      const updated = await reassignAppointmentProfessional(
+        appointmentToReassign.id,
+        reassignProfessionalId
+      );
+      if (selectedAppointment?.id === updated.id) {
+        setSelectedAppointment(updated);
+      }
+      setIsReassignDialogOpen(false);
+      setAppointmentToReassign(null);
+      setReassignProfessionalId('');
+    } catch (error) {
+      // Error is handled in the hook
+    } finally {
+      setIsReassigning(false);
     }
   };
 
@@ -278,6 +362,10 @@ export default function Agenda() {
   const selectedClient = selectedAppointment ? clients.find(c => c.id === selectedAppointment.clientId) : null;
   const selectedProfessionalData = selectedAppointment ? professionals.find(p => p.id === selectedAppointment.professionalId) : null;
   const selectedService = selectedAppointment ? services.find(s => s.id === selectedAppointment.serviceId) : null;
+  const reassignTargetProfessionals = useMemo(() => {
+    if (!appointmentToReassign) return [];
+    return activeProfessionals.filter((prof) => prof.id !== appointmentToReassign.professionalId);
+  }, [activeProfessionals, appointmentToReassign]);
 
   if (isLoading) {
     return (
@@ -311,21 +399,41 @@ export default function Agenda() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-            <Select
-              value={effectiveSelectedProfessional || selectedProfessional}
-              onValueChange={setSelectedProfessional}
-              disabled={isProfessionalUser}
-            >
+            {!isProfessionalUser ? (
+              <Select
+                value={effectiveSelectedProfessional || selectedProfessional}
+                onValueChange={setSelectedProfessional}
+              >
+                <SelectTrigger className="w-36 sm:w-44 h-8 sm:h-9 text-xs sm:text-sm">
+                  <SelectValue placeholder="Profissional" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {activeProfessionals.map((prof) => (
+                    <SelectItem key={prof.id} value={prof.id}>
+                      {prof.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="h-8 sm:h-9 min-w-36 sm:min-w-44 rounded-md border bg-gray-50 px-3 flex items-center text-xs sm:text-sm text-gray-700">
+                {loggedProfessional?.name || "Profissional logado"}
+              </div>
+            )}
+
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
               <SelectTrigger className="w-36 sm:w-44 h-8 sm:h-9 text-xs sm:text-sm">
-                <SelectValue placeholder="Profissional" />
+                <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                {!isProfessionalUser ? <SelectItem value="all">Todos</SelectItem> : null}
-                {activeProfessionals.map((prof) => (
-                  <SelectItem key={prof.id} value={prof.id}>
-                    {prof.name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="all">Todos status</SelectItem>
+                <SelectItem value="PENDING">Pendente</SelectItem>
+                <SelectItem value="CONFIRMED">Confirmado</SelectItem>
+                <SelectItem value="IN_PROGRESS">Em atendimento</SelectItem>
+                <SelectItem value="COMPLETED">Concluido</SelectItem>
+                <SelectItem value="CANCELLED">Cancelado</SelectItem>
+                <SelectItem value="NO_SHOW">Nao compareceu</SelectItem>
               </SelectContent>
             </Select>
 
@@ -355,7 +463,7 @@ export default function Agenda() {
                   <span className="hidden sm:inline">Novo</span> Agendamento
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md mx-4 sm:mx-auto">
+              <DialogContent className="max-w-md mx-4 sm:mx-auto max-h-[85vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Novo Agendamento</DialogTitle>
                   <DialogDescription>
@@ -415,37 +523,42 @@ export default function Agenda() {
                     </Select>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm">Data</Label>
-                      <Input
-                        type="date"
-                        value={newDate}
-                        onChange={(e) => setNewDate(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm">Horário</Label>
-                      <Select value={newTime} onValueChange={setNewTime}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Horário" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {timeSlots.map((time) => (
-                            <SelectItem key={time} value={time}>
-                              {time}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm">Data</Label>
+                    <Input
+                      type="date"
+                      value={newDate}
+                      onChange={(e) => setNewDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm">Horários sugeridos</Label>
+                    <AvailableSlotsList
+                      slots={availableSlots}
+                      isLoading={isLoadingAvailableSlots}
+                      error={availableSlotsError}
+                      canFetch={canFetchAvailableSlots}
+                      selectedStartTime={newStartTime}
+                      onSelect={(slot) => {
+                        setNewStartTime(slot.startTime);
+                        setNewEndTime(slot.endTime);
+                      }}
+                    />
+                    {newStartTime && newEndTime ? (
+                      <p className="text-xs text-gray-500">
+                        Selecionado: {newStartTime} - {newEndTime}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setIsNewAppointmentOpen(false)}>
                     Cancelar
                   </Button>
-                  <Button onClick={handleCreateAppointment} disabled={isSubmitting}>
+                  <Button
+                    onClick={handleCreateAppointment}
+                    disabled={isSubmitting || !newStartTime || !newEndTime}
+                  >
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -481,9 +594,9 @@ export default function Agenda() {
 
                 {/* Time slots */}
                 <div className="divide-y max-h-[500px] sm:max-h-[600px] overflow-y-auto">
-                  {timeSlots.map((time) => {
+                  {displayedTimeSlots.map((time) => {
                     const slotAppointments = filteredAppointments.filter(
-                      (apt) => apt.startTime === time
+                      (apt) => normalizeTimeToHourMinute(apt.startTime) === time
                     );
 
                     return (
@@ -559,6 +672,11 @@ export default function Agenda() {
                                         <DropdownMenuItem onClick={() => handleStatusChange(apt.id, 'NO_SHOW')}>
                                           Não Compareceu
                                         </DropdownMenuItem>
+                                        {!isProfessionalUser && canReassignAppointments && (
+                                          <DropdownMenuItem onClick={() => openReassignDialog(apt)}>
+                                            Realocar profissional
+                                          </DropdownMenuItem>
+                                        )}
                                         <DropdownMenuItem 
                                           className="text-red-600"
                                           onClick={() => handleStatusChange(apt.id, 'CANCELLED')}
@@ -587,6 +705,57 @@ export default function Agenda() {
             </div>
           </CardContent>
         </Card>
+
+        <Dialog open={isReassignDialogOpen} onOpenChange={setIsReassignDialogOpen}>
+          <DialogContent className="max-w-md mx-4 sm:mx-auto">
+            <DialogHeader>
+              <DialogTitle>Realocar Agendamento</DialogTitle>
+              <DialogDescription>
+                Selecione o novo profissional para este agendamento.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2 py-2">
+              <Label className="text-sm">Novo profissional</Label>
+              <Select value={reassignProfessionalId} onValueChange={setReassignProfessionalId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o profissional" />
+                </SelectTrigger>
+                <SelectContent>
+                  {reassignTargetProfessionals.map((prof) => (
+                    <SelectItem key={prof.id} value={prof.id}>
+                      {prof.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsReassignDialogOpen(false);
+                  setAppointmentToReassign(null);
+                  setReassignProfessionalId('');
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleReassignAppointment}
+                disabled={isReassigning || !reassignProfessionalId}
+              >
+                {isReassigning ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Realocando...
+                  </>
+                ) : (
+                  'Confirmar realocacao'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Appointment Details Sheet */}
         <Sheet open={isViewDetailsOpen} onOpenChange={setIsViewDetailsOpen}>
@@ -832,3 +1001,5 @@ export default function Agenda() {
     </MainLayout>
   );
 }
+
+
