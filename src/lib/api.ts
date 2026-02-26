@@ -569,6 +569,10 @@ export const notificationsApi = {
     request<void>(`/notifications/${id}`, {
       method: "DELETE",
     }),
+  deleteAll: () =>
+    request<void>("/notifications/all", {
+      method: "DELETE",
+    }),
 };
 
 export type SalonBusinessHours = {

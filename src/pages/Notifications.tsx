@@ -71,9 +71,11 @@ export default function Notifications() {
     markAllAsRead();
   };
 
-  const handleClearAll = () => {
-    clearAllNotifications();
-    setSelectedId(null);
+  const handleClearAll = async () => {
+    const cleared = await clearAllNotifications();
+    if (cleared) {
+      setSelectedId(null);
+    }
   };
 
   const handleRemoveSelected = async () => {
@@ -161,7 +163,11 @@ export default function Notifications() {
                   <CheckCheck className="w-4 h-4 mr-2" />
                   Marcar todas como lidas
                 </Button>
-                <Button variant="outline" onClick={handleClearAll} disabled={!notifications.length}>
+                <Button
+                  variant="outline"
+                  onClick={() => void handleClearAll()}
+                  disabled={!notifications.length || loading}
+                >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Limpar tudo
                 </Button>

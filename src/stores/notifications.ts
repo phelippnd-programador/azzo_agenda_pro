@@ -23,7 +23,7 @@ type NotificationsStoreState = {
   fetchAll: (filters?: NotificationsFilters) => Promise<void>;
   fetchNextPage: () => Promise<void>;
   removeNotification: (id: string) => Promise<boolean>;
-  clearAllNotifications: () => void;
+  clearAllNotifications: () => Promise<boolean>;
   markAllAsRead: () => void;
   startPolling: () => void;
   stopPolling: () => void;
@@ -227,16 +227,29 @@ export const useNotificationsStore = create<NotificationsStoreState>((set, get) 
     }
   },
 
-  clearAllNotifications: () => {
-    set({
-      items: [],
-      summaryItems: [],
-      unreadCount: 0,
-      hasMore: false,
-      nextCursorCreatedAt: null,
-      nextCursorId: null,
-      error: null,
-    });
+  clearAllNotifications: async () => {
+    try {
+      set({ loading: true, error: null });
+      await notificationsApi.deleteAll();
+      set({
+        items: [],
+        summaryItems: [],
+        unreadCount: 0,
+        hasMore: false,
+        nextCursorCreatedAt: null,
+        nextCursorId: null,
+        error: null,
+        loading: false,
+        lastFetchAt: new Date().toISOString(),
+      });
+      return true;
+    } catch (error) {
+      set({
+        loading: false,
+        error: normalizeErrorMessage(error),
+      });
+      return false;
+    }
   },
 
   markAllAsRead: () => {
