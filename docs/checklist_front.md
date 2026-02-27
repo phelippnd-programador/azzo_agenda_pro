@@ -56,7 +56,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 - [x] Revisar responsividade desktop/mobile.
 
 ## 3. API e contratos
-- [~] Padronizar tratamento de erro (`code`, `message`, `details`, `path`, `timestamp`).
+- [x] Padronizar tratamento de erro (`code`, `message`, `details`, `path`, `timestamp`).
 - [~] Garantir consistencia de status HTTP tratados na UI.
 - [x] Revisar tipos TypeScript para todos os DTOs usados.
 - [x] Tratar fallback seguro quando endpoint de configuracao falhar.
