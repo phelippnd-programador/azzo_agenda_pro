@@ -111,3 +111,4 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 ## 11. Pos-homologacao
 - [x] Corrigir pre-visualizacao da nota fiscal ao abrir via agenda com dados pre-carregados.
 - [x] Restringir financeiro por profissional para exibir somente dados do profissional logado.
+- [x] Restringir dashboard para profissional exibir apenas dados proprios.
