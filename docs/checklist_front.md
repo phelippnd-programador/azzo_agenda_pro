@@ -74,7 +74,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 
 ## 6. Modulos funcionais
 - [x] Dashboard: metricas e graficos.
-- [ ] Agenda: CRUD + status + reatribuicao + disponibilidade.
+- [x] Agenda: CRUD + status + reatribuicao + disponibilidade.
 - [ ] Servicos: CRUD + `professionalIds` no create/update.
 - [ ] Profissionais: CRUD + ativacao/inativacao + reset senha.
 - [ ] Clientes: CRUD + filtros.
