@@ -51,7 +51,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 ## 2. Base tecnica e padroes UI
 - [x] Aplicar Design System (cores, espacos, radius, sombras).
 - [x] Aplicar escala tipografica padrao em todas as telas.
-- [~] Garantir estados `loading`, `empty`, `error` em telas principais.
+- [x] Garantir estados `loading`, `empty`, `error` em telas principais.
 - [~] Padronizar labels/textos conforme documento.
 - [x] Revisar responsividade desktop/mobile.
 
