@@ -102,7 +102,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 - [ ] Validar criterios de aceite (CA e GLR relevantes ao frontend).
 
 ## 10. Fechamento
-- [ ] Revisao final de consistencia visual e de textos.
+- [x] Revisao final de consistencia visual e de textos.
 - [x] Revisao final de rotas e permissoes.
 - [x] Atualizar documentacao com pendencias de backend, se houver.
 - [x] Preparar PR com resumo por modulo e evidencias.
