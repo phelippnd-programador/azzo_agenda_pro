@@ -81,7 +81,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 - [x] Financeiro geral: transacoes e resumo.
 - [x] Financeiro por profissional: metricas e analise por servico.
 - [x] Fiscal: configuracao, preview, emissao, listagem, cancelamento, apuracao.
-- [ ] Licenca/Checkout: fluxo de assinatura e pagamentos.
+- [x] Licenca/Checkout: fluxo de assinatura e pagamentos.
 
 ## 7. Agendamento publico
 - [~] Fluxo em etapas completo (`/agendar/:slug`).
