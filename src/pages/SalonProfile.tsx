@@ -12,7 +12,6 @@ import {
   Building2,
   MapPin,
   Phone,
-  Mail,
   Globe,
   Clock,
   Camera,
@@ -25,7 +24,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { salonApi, utilsApi } from '@/lib/api';
+import { salonApi, utilsApi, type SalonProfile as SalonProfileData } from '@/lib/api';
+import { resolveUiError } from '@/lib/error-utils';
 
 const PUBLIC_BOOKING_BASE_URL =
   (import.meta.env.VITE_PUBLIC_BOOKING_BASE_URL as string | undefined)?.replace(/\/$/, '') ||
@@ -40,11 +40,11 @@ interface BusinessHours {
 
 const defaultBusinessHours: BusinessHours[] = [
   { day: 'Segunda-feira', enabled: true, open: '09:00', close: '19:00' },
-  { day: 'Terça-feira', enabled: true, open: '09:00', close: '19:00' },
+  { day: 'Terca-feira', enabled: true, open: '09:00', close: '19:00' },
   { day: 'Quarta-feira', enabled: true, open: '09:00', close: '19:00' },
   { day: 'Quinta-feira', enabled: true, open: '09:00', close: '19:00' },
   { day: 'Sexta-feira', enabled: true, open: '09:00', close: '19:00' },
-  { day: 'Sábado', enabled: true, open: '09:00', close: '17:00' },
+  { day: 'Sabado', enabled: true, open: '09:00', close: '17:00' },
   { day: 'Domingo', enabled: false, open: '09:00', close: '17:00' },
 ];
 
@@ -61,7 +61,6 @@ export default function SalonProfile() {
     state: false,
   });
 
-  // Salon info
   const [salonName, setSalonName] = useState('');
   const [salonSlug, setSalonSlug] = useState('');
   const [salonDescription, setSalonDescription] = useState('');
@@ -72,7 +71,6 @@ export default function SalonProfile() {
   const [salonInstagram, setSalonInstagram] = useState('');
   const [salonFacebook, setSalonFacebook] = useState('');
 
-  // Address
   const [street, setStreet] = useState('');
   const [number, setNumber] = useState('');
   const [complement, setComplement] = useState('');
@@ -81,7 +79,6 @@ export default function SalonProfile() {
   const [state, setState] = useState('');
   const [zipCode, setZipCode] = useState('');
 
-  // Business hours
   const [businessHours, setBusinessHours] = useState<BusinessHours[]>(defaultBusinessHours);
 
   const normalizeCep = (value: string) => value.replace(/\D/g, '').slice(0, 8);
@@ -154,11 +151,7 @@ export default function SalonProfile() {
         const resolvedState = (data.state || '').trim().toUpperCase();
 
         const hasAnyResolvedField = Boolean(
-          resolvedStreet ||
-          resolvedComplement ||
-          resolvedNeighborhood ||
-          resolvedCity ||
-          resolvedState
+          resolvedStreet || resolvedComplement || resolvedNeighborhood || resolvedCity || resolvedState
         );
 
         setStreet(resolvedStreet);
@@ -180,9 +173,9 @@ export default function SalonProfile() {
         }
 
         setLastResolvedCep(cep);
-      } catch {
+      } catch (error) {
         unlockAddressFields();
-        toast.error('Nao foi possivel buscar o endereco pelo CEP');
+        toast.error(resolveUiError(error, 'Nao foi possivel buscar o endereco pelo CEP').message);
       } finally {
         setIsAddressLoading(false);
       }
@@ -194,7 +187,7 @@ export default function SalonProfile() {
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      const profileData = {
+      const profileData: Partial<SalonProfileData> = {
         salonName,
         salonSlug,
         salonDescription,
@@ -214,10 +207,10 @@ export default function SalonProfile() {
         businessHours,
       };
 
-      await salonApi.updateProfile(profileData as any);
-      toast.success('Perfil do salão atualizado com sucesso!');
+      await salonApi.updateProfile(profileData);
+      toast.success('Perfil do salao atualizado com sucesso');
     } catch (error) {
-      toast.error('Erro ao salvar perfil');
+      toast.error(resolveUiError(error, 'Erro ao salvar perfil').message);
     } finally {
       setIsLoading(false);
     }
@@ -232,22 +225,21 @@ export default function SalonProfile() {
   const copyBookingLink = () => {
     const link = `${PUBLIC_BOOKING_BASE_URL}/agendar/${salonSlug}`;
     navigator.clipboard.writeText(link);
-    toast.success('Link copiado para a área de transferência!');
+    toast.success('Link copiado para a area de transferencia');
   };
 
   const bookingLink = `/agendar/${salonSlug}`;
 
   return (
-    <MainLayout title="Perfil do Salão" subtitle="Gerencie as informações do seu estabelecimento">
+    <MainLayout title="Perfil do Salao" subtitle="Gerencie as informacoes do seu estabelecimento">
       <div className="space-y-4 sm:space-y-6 max-w-4xl">
-        {/* Salon Header Card */}
         <Card>
           <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className="relative">
                 <Avatar className="w-20 h-20 sm:w-24 sm:h-24">
                   <AvatarImage src="" />
-                  <AvatarFallback className="bg-violet-100 text-violet-700 text-xl sm:text-2xl">
+                  <AvatarFallback className="bg-primary/10 text-primary text-xl sm:text-2xl">
                     {salonName.slice(0, 2).toUpperCase() || 'SL'}
                   </AvatarFallback>
                 </Avatar>
@@ -260,11 +252,11 @@ export default function SalonProfile() {
                 </Button>
               </div>
               <div className="flex-1 min-w-0">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-                  {salonName || 'Nome do Salão'}
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground truncate">
+                  {salonName || 'Nome do Salao'}
                 </h2>
-                <p className="text-sm text-gray-500 mt-1">
-                  {city && state ? `${city}, ${state}` : 'Localização não definida'}
+                <p className="text-sm text-muted-foreground mt-1">
+                  {city && state ? `${city}, ${state}` : 'Localizacao nao definida'}
                 </p>
                 <div className="flex flex-wrap gap-2 mt-3">
                   <Badge variant="secondary" className="gap-1">
@@ -277,17 +269,17 @@ export default function SalonProfile() {
           </CardContent>
         </Card>
 
-        {/* Public Booking Link */}
-        <Card className="bg-gradient-to-br from-violet-50 to-pink-50 border-violet-200">
+        <Card className="bg-gradient-to-br from-primary/10 to-accent border-primary/20">
           <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h3 className="font-semibold text-gray-900">Link de Agendamento Público</h3>
-                <p className="text-sm text-gray-600 mt-1">
+                <h3 className="font-semibold text-foreground">Link de Agendamento Publico</h3>
+                <p className="text-sm text-muted-foreground mt-1">
                   Compartilhe este link com seus clientes para agendamento online
                 </p>
-                <code className="text-xs sm:text-sm bg-white/50 px-2 py-1 rounded mt-2 inline-block text-violet-700">
-                  {PUBLIC_BOOKING_BASE_URL}{bookingLink}
+                <code className="text-xs sm:text-sm bg-background/70 px-2 py-1 rounded mt-2 inline-block text-primary">
+                  {PUBLIC_BOOKING_BASE_URL}
+                  {bookingLink}
                 </code>
               </div>
               <div className="flex gap-2">
@@ -295,7 +287,7 @@ export default function SalonProfile() {
                   <Copy className="w-4 h-4" />
                   Copiar
                 </Button>
-                <Button size="sm" asChild className="gap-2 bg-violet-600 hover:bg-violet-700">
+                <Button size="sm" asChild className="gap-2">
                   <a href={bookingLink} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="w-4 h-4" />
                     Abrir
@@ -306,19 +298,18 @@ export default function SalonProfile() {
           </CardContent>
         </Card>
 
-        {/* Basic Info */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Building2 className="w-5 h-5 text-violet-600" />
-              Informações Básicas
+              <Building2 className="w-5 h-5 text-primary" />
+              Informacoes Basicas
             </CardTitle>
-            <CardDescription>Dados principais do seu salão</CardDescription>
+            <CardDescription>Dados principais do seu salao</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Nome do Salão *</Label>
+                <Label>Nome do Salao *</Label>
                 <Input
                   placeholder="Ex: Bella Studio"
                   value={salonName}
@@ -328,7 +319,7 @@ export default function SalonProfile() {
               <div className="space-y-2">
                 <Label>URL do Agendamento</Label>
                 <div className="flex">
-                  <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-100 border border-r-0 border-gray-300 rounded-l-md">
+                  <span className="inline-flex items-center px-3 text-sm text-muted-foreground bg-muted border border-r-0 border-border rounded-l-md">
                     /agendar/
                   </span>
                   <Input
@@ -342,9 +333,9 @@ export default function SalonProfile() {
             </div>
 
             <div className="space-y-2">
-              <Label>Descrição</Label>
+              <Label>Descricao</Label>
               <Textarea
-                placeholder="Descreva seu salão, especialidades, diferenciais..."
+                placeholder="Descreva seu salao, especialidades, diferenciais..."
                 value={salonDescription}
                 onChange={(e) => setSalonDescription(e.target.value)}
                 rows={3}
@@ -353,14 +344,13 @@ export default function SalonProfile() {
           </CardContent>
         </Card>
 
-        {/* Contact Info */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Phone className="w-5 h-5 text-violet-600" />
+              <Phone className="w-5 h-5 text-primary" />
               Contato
             </CardTitle>
-            <CardDescription>Informações de contato do salão</CardDescription>
+            <CardDescription>Informacoes de contato do salao</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
@@ -429,14 +419,13 @@ export default function SalonProfile() {
           </CardContent>
         </Card>
 
-        {/* Address */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <MapPin className="w-5 h-5 text-violet-600" />
-              Endereço
+              <MapPin className="w-5 h-5 text-primary" />
+              Endereco
             </CardTitle>
-            <CardDescription>Localização do seu estabelecimento</CardDescription>
+            <CardDescription>Localizacao do seu estabelecimento</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid sm:grid-cols-3 gap-4">
@@ -450,12 +439,8 @@ export default function SalonProfile() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Número</Label>
-                <Input
-                  placeholder="1000"
-                  value={number}
-                  onChange={(e) => setNumber(e.target.value)}
-                />
+                <Label>Numero</Label>
+                <Input placeholder="1000" value={number} onChange={(e) => setNumber(e.target.value)} />
               </div>
             </div>
 
@@ -484,7 +469,7 @@ export default function SalonProfile() {
               <div className="space-y-2">
                 <Label>Cidade</Label>
                 <Input
-                  placeholder="São Paulo"
+                  placeholder="Sao Paulo"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   disabled={lockedAddressFields.city}
@@ -508,22 +493,19 @@ export default function SalonProfile() {
                   onChange={(e) => setZipCode(formatCep(e.target.value))}
                   maxLength={9}
                 />
-                {isAddressLoading && (
-                  <p className="text-xs text-gray-500">Buscando endereco pelo CEP...</p>
-                )}
+                {isAddressLoading && <p className="text-xs text-muted-foreground">Buscando endereco pelo CEP...</p>}
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Business Hours */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Clock className="w-5 h-5 text-violet-600" />
-              Horário de Funcionamento
+              <Clock className="w-5 h-5 text-primary" />
+              Horario de Funcionamento
             </CardTitle>
-            <CardDescription>Defina os horários de atendimento</CardDescription>
+            <CardDescription>Defina os horarios de atendimento</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -531,7 +513,7 @@ export default function SalonProfile() {
                 <div
                   key={hours.day}
                   className={`flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg ${
-                    hours.enabled ? 'bg-gray-50' : 'bg-gray-100 opacity-60'
+                    hours.enabled ? 'bg-muted/50' : 'bg-muted/30 opacity-60'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-[140px]">
@@ -549,7 +531,7 @@ export default function SalonProfile() {
                         onChange={(e) => updateBusinessHours(index, 'open', e.target.value)}
                         className="w-28"
                       />
-                      <span className="text-gray-500">até</span>
+                      <span className="text-muted-foreground">ate</span>
                       <Input
                         type="time"
                         value={hours.close}
@@ -558,23 +540,15 @@ export default function SalonProfile() {
                       />
                     </div>
                   )}
-                  {!hours.enabled && (
-                    <span className="text-sm text-gray-500 ml-auto">Fechado</span>
-                  )}
+                  {!hours.enabled && <span className="text-sm text-muted-foreground ml-auto">Fechado</span>}
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Save Button */}
         <div className="flex justify-end pb-6">
-          <Button
-            onClick={handleSave}
-            disabled={isLoading}
-            className="gap-2 bg-violet-600 hover:bg-violet-700"
-            size="lg"
-          >
+          <Button onClick={handleSave} disabled={isLoading} className="gap-2" size="lg">
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -583,7 +557,7 @@ export default function SalonProfile() {
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                Salvar Alterações
+                Salvar Alteracoes
               </>
             )}
           </Button>
@@ -592,5 +566,3 @@ export default function SalonProfile() {
     </MainLayout>
   );
 }
-
-

@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { getCurrentBillingSubscription } from '@/services/billingService';
 import { ApiError } from '@/lib/api';
+import { resolveUiError } from '@/lib/error-utils';
 
 const isDemoLoginEnabled =
   String(import.meta.env.VITE_ENABLE_DEMO_LOGIN ?? 'false').toLowerCase() === 'true';
@@ -51,11 +52,13 @@ export default function Login() {
       const redirectPath = await getPostLoginRoute();
       navigate(redirectPath);
     } catch (error) {
-      toast.error(
+      const uiError = resolveUiError(
+        error,
         isDemoLoginEnabled
           ? 'Credenciais invalidas. Tente demo@azzo.com / demo123'
           : 'Credenciais invalidas.'
       );
+      toast.error(uiError.message);
     } finally {
       setIsLoading(false);
     }
@@ -88,7 +91,8 @@ export default function Login() {
       const redirectPath = await getPostLoginRoute();
       navigate(redirectPath);
     } catch (error) {
-      toast.error('Erro ao fazer login de demonstracao');
+      const uiError = resolveUiError(error, 'Erro ao fazer login de demonstracao');
+      toast.error(uiError.message);
     } finally {
       setIsLoading(false);
     }
