@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PageErrorState } from '@/components/ui/page-states';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
@@ -68,7 +69,7 @@ export default function Clients() {
   const [formBirthDate, setFormBirthDate] = useState('');
   const [formNotes, setFormNotes] = useState('');
 
-  const { clients, isLoading, createClient, updateClient, deleteClient } = useClients();
+  const { clients, isLoading, error, refetch, createClient, updateClient, deleteClient } = useClients();
 
   const filteredClients = clients.filter((client) =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -149,13 +150,25 @@ export default function Clients() {
     );
   }
 
+  if (error) {
+    return (
+      <MainLayout title="Clientes" subtitle="Gerencie sua base de clientes">
+        <PageErrorState
+          title="Nao foi possivel carregar os clientes"
+          description={error}
+          action={{ label: 'Tentar novamente', onClick: refetch }}
+        />
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout title="Clientes" subtitle="Gerencie sua base de clientes">
       <div className="space-y-4 sm:space-y-6">
         {/* Header Controls */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Buscar clientes..."
               value={searchTerm}
@@ -189,12 +202,12 @@ export default function Clients() {
               if (!open) resetForm();
             }}>
               <DialogTrigger asChild>
-                <Button className="gap-2 bg-violet-600 hover:bg-violet-700">
+                <Button className="gap-2">
                   <Plus className="w-4 h-4" />
                   <span className="hidden sm:inline">Novo</span> Cliente
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md mx-4 sm:mx-auto">
+              <DialogContent className="max-w-md mx-4 sm:mx-auto max-h-[85vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>{editingClient ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
                   <DialogDescription>
@@ -277,8 +290,8 @@ export default function Clients() {
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
           <Card>
             <CardContent className="p-3 sm:p-4 text-center">
-              <p className="text-lg sm:text-2xl font-bold text-violet-600">{clients.length}</p>
-              <p className="text-xs sm:text-sm text-gray-500">Total de Clientes</p>
+              <p className="text-lg sm:text-2xl font-bold text-primary">{clients.length}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Total de Clientes</p>
             </CardContent>
           </Card>
           <Card>
@@ -286,15 +299,15 @@ export default function Clients() {
               <p className="text-lg sm:text-2xl font-bold text-green-600">
                 {clients.filter(c => c.lastVisit && new Date(c.lastVisit) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length}
               </p>
-              <p className="text-xs sm:text-sm text-gray-500">Ativos (30 dias)</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Ativos (30 dias)</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-3 sm:p-4 text-center">
-              <p className="text-lg sm:text-2xl font-bold text-pink-600">
+              <p className="text-lg sm:text-2xl font-bold text-primary">
                 {formatCurrency(clients.reduce((sum, c) => sum + c.totalSpent, 0))}
               </p>
-              <p className="text-xs sm:text-sm text-gray-500">Faturamento Total</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Faturamento Total</p>
             </CardContent>
           </Card>
         </div>
@@ -303,8 +316,8 @@ export default function Clients() {
         {filteredClients.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
-              <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">Nenhum cliente encontrado</p>
+              <Users className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+              <p className="text-muted-foreground">Nenhum cliente encontrado</p>
               {searchTerm && (
                 <Button variant="link" onClick={() => setSearchTerm('')}>
                   Limpar busca
@@ -320,15 +333,15 @@ export default function Clients() {
                   <div className="flex items-start justify-between gap-2 mb-4">
                     <div className="flex items-center gap-3 min-w-0">
                       <Avatar className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
-                        <AvatarFallback className="bg-pink-100 text-pink-700 text-sm">
+                        <AvatarFallback className="bg-primary/15 text-primary text-sm">
                           {client.name.slice(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
-                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
+                        <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">
                           {client.name}
                         </h3>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                           {client.totalVisits} visitas
                         </p>
                       </div>
@@ -355,21 +368,21 @@ export default function Clients() {
                   </div>
 
                   <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-gray-600">
+                    <div className="flex items-center gap-2 text-muted-foreground">
                       <Phone className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                       <span className="text-xs sm:text-sm">{client.phone}</span>
                     </div>
                     {client.email && (
-                      <div className="flex items-center gap-2 text-gray-600">
+                      <div className="flex items-center gap-2 text-muted-foreground">
                         <Mail className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                         <span className="text-xs sm:text-sm truncate">{client.email}</span>
                       </div>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border">
                     <div>
-                      <div className="flex items-center gap-1 text-gray-500 mb-1">
+                      <div className="flex items-center gap-1 text-muted-foreground mb-1">
                         <Calendar className="w-3 h-3" />
                         <span className="text-[10px] sm:text-xs">Última visita</span>
                       </div>
@@ -380,11 +393,11 @@ export default function Clients() {
                       </p>
                     </div>
                     <div>
-                      <div className="flex items-center gap-1 text-gray-500 mb-1">
+                      <div className="flex items-center gap-1 text-muted-foreground mb-1">
                         <DollarSign className="w-3 h-3" />
                         <span className="text-[10px] sm:text-xs">Total gasto</span>
                       </div>
-                      <p className="text-xs sm:text-sm font-medium text-violet-600">
+                      <p className="text-xs sm:text-sm font-medium text-primary">
                         {formatCurrency(client.totalSpent)}
                       </p>
                     </div>
@@ -413,7 +426,7 @@ export default function Clients() {
                       <TableCell>
                         <div className="flex items-center gap-2 sm:gap-3">
                           <Avatar className="w-8 h-8 flex-shrink-0">
-                            <AvatarFallback className="bg-pink-100 text-pink-700 text-xs">
+                            <AvatarFallback className="bg-primary/15 text-primary text-xs">
                               {client.name.slice(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
@@ -421,7 +434,7 @@ export default function Clients() {
                             <p className="font-medium text-sm truncate max-w-[120px] sm:max-w-none">
                               {client.name}
                             </p>
-                            <p className="text-xs text-gray-500 sm:hidden">{client.phone}</p>
+                            <p className="text-xs text-muted-foreground sm:hidden">{client.phone}</p>
                           </div>
                         </div>
                       </TableCell>
@@ -434,7 +447,7 @@ export default function Clients() {
                           {client.totalVisits}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right font-medium text-violet-600 text-sm">
+                      <TableCell className="text-right font-medium text-primary text-sm">
                         {formatCurrency(client.totalSpent)}
                       </TableCell>
                       <TableCell>

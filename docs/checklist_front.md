@@ -35,6 +35,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
   - login demo local por perfil (Owner e Profissional) para validar RBAC sem backend
   - contexto de permissoes sem bypass local fixo (sempre consome `menus/current`, inclusive demo)
   - camada de storage fiscal sem uso de `any`
+  - responsividade mobile reforcada em dialogs principais (agenda, clientes, financeiro, emissao fiscal)
   - build validado apos ajustes
 
 ## 1. Preparacao
@@ -49,7 +50,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 - [~] Aplicar escala tipografica padrao em todas as telas.
 - [~] Garantir estados `loading`, `empty`, `error` em telas principais.
 - [~] Padronizar labels/textos conforme documento.
-- [ ] Revisar responsividade desktop/mobile.
+- [x] Revisar responsividade desktop/mobile.
 
 ## 3. API e contratos
 - [~] Padronizar tratamento de erro (`code`, `message`, `details`, `path`, `timestamp`).

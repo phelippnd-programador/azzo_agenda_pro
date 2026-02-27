@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Invoice, InvoiceFormData } from '@/types/invoice';
 import { fiscalApi } from '@/lib/api';
+import { resolveUiError } from '@/lib/error-utils';
 import { toast } from 'sonner';
 import { FileText, List } from 'lucide-react';
 
@@ -45,8 +46,8 @@ export default function InvoiceEmission() {
           (a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime()
         )
       );
-    } catch {
-      toast.error('Erro ao carregar notas fiscais');
+    } catch (error) {
+      toast.error(resolveUiError(error, 'Erro ao carregar notas fiscais').message);
     }
   };
 
@@ -69,7 +70,7 @@ export default function InvoiceEmission() {
 
       setActiveTab('list');
     } catch (error) {
-      toast.error('Erro ao processar nota fiscal');
+      toast.error(resolveUiError(error, 'Erro ao processar nota fiscal').message);
       console.error(error);
     }
   };
@@ -104,7 +105,7 @@ export default function InvoiceEmission() {
       toast.success(`Nota fiscal ${invoiceToCancel.number} cancelada com sucesso`);
       setInvoiceToCancel(null);
     } catch (error) {
-      toast.error('Erro ao cancelar nota fiscal');
+      toast.error(resolveUiError(error, 'Erro ao cancelar nota fiscal').message);
       console.error(error);
     }
   };
@@ -144,7 +145,7 @@ export default function InvoiceEmission() {
         </Tabs>
 
         <Dialog open={isViewerOpen} onOpenChange={setIsViewerOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl mx-4 sm:mx-auto max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Detalhes da Nota Fiscal</DialogTitle>
               <DialogDescription>Visualizacao completa da nota fiscal emitida</DialogDescription>
