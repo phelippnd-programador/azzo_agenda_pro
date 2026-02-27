@@ -36,6 +36,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
   - contexto de permissoes sem bypass local fixo (sempre consome `menus/current`, inclusive demo)
   - camada de storage fiscal sem uso de `any`
   - responsividade mobile reforcada em dialogs principais (agenda, clientes, financeiro, emissao fiscal)
+  - validacao de perfil OWNER e PROFESSIONAL com login demo local dedicado e menus por `allowedRoutes`
   - build validado apos ajustes
 
 ## 1. Preparacao
@@ -67,7 +68,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 - [x] Consumir apenas `/config/menus/current` para renderizacao de menu.
 - [x] Aplicar `allowedRoutes` no guard de navegacao.
 - [x] Tratar bloqueio de acesso com redirecionamento para `/unauthorized`.
-- [~] Validar comportamento por perfil (OWNER, PROFESSIONAL, etc.).
+- [x] Validar comportamento por perfil (OWNER, PROFESSIONAL, etc.).
 
 ## 6. Modulos funcionais
 - [ ] Dashboard: metricas e graficos.

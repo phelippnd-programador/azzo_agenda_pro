@@ -12,10 +12,12 @@ import { ApiError } from '@/lib/api';
 
 const isDemoLoginEnabled =
   String(import.meta.env.VITE_ENABLE_DEMO_LOGIN ?? 'false').toLowerCase() === 'true';
+const isLocalDemoQuickAccessEnabled =
+  String(import.meta.env.VITE_ENABLE_LOCAL_DEMO ?? 'true').toLowerCase() !== 'false';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, loginLocalDemo } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -59,9 +61,26 @@ export default function Login() {
     }
   };
 
+  const handleLocalDemoLogin = async (role: 'OWNER' | 'PROFESSIONAL') => {
+    if (!isLocalDemoQuickAccessEnabled) return;
+    setIsLoading(true);
+    try {
+      await loginLocalDemo(role);
+      toast.success(
+        role === 'PROFESSIONAL'
+          ? 'Modo demo local (Profissional) ativado.'
+          : 'Modo demo local (Owner) ativado.'
+      );
+      navigate('/dashboard');
+    } catch (error) {
+      toast.error('Erro ao ativar demo local');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleDemoLogin = async () => {
     if (!isDemoLoginEnabled) return;
-
     setIsLoading(true);
     try {
       await login('demo@azzo.com', 'demo123');
@@ -76,15 +95,15 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 via-white to-pink-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-card p-4">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-2 mb-6 sm:mb-8">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-violet-600 to-pink-500 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-xl flex items-center justify-center">
             <Scissors className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Azzo</h1>
-            <p className="text-xs sm:text-sm text-violet-600 font-medium -mt-1">Agenda Pro</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Azzo</h1>
+            <p className="text-xs sm:text-sm text-primary font-medium -mt-1">Agenda Pro</p>
           </div>
         </div>
 
@@ -113,7 +132,7 @@ export default function Login() {
                   <Label htmlFor="password" className="text-sm">Senha</Label>
                   <Link
                     to="/recuperar-senha"
-                    className="text-xs sm:text-sm text-violet-600 hover:text-violet-700"
+                    className="text-xs sm:text-sm text-primary hover:opacity-90"
                   >
                     Esqueceu a senha?
                   </Link>
@@ -136,9 +155,9 @@ export default function Login() {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="w-4 h-4 text-gray-400" />
+                      <EyeOff className="w-4 h-4 text-muted-foreground" />
                     ) : (
-                      <Eye className="w-4 h-4 text-gray-400" />
+                      <Eye className="w-4 h-4 text-muted-foreground" />
                     )}
                   </Button>
                 </div>
@@ -146,7 +165,7 @@ export default function Login() {
 
               <Button
                 type="submit"
-                className="w-full h-10 sm:h-11 bg-gradient-to-r from-violet-600 to-pink-500 hover:from-violet-700 hover:to-pink-600"
+                className="w-full h-10 sm:h-11"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -160,43 +179,69 @@ export default function Login() {
               </Button>
             </form>
 
-            {isDemoLoginEnabled ? (
+            {isDemoLoginEnabled || isLocalDemoQuickAccessEnabled ? (
               <>
                 <div className="relative my-4 sm:my-6">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200" />
+                    <div className="w-full border-t border-border" />
                   </div>
                   <div className="relative flex justify-center text-xs sm:text-sm">
-                    <span className="bg-white px-2 text-gray-500">ou</span>
+                    <span className="bg-background px-2 text-muted-foreground">ou</span>
                   </div>
                 </div>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-10 sm:h-11"
-                  onClick={handleDemoLogin}
-                  disabled={isLoading}
-                >
-                  Acessar Demonstracao
-                </Button>
+                <div className="space-y-2">
+                  {isLocalDemoQuickAccessEnabled ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-10 sm:h-11"
+                        onClick={() => handleLocalDemoLogin('OWNER')}
+                        disabled={isLoading}
+                      >
+                        Demo Local Owner
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-10 sm:h-11"
+                        onClick={() => handleLocalDemoLogin('PROFESSIONAL')}
+                        disabled={isLoading}
+                      >
+                        Demo Local Profissional
+                      </Button>
+                    </>
+                  ) : null}
+                  {isDemoLoginEnabled ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full h-10 sm:h-11"
+                      onClick={handleDemoLogin}
+                      disabled={isLoading}
+                    >
+                      Login Demo Remoto
+                    </Button>
+                  ) : null}
+                </div>
               </>
             ) : null}
 
-            <p className="text-center text-xs sm:text-sm text-gray-600 mt-4 sm:mt-6">
+            <p className="text-center text-xs sm:text-sm text-muted-foreground mt-4 sm:mt-6">
               Nao tem uma conta?{' '}
-              <Link to="/cadastro" className="text-violet-600 hover:text-violet-700 font-medium">
+              <Link to="/cadastro" className="text-primary hover:opacity-90 font-medium">
                 Cadastre-se gratis
               </Link>
             </p>
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-gray-500 mt-4 sm:mt-6">
+        <p className="text-center text-xs text-muted-foreground mt-4 sm:mt-6">
           Ao entrar, voce concorda com nossos{' '}
-          <a href="#" className="text-violet-600 hover:underline">Termos de Uso</a>
+          <a href="#" className="text-primary hover:underline">Termos de Uso</a>
           {' '}e{' '}
-          <a href="#" className="text-violet-600 hover:underline">Politica de Privacidade</a>
+          <a href="#" className="text-primary hover:underline">Politica de Privacidade</a>
         </p>
       </div>
     </div>
