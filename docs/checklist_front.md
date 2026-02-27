@@ -104,5 +104,5 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 ## 10. Fechamento
 - [ ] Revisao final de consistencia visual e de textos.
 - [ ] Revisao final de rotas e permissoes.
-- [ ] Atualizar documentacao com pendencias de backend, se houver.
+- [x] Atualizar documentacao com pendencias de backend, se houver.
 - [ ] Preparar PR com resumo por modulo e evidencias.
