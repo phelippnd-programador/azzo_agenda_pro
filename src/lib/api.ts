@@ -54,6 +54,38 @@ export type ProfessionalLimits = {
   remaining: number;
 };
 
+export type DashboardProfessionalMetricsResponse = {
+  startDate: string;
+  endDate: string;
+  professionalId: string;
+  revenueTotal: number;
+  commissionTotal: number;
+  completedServices: number;
+  clientsServed: number;
+};
+
+export type DashboardServiceMetricItem = {
+  serviceId: string;
+  serviceName: string;
+  totalAppointments: number;
+  completedAppointments: number;
+  canceledAppointments: number;
+  revenueTotal: number;
+  completionRate: number;
+  cancellationRate: number;
+};
+
+export type DashboardServicesMetricsResponse = {
+  startDate: string;
+  endDate: string;
+  professionalId?: string | null;
+  services: DashboardServiceMetricItem[];
+  mostRequestedService: DashboardServiceMetricItem | null;
+  leastRequestedService: DashboardServiceMetricItem | null;
+  mostCancelledService: DashboardServiceMetricItem | null;
+  mostCompletedService: DashboardServiceMetricItem | null;
+};
+
 const API_URL =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ||
   "http://localhost:8080/api/v1";
@@ -385,6 +417,20 @@ export const authApi = {
 
 export const dashboardApi = {
   getMetrics: () => request<DashboardMetrics>("/dashboard/metrics"),
+  getProfessionalMetrics: (start: string, end: string, professionalId: string) =>
+    request<DashboardProfessionalMetricsResponse>(
+      `/dashboard/metrics/professional?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&professionalId=${encodeURIComponent(professionalId)}`
+    ),
+  getServicesMetrics: (start: string, end: string, professionalId?: string) => {
+    const query = new URLSearchParams({
+      start,
+      end,
+    });
+    if (professionalId) query.set("professionalId", professionalId);
+    return request<DashboardServicesMetricsResponse>(
+      `/dashboard/metrics/services?${query.toString()}`
+    );
+  },
   getWeeklyRevenue: (start: string, end: string) =>
     request<{
       points: Array<{ day: string; date: string; value: number }>;

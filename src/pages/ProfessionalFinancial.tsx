@@ -1,8 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { useAppointments } from "@/hooks/useAppointments";
 import { useProfessionals } from "@/hooks/useProfessionals";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  dashboardApi,
+  type DashboardServiceMetricItem,
+  type DashboardServicesMetricsResponse,
+} from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -19,6 +23,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -43,20 +48,17 @@ const formatCurrency = (value: number) =>
     currency: "BRL",
   }).format(value);
 
+const formatPercent = (value: number) =>
+  `${new Intl.NumberFormat("pt-BR", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 0,
+  }).format(Number(value || 0))}%`;
+
 function dateToYmd(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
-}
-
-function normalizeDate(value: unknown) {
-  if (!value) return null;
-  if (value instanceof Date) return value;
-  const text = String(value);
-  const normalized = text.includes("T") ? text : `${text}T12:00:00`;
-  const date = new Date(normalized);
-  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function getCurrentRange(preset: DatePreset, customStart: string, customEnd: string) {
@@ -97,12 +99,16 @@ function getCurrentRange(preset: DatePreset, customStart: string, customEnd: str
 
 export default function ProfessionalFinancial() {
   const { user } = useAuth();
-  const { appointments, isLoading: isLoadingAppointments } = useAppointments();
   const { professionals, isLoading: isLoadingProfessionals } = useProfessionals();
   const [preset, setPreset] = useState<DatePreset>("month");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [selectedProfessionalId, setSelectedProfessionalId] = useState("all");
+  const [statsByProfessional, setStatsByProfessional] = useState<ProfessionalStats[]>([]);
+  const [isLoadingProfessionalMetrics, setIsLoadingProfessionalMetrics] = useState(false);
+  const [servicesMetrics, setServicesMetrics] =
+    useState<DashboardServicesMetricsResponse | null>(null);
+  const [isLoadingServicesMetrics, setIsLoadingServicesMetrics] = useState(false);
 
   const loggedProfessional = useMemo(
     () => professionals.find((professional) => professional.userId === user?.id) ?? null,
@@ -118,57 +124,155 @@ export default function ProfessionalFinancial() {
     [customEnd, customStart, preset]
   );
 
-  const statsByProfessional = useMemo<ProfessionalStats[]>(() => {
-    if (!start || !end) return [];
-    const startDate = normalizeDate(start);
-    const endDate = normalizeDate(end);
-    if (!startDate || !endDate) return [];
-    endDate.setHours(23, 59, 59, 999);
+  useEffect(() => {
+    if (!start || !end || isLoadingProfessionals) {
+      setStatsByProfessional([]);
+      setIsLoadingProfessionalMetrics(false);
+      return;
+    }
 
-    const baseAppointments = appointments.filter((appointment) => {
-      if (appointment.status !== "COMPLETED") return false;
-      const appointmentDate = normalizeDate(appointment.date);
-      if (!appointmentDate) return false;
-      const inRange = appointmentDate >= startDate && appointmentDate <= endDate;
-      if (!inRange) return false;
-      if (effectiveProfessionalId === "all") return true;
-      return appointment.professionalId === effectiveProfessionalId;
-    });
+    const professionalIdsToFetch =
+      effectiveProfessionalId === "all"
+        ? professionals.map((professional) => professional.id)
+        : [effectiveProfessionalId];
 
-    const map = new Map<
-      string,
-      { revenue: number; servicesCount: number; clients: Set<string> }
-    >();
+    const filteredProfessionalIds = professionalIdsToFetch.filter(Boolean);
+    if (!filteredProfessionalIds.length) {
+      setStatsByProfessional([]);
+      setIsLoadingProfessionalMetrics(false);
+      return;
+    }
 
-    baseAppointments.forEach((appointment) => {
-      const current = map.get(appointment.professionalId) ?? {
-        revenue: 0,
-        servicesCount: 0,
-        clients: new Set<string>(),
-      };
-      current.revenue += Number(appointment.totalPrice || 0);
-      current.servicesCount += 1;
-      if (appointment.clientId) current.clients.add(appointment.clientId);
-      map.set(appointment.professionalId, current);
-    });
+    let isMounted = true;
+    setIsLoadingProfessionalMetrics(true);
 
-    return professionals
-      .map((professional) => {
-        const stats = map.get(professional.id);
-        const revenue = stats?.revenue || 0;
-        const commission = revenue * (Number(professional.commissionRate || 0) / 100);
+    Promise.all(
+      filteredProfessionalIds.map(async (professionalId) => {
+        const data = await dashboardApi.getProfessionalMetrics(start, end, professionalId);
+        const professional = professionals.find((item) => item.id === professionalId);
         return {
-          professionalId: professional.id,
-          name: professional.name,
-          revenue,
-          commission,
-          servicesCount: stats?.servicesCount || 0,
-          clientsCount: stats?.clients.size || 0,
+          professionalId,
+          name: professional?.name || "Profissional",
+          revenue: Number(data.revenueTotal || 0),
+          commission: Number(data.commissionTotal || 0),
+          servicesCount: Number(data.completedServices || 0),
+          clientsCount: Number(data.clientsServed || 0),
         };
       })
-      .filter((item) => item.revenue > 0 || item.servicesCount > 0)
-      .sort((a, b) => b.revenue - a.revenue);
-  }, [appointments, end, professionals, start, effectiveProfessionalId]);
+    )
+      .then((items) => {
+        if (!isMounted) return;
+        setStatsByProfessional(
+          items
+            .filter((item) => item.revenue > 0 || item.servicesCount > 0)
+            .sort((a, b) => b.revenue - a.revenue)
+        );
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setStatsByProfessional([]);
+      })
+      .finally(() => {
+        if (!isMounted) return;
+        setIsLoadingProfessionalMetrics(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [effectiveProfessionalId, end, isLoadingProfessionals, professionals, start]);
+
+  useEffect(() => {
+    if (!start || !end || isLoadingProfessionals) {
+      setServicesMetrics(null);
+      setIsLoadingServicesMetrics(false);
+      return;
+    }
+
+    if (isProfessional && (!effectiveProfessionalId || effectiveProfessionalId === "all")) {
+      setServicesMetrics(null);
+      setIsLoadingServicesMetrics(false);
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingServicesMetrics(true);
+
+    const professionalIdParam =
+      effectiveProfessionalId === "all" ? undefined : effectiveProfessionalId;
+
+    dashboardApi
+      .getServicesMetrics(start, end, professionalIdParam)
+      .then((data) => {
+        if (!isMounted) return;
+        setServicesMetrics(data);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setServicesMetrics(null);
+      })
+      .finally(() => {
+        if (!isMounted) return;
+        setIsLoadingServicesMetrics(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [effectiveProfessionalId, end, isLoadingProfessionals, isProfessional, start]);
+
+  const servicesChartData = useMemo(() => {
+    const services = servicesMetrics?.services || [];
+    return [...services]
+      .sort((a, b) => b.totalAppointments - a.totalAppointments)
+      .slice(0, 8)
+      .map((item) => {
+        const otherAppointments = Math.max(
+          0,
+          Number(item.totalAppointments || 0) -
+            Number(item.completedAppointments || 0) -
+            Number(item.canceledAppointments || 0)
+        );
+
+        return {
+          serviceName: item.serviceName,
+          totalAppointments: Number(item.totalAppointments || 0),
+          completedAppointments: Number(item.completedAppointments || 0),
+          canceledAppointments: Number(item.canceledAppointments || 0),
+          otherAppointments,
+          completionRate: Number(item.completionRate || 0),
+          cancellationRate: Number(item.cancellationRate || 0),
+          revenueTotal: Number(item.revenueTotal || 0),
+        };
+      });
+  }, [servicesMetrics]);
+
+  const servicesChartHeight = useMemo(
+    () => Math.max(300, servicesChartData.length * 56),
+    [servicesChartData.length]
+  );
+
+  const serviceHighlights = useMemo(
+    () => [
+      {
+        title: "Mais solicitado",
+        item: servicesMetrics?.mostRequestedService,
+      },
+      {
+        title: "Menos solicitado",
+        item: servicesMetrics?.leastRequestedService,
+      },
+      {
+        title: "Mais cancelado",
+        item: servicesMetrics?.mostCancelledService,
+      },
+      {
+        title: "Mais concluido",
+        item: servicesMetrics?.mostCompletedService,
+      },
+    ],
+    [servicesMetrics]
+  );
 
   const totals = useMemo(() => {
     return statsByProfessional.reduce(
@@ -184,7 +288,7 @@ export default function ProfessionalFinancial() {
   }, [statsByProfessional]);
   const isOwnerView = !isProfessional;
 
-  if (isLoadingAppointments || isLoadingProfessionals) {
+  if (isLoadingProfessionals || isLoadingProfessionalMetrics || isLoadingServicesMetrics) {
     return (
       <MainLayout
         title="Financeiro por Profissional"
@@ -365,6 +469,138 @@ export default function ProfessionalFinancial() {
 
         <Card>
           <CardHeader className="pb-2">
+            <CardTitle className="text-base sm:text-lg">Analise de servicos</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-3 md:grid-cols-4">
+              {serviceHighlights.map(({ title, item }) => {
+                const metricItem = item as DashboardServiceMetricItem | null;
+                return (
+                  <div key={title} className="rounded-lg border p-3">
+                    <p className="text-xs text-gray-500">{title}</p>
+                    <p className="mt-1 text-sm font-semibold text-gray-900">
+                      {metricItem?.serviceName || "Sem dados"}
+                    </p>
+                    {metricItem ? (
+                      <p className="mt-1 text-xs text-gray-600">
+                        {metricItem.totalAppointments} ag. • {metricItem.completedAppointments} concl. •{" "}
+                        {metricItem.canceledAppointments} cancel.
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+
+            {!servicesChartData.length ? (
+              <p className="text-sm text-gray-500">Sem dados de servicos para o periodo selecionado.</p>
+            ) : (
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div style={{ height: `${servicesChartHeight}px` }}>
+                  <p className="mb-2 text-sm font-medium text-gray-700">
+                    Volume de agendamentos por servico
+                  </p>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={servicesChartData} layout="vertical" margin={{ left: 8, right: 12 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                      <XAxis
+                        type="number"
+                        allowDecimals={false}
+                        label={{ value: "Quantidade de agendamentos", position: "insideBottom", offset: -2 }}
+                      />
+                      <YAxis type="category" dataKey="serviceName" width={130} />
+                      <Tooltip
+                        formatter={(value, name, payload) => {
+                          const item = payload?.payload as
+                            | (typeof servicesChartData)[number]
+                            | undefined;
+                          if (!item) return [value, name];
+                          if (name === "Agendamentos concluidos")
+                            return [`${value} (${formatPercent(item.completionRate)})`, name];
+                          if (name === "Agendamentos cancelados")
+                            return [`${value} (${formatPercent(item.cancellationRate)})`, name];
+                          if (name === "Outros status") return [value, name];
+                          return [value, name];
+                        }}
+                        labelFormatter={(label, payload) => {
+                          const item = payload?.[0]?.payload as
+                            | (typeof servicesChartData)[number]
+                            | undefined;
+                          if (!item) return label;
+                          return `${label} - Total ${item.totalAppointments} - ${formatCurrency(
+                            item.revenueTotal
+                          )}`;
+                        }}
+                      />
+                      <Legend />
+                      <Bar
+                        dataKey="completedAppointments"
+                        stackId="appointments"
+                        fill="#16a34a"
+                        name="Agendamentos concluidos"
+                        radius={[0, 4, 4, 0]}
+                        maxBarSize={22}
+                      />
+                      <Bar
+                        dataKey="canceledAppointments"
+                        stackId="appointments"
+                        fill="#ef4444"
+                        name="Agendamentos cancelados"
+                        maxBarSize={22}
+                      />
+                      <Bar
+                        dataKey="otherAppointments"
+                        stackId="appointments"
+                        fill="#94a3b8"
+                        name="Outros status"
+                        maxBarSize={22}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div style={{ height: `${servicesChartHeight}px` }}>
+                  <p className="mb-2 text-sm font-medium text-gray-700">
+                    Taxas de conclusao e cancelamento por servico
+                  </p>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={servicesChartData} layout="vertical" margin={{ left: 8, right: 12 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                      <XAxis
+                        type="number"
+                        domain={[0, 100]}
+                        tickFormatter={(value) => `${value}%`}
+                        label={{ value: "Percentual", position: "insideBottom", offset: -2 }}
+                      />
+                      <YAxis type="category" dataKey="serviceName" width={130} />
+                      <Tooltip
+                        formatter={(value, name) => [formatPercent(Number(value || 0)), name]}
+                      />
+                      <Legend />
+                      <Bar
+                        dataKey="completionRate"
+                        fill="#16a34a"
+                        name="% de conclusao"
+                        radius={[0, 4, 4, 0]}
+                        maxBarSize={18}
+                      />
+                      <Bar
+                        dataKey="cancellationRate"
+                        fill="#ef4444"
+                        name="% de cancelamento"
+                        radius={[0, 4, 4, 0]}
+                        maxBarSize={18}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
             <CardTitle className="text-base sm:text-lg">Detalhamento por profissional</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -421,3 +657,4 @@ export default function ProfessionalFinancial() {
     </MainLayout>
   );
 }
+
