@@ -56,10 +56,10 @@ Branch: `feature/frontend-arquitetura-auditoria`
 - [x] Aplicar tokens semanticos (sem hardcode de cor).
 - [x] Garantir responsividade desktop/mobile.
 - [x] Garantir estados de loading/empty/error padronizados.
-- [ ] Revisar labels e textos conforme `docs/PADRAO_LABELS_E_TEXTOS.md`.
+- [x] Revisar labels e textos conforme `docs/PADRAO_LABELS_E_TEXTOS.md`.
 
 ## 10. Homologacao e evidencias
-- [ ] Criar bloco de evidencias em `docs/EVIDENCIAS_RF` para auditoria.
-- [ ] Registrar execucao no `docs/PACOTE_EVIDENCIAS_RF_FRONT.md`.
-- [ ] Atualizar `docs/MATRIZ_HOMOLOGACAO_RF.md` com status do novo modulo.
+- [x] Criar bloco de evidencias em `docs/EVIDENCIAS_RF` para auditoria.
+- [x] Registrar execucao no `docs/PACOTE_EVIDENCIAS_RF_FRONT.md`.
+- [x] Atualizar `docs/MATRIZ_HOMOLOGACAO_RF.md` com status do novo modulo.
 - [x] Validar build/lint/tsc sem erro.

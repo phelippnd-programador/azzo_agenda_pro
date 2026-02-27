@@ -384,11 +384,11 @@ export default function Auditoria() {
               <div className="space-y-2">
                 {retentionEvents.map((event) => (
                   <div key={event.id} className="rounded-md border p-3 text-sm">
-                    <p><span className="font-medium">Policy version:</span> {event.policyVersion}</p>
+                    <p><span className="font-medium">Versao da politica:</span> {event.policyVersion}</p>
                     <p><span className="font-medium">Janela:</span> {formatDateTime(event.windowStart)} ate {formatDateTime(event.windowEnd)}</p>
                     <p><span className="font-medium">Linhas afetadas:</span> {event.affectedRows}</p>
-                    <p><span className="font-medium">Execution ID:</span> <span className="font-mono text-xs">{event.executionId}</span></p>
-                    <p><span className="font-medium">Evidence hash:</span> <span className="font-mono text-xs">{event.evidenceHash}</span></p>
+                    <p><span className="font-medium">ID da execucao:</span> <span className="font-mono text-xs">{event.executionId}</span></p>
+                    <p><span className="font-medium">Hash da evidencia:</span> <span className="font-mono text-xs">{event.evidenceHash}</span></p>
                   </div>
                 ))}
               </div>

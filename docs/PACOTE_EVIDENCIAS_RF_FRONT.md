@@ -25,6 +25,7 @@ Objetivo: centralizar evidencias para mover RFs da matriz de `EM_EXECUCAO` para 
 | RF-043..045 | `/notificacoes` | Pendente | Pendente | Pendente | `acc3e80` | EM_EXECUCAO |
 | RF-046..050 | `/perfil-salao`, `/configuracoes`, `/configuracoes/integracoes/whatsapp` | Pendente | Pendente | Pendente | `716ccea` | EM_EXECUCAO |
 | RF-051..056 | `/agendar/:slug` | Pendente | Pendente | Pendente | `acc3e80` | EM_EXECUCAO |
+| RF-057..060 | `/auditoria` | `docs/EVIDENCIAS_RF/RF-057-060/resultado.md` | Pendente | Base implementada no frontend; pendente validacao com backend real | `b368790` | EM_EXECUCAO |
 
 ## Evidencias RBAC dinamico
 | Cenario | Evidencia | Status |
