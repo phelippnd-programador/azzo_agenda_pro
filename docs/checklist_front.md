@@ -38,6 +38,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
   - responsividade mobile reforcada em dialogs principais (agenda, clientes, financeiro, emissao fiscal)
   - validacao de perfil OWNER e PROFESSIONAL com login demo local dedicado e menus por `allowedRoutes`
   - guardas de rota revisadas para redirecionar autenticado para primeira rota permitida (evita queda forçada em `/dashboard`)
+  - validacao de tipos com `tsc --noEmit` sem erros
   - build validado apos ajustes
 
 ## 1. Preparacao
@@ -57,7 +58,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 ## 3. API e contratos
 - [~] Padronizar tratamento de erro (`code`, `message`, `details`, `path`, `timestamp`).
 - [~] Garantir consistencia de status HTTP tratados na UI.
-- [~] Revisar tipos TypeScript para todos os DTOs usados.
+- [x] Revisar tipos TypeScript para todos os DTOs usados.
 - [x] Tratar fallback seguro quando endpoint de configuracao falhar.
 
 ## 4. Autenticacao e contexto
