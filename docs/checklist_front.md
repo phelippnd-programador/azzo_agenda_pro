@@ -78,7 +78,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 - [x] Servicos: CRUD + `professionalIds` no create/update.
 - [x] Profissionais: CRUD + ativacao/inativacao + reset senha.
 - [x] Clientes: CRUD + filtros.
-- [ ] Financeiro geral: transacoes e resumo.
+- [x] Financeiro geral: transacoes e resumo.
 - [ ] Financeiro por profissional: metricas e analise por servico.
 - [ ] Fiscal: configuracao, preview, emissao, listagem, cancelamento, apuracao.
 - [ ] Licenca/Checkout: fluxo de assinatura e pagamentos.
