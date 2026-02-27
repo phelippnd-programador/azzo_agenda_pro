@@ -15,8 +15,8 @@ type CreditCardFormProps = {
 
 export function CreditCardForm({ form }: CreditCardFormProps) {
   return (
-    <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
-      <h3 className="font-semibold text-slate-900">Dados do cartao</h3>
+    <div className="space-y-4 rounded-lg border border-border bg-muted/40 p-4">
+      <h3 className="font-semibold text-foreground">Dados do cartao</h3>
 
       <div className="grid gap-4 md:grid-cols-2">
         <FormField
@@ -92,7 +92,7 @@ export function CreditCardForm({ form }: CreditCardFormProps) {
         />
       </div>
 
-      <h3 className="pt-2 font-semibold text-slate-900">Dados do titular</h3>
+      <h3 className="pt-2 font-semibold text-foreground">Dados do titular</h3>
       <div className="grid gap-4 md:grid-cols-2">
         <FormField
           control={form.control}
@@ -195,3 +195,4 @@ export function CreditCardForm({ form }: CreditCardFormProps) {
     </div>
   );
 }
+

@@ -25,6 +25,7 @@ export interface CheckoutIntentResponse {
 export interface CheckoutConfirmResponse {
   intentId: string;
   status: CheckoutIntentStatus;
+  validUntil?: string | null;
   redirectUrl?: string | null;
 }
 
@@ -34,6 +35,9 @@ export interface CheckoutProduct {
   description?: string | null;
   currency: string;
   price: number;
+  validityDays?: number | null;
+  validityMonths?: number | null;
   highlight?: string | null;
+  maxProfessionals?: number | null;
   features?: string[] | null;
 }

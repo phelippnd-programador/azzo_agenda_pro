@@ -71,9 +71,11 @@ export default function Notifications() {
     markAllAsRead();
   };
 
-  const handleClearAll = () => {
-    clearAllNotifications();
-    setSelectedId(null);
+  const handleClearAll = async () => {
+    const cleared = await clearAllNotifications();
+    if (cleared) {
+      setSelectedId(null);
+    }
   };
 
   const handleRemoveSelected = async () => {
@@ -117,12 +119,12 @@ export default function Notifications() {
         <Card>
           <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <Bell className="w-4 h-4 text-violet-600" />
+              <Bell className="w-4 h-4 text-primary" />
               <span className="text-sm">
                 {unreadCount} pendente/falha{unreadCount === 1 ? "" : "s"}
               </span>
               {lastFetchAt ? (
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-muted-foreground">
                   (Atualizado em {formatDate(lastFetchAt)})
                 </span>
               ) : null}
@@ -161,7 +163,11 @@ export default function Notifications() {
                   <CheckCheck className="w-4 h-4 mr-2" />
                   Marcar todas como lidas
                 </Button>
-                <Button variant="outline" onClick={handleClearAll} disabled={!notifications.length}>
+                <Button
+                  variant="outline"
+                  onClick={() => void handleClearAll()}
+                  disabled={!notifications.length || loading}
+                >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Limpar tudo
                 </Button>
@@ -184,21 +190,21 @@ export default function Notifications() {
             </CardHeader>
             <CardContent className="space-y-3">
               {!selected ? (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   Selecione uma notificacao para visualizar os detalhes.
                 </p>
               ) : (
                 <>
                   <div className="flex items-center gap-2">
                     <Badge className={getStatusBadgeClass(selected.status)}>{selected.status}</Badge>
-                    <span className="text-xs text-gray-500">{selected.channel || "Notificacao"}</span>
+                    <span className="text-xs text-muted-foreground">{selected.channel || "Notificacao"}</span>
                   </div>
                   <p className="font-semibold text-lg">{selected.channel || "Notificacao"}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     {formatDate(selected.sentAt || selected.createdAt)}
                   </p>
-                  <p className="text-sm text-gray-700">{selected.message}</p>
-                  <p className="text-xs text-gray-500">Destino: {selected.destination || "-"}</p>
+                  <p className="text-sm text-foreground">{selected.message}</p>
+                  <p className="text-xs text-muted-foreground">Destino: {selected.destination || "-"}</p>
                   <Button
                     variant="outline"
                     className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"

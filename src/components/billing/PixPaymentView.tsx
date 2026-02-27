@@ -34,17 +34,17 @@ export function PixPaymentView({
           <img
             src={imageSrc}
             alt="QR Code PIX para pagamento da assinatura"
-            className="mx-auto w-full max-w-60 rounded-lg border bg-white p-2"
+            className="mx-auto w-full max-w-60 rounded-lg border bg-card p-2"
           />
         ) : (
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted-foreground">
             O QR Code nao foi retornado. Use o codigo PIX abaixo.
           </p>
         )}
 
         {pixPayload ? (
           <>
-            <p className="rounded-md border bg-white p-3 text-xs break-all text-slate-700">
+            <p className="rounded-md border bg-card p-3 text-xs break-all text-foreground">
               {pixPayload}
             </p>
             <Button type="button" variant="outline" onClick={onCopyPix} className="gap-2">
@@ -57,3 +57,4 @@ export function PixPaymentView({
     </Card>
   );
 }
+

@@ -22,7 +22,7 @@ export function ProductOfferCard({
   return (
     <Card
       className={cn(
-        "border-slate-200 transition-all",
+        "border-border transition-all",
         selected && "border-emerald-400 shadow-md ring-2 ring-emerald-100"
       )}
     >
@@ -30,13 +30,13 @@ export function ProductOfferCard({
         {product.highlight ? (
           <p className="text-xs font-medium text-emerald-700">{product.highlight}</p>
         ) : null}
-        <h3 className="mt-1 text-lg font-semibold text-slate-900">{product.name}</h3>
-        <p className="mt-2 text-sm text-slate-600">
+        <h3 className="mt-1 text-lg font-semibold text-foreground">{product.name}</h3>
+        <p className="mt-2 text-sm text-muted-foreground">
           {product.description || "Plano recomendado para acelerar suas vendas."}
         </p>
-        <p className="mt-4 text-2xl font-bold text-slate-900">{formattedPrice}</p>
+        <p className="mt-4 text-2xl font-bold text-foreground">{formattedPrice}</p>
         {product.features?.length ? (
-          <ul className="mt-3 space-y-1 text-xs text-slate-600">
+          <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
             {product.features.slice(0, 3).map((feature) => (
               <li key={feature}>- {feature}</li>
             ))}
@@ -54,3 +54,4 @@ export function ProductOfferCard({
     </Card>
   );
 }
+

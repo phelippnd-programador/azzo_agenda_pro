@@ -20,6 +20,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { servicesApi, professionalsApi, appointmentsApi, publicBookingApi, Service, Professional } from '@/lib/api';
+import { resolveUiError } from '@/lib/error-utils';
 import { toast } from 'sonner';
 
 const formatCurrency = (value: number) => {
@@ -40,6 +41,7 @@ export default function PublicBooking() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingProfessionals, setIsLoadingProfessionals] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
 
   // Data
@@ -70,16 +72,13 @@ export default function PublicBooking() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [servicesData, professionalsData] = slug
-          ? await Promise.all([
-              publicBookingApi.getServices(slug),
-              publicBookingApi.getProfessionals(slug),
-            ])
-          : await Promise.all([servicesApi.getAll(), professionalsApi.getAll()]);
+        const servicesData = slug
+          ? await publicBookingApi.getServices(slug)
+          : await servicesApi.getAll();
         setServices(servicesData.filter(s => s.isActive));
-        setProfessionals(professionalsData.filter(p => p.isActive));
+        setProfessionals([]);
       } catch (error) {
-        toast.error('Erro ao carregar dados');
+        toast.error(resolveUiError(error, 'Erro ao carregar dados').message);
       } finally {
         setIsLoading(false);
       }
@@ -123,6 +122,41 @@ export default function PublicBooking() {
     [professionals, selectedProfessional]
   );
 
+  const loadProfessionalsForService = async (serviceId: string) => {
+    setIsLoadingProfessionals(true);
+    try {
+      if (slug) {
+        const data = await publicBookingApi.getProfessionals(slug, serviceId);
+        const active = data.filter((professional) => professional.isActive);
+        setProfessionals(active);
+        setSelectedProfessional((prev) =>
+          prev && active.some((professional) => professional.id === prev) ? prev : null
+        );
+        return;
+      }
+
+      const data = await professionalsApi.getAll();
+      const active = data.filter((professional) => professional.isActive);
+      const currentService = services.find((service) => service.id === serviceId);
+      const restrictedIds = currentService?.professionalIds || [];
+      const filtered =
+        restrictedIds.length > 0
+          ? active.filter((professional) => restrictedIds.includes(professional.id))
+          : active;
+
+      setProfessionals(filtered);
+      setSelectedProfessional((prev) =>
+        prev && filtered.some((professional) => professional.id === prev) ? prev : null
+      );
+    } catch (error) {
+      setProfessionals([]);
+      setSelectedProfessional(null);
+      toast.error(resolveUiError(error, 'Erro ao carregar profissionais').message);
+    } finally {
+      setIsLoadingProfessionals(false);
+    }
+  };
+
   const getDaysInMonth = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
@@ -161,7 +195,13 @@ export default function PublicBooking() {
     return firstAvailable ?? null;
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
+    if (currentStep === 1 && selectedService) {
+      await loadProfessionalsForService(selectedService);
+      setCurrentStep(2);
+      return;
+    }
+
     if (currentStep === 2 && !selectedDate) {
       const defaultDate = getFirstSelectableDate();
       if (defaultDate) setSelectedDate(defaultDate);
@@ -172,11 +212,13 @@ export default function PublicBooking() {
   const canProceed = () => {
     switch (currentStep) {
       case 1:
-        return selectedService !== null;
+        return selectedService !== null && !isLoadingProfessionals;
       case 2:
         return selectedProfessional !== null;
       case 3:
-        return selectedDate !== null && selectedTime !== null;
+        if (!selectedDate || !selectedTime) return false;
+        if (!slug) return true;
+        return availableSlots.includes(selectedTime);
       case 4:
         return customerName.trim() !== '' && customerPhone.trim() !== '';
       default:
@@ -187,6 +229,10 @@ export default function PublicBooking() {
   const handleSubmit = async () => {
     if (!selectedService || !selectedProfessional || !selectedDate || !selectedTime || !selectedServiceData) {
       toast.error('Preencha todos os campos');
+      return;
+    }
+    if (slug && !availableSlots.includes(selectedTime)) {
+      toast.error('Horario indisponivel. Selecione outro horario e tente novamente.');
       return;
     }
 
@@ -225,15 +271,23 @@ export default function PublicBooking() {
       setBookingComplete(true);
       toast.success('Agendamento realizado com sucesso!');
     } catch (error) {
-      toast.error('Erro ao realizar agendamento');
+      toast.error(resolveUiError(error, 'Erro ao realizar agendamento').message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleSelectService = (serviceId: string) => {
+    setSelectedService(serviceId);
+    setSelectedProfessional(null);
+    setSelectedDate(null);
+    setSelectedTime(null);
+    setAvailableSlots([]);
+  };
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-pink-50 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-card p-4">
         <div className="max-w-2xl mx-auto">
           <Skeleton className="h-16 w-48 mx-auto mb-8" />
           <Skeleton className="h-96 w-full" />
@@ -244,30 +298,30 @@ export default function PublicBooking() {
 
   if (bookingComplete) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-pink-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-card flex items-center justify-center p-4">
         <Card className="max-w-md w-full text-center">
           <CardContent className="pt-8 pb-8">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Check className="w-8 h-8 text-green-600" />
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
               Agendamento Confirmado!
             </h2>
-            <p className="text-gray-600 mb-6 text-sm sm:text-base">
+            <p className="text-muted-foreground mb-6 text-sm sm:text-base">
               Seu agendamento foi realizado com sucesso. Você receberá uma confirmação em breve.
             </p>
             
-            <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left space-y-2">
+            <div className="bg-muted/40 rounded-xl p-4 mb-6 text-left space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Serviço:</span>
+                <span className="text-muted-foreground">Serviço:</span>
                 <span className="font-medium">{selectedServiceData?.name}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Profissional:</span>
+                <span className="text-muted-foreground">Profissional:</span>
                 <span className="font-medium">{selectedProfessionalData?.name}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Data:</span>
+                <span className="text-muted-foreground">Data:</span>
                 <span className="font-medium">
                   {selectedDate?.toLocaleDateString('pt-BR', {
                     weekday: 'long',
@@ -277,12 +331,12 @@ export default function PublicBooking() {
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Horário:</span>
+                <span className="text-muted-foreground">Horário:</span>
                 <span className="font-medium">{selectedTime}</span>
               </div>
               <div className="flex justify-between text-sm pt-2 border-t">
-                <span className="text-gray-500">Total:</span>
-                <span className="font-bold text-violet-600">
+                <span className="text-muted-foreground">Total:</span>
+                <span className="font-bold text-primary">
                   {formatCurrency(selectedServiceData?.price || 0)}
                 </span>
               </div>
@@ -290,7 +344,7 @@ export default function PublicBooking() {
 
             <Button
               onClick={() => window.location.reload()}
-              className="w-full bg-violet-600 hover:bg-violet-700"
+              className="w-full bg-primary hover:bg-primary/90"
             >
               Fazer Novo Agendamento
             </Button>
@@ -301,17 +355,17 @@ export default function PublicBooking() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-pink-50 p-4 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-card p-4 sm:p-6">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-violet-600 to-pink-500 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-xl flex items-center justify-center">
               <Scissors className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Bella Studio</h1>
-              <p className="text-xs sm:text-sm text-violet-600 font-medium">Agende seu horário</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Bella Studio</h1>
+              <p className="text-xs sm:text-sm text-primary font-medium">Agende seu horário</p>
             </div>
           </div>
         </div>
@@ -323,8 +377,8 @@ export default function PublicBooking() {
               <div
                 className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium transition-colors ${
                   currentStep >= step
-                    ? 'bg-violet-600 text-white'
-                    : 'bg-gray-200 text-gray-500'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground'
                 }`}
               >
                 {currentStep > step ? <Check className="w-3 h-3 sm:w-4 sm:h-4" /> : step}
@@ -332,7 +386,7 @@ export default function PublicBooking() {
               {step < 4 && (
                 <div
                   className={`w-6 sm:w-12 h-1 mx-1 sm:mx-2 rounded ${
-                    currentStep > step ? 'bg-violet-600' : 'bg-gray-200'
+                    currentStep > step ? 'bg-primary' : 'bg-muted'
                   }`}
                 />
               )}
@@ -353,25 +407,25 @@ export default function PublicBooking() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {services.length === 0 ? (
-                  <p className="text-center text-gray-500 py-8">Nenhum serviço disponível</p>
+                  <p className="text-center text-muted-foreground py-8">Nenhum serviço disponível</p>
                 ) : (
                   services.map((service) => (
                     <div
                       key={service.id}
-                      onClick={() => setSelectedService(service.id)}
+                      onClick={() => handleSelectService(service.id)}
                       className={`p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${
                         selectedService === service.id
-                          ? 'border-violet-600 bg-violet-50'
-                          : 'border-gray-200 hover:border-violet-300'
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/40'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-medium text-gray-900 text-sm sm:text-base truncate">
+                          <h3 className="font-medium text-foreground text-sm sm:text-base truncate">
                             {service.name}
                           </h3>
                           <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
-                            <span className="flex items-center gap-1 text-xs sm:text-sm text-gray-500">
+                            <span className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
                               <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                               {service.duration} min
                             </span>
@@ -381,7 +435,7 @@ export default function PublicBooking() {
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <span className="text-base sm:text-lg font-bold text-violet-600">
+                          <span className="text-base sm:text-lg font-bold text-primary">
                             {formatCurrency(service.price)}
                           </span>
                         </div>
@@ -403,8 +457,10 @@ export default function PublicBooking() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {professionals.length === 0 ? (
-                  <p className="text-center text-gray-500 py-8">Nenhum profissional disponível</p>
+                {isLoadingProfessionals ? (
+                  <p className="text-center text-muted-foreground py-8">Carregando profissionais...</p>
+                ) : professionals.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">Nenhum profissional disponível</p>
                 ) : (
                   professionals.map((professional) => (
                     <div
@@ -412,19 +468,19 @@ export default function PublicBooking() {
                       onClick={() => setSelectedProfessional(professional.id)}
                       className={`p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${
                         selectedProfessional === professional.id
-                          ? 'border-violet-600 bg-violet-50'
-                          : 'border-gray-200 hover:border-violet-300'
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/40'
                       }`}
                     >
                       <div className="flex items-center gap-3 sm:gap-4">
                         <Avatar className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0">
                           <AvatarImage src={professional.avatar} />
-                          <AvatarFallback className="bg-violet-100 text-violet-700 text-sm">
+                          <AvatarFallback className="bg-primary/15 text-primary text-sm">
                             {professional.name.slice(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-medium text-gray-900 text-sm sm:text-base truncate">
+                          <h3 className="font-medium text-foreground text-sm sm:text-base truncate">
                             {professional.name}
                           </h3>
                           <div className="flex flex-wrap gap-1 mt-1">
@@ -477,7 +533,7 @@ export default function PublicBooking() {
 
                   <div className="grid grid-cols-7 gap-1 text-center mb-2">
                     {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, i) => (
-                      <span key={i} className="text-[10px] sm:text-xs font-medium text-gray-500 py-1">
+                      <span key={i} className="text-[10px] sm:text-xs font-medium text-muted-foreground py-1">
                         {day}
                       </span>
                     ))}
@@ -493,10 +549,10 @@ export default function PublicBooking() {
                           !date
                             ? 'invisible'
                             : !isDateSelectable(date)
-                            ? 'text-gray-300 cursor-not-allowed'
+                            ? 'text-muted-foreground/50 cursor-not-allowed'
                             : selectedDate?.toDateString() === date.toDateString()
-                            ? 'bg-violet-600 text-white'
-                            : 'hover:bg-violet-100 text-gray-700'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'hover:bg-primary/10 text-foreground'
                         }`}
                       >
                         {date?.getDate()}
@@ -510,10 +566,10 @@ export default function PublicBooking() {
                   <div>
                     <Label className="text-sm font-medium mb-3 block">Horários Disponíveis</Label>
                     {isLoadingAvailability && slug && (
-                      <p className="text-sm text-gray-500 mb-2">Consultando disponibilidade...</p>
+                      <p className="text-sm text-muted-foreground mb-2">Consultando disponibilidade...</p>
                     )}
                     {!isLoadingAvailability && slug && availableSlots.length === 0 && (
-                      <p className="text-sm text-gray-500 mb-2">
+                      <p className="text-sm text-muted-foreground mb-2">
                         Nao ha horarios disponiveis para esta data.
                       </p>
                     )}
@@ -525,7 +581,7 @@ export default function PublicBooking() {
                           size="sm"
                           onClick={() => setSelectedTime(time)}
                           className={`text-xs sm:text-sm ${
-                            selectedTime === time ? 'bg-violet-600 hover:bg-violet-700' : ''
+                            selectedTime === time ? 'bg-primary hover:bg-primary/90' : ''
                           }`}
                         >
                           {time}
@@ -551,7 +607,7 @@ export default function PublicBooking() {
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-sm">Nome Completo *</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       id="name"
                       placeholder="Seu nome"
@@ -565,7 +621,7 @@ export default function PublicBooking() {
                 <div className="space-y-2">
                   <Label htmlFor="phone" className="text-sm">WhatsApp *</Label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       id="phone"
                       placeholder="(11) 99999-0000"
@@ -588,30 +644,30 @@ export default function PublicBooking() {
                 </div>
 
                 {/* Summary */}
-                <div className="bg-gray-50 rounded-xl p-4 mt-6">
-                  <h4 className="font-medium text-gray-900 mb-3 text-sm">Resumo do Agendamento</h4>
+                <div className="bg-muted/40 rounded-xl p-4 mt-6">
+                  <h4 className="font-medium text-foreground mb-3 text-sm">Resumo do Agendamento</h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Serviço:</span>
+                      <span className="text-muted-foreground">Serviço:</span>
                       <span className="font-medium truncate ml-2">{selectedServiceData?.name}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Profissional:</span>
+                      <span className="text-muted-foreground">Profissional:</span>
                       <span className="font-medium truncate ml-2">{selectedProfessionalData?.name}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Data:</span>
+                      <span className="text-muted-foreground">Data:</span>
                       <span className="font-medium">
                         {selectedDate?.toLocaleDateString('pt-BR')}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Horário:</span>
+                      <span className="text-muted-foreground">Horário:</span>
                       <span className="font-medium">{selectedTime}</span>
                     </div>
                     <div className="flex justify-between pt-2 border-t mt-2">
-                      <span className="text-gray-700 font-medium">Total:</span>
-                      <span className="font-bold text-violet-600">
+                      <span className="text-foreground font-medium">Total:</span>
+                      <span className="font-bold text-primary">
                         {formatCurrency(selectedServiceData?.price || 0)}
                       </span>
                     </div>
@@ -636,16 +692,25 @@ export default function PublicBooking() {
               <Button
                 onClick={handleNextStep}
                 disabled={!canProceed()}
-                className="bg-violet-600 hover:bg-violet-700"
+                className="bg-primary hover:bg-primary/90"
               >
-                Continuar
-                <ChevronRight className="w-4 h-4 ml-1" />
+                {isLoadingProfessionals && currentStep === 1 ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Carregando...
+                  </>
+                ) : (
+                  <>
+                    Continuar
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </>
+                )}
               </Button>
             ) : (
               <Button
                 onClick={handleSubmit}
                 disabled={!canProceed() || isSubmitting}
-                className="bg-gradient-to-r from-violet-600 to-pink-500 hover:from-violet-700 hover:to-pink-600"
+                className="bg-primary hover:bg-primary/90"
               >
                 {isSubmitting ? (
                   <>
@@ -666,3 +731,5 @@ export default function PublicBooking() {
     </div>
   );
 }
+
+

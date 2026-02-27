@@ -26,23 +26,52 @@ import {
   Calculator,
   Eye,
   CreditCard,
+  BarChart3,
 } from "lucide-react";
 
-const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: Bell, label: "Notificacoes", path: "/notificacoes" },
-  { icon: Calendar, label: "Agenda", path: "/agenda" },
-  { icon: Scissors, label: "Servicos", path: "/servicos" },
-  { icon: Tag, label: "Especialidades", path: "/especialidades" },
-  { icon: Users, label: "Profissionais", path: "/profissionais" },
-  { icon: UserCircle, label: "Clientes", path: "/clientes" },
-  { icon: DollarSign, label: "Financeiro", path: "/financeiro" },
-  { icon: CreditCard, label: "Gerenciador de Licenca", path: "/financeiro/licenca" },
-  { icon: FileText, label: "Emitir Nota Fiscal", path: "/emitir-nota" },
-  { icon: Eye, label: "Pre-visualizacao NF", path: "/nota-fiscal" },
-  { icon: Receipt, label: "Config. Impostos", path: "/config-impostos" },
-  { icon: Calculator, label: "Apuracao Mensal", path: "/apuracao-mensal" },
-];
+const MENU_REGISTRY = {
+  "/dashboard": { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+  "/notificacoes": { icon: Bell, label: "Notificacoes", path: "/notificacoes" },
+  "/agenda": { icon: Calendar, label: "Agenda", path: "/agenda" },
+  "/servicos": { icon: Scissors, label: "Servicos", path: "/servicos" },
+  "/especialidades": { icon: Tag, label: "Especialidades", path: "/especialidades" },
+  "/profissionais": { icon: Users, label: "Profissionais", path: "/profissionais" },
+  "/clientes": { icon: UserCircle, label: "Clientes", path: "/clientes" },
+  "/financeiro": { icon: DollarSign, label: "Financeiro", path: "/financeiro" },
+  "/financeiro/profissionais": {
+    icon: BarChart3,
+    label: "Financeiro Profissionais",
+    path: "/financeiro/profissionais",
+  },
+  "/financeiro/licenca": { icon: CreditCard, label: "Licenca", path: "/financeiro/licenca" },
+  "/emitir-nota": { icon: FileText, label: "Emitir Nota Fiscal", path: "/emitir-nota" },
+  "/nota-fiscal": { icon: Eye, label: "Pre-visualizacao de NF", path: "/nota-fiscal" },
+  "/config-impostos": {
+    icon: Receipt,
+    label: "Configuracao de Impostos",
+    path: "/config-impostos",
+  },
+  "/apuracao-mensal": { icon: Calculator, label: "Apuracao Mensal", path: "/apuracao-mensal" },
+  "/configuracoes": { icon: Settings, label: "Configuracoes", path: "/configuracoes" },
+  "/perfil-salao": { icon: Building2, label: "Perfil do Salao", path: "/perfil-salao" },
+} as const;
+
+const MAIN_MENU_ORDER = [
+  "/dashboard",
+  "/notificacoes",
+  "/agenda",
+  "/servicos",
+  "/especialidades",
+  "/profissionais",
+  "/clientes",
+  "/financeiro",
+  "/financeiro/profissionais",
+  "/financeiro/licenca",
+  "/emitir-nota",
+  "/nota-fiscal",
+  "/config-impostos",
+  "/apuracao-mensal",
+] as const;
 
 interface SidebarProps {
   isOpen: boolean;
@@ -53,8 +82,11 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const { canAccess } = useMenuPermissions();
-  const visibleMenuItems = menuItems.filter((item) => canAccess(item.path));
+  const { allowedRoutes } = useMenuPermissions();
+  const allowedSet = new Set(allowedRoutes ?? []);
+  const visibleMenuItems = MAIN_MENU_ORDER
+    .filter((route) => allowedSet.has(route))
+    .map((route) => MENU_REGISTRY[route]);
   const [salonSlug, setSalonSlug] = useState("meu-salao");
 
   useEffect(() => {
@@ -87,20 +119,20 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 h-full w-64 sm:w-72 bg-white border-r border-gray-200 transition-transform duration-300 lg:translate-x-0",
+          "fixed left-0 top-0 z-50 h-full w-64 sm:w-72 bg-card border-r border-border transition-transform duration-300 lg:translate-x-0",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between h-14 sm:h-16 px-4 sm:px-6 border-b border-gray-200">
+          <div className="flex items-center justify-between h-14 sm:h-16 px-4 sm:px-6 border-b border-border">
             <Link to="/dashboard" className="flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-violet-600 rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
                 <Scissors className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
-              <span className="text-lg sm:text-xl font-bold text-gray-900 truncate">
+              <span className="text-lg sm:text-xl font-bold text-foreground truncate">
                 Azzo
               </span>
-              <span className="text-xs sm:text-sm font-medium text-violet-600 truncate">
+              <span className="text-xs sm:text-sm font-medium text-primary truncate">
                 Agenda Pro
               </span>
             </Link>
@@ -128,11 +160,11 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                   >
                     <Button
                       variant={isActive ? "secondary" : "ghost"}
-                      className={cn(
-                        "w-full justify-start gap-3 h-10 sm:h-11 text-sm",
-                        isActive && "bg-violet-100 text-violet-700 hover:bg-violet-100"
-                      )}
-                    >
+                    className={cn(
+                      "w-full justify-start gap-3 h-10 sm:h-11 text-sm",
+                      isActive && "bg-primary/10 text-primary hover:bg-primary/10"
+                    )}
+                  >
                       <item.icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                       <span className="truncate">{item.label}</span>
                     </Button>
@@ -142,15 +174,15 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
             </nav>
 
             <div className="px-2 sm:px-3 mt-6">
-              <div className="p-3 sm:p-4 bg-gradient-to-br from-violet-50 to-pink-50 rounded-xl">
-                <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">
+              <div className="p-3 sm:p-4 bg-primary/5 rounded-xl border border-primary/10">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-2">
                   Link de Agendamento
                 </p>
                 <Link to={`/agendar/${salonSlug}`}>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full gap-2 border-violet-200 text-violet-700 hover:bg-violet-50 text-xs sm:text-sm"
+                    className="w-full gap-2 border-primary/20 text-primary hover:bg-primary/10 text-xs sm:text-sm"
                   >
                     <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                     <span className="truncate">Ver pagina publica</span>
@@ -160,8 +192,8 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
             </div>
           </ScrollArea>
 
-          <div className="p-2 sm:p-3 border-t border-gray-200 space-y-1">
-            {canAccess("/perfil-salao") && (
+          <div className="p-2 sm:p-3 border-t border-border space-y-1">
+            {allowedSet.has("/perfil-salao") && (
               <Link
                 to="/perfil-salao"
                 onClick={() => {
@@ -173,7 +205,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                   className={cn(
                     "w-full justify-start gap-3 h-10 sm:h-11 text-sm",
                     location.pathname === "/perfil-salao" &&
-                      "bg-violet-100 text-violet-700 hover:bg-violet-100"
+                      "bg-primary/10 text-primary hover:bg-primary/10"
                   )}
                 >
                   <Building2 className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
@@ -181,7 +213,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                 </Button>
               </Link>
             )}
-            {canAccess("/configuracoes") && (
+            {allowedSet.has("/configuracoes") && (
               <Link
                 to="/configuracoes"
                 onClick={() => {
@@ -193,7 +225,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                   className={cn(
                     "w-full justify-start gap-3 h-10 sm:h-11 text-sm",
                     location.pathname === "/configuracoes" &&
-                      "bg-violet-100 text-violet-700 hover:bg-violet-100"
+                      "bg-primary/10 text-primary hover:bg-primary/10"
                   )}
                 >
                   <Settings className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />

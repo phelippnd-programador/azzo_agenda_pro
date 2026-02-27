@@ -27,8 +27,8 @@ export function MetricCard({
       <CardContent className="p-4 sm:p-6">
         <div className="flex items-start justify-between gap-2">
           <div className="space-y-1 sm:space-y-2 min-w-0 flex-1">
-            <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">{title}</p>
-            <p className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{value}</p>
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{title}</p>
+            <p className="text-lg sm:text-2xl font-bold text-foreground truncate">{value}</p>
             {trend && (
               <p
                 className={cn(
@@ -36,18 +36,19 @@ export function MetricCard({
                   trend.isPositive ? 'text-green-600' : 'text-red-600'
                 )}
               >
-                {trend.isPositive ? '+' : '-'}{Math.abs(trend.value)}%
-                <span className="text-gray-500 ml-1 hidden sm:inline">vs. mês anterior</span>
+                {trend.isPositive ? '+' : '-'}
+                {Math.abs(trend.value)}%
+                <span className="text-muted-foreground ml-1 hidden sm:inline">vs. mes anterior</span>
               </p>
             )}
           </div>
           <div
             className={cn(
               'w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0',
-              iconClassName || 'bg-violet-100'
+              iconClassName || 'bg-primary/10'
             )}
           >
-            <Icon className={cn('w-5 h-5 sm:w-6 sm:h-6', iconClassName ? 'text-white' : 'text-violet-600')} />
+            <Icon className={cn('w-5 h-5 sm:w-6 sm:h-6', iconClassName ? 'text-white' : 'text-primary')} />
           </div>
         </div>
       </CardContent>

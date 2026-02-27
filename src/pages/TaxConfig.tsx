@@ -6,9 +6,9 @@ export default function TaxConfig() {
     <MainLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Configuração de Impostos</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Configuracao de Impostos</h1>
           <p className="text-muted-foreground mt-2">
-            Configure as alíquotas de impostos para emissão de notas fiscais
+            Configure as aliquotas de impostos para emissao de notas fiscais
           </p>
         </div>
         <TaxConfigForm />

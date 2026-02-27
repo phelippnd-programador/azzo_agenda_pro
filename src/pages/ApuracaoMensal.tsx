@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { fiscalApi } from '@/lib/api';
+import { resolveUiError } from '@/lib/error-utils';
 import { formatCurrency } from '@/lib/tax-calculator';
 import { ApuracaoMensal as ApuracaoMensalType, ApuracaoResumo, MESES_PT } from '@/types/apuracao';
 import { RefreshCw } from 'lucide-react';
@@ -21,7 +22,12 @@ export default function ApuracaoMensal() {
   const [apuracaoAtual, setApuracaoAtual] = useState<ApuracaoMensalType | null>(null);
   const [apuracaoSelecionada, setApuracaoSelecionada] = useState<ApuracaoMensalType | null>(null);
   const [historico, setHistorico] = useState<ApuracaoResumo[]>([]);
-  const [resumoAno, setResumoAno] = useState<{ totalServicos: number; totalImpostos: number; totalDocumentos: number; meses: ApuracaoResumo[] } | null>(null);
+  const [resumoAno, setResumoAno] = useState<{
+    totalServicos: number;
+    totalImpostos: number;
+    totalDocumentos: number;
+    meses: ApuracaoResumo[];
+  } | null>(null);
   const [anoSelecionado, setAnoSelecionado] = useState<number>(new Date().getFullYear());
   const [mesSelecionado, setMesSelecionado] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +49,9 @@ export default function ApuracaoMensal() {
     fiscalApi
       .getApuracaoByPeriodo(anoSelecionado, mesSelecionado)
       .then(setApuracaoSelecionada)
-      .catch(() => toast.error('Erro ao carregar apuracao do periodo'));
+      .catch((error) =>
+        toast.error(resolveUiError(error, 'Erro ao carregar apuracao do periodo').message)
+      );
   }, [anoSelecionado, mesSelecionado]);
 
   const loadCurrent = async () => {
@@ -51,8 +59,8 @@ export default function ApuracaoMensal() {
       setIsLoading(true);
       const data = await fiscalApi.getCurrentApuracao();
       setApuracaoAtual(data);
-    } catch {
-      toast.error('Erro ao carregar apuracao atual');
+    } catch (error) {
+      toast.error(resolveUiError(error, 'Erro ao carregar apuracao atual').message);
     } finally {
       setIsLoading(false);
     }
@@ -62,8 +70,8 @@ export default function ApuracaoMensal() {
     try {
       const data = await fiscalApi.getHistoricoApuracoes(12);
       setHistorico(data);
-    } catch {
-      toast.error('Erro ao carregar historico');
+    } catch (error) {
+      toast.error(resolveUiError(error, 'Erro ao carregar historico').message);
     }
   };
 
@@ -75,8 +83,8 @@ export default function ApuracaoMensal() {
       setApuracaoAtual(data);
       await loadHistorico();
       toast.success('Apuracao recalculada com sucesso');
-    } catch {
-      toast.error('Erro ao recalcular apuracao');
+    } catch (error) {
+      toast.error(resolveUiError(error, 'Erro ao recalcular apuracao').message);
     } finally {
       setIsLoading(false);
     }
@@ -115,7 +123,9 @@ export default function ApuracaoMensal() {
                 </SelectTrigger>
                 <SelectContent>
                   {anosDisponiveis.map((ano) => (
-                    <SelectItem key={ano} value={String(ano)}>{ano}</SelectItem>
+                    <SelectItem key={ano} value={String(ano)}>
+                      {ano}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -128,12 +138,12 @@ export default function ApuracaoMensal() {
                   <button
                     key={`${item.ano}-${item.mes}`}
                     onClick={() => setMesSelecionado(item.mes)}
-                    className="text-left p-3 border rounded-lg hover:bg-gray-50"
+                    className="text-left p-3 border rounded-lg hover:bg-muted/70"
                   >
                     <p className="font-medium">{MESES_PT[item.mes]}</p>
-                    <p className="text-sm text-gray-500">Servicos: {formatCurrency(item.valorTotalServicos)}</p>
-                    <p className="text-sm text-gray-500">Impostos: {formatCurrency(item.valorTotalImpostos)}</p>
-                    <p className="text-sm text-gray-500">Notas: {item.quantidadeDocumentos}</p>
+                    <p className="text-sm text-muted-foreground">Servicos: {formatCurrency(item.valorTotalServicos)}</p>
+                    <p className="text-sm text-muted-foreground">Impostos: {formatCurrency(item.valorTotalImpostos)}</p>
+                    <p className="text-sm text-muted-foreground">Notas: {item.quantidadeDocumentos}</p>
                   </button>
                 ))}
             </div>
@@ -146,17 +156,17 @@ export default function ApuracaoMensal() {
               <CardTitle>Resumo do Ano {anoSelecionado}</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 bg-blue-50 rounded-lg text-center">
-                <p className="text-sm text-gray-600">Total de Servicos</p>
-                <p className="text-2xl font-bold text-blue-700">{formatCurrency(resumoAno.totalServicos)}</p>
+              <div className="p-4 bg-primary/10 rounded-lg text-center">
+                <p className="text-sm text-muted-foreground">Total de Servicos</p>
+                <p className="text-2xl font-bold text-primary">{formatCurrency(resumoAno.totalServicos)}</p>
               </div>
-              <div className="p-4 bg-red-50 rounded-lg text-center">
-                <p className="text-sm text-gray-600">Total de Impostos</p>
-                <p className="text-2xl font-bold text-red-700">{formatCurrency(resumoAno.totalImpostos)}</p>
+              <div className="p-4 bg-destructive/10 rounded-lg text-center">
+                <p className="text-sm text-muted-foreground">Total de Impostos</p>
+                <p className="text-2xl font-bold text-destructive">{formatCurrency(resumoAno.totalImpostos)}</p>
               </div>
-              <div className="p-4 bg-green-50 rounded-lg text-center">
-                <p className="text-sm text-gray-600">Total de Notas</p>
-                <p className="text-2xl font-bold text-green-700">{resumoAno.totalDocumentos}</p>
+              <div className="p-4 bg-secondary rounded-lg text-center">
+                <p className="text-sm text-muted-foreground">Total de Notas</p>
+                <p className="text-2xl font-bold text-secondary-foreground">{resumoAno.totalDocumentos}</p>
               </div>
             </CardContent>
           </Card>

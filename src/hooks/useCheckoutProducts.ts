@@ -1,7 +1,8 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { CheckoutProduct } from "@/types/checkout";
 import { listCheckoutProducts } from "@/services/checkoutService";
 import { isPlanExpiredApiError } from "@/lib/api";
+import { resolveUiError } from "@/lib/error-utils";
 
 export function useCheckoutProducts() {
   const [products, setProducts] = useState<CheckoutProduct[]>([]);
@@ -19,9 +20,8 @@ export function useCheckoutProducts() {
         setError(null);
         return;
       }
-      const message =
-        err instanceof Error ? err.message : "Erro ao carregar produtos";
-      setError(message);
+      const uiError = resolveUiError(err, "Erro ao carregar produtos");
+      setError(uiError.message);
       setProducts([]);
     } finally {
       setIsLoading(false);

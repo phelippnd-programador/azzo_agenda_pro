@@ -8,6 +8,7 @@ import {
   confirmCheckoutIntent,
   createCheckoutIntent,
 } from "@/services/checkoutService";
+import { resolveUiError } from "@/lib/error-utils";
 
 type CheckoutViewState = "idle" | "loading" | "success" | "error" | "expired";
 
@@ -41,10 +42,12 @@ export function useCheckout(productId: string) {
       setState("success");
       return nextIntent;
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao iniciar checkout";
+      const uiError = resolveUiError(err, "Erro ao iniciar checkout");
+      const message =
+        uiError.status === 404 ? "Plano indisponivel no momento." : uiError.message;
       setError(message);
       setState("error");
-      toast.error("Nao foi possivel iniciar o checkout");
+      toast.error(message);
       return null;
     }
   }, [productId]);
@@ -72,10 +75,14 @@ export function useCheckout(productId: string) {
       const response = await confirmCheckoutIntent(intent.intentId);
       return response;
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Erro ao confirmar checkout";
+      const uiError = resolveUiError(err, "Erro ao confirmar checkout");
+      const message =
+        uiError.status === 422
+          ? "O produto ficou indisponivel. Gere uma nova intent."
+          : uiError.message;
       setError(message);
       setState("error");
-      toast.error("Erro ao confirmar pagamento");
+      toast.error(message);
       return null;
     } finally {
       setIsConfirming(false);

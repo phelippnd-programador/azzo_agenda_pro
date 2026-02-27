@@ -1,5 +1,6 @@
-﻿import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { transactionsApi, type Transaction, isPlanExpiredApiError } from "@/lib/api";
+import { resolveUiError } from "@/lib/error-utils";
 import { toast } from "sonner";
 
 export function useTransactions() {
@@ -23,8 +24,9 @@ export function useTransactions() {
         setError(null);
         return;
       }
-      setError("Erro ao carregar transacoes");
-      toast.error("Erro ao carregar transacoes");
+      const uiError = resolveUiError(err, "Erro ao carregar transacoes");
+      setError(uiError.message);
+      toast.error(uiError.message);
     } finally {
       setIsLoading(false);
     }
@@ -57,7 +59,7 @@ export function useTransactions() {
       return newTransaction;
     } catch (err) {
       if (!isPlanExpiredApiError(err)) {
-        toast.error("Erro ao registrar transacao");
+        toast.error(resolveUiError(err, "Erro ao registrar transacao").message);
       }
       throw err;
     }
@@ -88,7 +90,7 @@ export function useTransactions() {
       toast.success("Transacao excluida!");
     } catch (err) {
       if (!isPlanExpiredApiError(err)) {
-        toast.error("Erro ao excluir transacao");
+        toast.error(resolveUiError(err, "Erro ao excluir transacao").message);
       }
       throw err;
     }

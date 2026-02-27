@@ -52,7 +52,7 @@ export function NotificationBell() {
         <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-9 sm:w-9">
           <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
           {unreadCount > 0 ? (
-            <Badge className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 p-0 flex items-center justify-center bg-pink-500 text-[10px] sm:text-xs">
+            <Badge className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 p-0 flex items-center justify-center bg-destructive text-[10px] sm:text-xs">
               {unreadCount > 99 ? "99+" : unreadCount}
             </Badge>
           ) : null}
@@ -61,11 +61,7 @@ export function NotificationBell() {
       <DropdownMenuContent align="end" className="w-72 sm:w-80">
         <DropdownMenuLabel>Notificacoes</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {!summaryItems.length ? (
-          <DropdownMenuItem className="text-sm text-gray-500">
-            Nenhuma notificacao
-          </DropdownMenuItem>
-        ) : null}
+        {!summaryItems.length ? <DropdownMenuItem className="text-sm text-muted-foreground">Nenhuma notificacao</DropdownMenuItem> : null}
         {summaryItems.slice(0, 5).map((item) => (
           <DropdownMenuItem
             key={item.id}
@@ -73,18 +69,12 @@ export function NotificationBell() {
             onClick={() => navigate(`/notificacoes?id=${item.id}`)}
           >
             <span className="font-medium text-sm">{resolveNotificationTitle(item)}</span>
-            <span className="text-xs sm:text-sm text-gray-500 line-clamp-2">
-              {item.message}
-            </span>
-            <span className="text-[11px] text-gray-400">
-              {formatTimestamp(item.sentAt || item.createdAt)}
-            </span>
+            <span className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{item.message}</span>
+            <span className="text-[11px] text-muted-foreground">{formatTimestamp(item.sentAt || item.createdAt)}</span>
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate("/notificacoes")}>
-          Ver todas
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate("/notificacoes")}>Ver todas</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

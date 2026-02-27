@@ -21,11 +21,11 @@ export function SalesSection({
       <div className="mx-auto w-full max-w-6xl px-4 md:px-6">
         {title ? (
           <div className="mb-8 max-w-2xl">
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
               {title}
             </h2>
             {subtitle ? (
-              <p className="mt-3 text-sm md:text-base text-slate-600">{subtitle}</p>
+              <p className="mt-3 text-sm md:text-base text-muted-foreground">{subtitle}</p>
             ) : null}
           </div>
         ) : null}
@@ -34,3 +34,4 @@ export function SalesSection({
     </section>
   );
 }
+

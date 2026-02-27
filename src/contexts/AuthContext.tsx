@@ -6,12 +6,14 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginLocalDemo: (role?: "OWNER" | "PROFESSIONAL") => Promise<void>;
   register: (data: {
     name: string;
     email: string;
     password: string;
     salonName: string;
     phone: string;
+    cpfCnpj: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -24,12 +26,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     initializeDemoData();
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    const isPublicBookingRoute = pathname === "/agendar" || pathname.startsWith("/agendar/");
 
     const hasSession = authApi.hasSession();
     const storedUser = authApi.getCurrentUser();
 
     if (storedUser) {
       setUser(storedUser);
+    }
+
+    if (isPublicBookingRoute) {
+      setIsLoading(false);
+      return;
     }
 
     if (!hasSession) {
@@ -61,12 +70,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(currentUser);
   };
 
+  const loginLocalDemo = async (role: "OWNER" | "PROFESSIONAL" = "OWNER") => {
+    const localDemoUser = await authApi.loginLocalDemo(role);
+    setUser(localDemoUser);
+  };
+
   const register = async (data: {
     name: string;
     email: string;
     password: string;
     salonName: string;
     phone: string;
+    cpfCnpj: string;
   }) => {
     const response = await authApi.register(data);
     if (response.user) {
@@ -90,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         isLoading,
         login,
+        loginLocalDemo,
         register,
         logout,
       }}

@@ -40,18 +40,18 @@ export function ProfessionalLimitMeter({
     <Card className={nearLimit ? "border-amber-300 bg-amber-50/30" : ""}>
       <CardContent className="p-4 sm:p-5 space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-medium text-gray-800 flex items-center gap-2">
-            <Users className="w-4 h-4 text-violet-600" />
+          <p className="text-sm font-medium text-foreground flex items-center gap-2">
+            <Users className="w-4 h-4 text-primary" />
             Limite de Profissionais
           </p>
-          <span className="text-xs text-gray-600">
+          <span className="text-xs text-muted-foreground">
             {used}/{limits.maxProfessionals}
           </span>
         </div>
 
         <Progress value={percent} className="h-2.5" />
 
-        <div className="flex items-center justify-between text-xs text-gray-600">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{percent}% utilizado</span>
           <span>{remaining} disponiveis</span>
         </div>

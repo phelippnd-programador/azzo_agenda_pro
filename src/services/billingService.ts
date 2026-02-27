@@ -12,9 +12,10 @@ export function getBillingErrorMessage(error: unknown): string {
     }
     if (error.status === 401) return "Sua sessao expirou. Entre novamente para assinar.";
     if (error.status === 403) return "Sua conta nao tem permissao para criar assinatura.";
-    if (error.status === 404) return "Plano ou recurso de cobranca nao encontrado.";
-    if (error.status === 409) return "Ja existe uma assinatura em processamento para este plano.";
-    if (error.status === 422) return "Nao foi possivel processar o pagamento com os dados informados.";
+    if (error.status === 404) return "Plano nao encontrado ou indisponivel para contratacao.";
+    if (error.status === 409) return "Ja existe pagamento pendente para o mesmo plano/forma.";
+    if (error.status === 422)
+      return "Nao foi possivel processar a cobranca. O plano pode ter ficado indisponivel.";
     if (error.status >= 500) return "Erro interno no servidor de cobranca. Tente novamente.";
   }
 

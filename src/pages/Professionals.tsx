@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageErrorState } from "@/components/ui/page-states";
 import {
   Dialog,
   DialogContent,
@@ -37,8 +38,29 @@ import {
 import { Search, Plus, MoreVertical, Phone, Mail, Percent, Users, Loader2 } from "lucide-react";
 import { useProfessionals } from "@/hooks/useProfessionals";
 import { useSpecialties } from "@/hooks/useSpecialties";
+import type { WorkingHours } from "@/types";
 import { toast } from "sonner";
 import { ProfessionalLimitMeter } from "@/components/professionals/ProfessionalLimitMeter";
+
+const defaultWorkingHours: WorkingHours[] = [
+  { dayOfWeek: 1, startTime: "09:00", endTime: "18:00", isWorking: true },
+  { dayOfWeek: 2, startTime: "09:00", endTime: "18:00", isWorking: true },
+  { dayOfWeek: 3, startTime: "09:00", endTime: "18:00", isWorking: true },
+  { dayOfWeek: 4, startTime: "09:00", endTime: "18:00", isWorking: true },
+  { dayOfWeek: 5, startTime: "09:00", endTime: "18:00", isWorking: true },
+  { dayOfWeek: 6, startTime: "09:00", endTime: "13:00", isWorking: true },
+  { dayOfWeek: 0, startTime: "00:00", endTime: "00:00", isWorking: false },
+];
+
+const weekdayLabels: Record<number, string> = {
+  0: "Domingo",
+  1: "Segunda",
+  2: "Terca",
+  3: "Quarta",
+  4: "Quinta",
+  5: "Sexta",
+  6: "Sabado",
+};
 
 export default function Professionals() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -57,18 +79,25 @@ export default function Professionals() {
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
   const [formCommission, setFormCommission] = useState("40");
   const [formIsActive, setFormIsActive] = useState(true);
+  const [formWorkingHours, setFormWorkingHours] = useState<WorkingHours[]>(
+    defaultWorkingHours
+  );
+  const [isWorkingHoursDisabled, setIsWorkingHoursDisabled] = useState(false);
 
   const {
     professionals,
     professionalLimits,
+    pagination,
     isLoading,
     isLimitsLoading,
+    error,
+    refetch,
+    goToPage,
     createProfessional,
     updateProfessional,
     deleteProfessional,
     resetProfessionalPassword,
   } = useProfessionals();
-
   const {
     specialties,
     isLoading: isLoadingSpecialties,
@@ -84,6 +113,7 @@ export default function Professionals() {
       prof.specialties.some((s) => s.toLowerCase().includes(term))
     );
   });
+  const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.limit));
 
   const resetForm = () => {
     setFormName("");
@@ -92,6 +122,8 @@ export default function Professionals() {
     setSelectedSpecialties([]);
     setFormCommission("40");
     setFormIsActive(true);
+    setFormWorkingHours(defaultWorkingHours);
+    setIsWorkingHoursDisabled(false);
     setEditingProfessional(null);
   };
 
@@ -102,6 +134,32 @@ export default function Professionals() {
     setSelectedSpecialties(prof.specialties || []);
     setFormCommission(String(prof.commissionRate));
     setFormIsActive(prof.isActive);
+    const hasWorkingHours = Array.isArray(prof.workingHours) && prof.workingHours.length > 0;
+    if (!hasWorkingHours) {
+      setFormWorkingHours(
+        defaultWorkingHours.map((item) => ({
+          ...item,
+          startTime: "00:00",
+          endTime: "00:00",
+          isWorking: false,
+        }))
+      );
+      setIsWorkingHoursDisabled(true);
+    } else {
+      const normalized = defaultWorkingHours.map((defaultHour) => {
+        const current = prof.workingHours.find((item) => item.dayOfWeek === defaultHour.dayOfWeek);
+        return current
+          ? {
+              dayOfWeek: current.dayOfWeek,
+              startTime: current.startTime || defaultHour.startTime,
+              endTime: current.endTime || defaultHour.endTime,
+              isWorking: !!current.isWorking,
+            }
+          : defaultHour;
+      });
+      setFormWorkingHours(normalized);
+      setIsWorkingHoursDisabled(false);
+    }
     setEditingProfessional(prof.id);
     setIsNewProfessionalOpen(true);
   };
@@ -114,9 +172,29 @@ export default function Professionals() {
     );
   };
 
+  const updateWorkingHour = (
+    dayOfWeek: number,
+    field: "startTime" | "endTime" | "isWorking",
+    value: string | boolean
+  ) => {
+    setFormWorkingHours((prev) =>
+      prev.map((item) =>
+        item.dayOfWeek === dayOfWeek ? { ...item, [field]: value } : item
+      )
+    );
+  };
+
   const handleSubmit = async () => {
     if (!formName || !formEmail || !formPhone) {
       toast.error("Preencha todos os campos obrigatorios");
+      return;
+    }
+
+    const invalidWorkingRange = formWorkingHours.some(
+      (item) => item.isWorking && item.startTime >= item.endTime
+    );
+    if (invalidWorkingRange) {
+      toast.error("Revise os horarios: o inicio deve ser menor que o fim.");
       return;
     }
 
@@ -129,12 +207,13 @@ export default function Professionals() {
         specialties: selectedSpecialties,
         commissionRate: parseInt(formCommission, 10),
         isActive: formIsActive,
+        workingHours: formWorkingHours,
       };
 
       if (editingProfessional) {
         await updateProfessional(editingProfessional, professionalData);
       } else {
-        await createProfessional(professionalData as any);
+        await createProfessional(professionalData);
       }
 
       setIsNewProfessionalOpen(false);
@@ -178,6 +257,18 @@ export default function Professionals() {
     );
   }
 
+  if (error) {
+    return (
+      <MainLayout title="Profissionais" subtitle="Gerencie sua equipe">
+        <PageErrorState
+          title="Nao foi possivel carregar os profissionais"
+          description={error}
+          action={{ label: "Tentar novamente", onClick: refetch }}
+        />
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout title="Profissionais" subtitle="Gerencie sua equipe">
       <div className="space-y-4 sm:space-y-6">
@@ -188,7 +279,7 @@ export default function Professionals() {
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Buscar profissionais..."
               value={searchTerm}
@@ -205,12 +296,12 @@ export default function Professionals() {
             }}
           >
             <DialogTrigger asChild>
-              <Button className="gap-2 bg-violet-600 hover:bg-violet-700">
+              <Button className="gap-2">
                 <Plus className="w-4 h-4" />
                 Novo Profissional
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md mx-4 sm:mx-auto">
+            <DialogContent className="max-w-md mx-4 sm:mx-auto max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
                   {editingProfessional ? "Editar Profissional" : "Novo Profissional"}
@@ -253,7 +344,7 @@ export default function Professionals() {
                   </div>
                 </div>
                 {editingProfessional ? (
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     E-mail e telefone nao podem ser alterados na edicao do profissional.
                   </p>
                 ) : null}
@@ -262,7 +353,7 @@ export default function Professionals() {
                   <Label>Especialidades</Label>
                   <div className="rounded-lg border p-3 space-y-3 max-h-48 overflow-y-auto">
                     {isLoadingSpecialties && (
-                      <p className="text-sm text-gray-500">Carregando especialidades...</p>
+                      <p className="text-sm text-muted-foreground">Carregando especialidades...</p>
                     )}
                     {specialtiesError && (
                       <div className="space-y-2">
@@ -278,7 +369,7 @@ export default function Professionals() {
                       </div>
                     )}
                     {!isLoadingSpecialties && !specialtiesError && !specialties.length && (
-                      <p className="text-sm text-gray-500">Nenhuma especialidade cadastrada.</p>
+                      <p className="text-sm text-muted-foreground">Nenhuma especialidade cadastrada.</p>
                     )}
                     {!isLoadingSpecialties &&
                       specialties.map((specialty) => (
@@ -317,10 +408,57 @@ export default function Professionals() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="space-y-2">
+                  <Label>Horario de trabalho</Label>
+                  <div className="rounded-lg border p-3 space-y-2">
+                    {formWorkingHours
+                      .slice()
+                      .sort((a, b) => a.dayOfWeek - b.dayOfWeek)
+                      .map((hour) => (
+                        <div
+                          key={hour.dayOfWeek}
+                          className="grid grid-cols-[80px_1fr_1fr_auto] items-center gap-2"
+                        >
+                          <span className="text-xs text-muted-foreground">
+                            {weekdayLabels[hour.dayOfWeek]}
+                          </span>
+                          <Input
+                            type="time"
+                            value={hour.startTime}
+                            onChange={(event) =>
+                              updateWorkingHour(hour.dayOfWeek, "startTime", event.target.value)
+                            }
+                            disabled={isWorkingHoursDisabled || !hour.isWorking}
+                          />
+                          <Input
+                            type="time"
+                            value={hour.endTime}
+                            onChange={(event) =>
+                              updateWorkingHour(hour.dayOfWeek, "endTime", event.target.value)
+                            }
+                            disabled={isWorkingHoursDisabled || !hour.isWorking}
+                          />
+                          <Switch
+                            checked={hour.isWorking}
+                            onCheckedChange={(checked) =>
+                              updateWorkingHour(hour.dayOfWeek, "isWorking", checked)
+                            }
+                            disabled={isWorkingHoursDisabled}
+                          />
+                        </div>
+                      ))}
+                  </div>
+                  {isWorkingHoursDisabled ? (
+                    <p className="text-xs text-amber-700">
+                      Horarios de trabalho nao informados pelo backend. Edicao desativada.
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-muted/40 rounded-lg">
                   <div>
                     <Label>Profissional Ativo</Label>
-                    <p className="text-xs text-gray-500">Disponivel para agendamentos</p>
+                    <p className="text-xs text-muted-foreground">Disponivel para agendamentos</p>
                   </div>
                   <Switch checked={formIsActive} onCheckedChange={setFormIsActive} />
                 </div>
@@ -355,8 +493,8 @@ export default function Professionals() {
         {filteredProfessionals.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
-              <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">Nenhum profissional encontrado</p>
+              <Users className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+              <p className="text-muted-foreground">Nenhum profissional encontrado</p>
               {searchTerm && (
                 <Button variant="link" onClick={() => setSearchTerm("")}>
                   Limpar busca
@@ -378,12 +516,12 @@ export default function Professionals() {
                     <div className="flex items-center gap-3 min-w-0">
                       <Avatar className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0">
                         <AvatarImage src={professional.avatar} />
-                        <AvatarFallback className="bg-violet-100 text-violet-700 text-sm sm:text-base">
+                        <AvatarFallback className="bg-primary/15 text-primary text-sm sm:text-base">
                           {professional.name.slice(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
-                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
+                        <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">
                           {professional.name}
                         </h3>
                         <Badge
@@ -435,11 +573,11 @@ export default function Professionals() {
                   </div>
 
                   <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-gray-600">
+                    <div className="flex items-center gap-2 text-muted-foreground">
                       <Mail className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                       <span className="text-xs sm:text-sm truncate">{professional.email}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-600">
+                    <div className="flex items-center gap-2 text-muted-foreground">
                       <Phone className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                       <span className="text-xs sm:text-sm">{professional.phone}</span>
                     </div>
@@ -458,9 +596,9 @@ export default function Professionals() {
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                    <span className="text-xs sm:text-sm text-gray-500">Comissao</span>
-                    <div className="flex items-center gap-1 text-violet-600 font-semibold">
+                  <div className="flex items-center justify-between pt-3 border-t border-border">
+                    <span className="text-xs sm:text-sm text-muted-foreground">Comissao</span>
+                    <div className="flex items-center gap-1 text-primary font-semibold">
                       <Percent className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span className="text-sm sm:text-base">{professional.commissionRate}%</span>
                     </div>
@@ -470,6 +608,32 @@ export default function Professionals() {
             ))}
           </div>
         )}
+
+        {!searchTerm && totalPages > 1 ? (
+          <div className="flex items-center justify-between gap-3 border rounded-lg p-3 bg-muted/20">
+            <p className="text-sm text-muted-foreground">
+              Pagina {pagination.page} de {totalPages}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => goToPage(pagination.page - 1)}
+                disabled={pagination.page <= 1 || isLoading}
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => goToPage(pagination.page + 1)}
+                disabled={pagination.page >= totalPages || isLoading || !pagination.hasMore}
+              >
+                Proxima
+              </Button>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <AlertDialog

@@ -739,7 +739,6 @@ Status sugeridos: `400`, `401`, `403`, `404`, `409`, `422`, `500`.
 ### Rota da pagina de venda
 - `GET /compras` (publica, path amigavel)
 - `GET /compras/:productId` (publica)
-- Compatibilidade legada: `GET /sale/:productId` redireciona para `/compras/:productId`
 
 ### Fluxo de conversao no frontend
 - Visitante acessa `/compras` ou `/compras/:productId`.
@@ -814,7 +813,6 @@ Status sugeridos: `400`, `401`, `403`, `404`, `409`, `422`, `500`.
   - `src/components/sales/CheckoutIntentPanel.tsx`
   - `src/components/sales/ProductOfferCard.tsx`
 - Rotas adicionais:
-  - `/sale/:productId`
   - `/success`
   - `/error`
 

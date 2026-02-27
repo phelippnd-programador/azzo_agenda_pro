@@ -12,15 +12,13 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
-      
+
       <div className="lg:pl-64 xl:pl-72">
         <Header title={title} subtitle={subtitle} />
-        
-        <main className="p-3 sm:p-4 lg:p-6 xl:p-8 overflow-x-hidden">
-          {children}
-        </main>
+
+        <main className="p-3 sm:p-4 lg:p-6 xl:p-8 overflow-x-hidden">{children}</main>
       </div>
     </div>
   );

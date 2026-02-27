@@ -1,4 +1,4 @@
-export type BillingType = "PIX" | "BOLETO" | "CREDIT_CARD";
+export type BillingType = "PIX" | "BOLETO" | "CREDIT_CARD" | "TRIAL";
 
 export type BillingSubscriptionStatus =
   | "PENDING"
@@ -39,6 +39,7 @@ export interface CreateBillingSubscriptionRequest {
   planCode?: string;
   billingType: BillingType;
   cpfCnpj: string;
+  description?: string;
   creditCard?: CreditCardData;
   creditCardHolderInfo?: CreditCardHolderInfo;
 }
@@ -61,6 +62,10 @@ export interface CreateBillingSubscriptionResponse {
   updatedAt?: string | null;
   paymentId?: string | null;
   paymentStatus?: BillingPaymentStatus | string | null;
+  currentPaymentId?: string | null;
+  currentPaymentStatus?: BillingPaymentStatus | string | null;
+  currentPaymentDueDate?: string | null;
+  licenseStatus?: "ACTIVE" | "EXPIRED" | string | null;
   invoiceUrl?: string | null;
   bankSlipUrl?: string | null;
   boletoIdentificationField?: string | null;

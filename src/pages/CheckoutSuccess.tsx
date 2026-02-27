@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function CheckoutSuccess() {
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-10">
+    <div className="min-h-screen bg-background px-4 py-10">
       <div className="mx-auto max-w-xl">
         <Card className="border-emerald-200 shadow-md">
           <CardHeader>
@@ -14,7 +14,7 @@ export default function CheckoutSuccess() {
               Compra confirmada
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm text-slate-600">
+          <CardContent className="space-y-4 text-sm text-muted-foreground">
             <p>
               Seu checkout foi concluido com sucesso. A ativacao do plano sera
               processada em instantes.
@@ -28,3 +28,4 @@ export default function CheckoutSuccess() {
     </div>
   );
 }
+

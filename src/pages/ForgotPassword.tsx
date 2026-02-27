@@ -29,15 +29,15 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-50 via-white to-pink-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-card p-4">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-2 mb-6 sm:mb-8">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-violet-600 to-pink-500 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-xl flex items-center justify-center">
             <Scissors className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Azzo</h1>
-            <p className="text-xs sm:text-sm text-violet-600 font-medium -mt-1">Agenda Pro</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Azzo</h1>
+            <p className="text-xs sm:text-sm text-primary font-medium -mt-1">Agenda Pro</p>
           </div>
         </div>
 
@@ -55,7 +55,7 @@ export default function ForgotPassword() {
                   E-mail
                 </Label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Mail className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
                   <Input
                     id="email"
                     type="email"
