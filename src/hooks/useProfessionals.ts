@@ -8,18 +8,55 @@ import {
 import { resolveUiError } from "@/lib/error-utils";
 import { toast } from "sonner";
 
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 20;
+
+type PaginationState = {
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+};
+
 export function useProfessionals() {
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [professionalLimits, setProfessionalLimits] = useState<ProfessionalLimits | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLimitsLoading, setIsLimitsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<PaginationState>({
+    page: DEFAULT_PAGE,
+    limit: DEFAULT_LIMIT,
+    total: 0,
+    hasMore: false,
+  });
 
-  const fetchProfessionals = useCallback(async () => {
+  const fetchProfessionals = useCallback(async (options?: { page?: number; limit?: number }) => {
+    const page = options?.page ?? DEFAULT_PAGE;
+    const limit = options?.limit ?? DEFAULT_LIMIT;
     try {
       setIsLoading(true);
-      const data = await professionalsApi.getAll({ page: 1, limit: 100 });
-      setProfessionals(Array.isArray(data) ? data : data.items || []);
+      const data = await professionalsApi.getAll({ page, limit });
+      if (Array.isArray(data)) {
+        setProfessionals(data);
+        setPagination({
+          page,
+          limit,
+          total: data.length,
+          hasMore: false,
+        });
+      } else {
+        const items = data.items || [];
+        const total = data.total ?? items.length;
+        const hasMore = data.hasMore ?? page * limit < total;
+        setProfessionals(items);
+        setPagination({
+          page: data.page ?? page,
+          limit: data.pageSize ?? limit,
+          total,
+          hasMore,
+        });
+      }
       setError(null);
     } catch (err) {
       if (isPlanExpiredApiError(err)) {
@@ -49,14 +86,14 @@ export function useProfessionals() {
   }, []);
 
   useEffect(() => {
-    fetchProfessionals();
+    fetchProfessionals({ page: DEFAULT_PAGE, limit: DEFAULT_LIMIT });
     fetchProfessionalLimits();
   }, [fetchProfessionals, fetchProfessionalLimits]);
 
   const createProfessional = async (data: Partial<Professional>) => {
     try {
       const newProfessional = await professionalsApi.create(data);
-      setProfessionals((prev) => [...prev, newProfessional]);
+      await fetchProfessionals({ page: pagination.page, limit: pagination.limit });
       await fetchProfessionalLimits();
       toast.success("Profissional adicionado com sucesso!");
       return newProfessional;
@@ -71,7 +108,7 @@ export function useProfessionals() {
   const updateProfessional = async (id: string, data: Partial<Professional>) => {
     try {
       const updated = await professionalsApi.update(id, data);
-      setProfessionals((prev) => prev.map((p) => (p.id === id ? updated : p)));
+      await fetchProfessionals({ page: pagination.page, limit: pagination.limit });
       toast.success("Profissional atualizado com sucesso!");
       return updated;
     } catch (err) {
@@ -85,7 +122,7 @@ export function useProfessionals() {
   const deleteProfessional = async (id: string) => {
     try {
       await professionalsApi.delete(id);
-      setProfessionals((prev) => prev.filter((p) => p.id !== id));
+      await fetchProfessionals({ page: pagination.page, limit: pagination.limit });
       await fetchProfessionalLimits();
       toast.success("Profissional removido com sucesso!");
     } catch (err) {
@@ -109,13 +146,20 @@ export function useProfessionals() {
     }
   };
 
+  const goToPage = async (page: number) => {
+    if (page < 1) return;
+    await fetchProfessionals({ page, limit: pagination.limit });
+  };
+
   return {
     professionals,
     professionalLimits,
+    pagination,
     isLoading,
     isLimitsLoading,
     error,
-    refetch: fetchProfessionals,
+    refetch: () => fetchProfessionals({ page: pagination.page, limit: pagination.limit }),
+    goToPage,
     refetchProfessionalLimits: fetchProfessionalLimits,
     createProfessional,
     updateProfessional,

@@ -117,3 +117,4 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 - [x] Alinhar senha minima para 8 caracteres no cadastro.
 - [x] Preparar consultas principais para paginacao (`page/limit`) com fallback para contrato legado em array.
 - [x] Adicionar confirmar senha e medidor de seguranca no cadastro (`/cadastro` e `/compras`).
+- [x] Implementar navegacao de pagina no frontend para clientes, servicos e profissionais (com fallback legado).

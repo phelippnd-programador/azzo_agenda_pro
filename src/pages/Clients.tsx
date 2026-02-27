@@ -69,13 +69,14 @@ export default function Clients() {
   const [formBirthDate, setFormBirthDate] = useState('');
   const [formNotes, setFormNotes] = useState('');
 
-  const { clients, isLoading, error, refetch, createClient, updateClient, deleteClient } = useClients();
+  const { clients, pagination, isLoading, error, refetch, goToPage, createClient, updateClient, deleteClient } = useClients();
 
   const filteredClients = clients.filter((client) =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.phone.includes(searchTerm)
   );
+  const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.limit));
 
   const resetForm = () => {
     setFormName('');
@@ -290,7 +291,7 @@ export default function Clients() {
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
           <Card>
             <CardContent className="p-3 sm:p-4 text-center">
-              <p className="text-lg sm:text-2xl font-bold text-primary">{clients.length}</p>
+              <p className="text-lg sm:text-2xl font-bold text-primary">{pagination.total}</p>
               <p className="text-xs sm:text-sm text-muted-foreground">Total de Clientes</p>
             </CardContent>
           </Card>
@@ -478,6 +479,32 @@ export default function Clients() {
             </div>
           </Card>
         )}
+
+        {!searchTerm && totalPages > 1 ? (
+          <div className="flex items-center justify-between gap-3 border rounded-lg p-3 bg-muted/20">
+            <p className="text-sm text-muted-foreground">
+              Pagina {pagination.page} de {totalPages}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => goToPage(pagination.page - 1)}
+                disabled={pagination.page <= 1 || isLoading}
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => goToPage(pagination.page + 1)}
+                disabled={pagination.page >= totalPages || isLoading || !pagination.hasMore}
+              >
+                Proxima
+              </Button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </MainLayout>
   );
