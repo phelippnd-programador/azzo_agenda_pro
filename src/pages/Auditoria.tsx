@@ -10,7 +10,12 @@ import { auditoriaApi } from "@/lib/api";
 import { useAuditEventDetail } from "@/hooks/useAuditEventDetail";
 import { useAuditEvents } from "@/hooks/useAuditEvents";
 import { useAuditExport } from "@/hooks/useAuditExport";
-import type { AuditFiltersOptionsDto, AuditSearchQueryDto, AuditStatus } from "@/types/auditoria";
+import type {
+  AuditFiltersOptionsDto,
+  AuditRetentionEventDto,
+  AuditSearchQueryDto,
+  AuditStatus,
+} from "@/types/auditoria";
 
 const formatDateTime = (value: string) =>
   new Intl.DateTimeFormat("pt-BR", {
@@ -57,6 +62,7 @@ export default function Auditoria() {
   } = useAuditEvents();
   const { isExporting, lastExport, exportEvents } = useAuditExport();
   const [filterOptions, setFilterOptions] = useState<AuditFiltersOptionsDto | null>(null);
+  const [retentionEvents, setRetentionEvents] = useState<AuditRetentionEventDto[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const { eventDetail, isLoading: isLoadingDetail, error: detailError } =
     useAuditEventDetail(selectedEventId);
@@ -78,6 +84,22 @@ export default function Auditoria() {
       }
     };
     void loadFilterOptions();
+  }, [filters.from, filters.to]);
+
+  useEffect(() => {
+    const loadRetentionEvents = async () => {
+      try {
+        const response = await auditoriaApi.listRetentionEvents({
+          from: filters.from,
+          to: filters.to,
+          limit: 20,
+        });
+        setRetentionEvents(response.items);
+      } catch {
+        setRetentionEvents([]);
+      }
+    };
+    void loadRetentionEvents();
   }, [filters.from, filters.to]);
 
   useEffect(() => {
@@ -359,6 +381,29 @@ export default function Auditoria() {
             </CardContent>
           </Card>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Eventos de retencao e expurgo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!retentionEvents.length ? (
+              <p className="text-sm text-muted-foreground">Nenhum evento de retencao no periodo.</p>
+            ) : (
+              <div className="space-y-2">
+                {retentionEvents.map((event) => (
+                  <div key={event.id} className="rounded-md border p-3 text-sm">
+                    <p><span className="font-medium">Policy version:</span> {event.policyVersion}</p>
+                    <p><span className="font-medium">Janela:</span> {formatDateTime(event.windowStart)} ate {formatDateTime(event.windowEnd)}</p>
+                    <p><span className="font-medium">Linhas afetadas:</span> {event.affectedRows}</p>
+                    <p><span className="font-medium">Execution ID:</span> <span className="font-mono text-xs">{event.executionId}</span></p>
+                    <p><span className="font-medium">Evidence hash:</span> <span className="font-mono text-xs">{event.evidenceHash}</span></p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </MainLayout>
   );

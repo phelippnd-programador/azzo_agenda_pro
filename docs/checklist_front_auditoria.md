@@ -44,8 +44,8 @@ Branch: `feature/frontend-arquitetura-auditoria`
 - [x] Registrar feedback de sucesso/erro de exportacao.
 
 ## 7. Retencao e compliance (UI)
-- [ ] Criar visualizacao de eventos de retencao (`AUDIT_RETENTION_PURGE`).
-- [ ] Exibir `policy_version`, janela, linhas afetadas, `execution_id`, `evidence_hash`.
+- [x] Criar visualizacao de eventos de retencao (`AUDIT_RETENTION_PURGE`).
+- [x] Exibir `policy_version`, janela, linhas afetadas, `execution_id`, `evidence_hash`.
 
 ## 8. Seguranca e permissao
 - [x] Amarrar rota/menu de auditoria a `allowedRoutes` e permissao de perfil.
