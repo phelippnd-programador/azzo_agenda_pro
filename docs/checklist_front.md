@@ -49,7 +49,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 - [x] Revisar `docs/ESTRUTURA_BASE_DADOS_RELACIONAL.md`.
 
 ## 2. Base tecnica e padroes UI
-- [~] Aplicar Design System (cores, espacos, radius, sombras).
+- [x] Aplicar Design System (cores, espacos, radius, sombras).
 - [~] Aplicar escala tipografica padrao em todas as telas.
 - [~] Garantir estados `loading`, `empty`, `error` em telas principais.
 - [~] Padronizar labels/textos conforme documento.
