@@ -27,6 +27,7 @@ import {
   Eye,
   CreditCard,
   BarChart3,
+  ShieldCheck,
 } from "lucide-react";
 
 const MENU_REGISTRY = {
@@ -44,6 +45,7 @@ const MENU_REGISTRY = {
     path: "/financeiro/profissionais",
   },
   "/financeiro/licenca": { icon: CreditCard, label: "Licenca", path: "/financeiro/licenca" },
+  "/auditoria": { icon: ShieldCheck, label: "Auditoria", path: "/auditoria" },
   "/emitir-nota": { icon: FileText, label: "Emitir Nota Fiscal", path: "/emitir-nota" },
   "/nota-fiscal": { icon: Eye, label: "Pre-visualizacao de NF", path: "/nota-fiscal" },
   "/config-impostos": {
@@ -67,6 +69,7 @@ const MAIN_MENU_ORDER = [
   "/financeiro",
   "/financeiro/profissionais",
   "/financeiro/licenca",
+  "/auditoria",
   "/emitir-nota",
   "/nota-fiscal",
   "/config-impostos",
