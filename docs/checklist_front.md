@@ -44,7 +44,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 ## 1. Preparacao
 - [x] Validar branch de trabalho (`feature/alinhamento-completo-documentacao`).
 - [x] Revisar `docs/REQUISITOS_VALIDACAO_SISTEMA.md`.
-- [ ] Revisar `docs/MATRIZ_HOMOLOGACAO_RF.md`.
+- [x] Revisar `docs/MATRIZ_HOMOLOGACAO_RF.md`.
 - [ ] Revisar `docs/PADRAO_LABELS_E_TEXTOS.md`.
 - [ ] Revisar `docs/ESTRUTURA_BASE_DADOS_RELACIONAL.md`.
 
