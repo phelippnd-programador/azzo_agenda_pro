@@ -119,3 +119,4 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 - [x] Adicionar confirmar senha e medidor de seguranca no cadastro (`/cadastro` e `/compras`).
 - [x] Implementar navegacao de pagina no frontend para clientes, servicos e profissionais (com fallback legado).
 - [x] Implementar paginacao na agenda por filtros (data/profissional/status) com navegacao entre paginas.
+- [x] Atualizar matriz de homologacao por RF para `EM_EXECUCAO` nos modulos implementados no frontend.

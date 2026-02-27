@@ -19,15 +19,15 @@ Objetivo: rastrear validacao funcional com evidencia obrigatoria para cada requi
 |---|---|---|---|---|---|---|---|---|
 | RF-001..007 | Autenticacao e Sessao | `/login`, `/cadastro`, `/agendar/:slug` | `/auth/login`, `/auth/register`, `/auth/me`, `/auth/refresh` | Login/cadastro/sessao/isolamento publico | `docs/SMOKE_FRONT_DEMO_LOCAL.md` + screenshot/network pendentes | EM_EXECUCAO | Frontend | Login demo local com perfis OWNER/PROFESSIONAL implementado em 2026-02-27 |
 | RF-008..011 | Controle de Acesso | Rotas protegidas + `/unauthorized` | `/config/menus/current` | Bloqueio por permissao e acesso direto por URL | `docs/SMOKE_FRONT_DEMO_LOCAL.md` + screenshot/network pendentes | EM_EXECUCAO | Frontend | Sidebar renderizada por `allowedRoutes`; sem bypass fixo em demo local |
-| RF-012..014 | Dashboard | `/dashboard` | `/dashboard/metrics`, `/dashboard/revenue/weekly` | Cards e graficos com dados validos | Screenshot + Network + resultado | NAO_INICIADO |  |  |
-| RF-015..020 | Agenda | `/agenda` | `/appointments*`, `/appointments/available-slots` | CRUD e status de agendamento | Screenshot + Network + resultado | NAO_INICIADO |  |  |
-| RF-021..028 | Cadastros | `/servicos`, `/profissionais`, `/clientes`, `/especialidades` | `/services*`, `/professionals*`, `/clients*`, `/specialties*` | CRUDs e regras de negocio | Screenshot + Network + resultado | NAO_INICIADO |  |  |
-| RF-029..033 | Financeiro | `/financeiro`, `/financeiro/profissionais` | `/finance/transactions*`, `/dashboard/metrics/professional`, `/dashboard/metrics/services` | Resumo, filtros e graficos | Screenshot + Network + resultado | NAO_INICIADO |  |  |
-| RF-034..037 | Licenca e Checkout | `/financeiro/licenca`, `/compras*`, `/success`, `/error` | `/billing/*`, `/checkout/*` | Assinatura e fluxo de compra | Screenshot + Network + resultado | NAO_INICIADO |  |  |
-| RF-038..042 | Fiscal | `/config-impostos`, `/nota-fiscal`, `/emitir-nota`, `/apuracao-mensal` | `/fiscal/*` | Configuracao, emissao e apuracao | Screenshot + Network + resultado | NAO_INICIADO |  |  |
-| RF-043..045 | Notificacoes | `/notificacoes` | `/notifications*` | Filtros, paginacao e limpeza | Screenshot + Network + resultado | NAO_INICIADO |  |  |
-| RF-046..050 | Perfil e Configuracoes | `/perfil-salao`, `/configuracoes`, `/configuracoes/integracoes/whatsapp` | `/salon/profile`, `/settings*`, `/whatsapp/config*` (com fallback legado `/tenant/whatsapp*`), `/users/me*` | Persistencia de parametros e conta | Screenshot + Network + resultado | NAO_INICIADO |  |  |
-| RF-051..056 | Agendamento Publico | `/agendar/:slug` | `/public/salons/:slug/*` | Fluxo de 4 passos + criacao | Screenshot + Network + resultado | NAO_INICIADO |  |  |
+| RF-012..014 | Dashboard | `/dashboard` | `/dashboard/metrics`, `/dashboard/revenue/weekly` | Cards e graficos com dados validos | Screenshot + Network + resultado | EM_EXECUCAO | Frontend | Implementacao de cards/graficos concluida no frontend; pendente evidencia com backend real |
+| RF-015..020 | Agenda | `/agenda` | `/appointments*`, `/appointments/available-slots` | CRUD e status de agendamento | Screenshot + Network + resultado | EM_EXECUCAO | Frontend | CRUD/status/realocacao/paginacao por filtros implementados; pendente evidencia em homologacao real |
+| RF-021..028 | Cadastros | `/servicos`, `/profissionais`, `/clientes`, `/especialidades` | `/services*`, `/professionals*`, `/clients*`, `/specialties*` | CRUDs e regras de negocio | Screenshot + Network + resultado | EM_EXECUCAO | Frontend | CRUDs implementados com validacoes e feedback de erro; pendente evidencia em backend real |
+| RF-029..033 | Financeiro | `/financeiro`, `/financeiro/profissionais` | `/finance/transactions*`, `/dashboard/metrics/professional`, `/dashboard/metrics/services` | Resumo, filtros e graficos | Screenshot + Network + resultado | EM_EXECUCAO | Frontend | Fluxos e graficos implementados; isolamento por perfil aplicado; pendente evidencia formal |
+| RF-034..037 | Licenca e Checkout | `/financeiro/licenca`, `/compras*`, `/success`, `/error` | `/billing/*`, `/checkout/*` | Assinatura e fluxo de compra | Screenshot + Network + resultado | EM_EXECUCAO | Frontend | Fluxo de assinatura e telas comerciais implementados; pendente homologacao backend |
+| RF-038..042 | Fiscal | `/config-impostos`, `/nota-fiscal`, `/emitir-nota`, `/apuracao-mensal` | `/fiscal/*` | Configuracao, emissao e apuracao | Screenshot + Network + resultado | EM_EXECUCAO | Frontend | Modulo fiscal completo no frontend; pendente validacao fim a fim com provider real |
+| RF-043..045 | Notificacoes | `/notificacoes` | `/notifications*` | Filtros, paginacao e limpeza | Screenshot + Network + resultado | EM_EXECUCAO | Frontend | Lista/filtros/limpeza implementados; pendente evidencia com backend real |
+| RF-046..050 | Perfil e Configuracoes | `/perfil-salao`, `/configuracoes`, `/configuracoes/integracoes/whatsapp` | `/salon/profile`, `/settings*`, `/whatsapp/config*` (com fallback legado `/tenant/whatsapp*`), `/users/me*` | Persistencia de parametros e conta | Screenshot + Network + resultado | EM_EXECUCAO | Frontend | Perfil/settings/WhatsApp implementados com padrao de erro; pendente evidencias de homologacao |
+| RF-051..056 | Agendamento Publico | `/agendar/:slug` | `/public/salons/:slug/*` | Fluxo de 4 passos + criacao | Screenshot + Network + resultado | EM_EXECUCAO | Frontend | Fluxo em etapas e filtros por servico implementados; pendente evidencias com backend real |
 | RF-008..011 + RBAC-001..011 | Menus/Rotas por Perfil (Dinamico por Banco) | Todas rotas protegidas + `/unauthorized` | `/config/menus/current`, `/config/menus/perfis*`, `/config/menus/recarregar` | Alterar permissao no banco e validar reflexo imediato em menu e guard de rota | `docs/SMOKE_FRONT_DEMO_LOCAL.md` + screenshot/network pendentes + evidencia de auditoria | EM_EXECUCAO | Frontend | Validacao inicial por perfil em demo local (Owner/Profissional); pendente evidenciar cenarios com backend real |
 
 ## Cenarios obrigatorios adicionais (RBAC dinamico)
@@ -49,7 +49,7 @@ Objetivo: rastrear validacao funcional com evidencia obrigatoria para cada requi
 
 ## Registro de Execucao (Frontend - Demo Local)
 - Ambiente: `frontend` local (Vite), modo demo local sem backend.
-- Commit/Tag: `ef686fe` (ultimo check funcional desta rodada).
+- Commit/Tag: `387ea2f` (ultimo check funcional desta rodada).
 - Data/Hora: 2026-02-27.
 - Executor: Frontend.
 - Cenarios executados:
@@ -59,7 +59,7 @@ Objetivo: rastrear validacao funcional com evidencia obrigatoria para cada requi
   - modulos principais (dashboard, agenda, cadastros, financeiro, fiscal, licenca/checkout) validados no nivel de implementacao de frontend.
 - Evidencias anexadas:
   - roteiro de smoke: `docs/SMOKE_FRONT_DEMO_LOCAL.md`;
-  - historico de commits de checklist (ex.: `479c195`, `c8e9895`, `b5f29a7`, `f9cd849`, `d04b99a`, `35d7c1a`, `197777d`, `bd77bc5`, `4849e4d`, `1d4fc0b`, `ef686fe`);
+  - historico de commits de checklist (ex.: `479c195`, `c8e9895`, `b5f29a7`, `f9cd849`, `d04b99a`, `35d7c1a`, `197777d`, `bd77bc5`, `4849e4d`, `1d4fc0b`, `ef686fe`, `56b301a`, `50343c8`, `716ccea`, `f5921c4`, `00a3219`, `387ea2f`);
   - validacoes tecnicas: `npm run build`, `npm run lint`, `npx tsc --noEmit` sem erro.
 - Resultado final: status geral em `EM_EXECUCAO`, com trilha de evidencias tecnicas registrada.
 - Pendencias:
