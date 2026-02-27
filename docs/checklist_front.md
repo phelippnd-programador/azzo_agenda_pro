@@ -87,7 +87,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 - [x] Fluxo em etapas completo (`/agendar/:slug`).
 - [x] Buscar profissionais apenas apos selecionar servico e clicar em continuar.
 - [x] Filtrar profissionais por `serviceId`.
-- [~] Criar agendamento publico com validacoes de conflito.
+- [x] Criar agendamento publico com validacoes de conflito.
 
 ## 8. WhatsApp (escopo frontend)
 - [x] Tela de configuracao por tenant (`numero`, `token`, `verifyToken`, `phoneNumberId` etc.).
