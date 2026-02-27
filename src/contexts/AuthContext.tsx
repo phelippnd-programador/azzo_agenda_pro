@@ -25,12 +25,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     initializeDemoData();
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    const isPublicBookingRoute = pathname === "/agendar" || pathname.startsWith("/agendar/");
 
     const hasSession = authApi.hasSession();
     const storedUser = authApi.getCurrentUser();
 
     if (storedUser) {
       setUser(storedUser);
+    }
+
+    if (isPublicBookingRoute) {
+      setIsLoading(false);
+      return;
     }
 
     if (!hasSession) {

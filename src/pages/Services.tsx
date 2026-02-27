@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -32,6 +33,7 @@ import {
 } from '@/components/ui/select';
 import { Search, Plus, Clock, DollarSign, MoreVertical, Scissors, Loader2 } from 'lucide-react';
 import { useServices } from '@/hooks/useServices';
+import { useProfessionals } from '@/hooks/useProfessionals';
 import { toast } from 'sonner';
 
 const categories = ['Todos', 'Cabelo', 'Barba', 'Unhas', 'Estética', 'Maquiagem', 'Outros'];
@@ -56,9 +58,11 @@ export default function Services() {
   const [formDuration, setFormDuration] = useState('60');
   const [formPrice, setFormPrice] = useState('');
   const [formCategory, setFormCategory] = useState('Cabelo');
+  const [formProfessionalIds, setFormProfessionalIds] = useState<string[]>([]);
   const [formIsActive, setFormIsActive] = useState(true);
 
   const { services, isLoading, createService, updateService, deleteService } = useServices();
+  const { professionals, isLoading: isLoadingProfessionals } = useProfessionals();
 
   const filteredServices = services.filter((service) => {
     const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -73,6 +77,7 @@ export default function Services() {
     setFormDuration('60');
     setFormPrice('');
     setFormCategory('Cabelo');
+    setFormProfessionalIds([]);
     setFormIsActive(true);
     setEditingService(null);
   };
@@ -83,9 +88,18 @@ export default function Services() {
     setFormDuration(String(service.duration));
     setFormPrice(String(service.price));
     setFormCategory(service.category);
+    setFormProfessionalIds(Array.isArray(service.professionalIds) ? service.professionalIds : []);
     setFormIsActive(service.isActive);
     setEditingService(service.id);
     setIsNewServiceOpen(true);
+  };
+
+  const toggleProfessional = (professionalId: string) => {
+    setFormProfessionalIds((prev) =>
+      prev.includes(professionalId)
+        ? prev.filter((id) => id !== professionalId)
+        : [...prev, professionalId]
+    );
   };
 
   const handleSubmit = async () => {
@@ -102,7 +116,7 @@ export default function Services() {
         duration: parseInt(formDuration),
         price: parseFloat(formPrice),
         category: formCategory,
-        professionalIds: [],
+        professionalIds: formProfessionalIds,
         isActive: formIsActive,
       };
 
@@ -177,7 +191,7 @@ export default function Services() {
                 Novo Serviço
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md mx-4 sm:mx-auto">
+            <DialogContent className="max-w-md mx-4 sm:mx-auto max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingService ? 'Editar Serviço' : 'Novo Serviço'}</DialogTitle>
                 <DialogDescription>
@@ -238,6 +252,51 @@ export default function Services() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Profissionais</Label>
+                  <div className="rounded-lg border p-3 space-y-3 max-h-48 overflow-y-auto">
+                    {isLoadingProfessionals ? (
+                      <p className="text-sm text-gray-500">Carregando profissionais...</p>
+                    ) : !professionals.length ? (
+                      <p className="text-sm text-gray-500">Nenhum profissional cadastrado.</p>
+                    ) : (
+                      professionals.map((professional) => (
+                        <label
+                          key={professional.id}
+                          className="flex items-center gap-2 text-sm cursor-pointer"
+                        >
+                          <Checkbox
+                            checked={formProfessionalIds.includes(professional.id)}
+                            onCheckedChange={() => toggleProfessional(professional.id)}
+                          />
+                          <span>{professional.name}</span>
+                          {!professional.isActive ? (
+                            <Badge variant="outline" className="text-[10px] text-gray-500">
+                              Inativo
+                            </Badge>
+                          ) : null}
+                        </label>
+                      ))
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Se nenhum profissional for selecionado, o servico fica disponivel para todos.
+                  </p>
+                  {formProfessionalIds.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {formProfessionalIds.map((id) => {
+                        const professional = professionals.find((item) => item.id === id);
+                        if (!professional) return null;
+                        return (
+                          <Badge key={id} variant="secondary" className="text-[10px] sm:text-xs">
+                            {professional.name}
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">

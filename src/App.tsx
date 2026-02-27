@@ -304,14 +304,14 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <MenuPermissionsProvider>
-        <NotificationsProvider>
-          <TooltipProvider>
-            <Toaster />
-            <BrowserRouter>
+        <TooltipProvider>
+          <Toaster />
+          <BrowserRouter>
+            <NotificationsProvider>
               <AppRoutes />
-            </BrowserRouter>
-          </TooltipProvider>
-        </NotificationsProvider>
+            </NotificationsProvider>
+          </BrowserRouter>
+        </TooltipProvider>
       </MenuPermissionsProvider>
     </AuthProvider>
   </QueryClientProvider>

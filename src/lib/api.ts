@@ -858,8 +858,12 @@ export const fiscalApi = {
 export const publicBookingApi = {
   getServices: (slug: string) =>
     request<Service[]>(`/public/salons/${slug}/services`),
-  getProfessionals: (slug: string) =>
-    request<Professional[]>(`/public/salons/${slug}/professionals`),
+  getProfessionals: (slug: string, serviceId?: string) => {
+    const query = new URLSearchParams();
+    if (serviceId) query.set("serviceId", serviceId);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<Professional[]>(`/public/salons/${slug}/professionals${suffix}`);
+  },
   getAvailability: (params: {
     slug: string;
     date: string;

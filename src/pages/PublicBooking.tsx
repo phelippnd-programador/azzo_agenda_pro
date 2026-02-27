@@ -40,6 +40,7 @@ export default function PublicBooking() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingProfessionals, setIsLoadingProfessionals] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
 
   // Data
@@ -70,14 +71,11 @@ export default function PublicBooking() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [servicesData, professionalsData] = slug
-          ? await Promise.all([
-              publicBookingApi.getServices(slug),
-              publicBookingApi.getProfessionals(slug),
-            ])
-          : await Promise.all([servicesApi.getAll(), professionalsApi.getAll()]);
+        const servicesData = slug
+          ? await publicBookingApi.getServices(slug)
+          : await servicesApi.getAll();
         setServices(servicesData.filter(s => s.isActive));
-        setProfessionals(professionalsData.filter(p => p.isActive));
+        setProfessionals([]);
       } catch (error) {
         toast.error('Erro ao carregar dados');
       } finally {
@@ -123,6 +121,41 @@ export default function PublicBooking() {
     [professionals, selectedProfessional]
   );
 
+  const loadProfessionalsForService = async (serviceId: string) => {
+    setIsLoadingProfessionals(true);
+    try {
+      if (slug) {
+        const data = await publicBookingApi.getProfessionals(slug, serviceId);
+        const active = data.filter((professional) => professional.isActive);
+        setProfessionals(active);
+        setSelectedProfessional((prev) =>
+          prev && active.some((professional) => professional.id === prev) ? prev : null
+        );
+        return;
+      }
+
+      const data = await professionalsApi.getAll();
+      const active = data.filter((professional) => professional.isActive);
+      const currentService = services.find((service) => service.id === serviceId);
+      const restrictedIds = currentService?.professionalIds || [];
+      const filtered =
+        restrictedIds.length > 0
+          ? active.filter((professional) => restrictedIds.includes(professional.id))
+          : active;
+
+      setProfessionals(filtered);
+      setSelectedProfessional((prev) =>
+        prev && filtered.some((professional) => professional.id === prev) ? prev : null
+      );
+    } catch {
+      setProfessionals([]);
+      setSelectedProfessional(null);
+      toast.error('Erro ao carregar profissionais');
+    } finally {
+      setIsLoadingProfessionals(false);
+    }
+  };
+
   const getDaysInMonth = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
@@ -161,7 +194,13 @@ export default function PublicBooking() {
     return firstAvailable ?? null;
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
+    if (currentStep === 1 && selectedService) {
+      await loadProfessionalsForService(selectedService);
+      setCurrentStep(2);
+      return;
+    }
+
     if (currentStep === 2 && !selectedDate) {
       const defaultDate = getFirstSelectableDate();
       if (defaultDate) setSelectedDate(defaultDate);
@@ -172,7 +211,7 @@ export default function PublicBooking() {
   const canProceed = () => {
     switch (currentStep) {
       case 1:
-        return selectedService !== null;
+        return selectedService !== null && !isLoadingProfessionals;
       case 2:
         return selectedProfessional !== null;
       case 3:
@@ -229,6 +268,14 @@ export default function PublicBooking() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSelectService = (serviceId: string) => {
+    setSelectedService(serviceId);
+    setSelectedProfessional(null);
+    setSelectedDate(null);
+    setSelectedTime(null);
+    setAvailableSlots([]);
   };
 
   if (isLoading) {
@@ -358,7 +405,7 @@ export default function PublicBooking() {
                   services.map((service) => (
                     <div
                       key={service.id}
-                      onClick={() => setSelectedService(service.id)}
+                      onClick={() => handleSelectService(service.id)}
                       className={`p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${
                         selectedService === service.id
                           ? 'border-violet-600 bg-violet-50'
@@ -403,7 +450,9 @@ export default function PublicBooking() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {professionals.length === 0 ? (
+                {isLoadingProfessionals ? (
+                  <p className="text-center text-gray-500 py-8">Carregando profissionais...</p>
+                ) : professionals.length === 0 ? (
                   <p className="text-center text-gray-500 py-8">Nenhum profissional disponível</p>
                 ) : (
                   professionals.map((professional) => (
@@ -638,8 +687,17 @@ export default function PublicBooking() {
                 disabled={!canProceed()}
                 className="bg-violet-600 hover:bg-violet-700"
               >
-                Continuar
-                <ChevronRight className="w-4 h-4 ml-1" />
+                {isLoadingProfessionals && currentStep === 1 ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Carregando...
+                  </>
+                ) : (
+                  <>
+                    Continuar
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </>
+                )}
               </Button>
             ) : (
               <Button
@@ -666,3 +724,4 @@ export default function PublicBooking() {
     </div>
   );
 }
+
