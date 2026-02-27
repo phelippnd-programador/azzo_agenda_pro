@@ -118,3 +118,4 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 - [x] Preparar consultas principais para paginacao (`page/limit`) com fallback para contrato legado em array.
 - [x] Adicionar confirmar senha e medidor de seguranca no cadastro (`/cadastro` e `/compras`).
 - [x] Implementar navegacao de pagina no frontend para clientes, servicos e profissionais (com fallback legado).
+- [x] Implementar paginacao na agenda por filtros (data/profissional/status) com navegacao entre paginas.

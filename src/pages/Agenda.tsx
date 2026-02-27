@@ -84,19 +84,6 @@ const toMinutes = (time: string) => {
   return Number(hours) * 60 + Number(minutes);
 };
 
-const normalizeDateToIso = (value: unknown) => {
-  if (!value) return '';
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return value.toISOString().split('T')[0];
-  }
-  if (typeof value === 'string') {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-    const parsed = new Date(value);
-    if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().split('T')[0];
-  }
-  return '';
-};
-
 const getStatusColor = (status: string) => {
   const colors: Record<string, string> = {
     PENDING: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -153,17 +140,24 @@ export default function Agenda() {
   const [newDate, setNewDate] = useState(currentDate.toISOString().split('T')[0]);
   const [newStartTime, setNewStartTime] = useState('');
   const [newEndTime, setNewEndTime] = useState('');
+  const dateString = currentDate.toISOString().split('T')[0];
 
   const {
     appointments,
+    pagination,
     isLoading,
     error,
     refetch,
+    goToPage,
     createAppointment,
     updateAppointmentStatus,
     deleteAppointment,
     reassignAppointmentProfessional,
-  } = useAppointments();
+  } = useAppointments({
+    date: dateString,
+    professionalId: selectedProfessional !== 'all' ? selectedProfessional : undefined,
+    status: selectedStatus !== 'all' ? selectedStatus : undefined,
+  });
   const { professionals } = useProfessionals();
   const { clients } = useClients();
   const { services } = useServices();
@@ -209,18 +203,7 @@ export default function Agenda() {
     setCurrentDate(new Date());
   };
 
-  const dateString = currentDate.toISOString().split('T')[0];
-
-  const filteredAppointments = useMemo(() => {
-    return appointments.filter(apt => {
-      const matchesDate = normalizeDateToIso(apt.date) === dateString;
-      const matchesProfessional =
-        effectiveSelectedProfessional === 'all' ||
-        apt.professionalId === effectiveSelectedProfessional;
-      const matchesStatus = selectedStatus === 'all' || apt.status === selectedStatus;
-      return matchesDate && matchesProfessional && matchesStatus;
-    });
-  }, [appointments, dateString, effectiveSelectedProfessional, selectedStatus]);
+  const filteredAppointments = appointments;
 
   const displayedTimeSlots = useMemo(() => {
     const appointmentTimes = filteredAppointments
@@ -236,24 +219,6 @@ export default function Agenda() {
     setSelectedProfessional(loggedProfessional.id);
     setNewProfessionalId(loggedProfessional.id);
   }, [isProfessionalUser, loggedProfessional?.id]);
-
-  useEffect(() => {
-    if (!appointments.length) return;
-    const hasAppointmentsOnCurrentDate = appointments.some(
-      (apt) => normalizeDateToIso(apt.date) === dateString
-    );
-    if (hasAppointmentsOnCurrentDate) return;
-
-    const latestDate = [...appointments]
-      .map((apt) => normalizeDateToIso(apt.date))
-      .filter(Boolean)
-      .sort((a, b) => b.localeCompare(a))[0];
-
-    if (!latestDate) return;
-    const [year, month, day] = latestDate.split('-').map(Number);
-    if (!year || !month || !day) return;
-    setCurrentDate(new Date(year, month - 1, day));
-  }, [appointments, dateString]);
 
   useEffect(() => {
     setNewStartTime('');
@@ -743,6 +708,32 @@ export default function Agenda() {
           </CardContent>
         </Card>
         )}
+
+        {Math.ceil(pagination.total / pagination.limit) > 1 ? (
+          <div className="flex items-center justify-between gap-3 border rounded-lg p-3 bg-muted/20">
+            <p className="text-sm text-muted-foreground">
+              Pagina {pagination.page} de {Math.max(1, Math.ceil(pagination.total / pagination.limit))}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => goToPage(pagination.page - 1)}
+                disabled={pagination.page <= 1 || isLoading}
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => goToPage(pagination.page + 1)}
+                disabled={!pagination.hasMore || isLoading}
+              >
+                Proxima
+              </Button>
+            </div>
+          </div>
+        ) : null}
 
         <Dialog open={isReassignDialogOpen} onOpenChange={setIsReassignDialogOpen}>
           <DialogContent className="max-w-md mx-4 sm:mx-auto max-h-[85vh] overflow-y-auto">

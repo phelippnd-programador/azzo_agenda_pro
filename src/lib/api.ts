@@ -69,6 +69,12 @@ export type ListQueryParams = {
   search?: string;
 };
 
+export type AppointmentsListParams = ListQueryParams & {
+  date?: string;
+  professionalId?: string;
+  status?: string;
+};
+
 export type ListResponse<T> =
   | T[]
   | {
@@ -704,7 +710,39 @@ const localDemoRequest = <T>(endpoint: string, options: RequestInit = {}): T => 
   }
 
   if (path === "/appointments") {
-    if (method === "GET") return state.appointments as T;
+    if (method === "GET") {
+      const date = query.get("date") || undefined;
+      const professionalId = query.get("professionalId") || undefined;
+      const status = query.get("status") || undefined;
+      const page = Math.max(Number(query.get("page") || 1), 1);
+      const limit = Math.max(Number(query.get("limit") || 20), 1);
+
+      const normalizeDate = (value: Date | string) => {
+        const parsed = value instanceof Date ? value : new Date(value);
+        if (Number.isNaN(parsed.getTime())) return "";
+        return parsed.toISOString().split("T")[0];
+      };
+
+      const filtered = state.appointments.filter((appointment) => {
+        const matchesDate = !date || normalizeDate(appointment.date) === date;
+        const matchesProfessional = !professionalId || appointment.professionalId === professionalId;
+        const matchesStatus = !status || appointment.status === status;
+        return matchesDate && matchesProfessional && matchesStatus;
+      });
+
+      const start = (page - 1) * limit;
+      const items = filtered.slice(start, start + limit);
+      const total = filtered.length;
+      const hasMore = start + items.length < total;
+
+      return {
+        items,
+        total,
+        page,
+        pageSize: limit,
+        hasMore,
+      } as T;
+    }
     if (method === "POST") {
       const payload = JSON.parse(String(options.body || "{}")) as Partial<Appointment>;
       const created: Appointment = {
@@ -1532,8 +1570,15 @@ export const clientsApi = {
 /* ================= APPOINTMENTS ================= */
 
 export const appointmentsApi = {
-  getAll: (params?: ListQueryParams) => {
+  getAll: (params?: AppointmentsListParams) => {
     const query = buildListQuery(params);
+    if (params?.date) query.set("date", params.date);
+    if (params?.professionalId && params.professionalId !== "all") {
+      query.set("professionalId", params.professionalId);
+    }
+    if (params?.status && params.status !== "all") {
+      query.set("status", params.status);
+    }
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return request<ListResponse<Appointment>>(`/appointments${suffix}`);
   },
