@@ -124,3 +124,4 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 - [x] Publicar analise de gaps docs x implementacao em artefato dedicado.
 - [x] Estruturar pasta e padrao de evidencias por RF para homologacao final (`docs/EVIDENCIAS_RF`).
 - [x] Criar roteiro de validacao RBAC com backend real e vincular na matriz.
+- [x] Criar roteiro de execucao de homologacao por ordem de RF (`docs/ROTEIRO_HOMOLOGACAO_DIA.md`).

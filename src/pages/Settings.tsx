@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { settingsApi, usersApi } from "@/lib/api";
+import { resolveUiError } from "@/lib/error-utils";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -54,8 +55,8 @@ export default function Settings() {
         reminderHours: Number(reminderHours || 0),
       });
       toast.success("Notificacoes salvas com sucesso!");
-    } catch {
-      toast.error("Erro ao salvar notificacoes");
+    } catch (error) {
+      toast.error(resolveUiError(error, "Erro ao salvar notificacoes").message);
     } finally {
       setIsSaving(false);
     }
@@ -69,8 +70,8 @@ export default function Settings() {
         email: userEmail,
       });
       toast.success("Dados da conta salvos com sucesso!");
-    } catch {
-      toast.error("Erro ao salvar dados da conta");
+    } catch (error) {
+      toast.error(resolveUiError(error, "Erro ao salvar dados da conta").message);
     } finally {
       setIsSaving(false);
     }
@@ -89,8 +90,8 @@ export default function Settings() {
       setNewPassword("");
       setConfirmPassword("");
       toast.success("Senha alterada com sucesso");
-    } catch {
-      toast.error("Erro ao alterar senha");
+    } catch (error) {
+      toast.error(resolveUiError(error, "Erro ao alterar senha").message);
     } finally {
       setIsSaving(false);
     }
@@ -208,10 +209,10 @@ export default function Settings() {
               <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <p className="font-medium flex items-center gap-2">
-                    <PlugZap className="h-4 w-4 text-violet-600" />
+                    <PlugZap className="h-4 w-4 text-primary" />
                     WhatsApp Cloud API
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Defina credenciais por tenant e valide conexao.
                   </p>
                 </div>

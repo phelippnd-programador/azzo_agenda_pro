@@ -15,6 +15,18 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+      },
+      fontSize: {
+        xs: ["12px", { lineHeight: "16px", fontWeight: "400" }],
+        sm: ["14px", { lineHeight: "20px", fontWeight: "400" }],
+        base: ["16px", { lineHeight: "24px", fontWeight: "400" }],
+        lg: ["18px", { lineHeight: "28px", fontWeight: "500" }],
+        xl: ["20px", { lineHeight: "28px", fontWeight: "600" }],
+        "2xl": ["24px", { lineHeight: "32px", fontWeight: "700" }],
+        "3xl": ["30px", { lineHeight: "36px", fontWeight: "700" }],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

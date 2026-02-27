@@ -31,7 +31,7 @@ export function PlanSelector({
           <Card
             key={plan.code}
             className={cn(
-              "border-slate-200 transition-colors",
+              "border-border transition-colors",
               selected && "border-emerald-500 ring-1 ring-emerald-200"
             )}
           >
@@ -40,14 +40,14 @@ export function PlanSelector({
                 <CardTitle className="text-lg">{plan.name}</CardTitle>
                 {plan.highlight ? <Badge>{plan.highlight}</Badge> : null}
               </div>
-              <p className="text-sm text-slate-600">{plan.description}</p>
-              <p className="text-2xl font-bold text-slate-900">
+              <p className="text-sm text-muted-foreground">{plan.description}</p>
+              <p className="text-2xl font-bold text-foreground">
                 {formatCurrency(plan.amountCents)}
-                <span className="ml-1 text-sm font-normal text-slate-500">/mes</span>
+                <span className="ml-1 text-sm font-normal text-muted-foreground">/mes</span>
               </p>
             </CardHeader>
             <CardContent className="space-y-3">
-              <ul className="space-y-2 text-sm text-slate-700">
+              <ul className="space-y-2 text-sm text-foreground">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
@@ -70,3 +70,4 @@ export function PlanSelector({
     </div>
   );
 }
+

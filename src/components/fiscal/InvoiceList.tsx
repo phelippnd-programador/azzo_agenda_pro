@@ -89,9 +89,9 @@ export function InvoiceList({ invoices, onView, onPrint, onCancel }: InvoiceList
           <span>Notas Fiscais Emitidas</span>
           <div className="flex gap-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por número, cliente..."
+                placeholder="Buscar por Numero, cliente..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 w-64"
@@ -113,7 +113,7 @@ export function InvoiceList({ invoices, onView, onPrint, onCancel }: InvoiceList
       </CardHeader>
       <CardContent>
         {filteredInvoices.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-muted-foreground">
             <p>Nenhuma nota fiscal encontrada</p>
           </div>
         ) : (
@@ -121,13 +121,13 @@ export function InvoiceList({ invoices, onView, onPrint, onCancel }: InvoiceList
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Número</TableHead>
+                  <TableHead>Numero</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Cliente</TableHead>
                   <TableHead>Data</TableHead>
                   <TableHead>Valor</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead className="text-right">Acoes</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -138,7 +138,7 @@ export function InvoiceList({ invoices, onView, onPrint, onCancel }: InvoiceList
                     <TableCell>
                       <div>
                         <div className="font-medium">{invoice.customer.name}</div>
-                        <div className="text-xs text-gray-500">{invoice.customer.document}</div>
+                        <div className="text-xs text-muted-foreground">{invoice.customer.document}</div>
                       </div>
                     </TableCell>
                     <TableCell className="text-sm">{formatDate(invoice.issueDate)}</TableCell>
@@ -170,7 +170,7 @@ export function InvoiceList({ invoices, onView, onPrint, onCancel }: InvoiceList
                               variant="ghost"
                               size="sm"
                               onClick={() => onCancel(invoice)}
-                              className="text-red-600 hover:text-red-700"
+                              className="text-destructive hover:text-destructive"
                             >
                               <XCircle className="w-4 h-4" />
                             </Button>
@@ -188,3 +188,5 @@ export function InvoiceList({ invoices, onView, onPrint, onCancel }: InvoiceList
     </Card>
   );
 }
+
+

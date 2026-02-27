@@ -38,38 +38,34 @@ export function NotificationsList({
 }: NotificationsListProps) {
   return (
     <div className="space-y-3">
-      {!items.length && !loading ? (
-        <p className="text-sm text-gray-500">Nenhuma notificacao encontrada.</p>
-      ) : null}
+      {!items.length && !loading ? <p className="text-sm text-muted-foreground">Nenhuma notificacao encontrada.</p> : null}
 
       {items.map((item) => (
         <div
           key={item.id}
           className={`rounded-lg border p-4 space-y-2 ${
-            selectedId === item.id ? "border-violet-400 bg-violet-50/40" : ""
+            selectedId === item.id ? "border-primary bg-primary/5" : ""
           } ${onSelect ? "cursor-pointer" : ""}`}
           onClick={() => onSelect?.(item.id)}
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2">
               <Badge className={getStatusBadgeClass(item.status)}>{item.status}</Badge>
-              <span className="text-xs text-gray-500">{item.channel}</span>
+              <span className="text-xs text-muted-foreground">{item.channel}</span>
             </div>
-            <span className="text-xs text-gray-500">
-              {formatDate(item.sentAt || item.createdAt)}
-            </span>
+            <span className="text-xs text-muted-foreground">{formatDate(item.sentAt || item.createdAt)}</span>
           </div>
 
-          <p className="text-sm text-gray-800">{item.message}</p>
+          <p className="text-sm text-foreground">{item.message}</p>
 
-          <div className="text-xs text-gray-500 flex flex-wrap gap-3">
+          <div className="text-xs text-muted-foreground flex flex-wrap gap-3">
             <span>Destino: {item.destination || "-"}</span>
             <span>Criada em: {formatDate(item.createdAt)}</span>
             {item.sentAt ? <span>Enviada em: {formatDate(item.sentAt)}</span> : null}
           </div>
 
           {item.status === "FAILED" && item.errorMessage ? (
-            <div className="rounded-md border border-red-200 bg-red-50 p-2 text-xs text-red-700 flex items-start gap-2">
+            <div className="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive flex items-start gap-2">
               <AlertCircle className="w-3.5 h-3.5 mt-0.5" />
               <span>{item.errorMessage}</span>
             </div>
@@ -79,7 +75,7 @@ export function NotificationsList({
 
       <div className="pt-1">
         <Button variant="outline" onClick={onLoadMore} disabled={loading || !hasMore}>
-          {loading ? "Carregando..." : hasMore ? "Load more" : "Sem mais resultados"}
+          {loading ? "Carregando..." : hasMore ? "Carregar mais" : "Sem mais resultados"}
         </Button>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { ApiError, appointmentsApi } from "@/lib/api";
+import { appointmentsApi } from "@/lib/api";
+import { resolveUiError } from "@/lib/error-utils";
 import type { TimeSlotResponse } from "@/types/available-slots";
 
 type UseAvailableSlotsParams = {
@@ -52,12 +53,11 @@ export function useAvailableSlots(params: UseAvailableSlotsParams) {
         setSlots(Array.isArray(response) ? response : []);
       } catch (err) {
         if (!isMounted) return;
-        if (err instanceof ApiError && err.status === 400) {
+        const uiError = resolveUiError(err, "Nao foi possivel consultar horarios disponiveis.");
+        if (uiError.status === 400) {
           setError(getValidationErrorMessage());
-        } else if (err instanceof Error) {
-          setError(err.message);
         } else {
-          setError("Nao foi possivel consultar horarios disponiveis.");
+          setError(uiError.message);
         }
         setSlots([]);
       } finally {

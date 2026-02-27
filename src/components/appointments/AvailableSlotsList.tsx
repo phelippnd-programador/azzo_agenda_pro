@@ -20,14 +20,14 @@ export function AvailableSlotsList({
 }: AvailableSlotsListProps) {
   if (!canFetch) {
     return (
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-muted-foreground">
         Selecione profissional, servico e data para ver horarios sugeridos.
       </p>
     );
   }
 
   if (isLoading) {
-    return <p className="text-sm text-gray-500">Consultando horarios sugeridos...</p>;
+    return <p className="text-sm text-muted-foreground">Consultando horarios sugeridos...</p>;
   }
 
   if (error) {
@@ -35,7 +35,7 @@ export function AvailableSlotsList({
   }
 
   if (!slots.length) {
-    return <p className="text-sm text-gray-500">Nenhum horario disponivel para esta selecao.</p>;
+    return <p className="text-sm text-muted-foreground">Nenhum horario disponivel para esta selecao.</p>;
   }
 
   return (
@@ -50,7 +50,7 @@ export function AvailableSlotsList({
             title={index < 3 ? "Recomendado" : undefined}
             className={`justify-center gap-1 overflow-hidden px-2 ${
               selectedStartTime === slot.startTime
-                ? "bg-violet-600 hover:bg-violet-700"
+                ? "bg-primary hover:bg-primary/90"
                 : index < 3
                   ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                   : ""
