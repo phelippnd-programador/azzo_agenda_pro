@@ -24,7 +24,7 @@ interface InvoiceFormProps {
 export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
   const [type, setType] = useState<'NFE' | 'NFCE'>(initialData?.type || 'NFCE');
   const [operationNature, setOperationNature] = useState(
-    initialData?.operationNature || 'Prestação de serviços'
+    initialData?.operationNature || 'Prestacao de servicos'
   );
   const [notes, setNotes] = useState(initialData?.notes || '');
 
@@ -105,17 +105,17 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
 
     for (const item of items) {
       if (!item.description || item.unitPrice <= 0) {
-        toast.error('Preencha todos os itens corretamente (descrição e valor)');
+        toast.error('Preencha todos os itens corretamente (descricao e valor)');
         return false;
       }
 
       if (!item.cfop) {
-        toast.error('CFOP é obrigatório para todos os itens');
+        toast.error('CFOP e obrigatorio para todos os itens');
         return false;
       }
 
       if (!item.cst) {
-        toast.error('CST é obrigatório para todos os itens');
+        toast.error('CST e obrigatorio para todos os itens');
         return false;
       }
     }
@@ -166,7 +166,7 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
               <div className="text-center">
                 <div className="font-bold">NF-e</div>
                 <div className="text-xs">Modelo 55</div>
-                <div className="text-xs opacity-70">Pessoa Jurídica</div>
+                <div className="text-xs opacity-70">Pessoa Juridica</div>
               </div>
             </Button>
           </div>
@@ -206,7 +206,7 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
               />
             </div>
             <div className="space-y-2">
-              <Label>Nome/Razão Social</Label>
+              <Label>Nome/Razao Social</Label>
               <Input
                 placeholder="Nome completo"
                 value={customer.name}
@@ -240,7 +240,7 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Serviços Prestados</span>
+            <span>Servicos Prestados</span>
             <Button size="sm" onClick={addItem}>
               <Plus className="w-4 h-4 mr-2" />
               Adicionar Item
@@ -257,7 +257,7 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
                     variant="ghost"
                     size="sm"
                     onClick={() => removeItem(item.id)}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -265,7 +265,7 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="space-y-2 md:col-span-2">
-                  <Label>Descrição *</Label>
+                  <Label>Descricao *</Label>
                   <Input
                     placeholder="Ex: Corte de cabelo"
                     value={item.description}
@@ -282,7 +282,7 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Valor Unitário *</Label>
+                  <Label>Valor Unitario *</Label>
                   <Input
                     type="number"
                     min="0"
@@ -298,7 +298,7 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
                 <div className="space-y-2">
                   <Label className="flex items-center gap-1">
                     CFOP *
-                    <span className="text-xs text-muted-foreground">(obrigatório)</span>
+                    <span className="text-xs text-muted-foreground">(obrigatorio)</span>
                   </Label>
                   <Select
                     value={item.cfop}
@@ -318,14 +318,14 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
                   {!item.cfop && (
                     <p className="text-xs text-red-500 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" />
-                      CFOP é obrigatório
+                      CFOP e obrigatorio
                     </p>
                   )}
                 </div>
                 <div className="space-y-2">
                   <Label className="flex items-center gap-1">
                     CST *
-                    <span className="text-xs text-muted-foreground">(obrigatório)</span>
+                    <span className="text-xs text-muted-foreground">(obrigatorio)</span>
                   </Label>
                   <Select
                     value={item.cst}
@@ -345,7 +345,7 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
                   {!item.cst && (
                     <p className="text-xs text-red-500 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" />
-                      CST é obrigatório
+                      CST e obrigatorio
                     </p>
                   )}
                 </div>
@@ -354,7 +354,7 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
                   <Input
                     value={formatCurrency(item.totalPrice)}
                     disabled
-                    className="bg-gray-50"
+                    className="bg-muted/40"
                   />
                 </div>
               </div>
@@ -366,20 +366,20 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
       {/* Additional Info */}
       <Card>
         <CardHeader>
-          <CardTitle>Informações Adicionais</CardTitle>
+          <CardTitle>Informacoes Adicionais</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Natureza da Operação</Label>
+            <Label>Natureza da Operacao</Label>
             <Input
               value={operationNature}
               onChange={(e) => setOperationNature(e.target.value)}
             />
           </div>
           <div className="space-y-2">
-            <Label>Observações (opcional)</Label>
+            <Label>Observacoes (opcional)</Label>
             <Textarea
-              placeholder="Informações complementares..."
+              placeholder="Informacoes complementares..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
@@ -389,11 +389,11 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
       </Card>
 
       {/* Total */}
-      <Card className="bg-gradient-to-r from-violet-50 to-pink-50">
+      <Card className="bg-gradient-to-r from-primary/10 to-accent">
         <CardContent className="pt-6">
           <div className="flex justify-between items-center">
             <span className="text-lg font-medium">Valor Total da Nota:</span>
-            <span className="text-3xl font-bold text-violet-700">
+            <span className="text-3xl font-bold text-primary">
               {formatCurrency(calculateTotal())}
             </span>
           </div>
@@ -405,10 +405,12 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
         <Button variant="outline" onClick={() => handleSubmit(true)}>
           Salvar Rascunho
         </Button>
-        <Button onClick={() => handleSubmit(false)} className="bg-violet-600 hover:bg-violet-700">
+        <Button onClick={() => handleSubmit(false)} className="bg-primary hover:bg-primary/90">
           Emitir Nota Fiscal
         </Button>
       </div>
     </div>
   );
 }
+
+

@@ -522,7 +522,7 @@ export default function LicensePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {isLoadingPlans ? (
-              <p className="text-sm text-slate-600">Carregando planos...</p>
+              <p className="text-sm text-muted-foreground">Carregando planos...</p>
             ) : null}
             {plansError ? (
               <Alert className="border-red-200 bg-red-50">
@@ -531,7 +531,7 @@ export default function LicensePage() {
               </Alert>
             ) : null}
             {isLoadingCurrent ? (
-              <p className="text-sm text-slate-600">Carregando status da assinatura...</p>
+              <p className="text-sm text-muted-foreground">Carregando status da assinatura...</p>
             ) : null}
 
             {fetchError ? (
@@ -692,7 +692,7 @@ export default function LicensePage() {
                   </Alert>
                 )
               ) : (
-                <Card className="border-slate-200">
+                <Card className="border-border">
                   <CardContent className="pt-6 text-sm space-y-1">
                     <p>
                       <strong>Plano para pagamento:</strong>{" "}
@@ -784,7 +784,7 @@ export default function LicensePage() {
           />
         ) : null}
 
-        <Card className="border-slate-200">
+        <Card className="border-border">
           <CardHeader>
             <CardTitle>Historico de pagamentos</CardTitle>
             <CardDescription>
@@ -793,7 +793,7 @@ export default function LicensePage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {!orderedHistory.length ? (
-              <p className="text-sm text-slate-600">Nenhum pagamento registrado ainda.</p>
+              <p className="text-sm text-muted-foreground">Nenhum pagamento registrado ainda.</p>
             ) : (
               orderedHistory.map((payment) => (
                 <div
@@ -801,12 +801,12 @@ export default function LicensePage() {
                   className="flex items-center justify-between gap-2 rounded-lg border p-3"
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-900">
-                      {formatCurrency(payment.amountCents)} • {payment.billingType}
+                    <p className="text-sm font-medium text-foreground">
+                      {formatCurrency(payment.amountCents)}  -  {payment.billingType}
                     </p>
-                    <p className="text-xs text-slate-600">
-                      Status: {payment.status} • Competencia:{" "}
-                      {formatReferenceMonth(payment.referenceMonth)} • Vencimento:{" "}
+                    <p className="text-xs text-muted-foreground">
+                      Status: {payment.status}  -  Competencia:{" "}
+                      {formatReferenceMonth(payment.referenceMonth)}  -  Vencimento:{" "}
                       {formatDate(payment.dueDate)}
                     </p>
                   </div>
@@ -900,11 +900,11 @@ export default function LicensePage() {
         </Dialog>
 
         {result?.billingType === "CREDIT_CARD" && lastCardDigits ? (
-          <Card className="border-slate-200">
+          <Card className="border-border">
             <CardHeader>
               <CardTitle>Ultima confirmacao em cartao</CardTitle>
             </CardHeader>
-              <CardContent className="space-y-2 text-sm text-slate-700">
+              <CardContent className="space-y-2 text-sm text-foreground">
                 <p>
                   <strong>Status do plano:</strong> {result.status}
                 </p>
@@ -921,3 +921,5 @@ export default function LicensePage() {
     </MainLayout>
   );
 }
+
+

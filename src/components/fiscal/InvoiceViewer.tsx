@@ -61,19 +61,19 @@ export function InvoiceViewer({ invoice }: InvoiceViewerProps) {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <p className="text-sm text-gray-500">Número</p>
+              <p className="text-sm text-muted-foreground">Numero</p>
               <p className="font-medium">{invoice.number}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Série</p>
+              <p className="text-sm text-muted-foreground">Serie</p>
               <p className="font-medium">{invoice.series}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Data de Emissão</p>
+              <p className="text-sm text-muted-foreground">Data de Emissao</p>
               <p className="font-medium">{formatDate(invoice.issueDate)}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Natureza da Operação</p>
+              <p className="text-sm text-muted-foreground">Natureza da Operacao</p>
               <p className="font-medium">{invoice.operationNature}</p>
             </div>
           </div>
@@ -81,14 +81,14 @@ export function InvoiceViewer({ invoice }: InvoiceViewerProps) {
             <>
               <Separator />
               <div>
-                <p className="text-sm text-gray-500 mb-1">Chave de Acesso</p>
+                <p className="text-sm text-muted-foreground mb-1">Chave de Acesso</p>
                 <p className="font-mono text-sm break-all">{invoice.accessKey}</p>
               </div>
             </>
           )}
           {invoice.authorizationProtocol && (
             <div>
-              <p className="text-sm text-gray-500 mb-1">Protocolo de Autorização</p>
+              <p className="text-sm text-muted-foreground mb-1">Protocolo de Autorizacao</p>
               <p className="font-mono text-sm">{invoice.authorizationProtocol}</p>
             </div>
           )}
@@ -99,18 +99,18 @@ export function InvoiceViewer({ invoice }: InvoiceViewerProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <User className="w-5 h-5 text-violet-600" />
+            <User className="w-5 h-5 text-primary" />
             Dados do Tomador
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-500">Nome/Razão Social</p>
+              <p className="text-sm text-muted-foreground">Nome/Razao Social</p>
               <p className="font-medium">{invoice.customer.name}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">{invoice.customer.type}</p>
+              <p className="text-sm text-muted-foreground">{invoice.customer.type}</p>
               <p className="font-medium">{invoice.customer.document}</p>
             </div>
           </div>
@@ -118,13 +118,13 @@ export function InvoiceViewer({ invoice }: InvoiceViewerProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {invoice.customer.email && (
                 <div>
-                  <p className="text-sm text-gray-500">Email</p>
+                  <p className="text-sm text-muted-foreground">Email</p>
                   <p className="font-medium">{invoice.customer.email}</p>
                 </div>
               )}
               {invoice.customer.phone && (
                 <div>
-                  <p className="text-sm text-gray-500">Telefone</p>
+                  <p className="text-sm text-muted-foreground">Telefone</p>
                   <p className="font-medium">{invoice.customer.phone}</p>
                 </div>
               )}
@@ -137,18 +137,18 @@ export function InvoiceViewer({ invoice }: InvoiceViewerProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-violet-600" />
-            Serviços Prestados
+            <FileText className="w-5 h-5 text-primary" />
+            Servicos Prestados
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {invoice.items.map((item, index) => (
-              <div key={item.id} className="p-4 bg-gray-50 rounded-lg">
+              <div key={item.id} className="p-4 bg-muted/40 rounded-lg">
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex-1">
                     <p className="font-medium">{item.description}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       CFOP: {item.cfop} | CST: {item.cst}
                     </p>
                   </div>
@@ -156,15 +156,15 @@ export function InvoiceViewer({ invoice }: InvoiceViewerProps) {
                 </div>
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
-                    <p className="text-gray-500">Quantidade</p>
+                    <p className="text-muted-foreground">Quantidade</p>
                     <p className="font-medium">{item.quantity}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500">Valor Unitário</p>
+                    <p className="text-muted-foreground">Valor Unitario</p>
                     <p className="font-medium">{formatCurrency(item.unitPrice)}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500">Total</p>
+                    <p className="text-muted-foreground">Total</p>
                     <p className="font-medium">{formatCurrency(item.totalPrice)}</p>
                   </div>
                 </div>
@@ -178,30 +178,30 @@ export function InvoiceViewer({ invoice }: InvoiceViewerProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-violet-600" />
+            <DollarSign className="w-5 h-5 text-primary" />
             Tributos e Totais
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-3 gap-4 text-sm">
             <div className="p-3 bg-blue-50 rounded-lg">
-              <p className="text-gray-600 mb-1">ICMS</p>
+              <p className="text-muted-foreground mb-1">ICMS</p>
               <p className="font-bold text-blue-700">{formatCurrency(invoice.taxBreakdown.icms)}</p>
             </div>
             <div className="p-3 bg-green-50 rounded-lg">
-              <p className="text-gray-600 mb-1">PIS</p>
+              <p className="text-muted-foreground mb-1">PIS</p>
               <p className="font-bold text-green-700">{formatCurrency(invoice.taxBreakdown.pis)}</p>
             </div>
             <div className="p-3 bg-purple-50 rounded-lg">
-              <p className="text-gray-600 mb-1">COFINS</p>
+              <p className="text-muted-foreground mb-1">COFINS</p>
               <p className="font-bold text-purple-700">{formatCurrency(invoice.taxBreakdown.cofins)}</p>
             </div>
           </div>
           <Separator />
-          <div className="bg-gradient-to-r from-violet-50 to-pink-50 p-4 rounded-lg">
+          <div className="bg-gradient-to-r from-primary/10 to-accent p-4 rounded-lg">
             <div className="flex justify-between items-center">
               <span className="text-lg font-medium">Valor Total da Nota:</span>
-              <span className="text-3xl font-bold text-violet-700">
+              <span className="text-3xl font-bold text-primary">
                 {formatCurrency(invoice.totalValue)}
               </span>
             </div>
@@ -213,13 +213,14 @@ export function InvoiceViewer({ invoice }: InvoiceViewerProps) {
       {invoice.notes && (
         <Card>
           <CardHeader>
-            <CardTitle>Observações</CardTitle>
+            <CardTitle>Observacoes</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-700 whitespace-pre-wrap">{invoice.notes}</p>
+            <p className="text-foreground whitespace-pre-wrap">{invoice.notes}</p>
           </CardContent>
         </Card>
       )}
     </div>
   );
 }
+

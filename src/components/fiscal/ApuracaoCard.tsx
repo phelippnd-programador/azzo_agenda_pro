@@ -12,12 +12,12 @@ interface ApuracaoCardProps {
 export function ApuracaoCard({ apuracao, showDetails = true }: ApuracaoCardProps) {
   const statusColor =
     STATUS_COLORS[apuracao.status] ?? {
-      bg: 'bg-gray-50',
-      text: 'text-gray-700',
-      border: 'border-gray-200',
+      bg: 'bg-muted/40',
+      text: 'text-foreground',
+      border: 'border-border',
     };
   const statusLabel = STATUS_LABELS[apuracao.status] ?? apuracao.status ?? 'Desconhecido';
-  const mesNome = MESES_PT[apuracao.mes] ?? `Mês ${apuracao.mes}`;
+  const mesNome = MESES_PT[apuracao.mes] ?? `Mes ${apuracao.mes}`;
   const regimeLabel = apuracao.regimeTributario
     ? apuracao.regimeTributario.replaceAll('_', ' ')
     : 'Nao informado';
@@ -27,7 +27,7 @@ export function ApuracaoCard({ apuracao, showDetails = true }: ApuracaoCardProps
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-semibold flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-violet-600" />
+            <Calendar className="h-5 w-5 text-primary" />
             {mesNome} {apuracao.ano}
           </CardTitle>
           <Badge className={`${statusColor.bg} ${statusColor.text} ${statusColor.border} border`}>
@@ -37,13 +37,13 @@ export function ApuracaoCard({ apuracao, showDetails = true }: ApuracaoCardProps
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Total de Serviços */}
+          {/* Total de Servicos */}
           <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
             <div className="p-2 bg-blue-100 rounded-full">
               <TrendingUp className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Total de Serviços</p>
+              <p className="text-sm text-muted-foreground">Total de Servicos</p>
               <p className="text-lg font-semibold text-blue-700">
                 {formatCurrency(apuracao.valorTotalServicos)}
               </p>
@@ -56,7 +56,7 @@ export function ApuracaoCard({ apuracao, showDetails = true }: ApuracaoCardProps
               <Calculator className="h-5 w-5 text-red-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Total a Pagar</p>
+              <p className="text-sm text-muted-foreground">Total a Pagar</p>
               <p className="text-lg font-semibold text-red-700">
                 {formatCurrency(apuracao.valorTotalImpostos)}
               </p>
@@ -69,7 +69,7 @@ export function ApuracaoCard({ apuracao, showDetails = true }: ApuracaoCardProps
               <FileText className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Notas Emitidas</p>
+              <p className="text-sm text-muted-foreground">Notas Emitidas</p>
               <p className="text-lg font-semibold text-green-700">
                 {apuracao.quantidadeDocumentos}
               </p>
@@ -79,7 +79,7 @@ export function ApuracaoCard({ apuracao, showDetails = true }: ApuracaoCardProps
 
         {showDetails && (
           <div className="mt-4 pt-4 border-t">
-            <div className="flex items-center justify-between text-sm text-gray-500">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>
                 Regime: <strong>{regimeLabel}</strong>
               </span>
@@ -98,3 +98,5 @@ export function ApuracaoCard({ apuracao, showDetails = true }: ApuracaoCardProps
     </Card>
   );
 }
+
+

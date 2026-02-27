@@ -20,7 +20,19 @@ import { calculateTaxes, formatCurrency } from "@/lib/tax-calculator";
 import { Calculator, RefreshCw } from "lucide-react";
 import { fiscalApi } from "@/lib/api";
 
-// Default tax rates
+type InvoiceAppointmentPayload = {
+  appointment?: {
+    totalPrice?: number;
+  };
+  client?: {
+    document?: string;
+    cpfCnpj?: string;
+  };
+  service?: {
+    price?: number;
+  };
+};
+
 const DEFAULT_RATES = {
   [TaxRegime.SIMPLES_NACIONAL]: { icms: 4.0, pis: 0.65, cofins: 3.0 },
   [TaxRegime.LUCRO_PRESUMIDO]: { icms: 18.0, pis: 1.65, cofins: 7.6 },
@@ -35,8 +47,8 @@ export default function InvoicePreview() {
   const [calculation, setCalculation] = useState<TaxCalculation | undefined>(undefined);
   const [rates, setRates] = useState(DEFAULT_RATES);
   const [isTaxConfigLoaded, setIsTaxConfigLoaded] = useState(false);
+  const [loadedFromAppointment, setLoadedFromAppointment] = useState(false);
 
-  // Load tax rates from storage
   useEffect(() => {
     fiscalApi
       .getTaxConfig()
@@ -44,14 +56,32 @@ export default function InvoicePreview() {
         setRegime(config.regime);
         setRates({
           [TaxRegime.SIMPLES_NACIONAL]: {
-            icms: config.regime === TaxRegime.SIMPLES_NACIONAL ? config.icmsRate : DEFAULT_RATES[TaxRegime.SIMPLES_NACIONAL].icms,
-            pis: config.regime === TaxRegime.SIMPLES_NACIONAL ? config.pisRate : DEFAULT_RATES[TaxRegime.SIMPLES_NACIONAL].pis,
-            cofins: config.regime === TaxRegime.SIMPLES_NACIONAL ? config.cofinsRate : DEFAULT_RATES[TaxRegime.SIMPLES_NACIONAL].cofins,
+            icms:
+              config.regime === TaxRegime.SIMPLES_NACIONAL
+                ? config.icmsRate
+                : DEFAULT_RATES[TaxRegime.SIMPLES_NACIONAL].icms,
+            pis:
+              config.regime === TaxRegime.SIMPLES_NACIONAL
+                ? config.pisRate
+                : DEFAULT_RATES[TaxRegime.SIMPLES_NACIONAL].pis,
+            cofins:
+              config.regime === TaxRegime.SIMPLES_NACIONAL
+                ? config.cofinsRate
+                : DEFAULT_RATES[TaxRegime.SIMPLES_NACIONAL].cofins,
           },
           [TaxRegime.LUCRO_PRESUMIDO]: {
-            icms: config.regime === TaxRegime.LUCRO_PRESUMIDO ? config.icmsRate : DEFAULT_RATES[TaxRegime.LUCRO_PRESUMIDO].icms,
-            pis: config.regime === TaxRegime.LUCRO_PRESUMIDO ? config.pisRate : DEFAULT_RATES[TaxRegime.LUCRO_PRESUMIDO].pis,
-            cofins: config.regime === TaxRegime.LUCRO_PRESUMIDO ? config.cofinsRate : DEFAULT_RATES[TaxRegime.LUCRO_PRESUMIDO].cofins,
+            icms:
+              config.regime === TaxRegime.LUCRO_PRESUMIDO
+                ? config.icmsRate
+                : DEFAULT_RATES[TaxRegime.LUCRO_PRESUMIDO].icms,
+            pis:
+              config.regime === TaxRegime.LUCRO_PRESUMIDO
+                ? config.pisRate
+                : DEFAULT_RATES[TaxRegime.LUCRO_PRESUMIDO].pis,
+            cofins:
+              config.regime === TaxRegime.LUCRO_PRESUMIDO
+                ? config.cofinsRate
+                : DEFAULT_RATES[TaxRegime.LUCRO_PRESUMIDO].cofins,
           },
         });
         setIsTaxConfigLoaded(true);
@@ -59,14 +89,37 @@ export default function InvoicePreview() {
       .catch(() => setIsTaxConfigLoaded(false));
   }, []);
 
-  // Recalculate when values change
+  useEffect(() => {
+    const raw = sessionStorage.getItem("invoiceAppointment");
+    if (!raw) return;
+
+    try {
+      const payload = JSON.parse(raw) as InvoiceAppointmentPayload;
+      const totalFromAppointment = Number(payload.appointment?.totalPrice ?? 0);
+      const totalFromService = Number(payload.service?.price ?? 0);
+      const initialValue = totalFromAppointment > 0 ? totalFromAppointment : totalFromService;
+      const document = payload.client?.document || payload.client?.cpfCnpj || "";
+
+      if (initialValue > 0) {
+        setServiceValue(initialValue);
+      }
+      if (document) {
+        setCustomerDocument(document);
+      }
+      setLoadedFromAppointment(initialValue > 0 || !!document);
+    } catch {
+      setLoadedFromAppointment(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (serviceValue > 0) {
       const calc = calculateTaxes(serviceValue, regime, rates[regime]);
       setCalculation(calc);
-    } else {
-      setCalculation(undefined);
+      return;
     }
+
+    setCalculation(undefined);
   }, [serviceValue, regime, rates]);
 
   const handleCalculate = () => {
@@ -81,35 +134,37 @@ export default function InvoicePreview() {
     setServiceValue(value);
   };
 
-  const getRegimeLabel = (r: TaxRegime) => {
-    return r === TaxRegime.SIMPLES_NACIONAL ? "Simples Nacional" : "Lucro Presumido";
-  };
+  const getRegimeLabel = (value: TaxRegime) =>
+    value === TaxRegime.SIMPLES_NACIONAL ? "Simples Nacional" : "Lucro Presumido";
 
   return (
     <MainLayout title="">
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Pré-visualização de Nota Fiscal</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Pre-visualizacao de Nota Fiscal</h1>
           <p className="text-muted-foreground mt-2">
-            Visualize o cálculo detalhado dos impostos antes de emitir a nota fiscal
+            Visualize o calculo detalhado dos impostos antes de emitir a nota fiscal
           </p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          {/* Input Form */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Service Value and Regime */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calculator className="w-5 h-5" />
-                  Dados para Cálculo
+                  Dados para Calculo
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {loadedFromAppointment ? (
+                  <p className="rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-primary">
+                    Dados iniciais carregados do agendamento selecionado na agenda.
+                  </p>
+                ) : null}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="serviceValue">Valor do Serviço (R$) *</Label>
+                    <Label htmlFor="serviceValue">Valor do Servico (R$) *</Label>
                     <Input
                       id="serviceValue"
                       type="number"
@@ -120,29 +175,23 @@ export default function InvoicePreview() {
                       onChange={handleServiceValueChange}
                     />
                     {serviceValue > 0 && (
-                      <p className="text-sm text-muted-foreground">
-                        {formatCurrency(serviceValue)}
-                      </p>
+                      <p className="text-sm text-muted-foreground">{formatCurrency(serviceValue)}</p>
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="regime">Regime Tributário</Label>
+                    <Label htmlFor="regime">Regime Tributario</Label>
                     <Select value={regime}>
                       <SelectTrigger disabled>
                         <SelectValue placeholder="Selecione o regime" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={TaxRegime.SIMPLES_NACIONAL}>
-                          Simples Nacional
-                        </SelectItem>
-                        <SelectItem value={TaxRegime.LUCRO_PRESUMIDO}>
-                          Lucro Presumido
-                        </SelectItem>
+                        <SelectItem value={TaxRegime.SIMPLES_NACIONAL}>Simples Nacional</SelectItem>
+                        <SelectItem value={TaxRegime.LUCRO_PRESUMIDO}>Lucro Presumido</SelectItem>
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
                       Regime definido em{" "}
-                      <Link to="/config-impostos" className="text-violet-600 hover:underline">
+                      <Link to="/config-impostos" className="text-primary hover:underline">
                         Config. Impostos
                       </Link>
                       .
@@ -152,10 +201,9 @@ export default function InvoicePreview() {
 
                 <Separator />
 
-                {/* CFOP and CST */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="cfop">CFOP (Código Fiscal) *</Label>
+                    <Label htmlFor="cfop">CFOP (Codigo Fiscal) *</Label>
                     <Select value={cfop} onValueChange={setCfop}>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione o CFOP" />
@@ -168,12 +216,10 @@ export default function InvoicePreview() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">
-                      Código Fiscal de Operações e Prestações
-                    </p>
+                    <p className="text-xs text-muted-foreground">Codigo Fiscal de Operacoes e Prestacoes</p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="cst">CST (Situação Tributária) *</Label>
+                    <Label htmlFor="cst">CST (Situacao Tributaria) *</Label>
                     <Select value={cst} onValueChange={setCst}>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione o CST" />
@@ -186,15 +232,12 @@ export default function InvoicePreview() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">
-                      Código de Situação Tributária do ICMS
-                    </p>
+                    <p className="text-xs text-muted-foreground">Codigo de Situacao Tributaria do ICMS</p>
                   </div>
                 </div>
 
                 <Separator />
 
-                {/* Customer Document */}
                 <div className="space-y-2">
                   <Label htmlFor="customerDocument">CPF/CNPJ do Cliente</Label>
                   <Input
@@ -212,25 +255,18 @@ export default function InvoicePreview() {
               </CardContent>
             </Card>
 
-            {/* Tax Preview */}
             <TaxPreview calculation={calculation} regime={getRegimeLabel(regime)} />
           </div>
 
-          {/* Validation Panel */}
           <div>
             <Card className="p-6">
-              <h3 className="font-semibold mb-4">Validações Fiscais</h3>
+              <h3 className="font-semibold mb-4">Validacoes Fiscais</h3>
               <Separator className="mb-4" />
-              <FiscalValidation
-                cfop={cfop}
-                cst={cst}
-                customerDocument={customerDocument}
-              />
+              <FiscalValidation cfop={cfop} cst={cst} customerDocument={customerDocument} />
             </Card>
 
-            {/* Tax Rates Info */}
             <Card className="mt-6 p-6">
-              <h3 className="font-semibold mb-4">Alíquotas Aplicadas</h3>
+              <h3 className="font-semibold mb-4">Aliquotas Aplicadas</h3>
               <Separator className="mb-4" />
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
@@ -252,8 +288,8 @@ export default function InvoicePreview() {
               </div>
               <p className="text-xs text-muted-foreground mt-4">
                 {isTaxConfigLoaded
-                  ? 'Alíquotas carregadas de "Config. Impostos".'
-                  : "Usando alíquotas padrão até carregar a configuração fiscal."}
+                  ? 'Aliquotas carregadas de "Config. Impostos".'
+                  : "Usando aliquotas padrao ate carregar a configuracao fiscal."}
               </p>
             </Card>
           </div>

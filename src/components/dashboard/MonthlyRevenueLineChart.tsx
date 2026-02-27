@@ -85,14 +85,11 @@ export function MonthlyRevenueLineChart() {
                   }).format(Number(value))
                 }
               />
-              <Tooltip
-                formatter={(value) => formatCurrency(Number(value))}
-                labelFormatter={(label) => `Dia ${label}`}
-              />
+              <Tooltip formatter={(value) => formatCurrency(Number(value))} labelFormatter={(label) => `Dia ${label}`} />
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke="#7c3aed"
+                stroke="hsl(var(--primary))"
                 strokeWidth={3}
                 dot={{ r: 3 }}
                 activeDot={{ r: 5 }}
@@ -101,18 +98,14 @@ export function MonthlyRevenueLineChart() {
           </ResponsiveContainer>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-100 gap-2 sm:gap-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-border gap-2 sm:gap-0">
           <div>
-            <p className="text-xs sm:text-sm text-gray-500">Total do Mes</p>
-            <p className="text-lg sm:text-xl font-bold text-gray-900">
-              {formatCurrency(monthlyTotal)}
-            </p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Total do Mes</p>
+            <p className="text-lg sm:text-xl font-bold text-foreground">{formatCurrency(monthlyTotal)}</p>
           </div>
           <div className="sm:text-right">
-            <p className="text-xs sm:text-sm text-gray-500">Media Diaria</p>
-            <p className="text-lg sm:text-xl font-bold text-violet-600">
-              {formatCurrency(monthlyAverage)}
-            </p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Media Diaria</p>
+            <p className="text-lg sm:text-xl font-bold text-primary">{formatCurrency(monthlyAverage)}</p>
           </div>
         </div>
       </CardContent>

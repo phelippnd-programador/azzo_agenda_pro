@@ -46,7 +46,6 @@ const ROUTE_ALIASES: Record<string, string> = {
 };
 
 const ALWAYS_ALLOWED_ROUTES = ["/unauthorized"];
-
 function normalizeRoute(route: string): string {
   const trimmed = route.trim();
   return ROUTE_ALIASES[trimmed] ?? trimmed;
@@ -93,11 +92,10 @@ export function MenuPermissionsProvider({ children }: { children: ReactNode }) {
       setAllowedRoutes(normalizedRoutes);
       setIsEnforced(true);
     } catch {
-      // Mantém o estado atual quando a sessão já tinha permissões carregadas.
-      // Isso evita trocar menu/guard por fallback em falhas transitórias (ex.: 404 temporário).
-      setRole((prev) => prev);
-      setAllowedRoutes((prev) => prev);
-      setIsEnforced((prev) => prev);
+      // Modo seguro: se nao houver permissao previa, bloqueia acesso por padrao.
+      // Se ja houver permissao carregada, preserva o ultimo estado valido.
+      setAllowedRoutes((prev) => prev ?? []);
+      setIsEnforced(true);
     } finally {
       setIsLoading(false);
     }
@@ -110,7 +108,7 @@ export function MenuPermissionsProvider({ children }: { children: ReactNode }) {
   const canAccess = useCallback(
     (path: string) => {
       if (ALWAYS_ALLOWED_ROUTES.includes(path)) return true;
-      if (!isEnforced || !allowedRoutes) return true;
+      if (!isEnforced || !allowedRoutes) return false;
       return allowedRoutes.some((allowedPath) => isSubRouteAllowed(path, allowedPath));
     },
     [allowedRoutes, isEnforced]

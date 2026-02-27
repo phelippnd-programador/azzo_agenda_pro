@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, CheckCircle2, Loader2, PlugZap } from "lucide-react";
 import { toast } from "sonner";
@@ -22,6 +22,7 @@ import {
   testWhatsAppConnection,
 } from "@/services/whatsappService";
 import type { WhatsAppConfigResponse } from "@/types/whatsapp";
+import { resolveUiError } from "@/lib/error-utils";
 
 const EMPTY_RESULT = "";
 
@@ -115,8 +116,8 @@ export function WhatsAppIntegrationCard() {
 
       await queryClient.invalidateQueries({ queryKey: ["tenant"] });
       await queryClient.invalidateQueries({ queryKey: ["whatsapp-config"] });
-    } catch {
-      toast.error("Erro ao salvar configuracao do WhatsApp");
+    } catch (error) {
+      toast.error(resolveUiError(error, "Erro ao salvar configuracao do WhatsApp").message);
     } finally {
       setIsSaving(false);
     }
@@ -133,9 +134,10 @@ export function WhatsAppIntegrationCard() {
       const result = await testWhatsAppConnection();
       setTestResult(result.message);
       toast.success(result.success ? "Conexao validada" : "Conexao nao validada");
-    } catch {
-      setTestResult("Nao foi possivel testar a conexao no momento.");
-      toast.error("Erro ao testar conexao com WhatsApp");
+    } catch (error) {
+      const uiError = resolveUiError(error, "Erro ao testar conexao com WhatsApp");
+      setTestResult(uiError.message || "Nao foi possivel testar a conexao no momento.");
+      toast.error(uiError.message);
     } finally {
       setIsTesting(false);
     }
@@ -147,7 +149,7 @@ export function WhatsAppIntegrationCard() {
         <div className="flex items-start justify-between gap-3">
           <div>
             <CardTitle className="text-xl flex items-center gap-2">
-              <PlugZap className="h-5 w-5 text-violet-600" />
+              <PlugZap className="h-5 w-5 text-primary" />
               Integracao WhatsApp
             </CardTitle>
             <CardDescription className="mt-1">

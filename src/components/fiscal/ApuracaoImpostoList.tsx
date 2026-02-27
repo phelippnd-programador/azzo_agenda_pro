@@ -24,14 +24,14 @@ const IMPOSTO_COLORS: Record<TipoImposto, string> = {
   [TipoImposto.ISS]: 'bg-orange-100 text-orange-800',
   [TipoImposto.IRPJ]: 'bg-red-100 text-red-800',
   [TipoImposto.CSLL]: 'bg-pink-100 text-pink-800',
-  [TipoImposto.DAS]: 'bg-violet-100 text-violet-800',
+  [TipoImposto.DAS]: 'bg-primary/15 text-primary',
 };
 
 export function ApuracaoImpostoList({
   impostos,
   showZeroValues = false,
 }: ApuracaoImpostoListProps) {
-  // Filtrar impostos com valor zero se não for para mostrar
+  // Filtrar impostos com valor zero se nao for para mostrar
   const impostosFiltrados = showZeroValues
     ? impostos
     : impostos.filter((imp) => imp.valorApurado > 0 || imp.baseCalculo > 0);
@@ -43,24 +43,24 @@ export function ApuracaoImpostoList({
     <Card>
       <CardHeader>
         <CardTitle className="text-lg font-semibold flex items-center gap-2">
-          <Receipt className="h-5 w-5 text-violet-600" />
-          Discriminação por Imposto
+          <Receipt className="h-5 w-5 text-primary" />
+          Discriminacao por Imposto
         </CardTitle>
       </CardHeader>
       <CardContent>
         {impostosFiltrados.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
             <Receipt className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>Nenhum imposto apurado no período</p>
+            <p>Nenhum imposto apurado no periodo</p>
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Imposto</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead className="text-right">Base de Cálculo</TableHead>
-                <TableHead className="text-right">Alíquota</TableHead>
+                <TableHead>Descricao</TableHead>
+                <TableHead className="text-right">Base de Calculo</TableHead>
+                <TableHead className="text-right">Aliquota</TableHead>
                 <TableHead className="text-right">Valor Apurado</TableHead>
               </TableRow>
             </TableHeader>
@@ -76,7 +76,7 @@ export function ApuracaoImpostoList({
                       {imposto.tipoImposto}
                     </span>
                   </TableCell>
-                  <TableCell className="text-gray-600 text-sm">
+                  <TableCell className="text-muted-foreground text-sm">
                     {imposto.descricao}
                   </TableCell>
                   <TableCell className="text-right">
@@ -91,7 +91,7 @@ export function ApuracaoImpostoList({
                 </TableRow>
               ))}
               {/* Linha de total */}
-              <TableRow className="bg-gray-50 font-semibold">
+              <TableRow className="bg-muted/40 font-semibold">
                 <TableCell colSpan={4} className="text-right">
                   Total a Pagar:
                 </TableCell>
@@ -106,3 +106,4 @@ export function ApuracaoImpostoList({
     </Card>
   );
 }
+

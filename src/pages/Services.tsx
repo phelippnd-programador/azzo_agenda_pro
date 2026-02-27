@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
+import { PageErrorState } from '@/components/ui/page-states';
 import {
   Dialog,
   DialogContent,
@@ -61,7 +62,7 @@ export default function Services() {
   const [formProfessionalIds, setFormProfessionalIds] = useState<string[]>([]);
   const [formIsActive, setFormIsActive] = useState(true);
 
-  const { services, isLoading, createService, updateService, deleteService } = useServices();
+  const { services, pagination, isLoading, error, refetch, goToPage, createService, updateService, deleteService } = useServices();
   const { professionals, isLoading: isLoadingProfessionals } = useProfessionals();
 
   const filteredServices = services.filter((service) => {
@@ -70,6 +71,7 @@ export default function Services() {
     const matchesCategory = selectedCategory === 'Todos' || service.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+  const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.limit));
 
   const resetForm = () => {
     setFormName('');
@@ -166,13 +168,25 @@ export default function Services() {
     );
   }
 
+  if (error) {
+    return (
+      <MainLayout title="Servicos" subtitle="Gerencie os servicos oferecidos">
+        <PageErrorState
+          title="Nao foi possivel carregar os servicos"
+          description={error}
+          action={{ label: 'Tentar novamente', onClick: refetch }}
+        />
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout title="Serviços" subtitle="Gerencie os serviços oferecidos">
       <div className="space-y-4 sm:space-y-6">
         {/* Header Controls */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Buscar serviços..."
               value={searchTerm}
@@ -186,7 +200,7 @@ export default function Services() {
             if (!open) resetForm();
           }}>
             <DialogTrigger asChild>
-              <Button className="gap-2 bg-violet-600 hover:bg-violet-700">
+              <Button className="gap-2">
                 <Plus className="w-4 h-4" />
                 Novo Serviço
               </Button>
@@ -258,9 +272,9 @@ export default function Services() {
                   <Label>Profissionais</Label>
                   <div className="rounded-lg border p-3 space-y-3 max-h-48 overflow-y-auto">
                     {isLoadingProfessionals ? (
-                      <p className="text-sm text-gray-500">Carregando profissionais...</p>
+                      <p className="text-sm text-muted-foreground">Carregando profissionais...</p>
                     ) : !professionals.length ? (
-                      <p className="text-sm text-gray-500">Nenhum profissional cadastrado.</p>
+                      <p className="text-sm text-muted-foreground">Nenhum profissional cadastrado.</p>
                     ) : (
                       professionals.map((professional) => (
                         <label
@@ -273,7 +287,7 @@ export default function Services() {
                           />
                           <span>{professional.name}</span>
                           {!professional.isActive ? (
-                            <Badge variant="outline" className="text-[10px] text-gray-500">
+                            <Badge variant="outline" className="text-[10px] text-muted-foreground">
                               Inativo
                             </Badge>
                           ) : null}
@@ -281,7 +295,7 @@ export default function Services() {
                       ))
                     )}
                   </div>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     Se nenhum profissional for selecionado, o servico fica disponivel para todos.
                   </p>
                   {formProfessionalIds.length > 0 ? (
@@ -299,10 +313,10 @@ export default function Services() {
                   ) : null}
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-muted/40 rounded-lg">
                   <div>
                     <Label>Serviço Ativo</Label>
-                    <p className="text-xs text-gray-500">Disponível para agendamento</p>
+                    <p className="text-xs text-muted-foreground">Disponível para agendamento</p>
                   </div>
                   <Switch
                     checked={formIsActive}
@@ -341,7 +355,7 @@ export default function Services() {
               size="sm"
               onClick={() => setSelectedCategory(category)}
               className={`whitespace-nowrap text-xs sm:text-sm ${
-                selectedCategory === category ? 'bg-violet-600 hover:bg-violet-700' : ''
+                selectedCategory === category ? '' : ''
               }`}
             >
               {category}
@@ -353,8 +367,8 @@ export default function Services() {
         {filteredServices.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
-              <Scissors className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">Nenhum serviço encontrado</p>
+              <Scissors className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+              <p className="text-muted-foreground">Nenhum serviço encontrado</p>
               <Button
                 variant="link"
                 onClick={() => {
@@ -377,11 +391,11 @@ export default function Services() {
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
+                        <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">
                           {service.name}
                         </h3>
                         {!service.isActive && (
-                          <Badge variant="outline" className="text-[10px] sm:text-xs text-gray-500">
+                          <Badge variant="outline" className="text-[10px] sm:text-xs text-muted-foreground">
                             Inativo
                           </Badge>
                         )}
@@ -413,16 +427,16 @@ export default function Services() {
                     </DropdownMenu>
                   </div>
 
-                  <p className="text-xs sm:text-sm text-gray-600 mb-4 line-clamp-2">
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-4 line-clamp-2">
                     {service.description || 'Sem descrição'}
                   </p>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                    <div className="flex items-center gap-1 text-gray-500">
+                  <div className="flex items-center justify-between pt-3 border-t border-border">
+                    <div className="flex items-center gap-1 text-muted-foreground">
                       <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span className="text-xs sm:text-sm">{service.duration} min</span>
                     </div>
-                    <div className="flex items-center gap-1 text-violet-600 font-semibold">
+                    <div className="flex items-center gap-1 text-primary font-semibold">
                       <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span className="text-sm sm:text-base">{formatCurrency(service.price)}</span>
                     </div>
@@ -432,6 +446,32 @@ export default function Services() {
             ))}
           </div>
         )}
+
+        {!searchTerm && selectedCategory === 'Todos' && totalPages > 1 ? (
+          <div className="flex items-center justify-between gap-3 border rounded-lg p-3 bg-muted/20">
+            <p className="text-sm text-muted-foreground">
+              Pagina {pagination.page} de {totalPages}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => goToPage(pagination.page - 1)}
+                disabled={pagination.page <= 1 || isLoading}
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => goToPage(pagination.page + 1)}
+                disabled={pagination.page >= totalPages || isLoading || !pagination.hasMore}
+              >
+                Proxima
+              </Button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </MainLayout>
   );

@@ -109,7 +109,7 @@ export default function Specialties() {
         {error ? (
           <Card>
             <CardContent className="py-6 space-y-3">
-              <p className="text-sm text-red-600">{error}</p>
+              <p className="text-sm text-destructive">{error}</p>
               <Button variant="outline" onClick={refetch}>
                 Tentar novamente
               </Button>
@@ -124,13 +124,13 @@ export default function Specialties() {
                 <Card key={specialty.id}>
                   <CardContent className="py-4 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 min-w-0">
-                      <Tag className="w-4 h-4 text-violet-600 flex-shrink-0" />
+                      <Tag className="w-4 h-4 text-primary flex-shrink-0" />
                       <p className="font-medium truncate">{specialty.name}</p>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       onClick={() =>
                         setSpecialtyToDelete({ id: specialty.id, name: specialty.name })
                       }
@@ -143,7 +143,7 @@ export default function Specialties() {
             </div>
           ) : (
             <Card>
-              <CardContent className="py-10 text-center text-gray-500">
+              <CardContent className="py-10 text-center text-muted-foreground">
                 Nenhuma especialidade encontrada.
               </CardContent>
             </Card>
@@ -170,10 +170,7 @@ export default function Specialties() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
               Remover
             </AlertDialogAction>
           </AlertDialogFooter>

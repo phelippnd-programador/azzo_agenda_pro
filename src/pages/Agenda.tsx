@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
+import { PageEmptyState, PageErrorState } from '@/components/ui/page-states';
 import {
   Select,
   SelectContent,
@@ -87,10 +88,10 @@ const getStatusColor = (status: string) => {
   const colors: Record<string, string> = {
     PENDING: 'bg-amber-100 text-amber-700 border-amber-200',
     CONFIRMED: 'bg-blue-100 text-blue-700 border-blue-200',
-    IN_PROGRESS: 'bg-purple-100 text-purple-700 border-purple-200',
+    IN_PROGRESS: 'bg-primary/15 text-primary border-primary/30',
     COMPLETED: 'bg-green-100 text-green-700 border-green-200',
     CANCELLED: 'bg-red-100 text-red-700 border-red-200',
-    NO_SHOW: 'bg-gray-100 text-gray-700 border-gray-200',
+    NO_SHOW: 'bg-muted text-muted-foreground border-border',
   };
   return colors[status] || colors.PENDING;
 };
@@ -139,15 +140,24 @@ export default function Agenda() {
   const [newDate, setNewDate] = useState(currentDate.toISOString().split('T')[0]);
   const [newStartTime, setNewStartTime] = useState('');
   const [newEndTime, setNewEndTime] = useState('');
+  const dateString = currentDate.toISOString().split('T')[0];
 
   const {
     appointments,
+    pagination,
     isLoading,
+    error,
+    refetch,
+    goToPage,
     createAppointment,
     updateAppointmentStatus,
     deleteAppointment,
     reassignAppointmentProfessional,
-  } = useAppointments();
+  } = useAppointments({
+    date: dateString,
+    professionalId: selectedProfessional !== 'all' ? selectedProfessional : undefined,
+    status: selectedStatus !== 'all' ? selectedStatus : undefined,
+  });
   const { professionals } = useProfessionals();
   const { clients } = useClients();
   const { services } = useServices();
@@ -193,18 +203,7 @@ export default function Agenda() {
     setCurrentDate(new Date());
   };
 
-  const dateString = currentDate.toISOString().split('T')[0];
-
-  const filteredAppointments = useMemo(() => {
-    return appointments.filter(apt => {
-      const matchesDate = apt.date === dateString;
-      const matchesProfessional =
-        effectiveSelectedProfessional === 'all' ||
-        apt.professionalId === effectiveSelectedProfessional;
-      const matchesStatus = selectedStatus === 'all' || apt.status === selectedStatus;
-      return matchesDate && matchesProfessional && matchesStatus;
-    });
-  }, [appointments, dateString, effectiveSelectedProfessional, selectedStatus]);
+  const filteredAppointments = appointments;
 
   const displayedTimeSlots = useMemo(() => {
     const appointmentTimes = filteredAppointments
@@ -220,21 +219,6 @@ export default function Agenda() {
     setSelectedProfessional(loggedProfessional.id);
     setNewProfessionalId(loggedProfessional.id);
   }, [isProfessionalUser, loggedProfessional?.id]);
-
-  useEffect(() => {
-    if (!appointments.length) return;
-    const hasAppointmentsOnCurrentDate = appointments.some((apt) => apt.date === dateString);
-    if (hasAppointmentsOnCurrentDate) return;
-
-    const latestDate = [...appointments]
-      .map((apt) => apt.date)
-      .sort((a, b) => b.localeCompare(a))[0];
-
-    if (!latestDate) return;
-    const [year, month, day] = latestDate.split('-').map(Number);
-    if (!year || !month || !day) return;
-    setCurrentDate(new Date(year, month - 1, day));
-  }, [appointments, dateString]);
 
   useEffect(() => {
     setNewStartTime('');
@@ -280,12 +264,12 @@ export default function Agenda() {
     }
   };
 
-  const handleStatusChange = async (appointmentId: string, newStatus: string) => {
+  const handleStatusChange = async (appointmentId: string, newStatus: Appointment['status']) => {
     try {
-      await updateAppointmentStatus(appointmentId, newStatus as any);
+      await updateAppointmentStatus(appointmentId, newStatus);
       // Update selected appointment if it's the one being changed
       if (selectedAppointment?.id === appointmentId) {
-        setSelectedAppointment(prev => prev ? { ...prev, status: newStatus as any } : null);
+        setSelectedAppointment(prev => prev ? { ...prev, status: newStatus } : null);
       }
     } catch (error) {
       // Error is handled in the hook
@@ -378,6 +362,18 @@ export default function Agenda() {
     );
   }
 
+  if (error) {
+    return (
+      <MainLayout title="Agenda" subtitle="Gerencie seus agendamentos">
+        <PageErrorState
+          title="Nao foi possivel carregar a agenda"
+          description={error}
+          action={{ label: 'Tentar novamente', onClick: refetch }}
+        />
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout title="Agenda" subtitle="Gerencie seus agendamentos">
       <div className="space-y-4 sm:space-y-6">
@@ -393,7 +389,7 @@ export default function Agenda() {
             <Button variant="outline" size="icon" onClick={() => navigateDate('next')} className="h-8 w-8 sm:h-9 sm:w-9">
               <ChevronRight className="w-4 h-4" />
             </Button>
-            <span className="text-sm sm:text-lg font-medium text-gray-900 capitalize truncate">
+            <span className="text-sm sm:text-lg font-medium text-foreground capitalize truncate">
               {formattedDate}
             </span>
           </div>
@@ -417,7 +413,7 @@ export default function Agenda() {
                 </SelectContent>
               </Select>
             ) : (
-              <div className="h-8 sm:h-9 min-w-36 sm:min-w-44 rounded-md border bg-gray-50 px-3 flex items-center text-xs sm:text-sm text-gray-700">
+              <div className="h-8 sm:h-9 min-w-36 sm:min-w-44 rounded-md border bg-muted/40 px-3 flex items-center text-xs sm:text-sm text-muted-foreground">
                 {loggedProfessional?.name || "Profissional logado"}
               </div>
             )}
@@ -458,7 +454,7 @@ export default function Agenda() {
 
             <Dialog open={isNewAppointmentOpen} onOpenChange={setIsNewAppointmentOpen}>
               <DialogTrigger asChild>
-                <Button size="sm" className="gap-1 sm:gap-2 h-8 sm:h-9 text-xs sm:text-sm bg-violet-600 hover:bg-violet-700">
+                <Button size="sm" className="gap-1 sm:gap-2 h-8 sm:h-9 text-xs sm:text-sm">
                   <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                   <span className="hidden sm:inline">Novo</span> Agendamento
                 </Button>
@@ -545,7 +541,7 @@ export default function Agenda() {
                       }}
                     />
                     {newStartTime && newEndTime ? (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         Selecionado: {newStartTime} - {newEndTime}
                       </p>
                     ) : null}
@@ -575,18 +571,24 @@ export default function Agenda() {
         </div>
 
         {/* Calendar Grid */}
+        {filteredAppointments.length === 0 ? (
+          <PageEmptyState
+            title="Nenhum agendamento para este filtro"
+            description="Altere a data, os filtros ou crie um novo agendamento."
+          />
+        ) : (
         <Card>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <div className="min-w-[600px]">
                 {/* Time slots header */}
                 <div className="grid grid-cols-[60px_1fr] sm:grid-cols-[80px_1fr] border-b">
-                  <div className="p-2 sm:p-3 bg-gray-50 border-r">
-                    <Clock className="w-4 h-4 text-gray-400 mx-auto" />
+                  <div className="p-2 sm:p-3 bg-muted/40 border-r">
+                    <Clock className="w-4 h-4 text-muted-foreground mx-auto" />
                   </div>
-                  <div className="p-2 sm:p-3 bg-gray-50">
+                  <div className="p-2 sm:p-3 bg-muted/40">
                     <div className="flex items-center gap-2">
-                      <CalendarIcon className="w-4 h-4 text-violet-600" />
+                      <CalendarIcon className="w-4 h-4 text-primary" />
                       <span className="font-medium text-sm capitalize">{formattedDate}</span>
                     </div>
                   </div>
@@ -601,7 +603,7 @@ export default function Agenda() {
 
                     return (
                       <div key={time} className="grid grid-cols-[60px_1fr] sm:grid-cols-[80px_1fr] min-h-[60px] sm:min-h-[70px]">
-                        <div className="p-2 sm:p-3 bg-gray-50 border-r text-xs sm:text-sm text-gray-500 font-medium">
+                        <div className="p-2 sm:p-3 bg-muted/40 border-r text-xs sm:text-sm text-muted-foreground font-medium">
                           {time}
                         </div>
                         <div className="p-1 sm:p-2">
@@ -705,9 +707,36 @@ export default function Agenda() {
             </div>
           </CardContent>
         </Card>
+        )}
+
+        {Math.ceil(pagination.total / pagination.limit) > 1 ? (
+          <div className="flex items-center justify-between gap-3 border rounded-lg p-3 bg-muted/20">
+            <p className="text-sm text-muted-foreground">
+              Pagina {pagination.page} de {Math.max(1, Math.ceil(pagination.total / pagination.limit))}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => goToPage(pagination.page - 1)}
+                disabled={pagination.page <= 1 || isLoading}
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => goToPage(pagination.page + 1)}
+                disabled={!pagination.hasMore || isLoading}
+              >
+                Proxima
+              </Button>
+            </div>
+          </div>
+        ) : null}
 
         <Dialog open={isReassignDialogOpen} onOpenChange={setIsReassignDialogOpen}>
-          <DialogContent className="max-w-md mx-4 sm:mx-auto">
+          <DialogContent className="max-w-md mx-4 sm:mx-auto max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Realocar Agendamento</DialogTitle>
               <DialogDescription>
@@ -771,7 +800,7 @@ export default function Agenda() {
               <div className="mt-6 space-y-6">
                 {/* Status */}
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Status</span>
+                  <span className="text-sm text-muted-foreground">Status</span>
                   <Badge className={getStatusColor(selectedAppointment.status)}>
                     {getStatusLabel(selectedAppointment.status)}
                   </Badge>
@@ -782,12 +811,12 @@ export default function Agenda() {
                 {/* Date and Time */}
                 <div className="space-y-3">
                   <h4 className="font-medium text-sm flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4 text-violet-600" />
+                    <CalendarIcon className="w-4 h-4 text-primary" />
                     Data e Horário
                   </h4>
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                  <div className="bg-muted/40 rounded-lg p-4 space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Data:</span>
+                      <span className="text-muted-foreground">Data:</span>
                       <span className="font-medium">
                         {new Date(selectedAppointment.date + 'T12:00:00').toLocaleDateString('pt-BR', {
                           weekday: 'long',
@@ -798,7 +827,7 @@ export default function Agenda() {
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Horário:</span>
+                      <span className="text-muted-foreground">Horário:</span>
                       <span className="font-medium">
                         {selectedAppointment.startTime} - {selectedAppointment.endTime}
                       </span>
@@ -811,31 +840,31 @@ export default function Agenda() {
                 {/* Client Info */}
                 <div className="space-y-3">
                   <h4 className="font-medium text-sm flex items-center gap-2">
-                    <User className="w-4 h-4 text-violet-600" />
+                    <User className="w-4 h-4 text-primary" />
                     Cliente
                   </h4>
                   {selectedClient && (
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div className="bg-muted/40 rounded-lg p-4 space-y-3">
                       <div className="flex items-center gap-3">
                         <Avatar className="w-10 h-10">
-                          <AvatarFallback className="bg-violet-100 text-violet-700">
+                          <AvatarFallback className="bg-primary/15 text-primary">
                             {selectedClient.name.slice(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="font-medium">{selectedClient.name}</p>
-                          <p className="text-xs text-gray-500">Cliente desde {new Date(selectedClient.createdAt).toLocaleDateString('pt-BR')}</p>
+                          <p className="text-xs text-muted-foreground">Cliente desde {new Date(selectedClient.createdAt).toLocaleDateString('pt-BR')}</p>
                         </div>
                       </div>
                       {selectedClient.phone && (
                         <div className="flex items-center gap-2 text-sm">
-                          <Phone className="w-4 h-4 text-gray-400" />
+                          <Phone className="w-4 h-4 text-muted-foreground" />
                           <span>{selectedClient.phone}</span>
                         </div>
                       )}
                       {selectedClient.email && (
                         <div className="flex items-center gap-2 text-sm">
-                          <Mail className="w-4 h-4 text-gray-400" />
+                          <Mail className="w-4 h-4 text-muted-foreground" />
                           <span>{selectedClient.email}</span>
                         </div>
                       )}
@@ -848,21 +877,21 @@ export default function Agenda() {
                 {/* Service Info */}
                 <div className="space-y-3">
                   <h4 className="font-medium text-sm flex items-center gap-2">
-                    <Scissors className="w-4 h-4 text-violet-600" />
+                    <Scissors className="w-4 h-4 text-primary" />
                     Serviço
                   </h4>
                   {selectedService && (
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div className="bg-muted/40 rounded-lg p-4 space-y-2">
                       <div className="flex justify-between">
                         <span className="font-medium">{selectedService.name}</span>
                         <Badge variant="outline">{selectedService.category}</Badge>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Duração:</span>
+                        <span className="text-muted-foreground">Duração:</span>
                         <span>{selectedService.duration} minutos</span>
                       </div>
                       {selectedService.description && (
-                        <p className="text-sm text-gray-600 mt-2">{selectedService.description}</p>
+                        <p className="text-sm text-muted-foreground mt-2">{selectedService.description}</p>
                       )}
                     </div>
                   )}
@@ -873,15 +902,15 @@ export default function Agenda() {
                 {/* Professional Info */}
                 <div className="space-y-3">
                   <h4 className="font-medium text-sm flex items-center gap-2">
-                    <User className="w-4 h-4 text-violet-600" />
+                    <User className="w-4 h-4 text-primary" />
                     Profissional
                   </h4>
                   {selectedProfessionalData && (
-                    <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="bg-muted/40 rounded-lg p-4">
                       <div className="flex items-center gap-3">
                         <Avatar className="w-10 h-10">
                           <AvatarImage src={selectedProfessionalData.avatar} />
-                          <AvatarFallback className="bg-violet-100 text-violet-700">
+                          <AvatarFallback className="bg-primary/15 text-primary">
                             {selectedProfessionalData.name.slice(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
@@ -905,13 +934,13 @@ export default function Agenda() {
                 {/* Price */}
                 <div className="space-y-3">
                   <h4 className="font-medium text-sm flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-violet-600" />
+                    <DollarSign className="w-4 h-4 text-primary" />
                     Valor
                   </h4>
-                  <div className="bg-gradient-to-r from-violet-50 to-pink-50 rounded-lg p-4">
+                  <div className="bg-primary/5 rounded-lg p-4 border border-primary/10">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Total:</span>
-                      <span className="text-2xl font-bold text-violet-700">
+                      <span className="text-muted-foreground">Total:</span>
+                      <span className="text-2xl font-bold text-primary">
                         {formatCurrency(selectedAppointment.totalPrice)}
                       </span>
                     </div>
@@ -924,11 +953,11 @@ export default function Agenda() {
                     <Separator />
                     <div className="space-y-3">
                       <h4 className="font-medium text-sm flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-violet-600" />
+                        <FileText className="w-4 h-4 text-primary" />
                         Observações
                       </h4>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <p className="text-sm text-gray-600">{selectedAppointment.notes}</p>
+                      <div className="bg-muted/40 rounded-lg p-4">
+                        <p className="text-sm text-muted-foreground">{selectedAppointment.notes}</p>
                       </div>
                     </div>
                   </>
@@ -939,7 +968,7 @@ export default function Agenda() {
                   <>
                     <Separator />
                     <Button 
-                      className="w-full bg-violet-600 hover:bg-violet-700"
+                      className="w-full"
                       onClick={handleViewInvoice}
                     >
                       <Receipt className="w-4 h-4 mr-2" />
@@ -961,7 +990,7 @@ export default function Agenda() {
                     )}
                     {selectedAppointment.status === 'CONFIRMED' && (
                       <Button 
-                        className="bg-purple-600 hover:bg-purple-700"
+                        className=""
                         onClick={() => handleStatusChange(selectedAppointment.id, 'IN_PROGRESS')}
                       >
                         Iniciar

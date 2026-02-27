@@ -39,26 +39,17 @@ export function Header({ title, subtitle }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-sm border-b border-gray-200">
+    <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-sm border-b border-border">
       <div className="flex items-center justify-between h-14 sm:h-16 px-3 sm:px-4 lg:px-8">
         <div className="ml-10 sm:ml-12 lg:ml-0 min-w-0 flex-1">
-          <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 truncate">
-            {title}
-          </h1>
-          {subtitle ? (
-            <p className="text-xs sm:text-sm text-gray-500 truncate hidden sm:block">
-              {subtitle}
-            </p>
-          ) : null}
+          <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-foreground truncate">{title}</h1>
+          {subtitle ? <p className="text-xs sm:text-sm text-muted-foreground truncate hidden sm:block">{subtitle}</p> : null}
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 flex-shrink-0">
           <div className="hidden lg:flex relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              placeholder="Buscar..."
-              className="w-48 xl:w-64 pl-9 bg-gray-50 border-gray-200"
-            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="Buscar..." className="w-48 xl:w-64 pl-9 bg-muted/40 border-border" />
           </div>
 
           <DropdownMenu
@@ -72,7 +63,7 @@ export function Header({ title, subtitle }: HeaderProps) {
               <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-9 sm:w-9">
                 <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                 {unreadCount > 0 ? (
-                  <Badge className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 p-0 flex items-center justify-center bg-pink-500 text-[10px] sm:text-xs">
+                  <Badge className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 p-0 flex items-center justify-center bg-destructive text-[10px] sm:text-xs">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </Badge>
                 ) : null}
@@ -81,11 +72,7 @@ export function Header({ title, subtitle }: HeaderProps) {
             <DropdownMenuContent align="end" className="w-72 sm:w-80">
               <DropdownMenuLabel>Notificacoes</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {!summaryItems.length ? (
-                <DropdownMenuItem className="text-sm text-gray-500">
-                  Nenhuma notificacao
-                </DropdownMenuItem>
-              ) : null}
+              {!summaryItems.length ? <DropdownMenuItem className="text-sm text-muted-foreground">Nenhuma notificacao</DropdownMenuItem> : null}
               {summaryItems.slice(0, 5).map((item) => (
                 <DropdownMenuItem
                   key={item.id}
@@ -95,15 +82,11 @@ export function Header({ title, subtitle }: HeaderProps) {
                   }}
                 >
                   <span className="font-medium text-sm">{item.channel || "Notificacao"}</span>
-                  <span className="text-xs sm:text-sm text-gray-500 line-clamp-2">
-                    {item.message}
-                  </span>
+                  <span className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{item.message}</span>
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/notificacoes")}>
-                Ver todas
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/notificacoes")}>Ver todas</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -114,9 +97,7 @@ export function Header({ title, subtitle }: HeaderProps) {
                   <AvatarImage src={user?.avatar || undefined} />
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
-                <span className="hidden md:inline text-xs sm:text-sm font-medium truncate max-w-[80px] lg:max-w-none">
-                  {displayName}
-                </span>
+                <span className="hidden md:inline text-xs sm:text-sm font-medium truncate max-w-[80px] lg:max-w-none">{displayName}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 sm:w-56">
@@ -135,7 +116,7 @@ export function Header({ title, subtitle }: HeaderProps) {
                 Plano e Faturamento
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600" onClick={handleLogout}>
+              <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair
               </DropdownMenuItem>

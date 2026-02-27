@@ -1,6 +1,7 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { specialtiesApi, isPlanExpiredApiError } from "@/lib/api";
+import { resolveUiError } from "@/lib/error-utils";
 import type { Specialty } from "@/types";
 
 export function useSpecialties() {
@@ -19,9 +20,10 @@ export function useSpecialties() {
         setError(null);
         return;
       }
+      const uiError = resolveUiError(err, "Erro ao carregar especialidades");
       setSpecialties([]);
-      setError("Erro ao carregar especialidades");
-      toast.error("Erro ao carregar especialidades");
+      setError(uiError.message);
+      toast.error(uiError.message);
     } finally {
       setIsLoading(false);
     }
@@ -44,7 +46,7 @@ export function useSpecialties() {
       return created;
     } catch (err) {
       if (!isPlanExpiredApiError(err)) {
-        toast.error("Erro ao criar especialidade");
+        toast.error(resolveUiError(err, "Erro ao criar especialidade").message);
       }
       throw err;
     }
@@ -57,7 +59,7 @@ export function useSpecialties() {
       toast.success("Especialidade removida com sucesso!");
     } catch (err) {
       if (!isPlanExpiredApiError(err)) {
-        toast.error("Erro ao remover especialidade");
+        toast.error(resolveUiError(err, "Erro ao remover especialidade").message);
       }
       throw err;
     }

@@ -108,24 +108,24 @@ export function BoletoPaymentView({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-slate-700">
+        <p className="text-sm text-foreground">
           Sua assinatura foi criada e aguarda compensacao do boleto.
         </p>
 
         {qrCodeUrl ? (
           <div className="space-y-2">
-            <p className="text-xs font-medium text-slate-700">QR Code da linha digitavel</p>
+            <p className="text-xs font-medium text-foreground">QR Code da linha digitavel</p>
             <img
               src={qrCodeUrl}
               alt="QR Code da linha digitavel do boleto"
-              className="mx-auto w-full max-w-60 rounded-lg border bg-white p-2"
+              className="mx-auto w-full max-w-60 rounded-lg border bg-card p-2"
             />
           </div>
         ) : null}
 
         <div className="space-y-2">
-          <p className="text-xs font-medium text-slate-700">Linha digitavel</p>
-          <p className="rounded-md border bg-white p-3 text-xs break-all text-slate-700 font-mono">
+          <p className="text-xs font-medium text-foreground">Linha digitavel</p>
+          <p className="rounded-md border bg-card p-3 text-xs break-all text-foreground font-mono">
             {formattedLinhaDigitavel}
           </p>
           <Button
@@ -140,11 +140,11 @@ export function BoletoPaymentView({
         </div>
 
         <div className="space-y-2">
-          <p className="text-xs font-medium text-slate-700 flex items-center gap-2">
+          <p className="text-xs font-medium text-foreground flex items-center gap-2">
             <Barcode className="h-4 w-4" />
             Codigo de barras
           </p>
-          <p className="rounded-md border bg-white p-3 text-xs break-all text-slate-700 font-mono">
+          <p className="rounded-md border bg-card p-3 text-xs break-all text-foreground font-mono">
             {formattedBarCode}
           </p>
           <Button
@@ -158,7 +158,7 @@ export function BoletoPaymentView({
           </Button>
         </div>
 
-        <div className="space-y-1 text-sm text-slate-700">
+        <div className="space-y-1 text-sm text-foreground">
           <p>
             <strong>Nosso numero:</strong> {formattedNossoNumero}
           </p>
@@ -172,9 +172,10 @@ export function BoletoPaymentView({
             </a>
           </Button>
         ) : (
-          <p className="text-sm text-slate-600">Link do boleto indisponivel no momento.</p>
+          <p className="text-sm text-muted-foreground">Link do boleto indisponivel no momento.</p>
         )}
       </CardContent>
     </Card>
   );
 }
+

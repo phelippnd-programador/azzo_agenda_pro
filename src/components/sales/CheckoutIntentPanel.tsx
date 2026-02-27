@@ -24,12 +24,12 @@ export function CheckoutIntentPanel({
   error,
 }: CheckoutIntentPanelProps) {
   return (
-    <Card className="border-slate-200 shadow-sm">
+    <Card className="border-border shadow-sm">
       <CardHeader>
         <CardTitle className="text-lg">Resumo seguro do checkout</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2 rounded-lg bg-slate-50 p-4 text-sm">
+        <div className="space-y-2 rounded-lg bg-muted/40 p-4 text-sm">
           <p>
             <strong>Intent:</strong> {intent.intentId}
           </p>
@@ -40,7 +40,7 @@ export function CheckoutIntentPanel({
             <strong>Valor:</strong> {formattedPrice}
           </p>
           <p className="flex items-center gap-2">
-            <Clock3 className="h-4 w-4 text-slate-500" />
+            <Clock3 className="h-4 w-4 text-muted-foreground" />
             <span>
               <strong>Validade:</strong>{" "}
               {new Date(intent.expiresAt).toLocaleString("pt-BR")}
@@ -82,3 +82,4 @@ export function CheckoutIntentPanel({
     </Card>
   );
 }
+

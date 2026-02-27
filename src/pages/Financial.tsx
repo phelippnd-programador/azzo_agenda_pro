@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PageErrorState } from '@/components/ui/page-states';
 import {
   Dialog,
   DialogContent,
@@ -104,7 +105,7 @@ export default function Financial() {
   const [formPaymentMethod, setFormPaymentMethod] = useState<string>('PIX');
   const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0]);
 
-  const { transactions, summary, isLoading, createTransaction, deleteTransaction } = useTransactions();
+  const { transactions, summary, isLoading, error, refetch, createTransaction, deleteTransaction } = useTransactions();
 
   const getPaymentIcon = (method: string) => {
     const found = paymentMethods.find(p => p.value === method);
@@ -176,6 +177,18 @@ export default function Financial() {
     );
   }
 
+  if (error) {
+    return (
+      <MainLayout title="Financeiro" subtitle="Controle de caixa e transacoes">
+        <PageErrorState
+          title="Nao foi possivel carregar o financeiro"
+          description={error}
+          action={{ label: 'Tentar novamente', onClick: refetch }}
+        />
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout title="Financeiro" subtitle="Controle de caixa e transações">
       <div className="space-y-4 sm:space-y-6">
@@ -213,19 +226,19 @@ export default function Financial() {
             </CardContent>
           </Card>
 
-          <Card className={`bg-gradient-to-br ${summary.balance >= 0 ? 'from-violet-50 to-purple-50 border-violet-200' : 'from-orange-50 to-amber-50 border-orange-200'}`}>
+          <Card className={`bg-gradient-to-br ${summary.balance >= 0 ? 'from-primary/10 to-primary/5 border-primary/20' : 'from-orange-50 to-amber-50 border-orange-200'}`}>
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className={`text-xs sm:text-sm font-medium ${summary.balance >= 0 ? 'text-violet-700' : 'text-orange-700'}`}>
+                  <p className={`text-xs sm:text-sm font-medium ${summary.balance >= 0 ? 'text-primary' : 'text-orange-700'}`}>
                     Saldo
                   </p>
-                  <p className={`text-xl sm:text-2xl font-bold ${summary.balance >= 0 ? 'text-violet-800' : 'text-orange-800'}`}>
+                  <p className={`text-xl sm:text-2xl font-bold ${summary.balance >= 0 ? 'text-primary' : 'text-orange-800'}`}>
                     {formatCurrency(summary.balance)}
                   </p>
                 </div>
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center ${summary.balance >= 0 ? 'bg-violet-100' : 'bg-orange-100'}`}>
-                  <Wallet className={`w-5 h-5 sm:w-6 sm:h-6 ${summary.balance >= 0 ? 'text-violet-600' : 'text-orange-600'}`} />
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center ${summary.balance >= 0 ? 'bg-primary/15' : 'bg-orange-100'}`}>
+                  <Wallet className={`w-5 h-5 sm:w-6 sm:h-6 ${summary.balance >= 0 ? 'text-primary' : 'text-orange-600'}`} />
                 </div>
               </div>
             </CardContent>
@@ -273,7 +286,7 @@ export default function Financial() {
                   <span className="hidden sm:inline">Nova</span> Saída
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md mx-4 sm:mx-auto">
+              <DialogContent className="max-w-md mx-4 sm:mx-auto max-h-[85vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className={transactionType === 'INCOME' ? 'text-green-700' : 'text-red-700'}>
                     {transactionType === 'INCOME' ? 'Nova Entrada' : 'Nova Saída'}
@@ -378,8 +391,8 @@ export default function Financial() {
           <CardContent>
             {filteredTransactions.length === 0 ? (
               <div className="py-12 text-center">
-                <DollarSign className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">Nenhuma transação encontrada</p>
+                <DollarSign className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                <p className="text-muted-foreground">Nenhuma transação encontrada</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -389,7 +402,7 @@ export default function Financial() {
                   return (
                     <div
                       key={transaction.id}
-                      className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                      className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-muted/40 rounded-xl hover:bg-muted/70 transition-colors"
                     >
                       <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                         transaction.type === 'INCOME' ? 'bg-green-100' : 'bg-red-100'
@@ -402,14 +415,14 @@ export default function Financial() {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 text-sm truncate">
+                        <p className="font-medium text-foreground text-sm truncate">
                           {transaction.description}
                         </p>
                         <div className="flex flex-wrap items-center gap-2 mt-1">
                           <Badge variant="outline" className="text-[10px] sm:text-xs">
                             {transaction.category}
                           </Badge>
-                          <span className="flex items-center gap-1 text-[10px] sm:text-xs text-gray-500">
+                          <span className="flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground">
                             <PaymentIcon className="w-3 h-3" />
                             {getPaymentLabel(transaction.paymentMethod)}
                           </span>
@@ -422,7 +435,7 @@ export default function Financial() {
                         }`}>
                           {transaction.type === 'INCOME' ? '+' : '-'}{formatCurrency(transaction.amount)}
                         </p>
-                        <p className="text-[10px] sm:text-xs text-gray-500">
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">
                           {new Date(transaction.date).toLocaleDateString('pt-BR')}
                         </p>
                       </div>
