@@ -115,9 +115,8 @@ export default function ProfessionalFinancial() {
     [professionals, user?.id]
   );
   const isProfessional = user?.role === "PROFESSIONAL";
-  const effectiveProfessionalId = isProfessional
-    ? loggedProfessional?.id || "all"
-    : selectedProfessionalId;
+  const loggedProfessionalId = loggedProfessional?.id || "";
+  const effectiveProfessionalId = isProfessional ? loggedProfessionalId : selectedProfessionalId;
 
   const { start, end } = useMemo(
     () => getCurrentRange(preset, customStart, customEnd),
@@ -131,8 +130,16 @@ export default function ProfessionalFinancial() {
       return;
     }
 
+    if (isProfessional && !loggedProfessionalId) {
+      setStatsByProfessional([]);
+      setIsLoadingProfessionalMetrics(false);
+      return;
+    }
+
     const professionalIdsToFetch =
-      effectiveProfessionalId === "all"
+      isProfessional
+        ? [loggedProfessionalId]
+        : effectiveProfessionalId === "all"
         ? professionals.map((professional) => professional.id)
         : [effectiveProfessionalId];
 
@@ -162,11 +169,12 @@ export default function ProfessionalFinancial() {
     )
       .then((items) => {
         if (!isMounted) return;
-        setStatsByProfessional(
-          items
-            .filter((item) => item.revenue > 0 || item.servicesCount > 0)
-            .sort((a, b) => b.revenue - a.revenue)
+        const filteredItems = items.filter(
+          (item) =>
+            (item.revenue > 0 || item.servicesCount > 0) &&
+            (!isProfessional || item.professionalId === loggedProfessionalId)
         );
+        setStatsByProfessional(filteredItems.sort((a, b) => b.revenue - a.revenue));
       })
       .catch(() => {
         if (!isMounted) return;
@@ -180,7 +188,7 @@ export default function ProfessionalFinancial() {
     return () => {
       isMounted = false;
     };
-  }, [effectiveProfessionalId, end, isLoadingProfessionals, professionals, start]);
+  }, [effectiveProfessionalId, end, isLoadingProfessionals, isProfessional, loggedProfessionalId, professionals, start]);
 
   useEffect(() => {
     if (!start || !end || isLoadingProfessionals) {
@@ -189,7 +197,7 @@ export default function ProfessionalFinancial() {
       return;
     }
 
-    if (isProfessional && (!effectiveProfessionalId || effectiveProfessionalId === "all")) {
+    if (isProfessional && !loggedProfessionalId) {
       setServicesMetrics(null);
       setIsLoadingServicesMetrics(false);
       return;
@@ -198,13 +206,24 @@ export default function ProfessionalFinancial() {
     let isMounted = true;
     setIsLoadingServicesMetrics(true);
 
-    const professionalIdParam =
-      effectiveProfessionalId === "all" ? undefined : effectiveProfessionalId;
+    const professionalIdParam = isProfessional
+      ? loggedProfessionalId
+      : effectiveProfessionalId === "all"
+      ? undefined
+      : effectiveProfessionalId;
 
     dashboardApi
       .getServicesMetrics(start, end, professionalIdParam)
       .then((data) => {
         if (!isMounted) return;
+        if (
+          isProfessional &&
+          data.professionalId &&
+          data.professionalId !== loggedProfessionalId
+        ) {
+          setServicesMetrics(null);
+          return;
+        }
         setServicesMetrics(data);
       })
       .catch(() => {
@@ -219,7 +238,15 @@ export default function ProfessionalFinancial() {
     return () => {
       isMounted = false;
     };
-  }, [effectiveProfessionalId, end, isLoadingProfessionals, isProfessional, start]);
+  }, [effectiveProfessionalId, end, isLoadingProfessionals, isProfessional, loggedProfessionalId, start]);
+
+  const visibleStatsByProfessional = useMemo(
+    () =>
+      isProfessional
+        ? statsByProfessional.filter((item) => item.professionalId === loggedProfessionalId)
+        : statsByProfessional,
+    [isProfessional, loggedProfessionalId, statsByProfessional]
+  );
 
   const servicesChartData = useMemo(() => {
     const services = servicesMetrics?.services || [];
@@ -275,7 +302,7 @@ export default function ProfessionalFinancial() {
   );
 
   const totals = useMemo(() => {
-    return statsByProfessional.reduce(
+    return visibleStatsByProfessional.reduce(
       (acc, item) => {
         acc.revenue += item.revenue;
         acc.commission += item.commission;
@@ -285,7 +312,7 @@ export default function ProfessionalFinancial() {
       },
       { revenue: 0, commission: 0, services: 0, clients: 0 }
     );
-  }, [statsByProfessional]);
+  }, [visibleStatsByProfessional]);
   const isOwnerView = !isProfessional;
 
   if (isLoadingProfessionals || isLoadingProfessionalMetrics || isLoadingServicesMetrics) {
@@ -351,7 +378,7 @@ export default function ProfessionalFinancial() {
             ) : (
               <div className="space-y-2">
                 <Label>Profissional</Label>
-                <div className="h-10 rounded-md border bg-gray-50 px-3 flex items-center text-sm text-gray-700">
+                <div className="h-10 rounded-md border bg-muted/40 px-3 flex items-center text-sm text-muted-foreground">
                   {loggedProfessional?.name || "Profissional logado"}
                 </div>
               </div>
@@ -383,26 +410,26 @@ export default function ProfessionalFinancial() {
           {isOwnerView ? (
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-gray-500">Faturamento</p>
-                <p className="text-xl font-bold text-gray-900">{formatCurrency(totals.revenue)}</p>
+                <p className="text-sm text-muted-foreground">Faturamento</p>
+                <p className="text-xl font-bold text-foreground">{formatCurrency(totals.revenue)}</p>
               </CardContent>
             </Card>
           ) : null}
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-gray-500">Comissao total</p>
-              <p className="text-xl font-bold text-violet-700">{formatCurrency(totals.commission)}</p>
+              <p className="text-sm text-muted-foreground">Comissao total</p>
+              <p className="text-xl font-bold text-primary">{formatCurrency(totals.commission)}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-gray-500">Servicos concluidos</p>
+              <p className="text-sm text-muted-foreground">Servicos concluidos</p>
               <p className="text-xl font-bold text-emerald-700">{totals.services}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-gray-500">Clientes atendidos</p>
+              <p className="text-sm text-muted-foreground">Clientes atendidos</p>
               <p className="text-xl font-bold text-sky-700">{totals.clients}</p>
             </CardContent>
           </Card>
@@ -415,12 +442,12 @@ export default function ProfessionalFinancial() {
                 <CardTitle className="text-base sm:text-lg">Comparativo de faturamento</CardTitle>
               </CardHeader>
               <CardContent>
-                {!statsByProfessional.length ? (
-                  <p className="text-sm text-gray-500">Sem dados para o periodo selecionado.</p>
+                {!visibleStatsByProfessional.length ? (
+                  <p className="text-sm text-muted-foreground">Sem dados para o periodo selecionado.</p>
                 ) : (
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={statsByProfessional}>
+                      <BarChart data={visibleStatsByProfessional}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="name" />
                         <YAxis
@@ -447,12 +474,12 @@ export default function ProfessionalFinancial() {
               <CardTitle className="text-base sm:text-lg">Comparativo de volume</CardTitle>
             </CardHeader>
             <CardContent>
-              {!statsByProfessional.length ? (
-                <p className="text-sm text-gray-500">Sem dados para o periodo selecionado.</p>
+              {!visibleStatsByProfessional.length ? (
+                <p className="text-sm text-muted-foreground">Sem dados para o periodo selecionado.</p>
               ) : (
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={statsByProfessional}>
+                    <BarChart data={visibleStatsByProfessional}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis dataKey="name" />
                       <YAxis allowDecimals={false} />
@@ -477,12 +504,12 @@ export default function ProfessionalFinancial() {
                 const metricItem = item as DashboardServiceMetricItem | null;
                 return (
                   <div key={title} className="rounded-lg border p-3">
-                    <p className="text-xs text-gray-500">{title}</p>
-                    <p className="mt-1 text-sm font-semibold text-gray-900">
+                    <p className="text-xs text-muted-foreground">{title}</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">
                       {metricItem?.serviceName || "Sem dados"}
                     </p>
                     {metricItem ? (
-                      <p className="mt-1 text-xs text-gray-600">
+                      <p className="mt-1 text-xs text-muted-foreground">
                         {metricItem.totalAppointments} ag. • {metricItem.completedAppointments} concl. •{" "}
                         {metricItem.canceledAppointments} cancel.
                       </p>
@@ -493,11 +520,11 @@ export default function ProfessionalFinancial() {
             </div>
 
             {!servicesChartData.length ? (
-              <p className="text-sm text-gray-500">Sem dados de servicos para o periodo selecionado.</p>
+              <p className="text-sm text-muted-foreground">Sem dados de servicos para o periodo selecionado.</p>
             ) : (
               <div className="grid gap-4 lg:grid-cols-2">
                 <div style={{ height: `${servicesChartHeight}px` }}>
-                  <p className="mb-2 text-sm font-medium text-gray-700">
+                  <p className="mb-2 text-sm font-medium text-foreground">
                     Volume de agendamentos por servico
                   </p>
                   <ResponsiveContainer width="100%" height="100%">
@@ -560,7 +587,7 @@ export default function ProfessionalFinancial() {
                 </div>
 
                 <div style={{ height: `${servicesChartHeight}px` }}>
-                  <p className="mb-2 text-sm font-medium text-gray-700">
+                  <p className="mb-2 text-sm font-medium text-foreground">
                     Taxas de conclusao e cancelamento por servico
                   </p>
                   <ResponsiveContainer width="100%" height="100%">
@@ -604,10 +631,10 @@ export default function ProfessionalFinancial() {
             <CardTitle className="text-base sm:text-lg">Detalhamento por profissional</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {!statsByProfessional.length ? (
-              <p className="text-sm text-gray-500">Sem dados para listar no periodo selecionado.</p>
+            {!visibleStatsByProfessional.length ? (
+              <p className="text-sm text-muted-foreground">Sem dados para listar no periodo selecionado.</p>
             ) : (
-              statsByProfessional.map((item) => (
+              visibleStatsByProfessional.map((item) => (
                 <div
                   key={item.professionalId}
                   className={`grid gap-2 rounded-lg border p-3 ${
@@ -616,20 +643,20 @@ export default function ProfessionalFinancial() {
                       : "md:grid-cols-[1.5fr_repeat(3,1fr)]"
                   }`}
                 >
-                  <div className="font-medium text-gray-900">{item.name}</div>
+                  <div className="font-medium text-foreground">{item.name}</div>
                   {isOwnerView ? (
-                    <div className="text-sm text-gray-600">
-                      <span className="text-gray-500">Faturamento:</span> {formatCurrency(item.revenue)}
+                    <div className="text-sm text-muted-foreground">
+                      <span className="text-muted-foreground">Faturamento:</span> {formatCurrency(item.revenue)}
                     </div>
                   ) : null}
-                  <div className="text-sm text-gray-600">
-                    <span className="text-gray-500">Comissao:</span> {formatCurrency(item.commission)}
+                  <div className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground">Comissao:</span> {formatCurrency(item.commission)}
                   </div>
-                  <div className="text-sm text-gray-600">
-                    <span className="text-gray-500">Servicos:</span> {item.servicesCount}
+                  <div className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground">Servicos:</span> {item.servicesCount}
                   </div>
-                  <div className="text-sm text-gray-600">
-                    <span className="text-gray-500">Clientes:</span> {item.clientsCount}
+                  <div className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground">Clientes:</span> {item.clientsCount}
                   </div>
                 </div>
               ))
@@ -637,7 +664,7 @@ export default function ProfessionalFinancial() {
           </CardContent>
         </Card>
 
-        <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
           {isOwnerView ? (
             <Badge variant="secondary" className="gap-1">
               <DollarSign className="h-3 w-3" />
