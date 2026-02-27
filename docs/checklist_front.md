@@ -97,7 +97,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 
 ## 9. Qualidade e homologacao
 - [x] Rodar build sem erro.
-- [~] Executar smoke dos fluxos criticos.
+- [x] Executar smoke dos fluxos criticos.
 - [x] Registrar evidencias na matriz RF.
 - [x] Validar criterios de aceite (CA e GLR relevantes ao frontend).
 
