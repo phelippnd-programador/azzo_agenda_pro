@@ -76,7 +76,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 - [x] Dashboard: metricas e graficos.
 - [x] Agenda: CRUD + status + reatribuicao + disponibilidade.
 - [x] Servicos: CRUD + `professionalIds` no create/update.
-- [ ] Profissionais: CRUD + ativacao/inativacao + reset senha.
+- [x] Profissionais: CRUD + ativacao/inativacao + reset senha.
 - [ ] Clientes: CRUD + filtros.
 - [ ] Financeiro geral: transacoes e resumo.
 - [ ] Financeiro por profissional: metricas e analise por servico.
