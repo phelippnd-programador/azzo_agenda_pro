@@ -46,7 +46,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 - [x] Revisar `docs/REQUISITOS_VALIDACAO_SISTEMA.md`.
 - [x] Revisar `docs/MATRIZ_HOMOLOGACAO_RF.md`.
 - [x] Revisar `docs/PADRAO_LABELS_E_TEXTOS.md`.
-- [ ] Revisar `docs/ESTRUTURA_BASE_DADOS_RELACIONAL.md`.
+- [x] Revisar `docs/ESTRUTURA_BASE_DADOS_RELACIONAL.md`.
 
 ## 2. Base tecnica e padroes UI
 - [~] Aplicar Design System (cores, espacos, radius, sombras).
