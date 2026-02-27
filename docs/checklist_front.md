@@ -62,7 +62,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 - [x] Tratar fallback seguro quando endpoint de configuracao falhar.
 
 ## 4. Autenticacao e contexto
-- [~] Validar login/cadastro/refresh/logout.
+- [x] Validar login/cadastro/refresh/logout.
 - [x] Validar isolamento de rotas publicas (`/agendar/:slug`) sem chamadas internas indevidas.
 - [x] Revisar guardas de rota para autenticacao/permissao.
 
