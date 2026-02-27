@@ -25,6 +25,7 @@ import { SalesSection } from "@/components/sales/SalesSection";
 import { useCheckoutProducts } from "@/hooks/useCheckoutProducts";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError } from "@/lib/api";
+import { resolveUiError } from "@/lib/error-utils";
 import { toast } from "sonner";
 
 export default function SalePage() {
@@ -114,7 +115,8 @@ export default function SalePage() {
       if (error instanceof ApiError && error.status === 429) {
         toast.error("Muitas tentativas. Aguarde um momento e tente novamente.");
       } else {
-        toast.error("Nao foi possivel criar sua conta agora.");
+        const uiError = resolveUiError(error, "Nao foi possivel criar sua conta agora.");
+        toast.error(uiError.message);
       }
     } finally {
       setIsCreatingAccount(false);
@@ -130,29 +132,29 @@ export default function SalePage() {
   const painelDemoImage = "/images/painel-demo.png";
 
   return (
-    <div className="min-h-screen bg-[#f4f5f9] text-slate-900">
-      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-30 border-b border-border/80 bg-background/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 md:px-6">
-          <Link to="/" className="inline-flex items-center gap-2 font-semibold text-slate-900">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-violet-600 text-xs font-bold text-white">
+          <Link to="/" className="inline-flex items-center gap-2 font-semibold text-foreground">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-xs font-bold text-white">
               A
             </span>
             Azzo Agenda Pro
           </Link>
-          <nav className="hidden items-center gap-7 text-sm text-slate-600 md:flex">
-            <a href="#funcionalidades" className="hover:text-slate-900">
+          <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
+            <a href="#funcionalidades" className="hover:text-foreground">
               Funcionalidades
             </a>
-            <a href="#como-funciona" className="hover:text-slate-900">
+            <a href="#como-funciona" className="hover:text-foreground">
               Como Funciona
             </a>
-            <a href="#resultados" className="hover:text-slate-900">
+            <a href="#resultados" className="hover:text-foreground">
               Resultados
             </a>
           </nav>
           <Button
             size="sm"
-            className="bg-violet-600 hover:bg-violet-700"
+            className="bg-primary hover:bg-primary/90"
             onClick={() => scrollToSection("offer")}
           >
             Comecar agora
@@ -163,22 +165,22 @@ export default function SalePage() {
       <SalesSection className="pt-12 md:pt-16">
         <div className="grid items-center gap-8 md:grid-cols-2">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700">
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
               <Sparkles className="h-3.5 w-3.5" />
               Gestao completa do seu salao
             </span>
             <h1 className="mt-5 text-4xl font-bold leading-tight tracking-tight md:text-6xl">
               Organize sua agenda, equipe e{" "}
-              <span className="text-violet-600">financeiro em um lugar</span>
+              <span className="text-primary">financeiro em um lugar</span>
             </h1>
-            <p className="mt-4 max-w-xl text-base text-slate-600 md:text-lg">
+            <p className="mt-4 max-w-xl text-base text-muted-foreground md:text-lg">
               Azzo Agenda Pro e um sistema de gestao para saloes que une agenda,
               equipe, clientes e financeiro em um unico painel.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Button
                 size="lg"
-                className="bg-violet-600 hover:bg-violet-700"
+                className="bg-primary hover:bg-primary/90"
                 onClick={() => scrollToSection("offer")}
               >
                 Comecar teste gratis <ArrowRight className="ml-2 h-4 w-4" />
@@ -190,14 +192,14 @@ export default function SalePage() {
                 <Link to="/login">Entrar no sistema</Link>
               </Button>
             </div>
-            <p className="mt-4 inline-flex items-center gap-2 text-xs text-slate-500">
+            <p className="mt-4 inline-flex items-center gap-2 text-xs text-muted-foreground">
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
               Sem cartao de credito. Acesso imediato.
             </p>
           </div>
           <div className="relative">
-            <div className="absolute -inset-3 rounded-3xl bg-gradient-to-r from-violet-200 via-fuchsia-200 to-cyan-200 opacity-60 blur-xl" />
-            <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-2 shadow-2xl shadow-slate-300/40">
+            <div className="absolute -inset-3 rounded-3xl bg-gradient-to-r from-primary/30 via-primary/20 to-accent opacity-60 blur-xl" />
+            <div className="relative overflow-hidden rounded-3xl border border-border bg-card p-2 shadow-2xl">
               <img
                 src={dashboardPreviewImage}
                 alt="Preview real do dashboard Azzo Agenda Pro"
@@ -206,7 +208,7 @@ export default function SalePage() {
                   event.currentTarget.src =
                     "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1400&auto=format&fit=crop";
                 }}
-                className="h-[300px] w-full rounded-2xl bg-slate-50 object-contain p-2 md:h-[380px]"
+                className="h-[300px] w-full rounded-2xl bg-muted/40 object-contain p-2 md:h-[380px]"
               />
             </div>
           </div>
@@ -222,42 +224,42 @@ export default function SalePage() {
           {[
             {
               title: "Gestao da equipe",
-              icon: <Users className="h-4 w-4 text-violet-600" />,
+              icon: <Users className="h-4 w-4 text-primary" />,
               text: "Organize profissionais, especialidades e disponibilidade em tempo real.",
             },
             {
               title: "Servicos e especialidades",
-              icon: <Sparkles className="h-4 w-4 text-violet-600" />,
+              icon: <Sparkles className="h-4 w-4 text-primary" />,
               text: "Configure servicos, duracao, preco e quem pode executar cada atendimento.",
             },
             {
               title: "Notificacoes",
-              icon: <BellRing className="h-4 w-4 text-violet-600" />,
+              icon: <BellRing className="h-4 w-4 text-primary" />,
               text: "Receba alertas de novos agendamentos, confirmacoes e eventos importantes.",
             },
             {
               title: "Agenda inteligente",
-              icon: <CalendarClock className="h-4 w-4 text-violet-600" />,
+              icon: <CalendarClock className="h-4 w-4 text-primary" />,
               text: "Visualizacao clara dos horarios com menos conflitos e mais produtividade.",
             },
             {
               title: "Financeiro centralizado",
-              icon: <CreditCard className="h-4 w-4 text-violet-600" />,
+              icon: <CreditCard className="h-4 w-4 text-primary" />,
               text: "Controle entradas e saidas com relatorios simples para tomada de decisao.",
             },
             {
               title: "Painel de controle",
-              icon: <LayoutDashboard className="h-4 w-4 text-violet-600" />,
+              icon: <LayoutDashboard className="h-4 w-4 text-primary" />,
               text: "Dados importantes do salao em um unico lugar.",
             },
           ].map((item) => (
-            <Card key={item.title} className="border-slate-200 bg-white shadow-sm">
+            <Card key={item.title} className="border-border bg-card shadow-sm">
               <CardContent className="p-5">
-                <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50">
+                <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                   {item.icon}
                 </div>
-                <h3 className="font-semibold text-slate-900">{item.title}</h3>
-                <p className="mt-2 text-sm text-slate-600">{item.text}</p>
+                <h3 className="font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{item.text}</p>
               </CardContent>
             </Card>
           ))}
@@ -266,7 +268,7 @@ export default function SalePage() {
 
       <SalesSection title="Seu painel de controle" subtitle="Visao clara para toda a operacao do salao.">
         <div className="space-y-4">
-          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-2">
+          <div className="overflow-hidden rounded-3xl border border-border bg-card p-2">
             <img
               src={painelDemoImage}
               alt="Painel demonstrativo de gestao"
@@ -275,7 +277,7 @@ export default function SalePage() {
                   event.currentTarget.src =
                     "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1400&auto=format&fit=crop";
                 }}
-              className="h-[320px] w-full rounded-2xl bg-slate-50 object-contain p-2 md:h-[460px]"
+              className="h-[320px] w-full rounded-2xl bg-muted/40 object-contain p-2 md:h-[460px]"
             />
           </div>
           <div className="mt-4 grid gap-3 text-sm md:grid-cols-4">
@@ -285,7 +287,7 @@ export default function SalePage() {
               "Clientes ativos: historico completo",
               "Equipe: disponibilidade e produtividade",
             ].map((metric) => (
-              <div key={metric} className="rounded-lg border bg-slate-50 p-3 text-slate-600">
+              <div key={metric} className="rounded-lg border bg-muted/40 p-3 text-muted-foreground">
                 {metric}
               </div>
             ))}
@@ -312,13 +314,13 @@ export default function SalePage() {
               description: "Acesse o dashboard e gerencie agenda e financeiro.",
             },
           ].map((item) => (
-            <Card key={item.step} className="border-slate-200 bg-white">
+            <Card key={item.step} className="border-border bg-card">
               <CardContent className="p-6">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-violet-600 text-sm font-bold text-white">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
                   {item.step}
                 </span>
-                <h3 className="mt-4 font-semibold text-slate-900">{item.title}</h3>
-                <p className="mt-2 text-sm text-slate-600">{item.description}</p>
+                <h3 className="mt-4 font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{item.description}</p>
               </CardContent>
             </Card>
           ))}
@@ -327,7 +329,7 @@ export default function SalePage() {
 
       <SalesSection
         id="resultados"
-        className="bg-white"
+        className="bg-card"
         title="Beneficios diretos em receita e produtividade"
         subtitle="Projetado para conversao: menos atrito e mais previsibilidade."
       >
@@ -374,10 +376,10 @@ export default function SalePage() {
               text: "Recorremos para todo o salao. Economiza tempo e deixa tudo organizado em um so lugar.",
             },
           ].map((item) => (
-            <Card key={item.name} className="border-slate-200 bg-white">
-              <CardContent className="p-5 text-sm text-slate-600">
-                <p className="font-semibold text-slate-900">{item.name}</p>
-                <p className="text-xs text-slate-500">{item.salon}</p>
+            <Card key={item.name} className="border-border bg-card">
+              <CardContent className="p-5 text-sm text-muted-foreground">
+                <p className="font-semibold text-foreground">{item.name}</p>
+                <p className="text-xs text-muted-foreground">{item.salon}</p>
                 <p className="mt-3">"{item.text}"</p>
               </CardContent>
             </Card>
@@ -385,19 +387,19 @@ export default function SalePage() {
         </div>
       </SalesSection>
 
-      <SalesSection id="offer" className="bg-white" title="Plano recomendado para iniciar hoje">
-        <Card className="border-violet-200 shadow-lg">
+      <SalesSection id="offer" className="bg-card" title="Plano recomendado para iniciar hoje">
+        <Card className="border-primary/20 shadow-lg">
           <CardContent className="grid gap-6 p-6 md:grid-cols-2 md:p-8">
             <div>
-              <p className="text-sm font-medium text-violet-700">Oferta ativa</p>
+              <p className="text-sm font-medium text-primary">Oferta ativa</p>
               <h3 className="mt-2 text-2xl font-bold">
                 {selectedProduct?.name || "Plano Pro Growth"}
               </h3>
-              <p className="mt-3 text-sm text-slate-600">
+              <p className="mt-3 text-sm text-muted-foreground">
                 {selectedProduct?.description ||
                   "Inclui agenda inteligente, CRM de clientes, financeiro consolidado e checkout interno da licenca."}
               </p>
-              <ul className="mt-4 space-y-2 text-sm text-slate-700">
+              <ul className="mt-4 space-y-2 text-sm text-foreground">
                 <li className="inline-flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                   Usuarios da equipe
@@ -412,9 +414,9 @@ export default function SalePage() {
                 </li>
               </ul>
             </div>
-            <Card className="border-dashed border-slate-300">
+            <Card className="border-dashed border-border">
               <CardContent className="p-6">
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-muted-foreground">
                   Crie sua conta e continue direto para o pagamento interno com o plano selecionado.
                 </p>
                 <Button className="mt-4 w-full" onClick={() => scrollToSection("account-signup")}>
@@ -425,13 +427,13 @@ export default function SalePage() {
           </CardContent>
         </Card>
 
-        <Card id="account-signup" className="mt-6 border-violet-200 shadow-sm">
+        <Card id="account-signup" className="mt-6 border-primary/20 shadow-sm">
           <CardContent className="p-6 space-y-4">
             <div>
-              <p className="text-sm font-semibold text-slate-900">
+              <p className="text-sm font-semibold text-foreground">
                 Crie sua conta para seguir ao pagamento
               </p>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted-foreground">
                 Depois do cadastro, voce sera levado para pagar a licenca do plano selecionado.
               </p>
             </div>
@@ -503,7 +505,7 @@ export default function SalePage() {
 
             <Button
               type="button"
-              className="w-full bg-violet-600 hover:bg-violet-700"
+              className="w-full bg-primary hover:bg-primary/90"
               onClick={handleCreateAccountAndContinue}
               disabled={isCreatingAccount}
             >
@@ -514,7 +516,7 @@ export default function SalePage() {
       </SalesSection>
 
       <SalesSection>
-        <div className="rounded-2xl bg-gradient-to-r from-violet-700 via-fuchsia-600 to-pink-600 px-6 py-12 text-center text-white">
+        <div className="rounded-2xl bg-gradient-to-r from-primary via-primary/90 to-primary/70 px-6 py-12 text-center text-white">
           <h2 className="text-2xl font-bold md:text-4xl">Pronto para organizar seu salao?</h2>
           <p className="mx-auto mt-3 max-w-2xl text-sm text-white/90 md:text-base">
             Comece seu teste gratuito agora e centralize agenda, equipe e financeiro em um so painel.
@@ -523,12 +525,12 @@ export default function SalePage() {
             <Button
               size="lg"
               variant="secondary"
-              className="text-violet-700"
+              className="text-primary"
               onClick={() => scrollToSection("offer")}
             >
-              Comprar teste gratis
+              Comecar teste gratis
             </Button>
-            <Button size="lg" variant="outline" className="border-white/60 text-white hover:bg-white/10">
+            <Button size="lg" variant="outline" className="border-white/60 text-white hover:bg-card/10">
               Agendar demonstracao <MessageCircle className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -568,10 +570,13 @@ export default function SalePage() {
             </ul>
           </div>
         </div>
-        <div className="border-t border-slate-800 px-4 py-4 text-center text-xs text-slate-500 md:px-6">
+        <div className="border-t border-slate-800 px-4 py-4 text-center text-xs text-muted-foreground md:px-6">
           © {new Date().getFullYear()} Azzo Agenda Pro. Todos os direitos reservados.
         </div>
       </footer>
     </div>
   );
 }
+
+
+
