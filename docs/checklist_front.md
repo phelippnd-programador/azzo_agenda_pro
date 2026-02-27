@@ -116,3 +116,4 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 - [x] Padronizar exibicao da mensagem de erro do backend em login, perfil do salao e integracao WhatsApp.
 - [x] Alinhar senha minima para 8 caracteres no cadastro.
 - [x] Preparar consultas principais para paginacao (`page/limit`) com fallback para contrato legado em array.
+- [x] Adicionar confirmar senha e medidor de seguranca no cadastro (`/cadastro` e `/compras`).

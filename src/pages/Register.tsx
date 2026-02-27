@@ -10,6 +10,23 @@ import { ApiError } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
 import { toast } from 'sonner';
 
+const getPasswordStrengthStatus = (value: string) => {
+  let score = 0;
+  if (value.length >= 8) score += 1;
+  if (/[a-z]/.test(value)) score += 1;
+  if (/[A-Z]/.test(value)) score += 1;
+  if (/\d/.test(value)) score += 1;
+  if (/[^A-Za-z0-9]/.test(value)) score += 1;
+
+  if (score <= 2) {
+    return { label: 'Fraca', width: '33%', barClassName: 'bg-red-500', textClassName: 'text-red-600' };
+  }
+  if (score <= 4) {
+    return { label: 'Media', width: '66%', barClassName: 'bg-amber-500', textClassName: 'text-amber-600' };
+  }
+  return { label: 'Forte', width: '100%', barClassName: 'bg-emerald-500', textClassName: 'text-emerald-600' };
+};
+
 export default function Register() {
   const navigate = useNavigate();
   const { register } = useAuth();
@@ -21,19 +38,25 @@ export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   
   // Step 2 - Salon data
   const [salonName, setSalonName] = useState('');
   const [phone, setPhone] = useState('');
   const [cpfCnpj, setCpfCnpj] = useState('');
+  const passwordStrength = getPasswordStrengthStatus(password);
 
   const handleNextStep = () => {
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !confirmPassword) {
       toast.error('Preencha todos os campos');
       return;
     }
     if (password.length < 8) {
       toast.error('A senha deve ter pelo menos 8 caracteres');
+      return;
+    }
+    if (password !== confirmPassword) {
+      toast.error('As senhas nao conferem');
       return;
     }
     setStep(2);
@@ -164,6 +187,29 @@ export default function Register() {
                       )}
                     </Button>
                   </div>
+                  <div className="space-y-1">
+                    <div className="h-1.5 w-full rounded bg-muted">
+                      <div
+                        className={`h-full rounded transition-all ${password ? passwordStrength.barClassName : 'bg-muted-foreground/40'}`}
+                        style={{ width: password ? passwordStrength.width : '0%' }}
+                      />
+                    </div>
+                    <p className={`text-xs ${password ? passwordStrength.textClassName : 'text-muted-foreground'}`}>
+                      Seguranca da senha: {password ? passwordStrength.label : 'Nao definida'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-sm">Confirmar senha</Label>
+                  <Input
+                    id="confirmPassword"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Repita a senha"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="h-10 sm:h-11"
+                  />
                 </div>
 
                 <Button

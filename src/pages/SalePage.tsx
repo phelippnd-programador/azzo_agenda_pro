@@ -28,6 +28,23 @@ import { ApiError } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import { toast } from "sonner";
 
+const getPasswordStrengthStatus = (value: string) => {
+  let score = 0;
+  if (value.length >= 8) score += 1;
+  if (/[a-z]/.test(value)) score += 1;
+  if (/[A-Z]/.test(value)) score += 1;
+  if (/\d/.test(value)) score += 1;
+  if (/[^A-Za-z0-9]/.test(value)) score += 1;
+
+  if (score <= 2) {
+    return { label: "Fraca", width: "33%", barClassName: "bg-red-500", textClassName: "text-red-600" };
+  }
+  if (score <= 4) {
+    return { label: "Media", width: "66%", barClassName: "bg-amber-500", textClassName: "text-amber-600" };
+  }
+  return { label: "Forte", width: "100%", barClassName: "bg-emerald-500", textClassName: "text-emerald-600" };
+};
+
 export default function SalePage() {
   const navigate = useNavigate();
   const { register } = useAuth();
@@ -35,12 +52,14 @@ export default function SalePage() {
   const [accountName, setAccountName] = useState("");
   const [accountEmail, setAccountEmail] = useState("");
   const [accountPassword, setAccountPassword] = useState("");
+  const [accountConfirmPassword, setAccountConfirmPassword] = useState("");
   const [accountSalonName, setAccountSalonName] = useState("");
   const [accountPhone, setAccountPhone] = useState("");
   const [accountCpfCnpj, setAccountCpfCnpj] = useState("");
   const { products } = useCheckoutProducts();
   const defaultProductId = products[0]?.id ?? "";
   const effectiveProductId = defaultProductId;
+  const passwordStrength = getPasswordStrengthStatus(accountPassword);
 
   const selectedProduct = useMemo(
     () => products.find((item) => item.id === effectiveProductId) ?? null,
@@ -76,6 +95,7 @@ export default function SalePage() {
       !accountName.trim() ||
       !accountEmail.trim() ||
       !accountPassword.trim() ||
+      !accountConfirmPassword.trim() ||
       !accountSalonName.trim() ||
       !accountPhone.trim() ||
       !accountCpfCnpjDigits
@@ -90,6 +110,10 @@ export default function SalePage() {
 
     if (accountPassword.trim().length < 8) {
       toast.error("A senha deve ter pelo menos 8 caracteres.");
+      return;
+    }
+    if (accountPassword.trim() !== accountConfirmPassword.trim()) {
+      toast.error("As senhas nao conferem.");
       return;
     }
 
@@ -468,6 +492,28 @@ export default function SalePage() {
                   value={accountPassword}
                   onChange={(event) => setAccountPassword(event.target.value)}
                   placeholder="Minimo 8 caracteres"
+                  disabled={isCreatingAccount}
+                />
+                <div className="space-y-1">
+                  <div className="h-1.5 w-full rounded bg-muted">
+                    <div
+                      className={`h-full rounded transition-all ${accountPassword ? passwordStrength.barClassName : "bg-muted-foreground/40"}`}
+                      style={{ width: accountPassword ? passwordStrength.width : "0%" }}
+                    />
+                  </div>
+                  <p className={`text-xs ${accountPassword ? passwordStrength.textClassName : "text-muted-foreground"}`}>
+                    Seguranca da senha: {accountPassword ? passwordStrength.label : "Nao definida"}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sale-account-confirm-password">Confirmar senha</Label>
+                <Input
+                  id="sale-account-confirm-password"
+                  type="password"
+                  value={accountConfirmPassword}
+                  onChange={(event) => setAccountConfirmPassword(event.target.value)}
+                  placeholder="Repita a senha"
                   disabled={isCreatingAccount}
                 />
               </div>
