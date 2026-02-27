@@ -52,7 +52,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 - [x] Aplicar Design System (cores, espacos, radius, sombras).
 - [x] Aplicar escala tipografica padrao em todas as telas.
 - [x] Garantir estados `loading`, `empty`, `error` em telas principais.
-- [~] Padronizar labels/textos conforme documento.
+- [x] Padronizar labels/textos conforme documento.
 - [x] Revisar responsividade desktop/mobile.
 
 ## 3. API e contratos
