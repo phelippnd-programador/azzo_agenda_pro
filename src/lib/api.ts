@@ -36,6 +36,18 @@ import type {
   BillingPaymentItem,
   BillingPaymentsResponse,
 } from "@/types/billing";
+import type {
+  AuditEventDetailDto,
+  AuditEventListItemDto,
+  AuditExportRequestDto,
+  AuditExportResponseDto,
+  AuditFiltersOptionsDto,
+  AuditRetentionListResponseDto,
+  AuditRetentionQueryDto,
+  AuditSearchQueryDto,
+  AuditSearchResponseDto,
+  AuditStatus,
+} from "@/types/auditoria";
 import {
   mockAppointments,
   mockClients,
@@ -159,6 +171,7 @@ const ALL_LOCAL_DEMO_ROUTES = [
   "/apuracao-mensal",
   "/configuracoes",
   "/configuracoes/integracoes/whatsapp",
+  "/auditoria",
   "/perfil-salao",
   "/unauthorized",
 ];
@@ -505,6 +518,118 @@ const buildListQuery = (params?: ListQueryParams) => {
   return query;
 };
 
+const decodeAuditCursor = (cursor?: string | null) => {
+  if (!cursor) return null;
+  try {
+    const raw = atob(cursor);
+    const [createdAt, id] = raw.split("|");
+    if (!createdAt || !id) return null;
+    return { createdAt, id };
+  } catch {
+    return null;
+  }
+};
+
+const buildAuditAggregations = (items: AuditEventListItemDto[]) => {
+  const byModuleMap = new Map<string, number>();
+  const byStatusMap = new Map<string, number>();
+  const byActionMap = new Map<string, number>();
+
+  items.forEach((item) => {
+    byModuleMap.set(item.module, (byModuleMap.get(item.module) ?? 0) + 1);
+    byStatusMap.set(item.status, (byStatusMap.get(item.status) ?? 0) + 1);
+    byActionMap.set(item.action, (byActionMap.get(item.action) ?? 0) + 1);
+  });
+
+  const mapToList = (map: Map<string, number>) =>
+    Array.from(map.entries())
+      .map(([key, count]) => ({ key, count }))
+      .sort((a, b) => b.count - a.count);
+
+  return {
+    byModule: mapToList(byModuleMap),
+    byStatus: mapToList(byStatusMap),
+    byAction: mapToList(byActionMap).slice(0, 10),
+  };
+};
+
+const getMockAuditEvents = (state: DemoState): AuditEventDetailDto[] => {
+  const baseDate = new Date();
+  const actors = [
+    state.professionals[0]?.name || "Ana Silva",
+    state.professionals[1]?.name || "Carlos Santos",
+    "Azzo Owner",
+  ];
+  const actorIds = [
+    state.professionals[0]?.userId || "demo-user-1",
+    state.professionals[1]?.userId || "demo-user-2",
+    "demo-local-user",
+  ];
+  const modules: AuditEventDetailDto["module"][] = [
+    "FISCAL",
+    "RBAC",
+    "FINANCE",
+    "AUTH",
+    "SYSTEM",
+  ];
+  const statuses: AuditStatus[] = ["SUCCESS", "SUCCESS", "SUCCESS", "ERROR", "DENIED"];
+  const actions = [
+    "FISCAL_INVOICE_AUTHORIZE",
+    "RBAC_PERMISSION_UPDATE",
+    "FINANCE_TRANSACTION_CREATE",
+    "AUTH_LOGIN",
+    "SYSTEM_CONFIG_UPDATE",
+  ];
+
+  return new Array(24).fill(null).map((_, index) => {
+    const createdAt = new Date(baseDate.getTime() - index * 1000 * 60 * 41).toISOString();
+    const actorIndex = index % actors.length;
+    const module = modules[index % modules.length];
+    const status = statuses[index % statuses.length];
+    const action = actions[index % actions.length];
+    const eventId = `demo-audit-event-${index + 1}`;
+    const prevEventHash = index > 0 ? `prev-hash-${index}` : null;
+    const changed = module !== "AUTH";
+    const errorCode = status === "SUCCESS" ? null : status === "DENIED" ? "ACCESS_DENIED" : "AUTH_401";
+    const errorMessage =
+      status === "SUCCESS"
+        ? null
+        : status === "DENIED"
+          ? "Usuario sem permissao para executar a acao."
+          : "Falha de autenticacao por credencial invalida.";
+
+    return {
+      id: eventId,
+      tenantId: "demo-local-tenant",
+      actorUserId: actorIds[actorIndex],
+      actorName: actors[actorIndex],
+      actorRole: actorIndex === 2 ? "OWNER" : "PROFESSIONAL",
+      module,
+      action,
+      entityType: module === "AUTH" ? "USER_SESSION" : "ENTITY",
+      entityId: `entity-${index + 1}`,
+      status,
+      errorCode,
+      errorMessage,
+      requestId: `req-${1000 + index}`,
+      sourceChannel: index % 4 === 0 ? "WEBHOOK" : "API",
+      ipAddress: "177.12.34.56",
+      createdAt,
+      alterado: changed,
+      camposAlterados: changed ? ["status", "updatedAt"] : [],
+      before: changed ? { status: "PENDING" } : null,
+      after: changed ? { status: "COMPLETED" } : null,
+      metadata: {
+        endpoint: `/api/v1/${module.toLowerCase()}/resource`,
+        method: index % 3 === 0 ? "POST" : "PATCH",
+      },
+      eventHash: `hash-${eventId}`,
+      prevEventHash,
+      chainValid: true,
+    };
+  });
+};
+
 const localDemoRequest = <T>(endpoint: string, options: RequestInit = {}): T => {
   const state = getDemoState();
   const method = String(options.method || "GET").toUpperCase();
@@ -567,6 +692,155 @@ const localDemoRequest = <T>(endpoint: string, options: RequestInit = {}): T => 
       leastRequestedService: items[items.length - 1] || null,
       mostCancelledService: items[0] || null,
       mostCompletedService: items[0] || null,
+    } as T;
+  }
+
+  if (path === "/auditoria/events" && method === "GET") {
+    const from = query.get("from");
+    const to = query.get("to");
+    if (!from || !to) {
+      throw new ApiError(
+        "Periodo obrigatorio para pesquisa de auditoria.",
+        400,
+        {
+          code: "BAD_REQUEST",
+          message: "Informe from e to para consultar eventos.",
+          path: "/api/v1/auditoria/events",
+          timestamp: new Date().toISOString(),
+        },
+        "BAD_REQUEST"
+      );
+    }
+
+    const events = getMockAuditEvents(state);
+    const modules = query.getAll("modules");
+    const statuses = query.getAll("statuses");
+    const actions = query.getAll("actions");
+    const entityTypes = query.getAll("entityTypes");
+    const actorUserIds = query.getAll("actorUserIds");
+    const sourceChannels = query.getAll("sourceChannels");
+    const entityId = query.get("entityId");
+    const requestId = query.get("requestId");
+    const ip = query.get("ip");
+    const text = query.get("text")?.toLowerCase();
+    const hasChangesRaw = query.get("hasChanges");
+    const hasChanges =
+      hasChangesRaw === "true" ? true : hasChangesRaw === "false" ? false : undefined;
+    const cursor = decodeAuditCursor(query.get("cursor"));
+    const limit = Math.min(Math.max(Number(query.get("limit") || 50), 1), 200);
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+
+    const filtered = events
+      .filter((event) => {
+        const createdAt = new Date(event.createdAt);
+        const inPeriod = createdAt >= fromDate && createdAt <= toDate;
+        if (!inPeriod) return false;
+        if (modules.length && !modules.includes(event.module)) return false;
+        if (statuses.length && !statuses.includes(event.status)) return false;
+        if (actions.length && !actions.includes(event.action)) return false;
+        if (entityTypes.length && !entityTypes.includes(event.entityType || "")) return false;
+        if (actorUserIds.length && !actorUserIds.includes(event.actorUserId || "")) return false;
+        if (sourceChannels.length && !sourceChannels.includes(event.sourceChannel)) return false;
+        if (entityId && event.entityId !== entityId) return false;
+        if (requestId && event.requestId !== requestId) return false;
+        if (ip && event.ipAddress !== ip) return false;
+        if (typeof hasChanges === "boolean" && event.alterado !== hasChanges) return false;
+        if (
+          text &&
+          !`${event.action} ${event.errorMessage || ""} ${JSON.stringify(event.metadata || {})}`
+            .toLowerCase()
+            .includes(text)
+        ) {
+          return false;
+        }
+        if (!cursor) return true;
+        const createdAtIso = event.createdAt;
+        return (
+          createdAtIso < cursor.createdAt ||
+          (createdAtIso === cursor.createdAt && event.id < cursor.id)
+        );
+      })
+      .sort((a, b) => {
+        const dateDiff = b.createdAt.localeCompare(a.createdAt);
+        if (dateDiff !== 0) return dateDiff;
+        return b.id.localeCompare(a.id);
+      });
+
+    const items = filtered.slice(0, limit).map(({ errorMessage: _errorMessage, before: _before, after: _after, metadata: _metadata, eventHash: _eventHash, prevEventHash: _prevEventHash, chainValid: _chainValid, ...rest }) => rest);
+    const last = items[items.length - 1];
+    const nextCursor =
+      filtered.length > limit && last
+        ? btoa(`${last.createdAt}|${last.id}`)
+        : null;
+
+    return {
+      items,
+      nextCursor,
+      limit,
+      hasNext: Boolean(nextCursor),
+      aggregations: buildAuditAggregations(filtered),
+    } as T;
+  }
+  if (path.startsWith("/auditoria/events/") && method === "GET") {
+    const id = path.replace("/auditoria/events/", "");
+    const event = getMockAuditEvents(state).find((item) => item.id === id);
+    if (!event) {
+      throw new ApiError(
+        "Evento de auditoria nao encontrado.",
+        404,
+        {
+          code: "NOT_FOUND",
+          message: "Evento de auditoria nao encontrado.",
+          path: `/api/v1/auditoria/events/${id}`,
+          timestamp: new Date().toISOString(),
+        },
+        "NOT_FOUND"
+      );
+    }
+    return event as T;
+  }
+  if (path === "/auditoria/events/export" && method === "POST") {
+    const payload = JSON.parse(String(options.body || "{}")) as AuditExportRequestDto;
+    const format = payload.format || "CSV";
+    return {
+      exportId: `exp-${Date.now()}`,
+      format,
+      downloadUrl: `https://demo.local/downloads/auditoria.${format.toLowerCase()}`,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 15).toISOString(),
+      checksumSha256: `checksum-${Date.now()}`,
+    } as T;
+  }
+  if (path === "/auditoria/filters/options" && method === "GET") {
+    const events = getMockAuditEvents(state);
+    return {
+      modules: Array.from(new Set(events.map((item) => item.module))).sort(),
+      statuses: Array.from(new Set(events.map((item) => item.status))).sort(),
+      actions: Array.from(new Set(events.map((item) => item.action))).sort(),
+      entityTypes: Array.from(new Set(events.map((item) => item.entityType).filter(Boolean))).sort(),
+      sourceChannels: Array.from(new Set(events.map((item) => item.sourceChannel))).sort(),
+    } as T;
+  }
+  if (path === "/auditoria/retention/events" && method === "GET") {
+    const now = new Date();
+    return {
+      items: [
+        {
+          id: "ret-1",
+          tenantId: "demo-local-tenant",
+          policyVersion: "2026.01",
+          retentionPeriodDays: 730,
+          windowStart: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 10).toISOString(),
+          windowEnd: new Date(now.getTime() - 1000 * 60 * 60 * 24).toISOString(),
+          affectedRows: 128,
+          executedBy: "SYSTEM",
+          executionId: "ret-job-2026-02",
+          evidenceHash: "evidence-hash-demo",
+          createdAt: now.toISOString(),
+        },
+      ],
+      nextCursor: null,
+      hasNext: false,
     } as T;
   }
 
@@ -1470,6 +1744,67 @@ export const dashboardApi = {
       total: number;
       average: number;
     }>(`/dashboard/revenue/weekly?start=${start}&end=${end}`),
+};
+
+const appendMultiValues = (query: URLSearchParams, key: string, values?: string[]) => {
+  if (!values?.length) return;
+  values.forEach((value) => {
+    if (value?.trim()) query.append(key, value.trim());
+  });
+};
+
+const buildAuditoriaSearchQuery = (filters: AuditSearchQueryDto) => {
+  const query = new URLSearchParams();
+  query.set("from", filters.from);
+  query.set("to", filters.to);
+  appendMultiValues(query, "modules", filters.modules);
+  appendMultiValues(query, "actions", filters.actions);
+  appendMultiValues(query, "statuses", filters.statuses);
+  appendMultiValues(query, "entityTypes", filters.entityTypes);
+  appendMultiValues(query, "actorUserIds", filters.actorUserIds);
+  appendMultiValues(query, "sourceChannels", filters.sourceChannels);
+  if (filters.entityId?.trim()) query.set("entityId", filters.entityId.trim());
+  if (filters.requestId?.trim()) query.set("requestId", filters.requestId.trim());
+  if (filters.ip?.trim()) query.set("ip", filters.ip.trim());
+  if (filters.text?.trim()) query.set("text", filters.text.trim());
+  if (typeof filters.hasChanges === "boolean") query.set("hasChanges", String(filters.hasChanges));
+  if (filters.cursor?.trim()) query.set("cursor", filters.cursor.trim());
+  if (filters.limit) query.set("limit", String(filters.limit));
+  if (filters.sortBy) query.set("sortBy", filters.sortBy);
+  if (filters.sortDir) query.set("sortDir", filters.sortDir);
+  return query;
+};
+
+export const auditoriaApi = {
+  listEvents: (filters: AuditSearchQueryDto) =>
+    request<AuditSearchResponseDto>(`/auditoria/events?${buildAuditoriaSearchQuery(filters)}`),
+  getEventDetail: (id: string) =>
+    request<AuditEventDetailDto>(`/auditoria/events/${id}`),
+  exportEvents: (payload: AuditExportRequestDto) =>
+    request<AuditExportResponseDto>("/auditoria/events/export", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getFilterOptions: (from?: string, to?: string) => {
+    const query = new URLSearchParams();
+    if (from) query.set("from", from);
+    if (to) query.set("to", to);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<AuditFiltersOptionsDto>(`/auditoria/filters/options${suffix}`);
+  },
+  listRetentionEvents: (filters: AuditRetentionQueryDto) => {
+    const query = new URLSearchParams({
+      from: filters.from,
+      to: filters.to,
+    });
+    if (filters.policyVersion?.trim()) query.set("policyVersion", filters.policyVersion.trim());
+    if (filters.executionId?.trim()) query.set("executionId", filters.executionId.trim());
+    if (filters.cursor?.trim()) query.set("cursor", filters.cursor.trim());
+    if (filters.limit) query.set("limit", String(filters.limit));
+    return request<AuditRetentionListResponseDto>(
+      `/auditoria/retention/events?${query.toString()}`
+    );
+  },
 };
 
 /* ================= SERVICES ================= */

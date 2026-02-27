@@ -14,6 +14,7 @@ Objetivo: organizar capturas e logs de rede para mover blocos RF de `EM_EXECUCAO
 - `docs/EVIDENCIAS_RF/RF-043-045/`
 - `docs/EVIDENCIAS_RF/RF-046-050/`
 - `docs/EVIDENCIAS_RF/RF-051-056/`
+- `docs/EVIDENCIAS_RF/RF-057-060/`
 
 ## Padrao de arquivo
 - UI: `ui-<rota>-<cenario>-YYYYMMDD-HHMM.png`

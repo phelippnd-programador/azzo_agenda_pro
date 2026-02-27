@@ -34,6 +34,8 @@ const ROUTE_ALIASES: Record<string, string> = {
   "/clients": "/clientes",
   "/financial": "/financeiro",
   "/finance": "/financeiro",
+  "/audit": "/auditoria",
+  "/auditoria": "/auditoria",
   "/settings": "/configuracoes",
   "/salon-profile": "/perfil-salao",
   "/tax-config": "/config-impostos",
