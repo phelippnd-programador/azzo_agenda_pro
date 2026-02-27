@@ -59,6 +59,7 @@ Objetivo: rastrear validacao funcional com evidencia obrigatoria para cada requi
   - modulos principais (dashboard, agenda, cadastros, financeiro, fiscal, licenca/checkout) validados no nivel de implementacao de frontend.
 - Evidencias anexadas:
   - roteiro de smoke: `docs/SMOKE_FRONT_DEMO_LOCAL.md`;
+  - pacote de evidencias por RF: `docs/PACOTE_EVIDENCIAS_RF_FRONT.md`;
   - historico de commits de checklist (ex.: `479c195`, `c8e9895`, `b5f29a7`, `f9cd849`, `d04b99a`, `35d7c1a`, `197777d`, `bd77bc5`, `4849e4d`, `1d4fc0b`, `ef686fe`, `56b301a`, `50343c8`, `716ccea`, `f5921c4`, `00a3219`, `387ea2f`);
   - validacoes tecnicas: `npm run build`, `npm run lint`, `npx tsc --noEmit` sem erro.
 - Resultado final: status geral em `EM_EXECUCAO`, com trilha de evidencias tecnicas registrada.

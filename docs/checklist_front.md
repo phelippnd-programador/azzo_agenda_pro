@@ -120,3 +120,5 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 - [x] Implementar navegacao de pagina no frontend para clientes, servicos e profissionais (com fallback legado).
 - [x] Implementar paginacao na agenda por filtros (data/profissional/status) com navegacao entre paginas.
 - [x] Atualizar matriz de homologacao por RF para `EM_EXECUCAO` nos modulos implementados no frontend.
+- [x] Criar pacote de evidencias por RF para acelerar transicao de `EM_EXECUCAO` para `APROVADO`.
+- [x] Publicar analise de gaps docs x implementacao em artefato dedicado.
