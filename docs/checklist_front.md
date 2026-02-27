@@ -37,6 +37,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
   - camada de storage fiscal sem uso de `any`
   - responsividade mobile reforcada em dialogs principais (agenda, clientes, financeiro, emissao fiscal)
   - validacao de perfil OWNER e PROFESSIONAL com login demo local dedicado e menus por `allowedRoutes`
+  - guardas de rota revisadas para redirecionar autenticado para primeira rota permitida (evita queda forçada em `/dashboard`)
   - build validado apos ajustes
 
 ## 1. Preparacao
@@ -62,7 +63,7 @@ Objetivo: guiar a implementacao do frontend com base nos documentos de `/docs`.
 ## 4. Autenticacao e contexto
 - [~] Validar login/cadastro/refresh/logout.
 - [x] Validar isolamento de rotas publicas (`/agendar/:slug`) sem chamadas internas indevidas.
-- [~] Revisar guardas de rota para autenticacao/permissao.
+- [x] Revisar guardas de rota para autenticacao/permissao.
 
 ## 5. RBAC dinamico (menus por banco)
 - [x] Consumir apenas `/config/menus/current` para renderizacao de menu.

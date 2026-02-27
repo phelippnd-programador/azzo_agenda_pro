@@ -8,7 +8,6 @@ import {
   Route,
   Navigate,
   useLocation,
-  useParams,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import {
@@ -38,12 +37,19 @@ import ApuracaoMensal from "./pages/ApuracaoMensal";
 import WhatsAppIntegration from "./pages/WhatsAppIntegration";
 import Unauthorized from "./pages/Unauthorized";
 import { NotificationsProvider } from "@/providers/NotificationsProvider";
+import { FullScreenLoader } from "@/components/ui/full-screen-loader";
 
 const SalePage = lazy(() => import("./pages/SalePage"));
 const CheckoutSuccess = lazy(() => import("./pages/CheckoutSuccess"));
 const CheckoutError = lazy(() => import("./pages/CheckoutError"));
 
 const queryClient = new QueryClient();
+
+const getFirstAllowedRoute = (allowedRoutes: string[] | null) => {
+  if (!allowedRoutes?.length) return "/dashboard";
+  const firstBusinessRoute = allowedRoutes.find((route) => route !== "/unauthorized");
+  return firstBusinessRoute || "/dashboard";
+};
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -52,11 +58,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { canAccess, isLoading: isPermissionsLoading } = useMenuPermissions();
 
   if (isLoading || isPermissionsLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600"></div>
-      </div>
-    );
+    return <FullScreenLoader />;
   }
 
   if (!isAuthenticated) {
@@ -73,52 +75,51 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 // Public Route Component (redirects to dashboard if authenticated)
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
+  const { allowedRoutes, isLoading: isPermissionsLoading } = useMenuPermissions();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600"></div>
-      </div>
-    );
+  if (isLoading || (isAuthenticated && isPermissionsLoading)) {
+    return <FullScreenLoader />;
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={getFirstAllowedRoute(allowedRoutes)} replace />;
   }
 
   return <>{children}</>;
 }
 
-function AppRoutes() {
+function RootRoute() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { allowedRoutes, isLoading: isPermissionsLoading } = useMenuPermissions();
 
-  function LegacySaleRedirect() {
-    const { productId } = useParams();
-    return <Navigate to={productId ? `/compras/${productId}` : "/compras"} replace />;
+  if (isLoading || (isAuthenticated && isPermissionsLoading)) {
+    return <FullScreenLoader />;
   }
 
+  return (
+    <Navigate
+      to={isAuthenticated ? getFirstAllowedRoute(allowedRoutes) : "/compras"}
+      replace
+    />
+  );
+}
+
+function AppRoutes() {
+  const { isLoading } = useAuth();
+
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600"></div>
-      </div>
-    );
+    return <FullScreenLoader />;
   }
 
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600"></div>
-        </div>
+        <FullScreenLoader />
       }
     >
       <Routes>
         {/* Public routes */}
-        <Route
-          path="/"
-          element={<Navigate to={isAuthenticated ? "/dashboard" : "/compras"} replace />}
-        />
+        <Route path="/" element={<RootRoute />} />
         <Route
           path="/login"
           element={
@@ -146,7 +147,6 @@ function AppRoutes() {
         <Route path="/agendar/:slug" element={<PublicBooking />} />
         <Route path="/compras" element={<SalePage />} />
         <Route path="/compras/:productId" element={<SalePage />} />
-        <Route path="/sale/:productId" element={<LegacySaleRedirect />} />
         <Route path="/success" element={<CheckoutSuccess />} />
         <Route path="/error" element={<CheckoutError />} />
 
