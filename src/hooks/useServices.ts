@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { servicesApi, type Service, isPlanExpiredApiError } from "@/lib/api";
+import { resolveUiError } from "@/lib/error-utils";
 import { toast } from "sonner";
 
 export function useServices() {
@@ -10,16 +11,17 @@ export function useServices() {
   const fetchServices = useCallback(async () => {
     try {
       setIsLoading(true);
-      const data = await servicesApi.getAll();
-      setServices(data);
+      const data = await servicesApi.getAll({ page: 1, limit: 100 });
+      setServices(Array.isArray(data) ? data : data.items || []);
       setError(null);
     } catch (err) {
       if (isPlanExpiredApiError(err)) {
         setError(null);
         return;
       }
-      setError("Erro ao carregar servicos");
-      toast.error("Erro ao carregar servicos");
+      const uiError = resolveUiError(err, "Erro ao carregar servicos");
+      setError(uiError.message);
+      toast.error(uiError.message);
     } finally {
       setIsLoading(false);
     }
@@ -37,7 +39,7 @@ export function useServices() {
       return newService;
     } catch (err) {
       if (!isPlanExpiredApiError(err)) {
-        toast.error("Erro ao criar servico");
+        toast.error(resolveUiError(err, "Erro ao criar servico").message);
       }
       throw err;
     }
@@ -51,7 +53,7 @@ export function useServices() {
       return updated;
     } catch (err) {
       if (!isPlanExpiredApiError(err)) {
-        toast.error("Erro ao atualizar servico");
+        toast.error(resolveUiError(err, "Erro ao atualizar servico").message);
       }
       throw err;
     }
@@ -64,7 +66,7 @@ export function useServices() {
       toast.success("Servico excluido com sucesso!");
     } catch (err) {
       if (!isPlanExpiredApiError(err)) {
-        toast.error("Erro ao excluir servico");
+        toast.error(resolveUiError(err, "Erro ao excluir servico").message);
       }
       throw err;
     }

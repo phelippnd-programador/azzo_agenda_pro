@@ -32,8 +32,8 @@ export default function Register() {
       toast.error('Preencha todos os campos');
       return;
     }
-    if (password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres');
+    if (password.length < 8) {
+      toast.error('A senha deve ter pelo menos 8 caracteres');
       return;
     }
     setStep(2);
@@ -145,7 +145,7 @@ export default function Register() {
                     <Input
                       id="password"
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="Mínimo 6 caracteres"
+                      placeholder="Minimo 8 caracteres"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="h-10 sm:h-11 pr-10"

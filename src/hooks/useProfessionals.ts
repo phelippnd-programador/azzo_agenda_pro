@@ -1,10 +1,11 @@
-﻿import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   professionalsApi,
   type Professional,
   type ProfessionalLimits,
   isPlanExpiredApiError,
 } from "@/lib/api";
+import { resolveUiError } from "@/lib/error-utils";
 import { toast } from "sonner";
 
 export function useProfessionals() {
@@ -17,16 +18,17 @@ export function useProfessionals() {
   const fetchProfessionals = useCallback(async () => {
     try {
       setIsLoading(true);
-      const data = await professionalsApi.getAll();
-      setProfessionals(data);
+      const data = await professionalsApi.getAll({ page: 1, limit: 100 });
+      setProfessionals(Array.isArray(data) ? data : data.items || []);
       setError(null);
     } catch (err) {
       if (isPlanExpiredApiError(err)) {
         setError(null);
         return;
       }
-      setError("Erro ao carregar profissionais");
-      toast.error("Erro ao carregar profissionais");
+      const uiError = resolveUiError(err, "Erro ao carregar profissionais");
+      setError(uiError.message);
+      toast.error(uiError.message);
     } finally {
       setIsLoading(false);
     }
@@ -51,7 +53,7 @@ export function useProfessionals() {
     fetchProfessionalLimits();
   }, [fetchProfessionals, fetchProfessionalLimits]);
 
-  const createProfessional = async (data: Omit<Professional, "id" | "createdAt">) => {
+  const createProfessional = async (data: Partial<Professional>) => {
     try {
       const newProfessional = await professionalsApi.create(data);
       setProfessionals((prev) => [...prev, newProfessional]);
@@ -60,7 +62,7 @@ export function useProfessionals() {
       return newProfessional;
     } catch (err) {
       if (!isPlanExpiredApiError(err)) {
-        toast.error("Erro ao adicionar profissional");
+        toast.error(resolveUiError(err, "Erro ao adicionar profissional").message);
       }
       throw err;
     }
@@ -74,7 +76,7 @@ export function useProfessionals() {
       return updated;
     } catch (err) {
       if (!isPlanExpiredApiError(err)) {
-        toast.error("Erro ao atualizar profissional");
+        toast.error(resolveUiError(err, "Erro ao atualizar profissional").message);
       }
       throw err;
     }
@@ -88,7 +90,7 @@ export function useProfessionals() {
       toast.success("Profissional removido com sucesso!");
     } catch (err) {
       if (!isPlanExpiredApiError(err)) {
-        toast.error("Erro ao remover profissional");
+        toast.error(resolveUiError(err, "Erro ao remover profissional").message);
       }
       throw err;
     }
@@ -101,7 +103,7 @@ export function useProfessionals() {
       return response;
     } catch (err) {
       if (!isPlanExpiredApiError(err)) {
-        toast.error("Erro ao resetar senha do profissional");
+        toast.error(resolveUiError(err, "Erro ao resetar senha do profissional").message);
       }
       throw err;
     }

@@ -63,6 +63,22 @@ export type ProfessionalLimits = {
   remaining: number;
 };
 
+export type ListQueryParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
+};
+
+export type ListResponse<T> =
+  | T[]
+  | {
+      items: T[];
+      total?: number;
+      page?: number;
+      pageSize?: number;
+      hasMore?: boolean;
+    };
+
 export type DashboardProfessionalMetricsResponse = {
   startDate: string;
   endDate: string;
@@ -474,6 +490,15 @@ const extractPathAndQuery = (endpoint: string) => {
   };
 };
 
+const buildListQuery = (params?: ListQueryParams) => {
+  const query = new URLSearchParams();
+  if (!params) return query;
+  if (params.page && params.page > 0) query.set("page", String(params.page));
+  if (params.limit && params.limit > 0) query.set("limit", String(params.limit));
+  if (params.search?.trim()) query.set("search", params.search.trim());
+  return query;
+};
+
 const localDemoRequest = <T>(endpoint: string, options: RequestInit = {}): T => {
   const state = getDemoState();
   const method = String(options.method || "GET").toUpperCase();
@@ -872,7 +897,7 @@ const localDemoRequest = <T>(endpoint: string, options: RequestInit = {}): T => 
   }
   if (path === "/users/me/password" && method === "PUT") return {} as T;
 
-  if (path === "/tenant/whatsapp" && method === "GET") {
+  if ((path === "/tenant/whatsapp" || path === "/whatsapp/config") && method === "GET") {
     return {
       enabled: true,
       whatsappEnabled: true,
@@ -885,14 +910,17 @@ const localDemoRequest = <T>(endpoint: string, options: RequestInit = {}): T => 
       webhookVerifyToken: "demo-verify-token",
     } as T;
   }
-  if (path === "/tenant/whatsapp" && method === "PUT") {
+  if ((path === "/tenant/whatsapp" || path === "/whatsapp/config") && method === "PUT") {
     const payload = JSON.parse(String(options.body || "{}"));
     return {
       ...payload,
       accessTokenConfigured: true,
     } as T;
   }
-  if (path === "/tenant/whatsapp/test" && method === "POST") {
+  if (
+    (path === "/tenant/whatsapp/test" || path === "/whatsapp/config/testar-conexao") &&
+    method === "POST"
+  ) {
     return {
       success: true,
       message: "Conexao validada em modo demo local.",
@@ -1409,7 +1437,11 @@ export const dashboardApi = {
 /* ================= SERVICES ================= */
 
 export const servicesApi = {
-  getAll: () => request<Service[]>("/services"),
+  getAll: (params?: ListQueryParams) => {
+    const query = buildListQuery(params);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<ListResponse<Service>>(`/services${suffix}`);
+  },
   create: (data: Partial<Service>) =>
     request<Service>("/services", {
       method: "POST",
@@ -1429,7 +1461,11 @@ export const servicesApi = {
 /* ================= PROFESSIONALS ================= */
 
 export const professionalsApi = {
-  getAll: () => request<Professional[]>("/professionals"),
+  getAll: (params?: ListQueryParams) => {
+    const query = buildListQuery(params);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<ListResponse<Professional>>(`/professionals${suffix}`);
+  },
   getLimits: () => request<ProfessionalLimits>("/professionals/limits"),
   create: (data: Partial<Professional>) =>
     request<Professional>("/professionals", {
@@ -1472,7 +1508,11 @@ export const specialtiesApi = {
 /* ================= CLIENTS ================= */
 
 export const clientsApi = {
-  getAll: () => request<Client[]>("/clients"),
+  getAll: (params?: ListQueryParams) => {
+    const query = buildListQuery(params);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<ListResponse<Client>>(`/clients${suffix}`);
+  },
   create: (data: Partial<Client>) =>
     request<Client>("/clients", {
       method: "POST",
@@ -1492,7 +1532,11 @@ export const clientsApi = {
 /* ================= APPOINTMENTS ================= */
 
 export const appointmentsApi = {
-  getAll: () => request<Appointment[]>("/appointments"),
+  getAll: (params?: ListQueryParams) => {
+    const query = buildListQuery(params);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<ListResponse<Appointment>>(`/appointments${suffix}`);
+  },
   create: (data: Partial<Appointment>) =>
     request<Appointment>("/appointments", {
       method: "POST",
@@ -1714,17 +1758,46 @@ export const usersApi = {
 };
 
 export const tenantApi = {
-  getWhatsAppConfig: () =>
-    request<WhatsAppConfigResponse>("/tenant/whatsapp"),
-  saveWhatsAppConfig: (data: WhatsAppConfigRequest) =>
-    request<WhatsAppConfigResponse>("/tenant/whatsapp", {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }),
-  testWhatsAppConnection: () =>
-    request<WhatsAppTestResponse>("/tenant/whatsapp/test", {
-      method: "POST",
-    }),
+  getWhatsAppConfig: async () => {
+    try {
+      return await request<WhatsAppConfigResponse>("/whatsapp/config");
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        return request<WhatsAppConfigResponse>("/tenant/whatsapp");
+      }
+      throw error;
+    }
+  },
+  saveWhatsAppConfig: async (data: WhatsAppConfigRequest) => {
+    try {
+      return await request<WhatsAppConfigResponse>("/whatsapp/config", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        return request<WhatsAppConfigResponse>("/tenant/whatsapp", {
+          method: "PUT",
+          body: JSON.stringify(data),
+        });
+      }
+      throw error;
+    }
+  },
+  testWhatsAppConnection: async () => {
+    try {
+      return await request<WhatsAppTestResponse>("/whatsapp/config/testar-conexao", {
+        method: "POST",
+      });
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        return request<WhatsAppTestResponse>("/tenant/whatsapp/test", {
+          method: "POST",
+        });
+      }
+      throw error;
+    }
+  },
 };
 
 export const configApi = {

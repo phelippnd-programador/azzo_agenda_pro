@@ -1,5 +1,6 @@
-﻿import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { clientsApi, type Client, isPlanExpiredApiError } from "@/lib/api";
+import { resolveUiError } from "@/lib/error-utils";
 import { toast } from "sonner";
 
 export function useClients() {
@@ -10,16 +11,17 @@ export function useClients() {
   const fetchClients = useCallback(async () => {
     try {
       setIsLoading(true);
-      const data = await clientsApi.getAll();
-      setClients(data);
+      const data = await clientsApi.getAll({ page: 1, limit: 100 });
+      setClients(Array.isArray(data) ? data : data.items || []);
       setError(null);
     } catch (err) {
       if (isPlanExpiredApiError(err)) {
         setError(null);
         return;
       }
-      setError("Erro ao carregar clientes");
-      toast.error("Erro ao carregar clientes");
+      const uiError = resolveUiError(err, "Erro ao carregar clientes");
+      setError(uiError.message);
+      toast.error(uiError.message);
     } finally {
       setIsLoading(false);
     }
@@ -37,7 +39,7 @@ export function useClients() {
       return newClient;
     } catch (err) {
       if (!isPlanExpiredApiError(err)) {
-        toast.error("Erro ao cadastrar cliente");
+        toast.error(resolveUiError(err, "Erro ao cadastrar cliente").message);
       }
       throw err;
     }
@@ -51,7 +53,7 @@ export function useClients() {
       return updated;
     } catch (err) {
       if (!isPlanExpiredApiError(err)) {
-        toast.error("Erro ao atualizar cliente");
+        toast.error(resolveUiError(err, "Erro ao atualizar cliente").message);
       }
       throw err;
     }
@@ -64,7 +66,7 @@ export function useClients() {
       toast.success("Cliente excluido com sucesso!");
     } catch (err) {
       if (!isPlanExpiredApiError(err)) {
-        toast.error("Erro ao excluir cliente");
+        toast.error(resolveUiError(err, "Erro ao excluir cliente").message);
       }
       throw err;
     }

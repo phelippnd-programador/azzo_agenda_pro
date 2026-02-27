@@ -88,8 +88,8 @@ export default function SalePage() {
       return;
     }
 
-    if (accountPassword.trim().length < 6) {
-      toast.error("A senha deve ter pelo menos 6 caracteres.");
+    if (accountPassword.trim().length < 8) {
+      toast.error("A senha deve ter pelo menos 8 caracteres.");
       return;
     }
 
@@ -467,7 +467,7 @@ export default function SalePage() {
                   type="password"
                   value={accountPassword}
                   onChange={(event) => setAccountPassword(event.target.value)}
-                  placeholder="Minimo 6 caracteres"
+                  placeholder="Minimo 8 caracteres"
                   disabled={isCreatingAccount}
                 />
               </div>

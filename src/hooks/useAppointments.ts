@@ -1,5 +1,6 @@
-﻿import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { appointmentsApi, type Appointment, isPlanExpiredApiError } from "@/lib/api";
+import { resolveUiError } from "@/lib/error-utils";
 import { toast } from "sonner";
 
 export function useAppointments() {
@@ -10,16 +11,17 @@ export function useAppointments() {
   const fetchAppointments = useCallback(async () => {
     try {
       setIsLoading(true);
-      const data = await appointmentsApi.getAll();
-      setAppointments(data);
+      const data = await appointmentsApi.getAll({ page: 1, limit: 100 });
+      setAppointments(Array.isArray(data) ? data : data.items || []);
       setError(null);
     } catch (err) {
       if (isPlanExpiredApiError(err)) {
         setError(null);
         return;
       }
-      setError("Erro ao carregar agendamentos");
-      toast.error("Erro ao carregar agendamentos");
+      const uiError = resolveUiError(err, "Erro ao carregar agendamentos");
+      setError(uiError.message);
+      toast.error(uiError.message);
     } finally {
       setIsLoading(false);
     }
@@ -37,7 +39,7 @@ export function useAppointments() {
       return newAppointment;
     } catch (err) {
       if (!isPlanExpiredApiError(err)) {
-        toast.error("Erro ao criar agendamento");
+        toast.error(resolveUiError(err, "Erro ao criar agendamento").message);
       }
       throw err;
     }
@@ -60,7 +62,7 @@ export function useAppointments() {
       return updated;
     } catch (err) {
       if (!isPlanExpiredApiError(err)) {
-        toast.error("Erro ao atualizar status");
+        toast.error(resolveUiError(err, "Erro ao atualizar status").message);
       }
       throw err;
     }
@@ -73,7 +75,7 @@ export function useAppointments() {
       toast.success("Agendamento excluido!");
     } catch (err) {
       if (!isPlanExpiredApiError(err)) {
-        toast.error("Erro ao excluir agendamento");
+        toast.error(resolveUiError(err, "Erro ao excluir agendamento").message);
       }
       throw err;
     }
@@ -87,7 +89,7 @@ export function useAppointments() {
       return updated;
     } catch (err) {
       if (!isPlanExpiredApiError(err)) {
-        toast.error("Erro ao realocar agendamento");
+        toast.error(resolveUiError(err, "Erro ao realocar agendamento").message);
       }
       throw err;
     }
