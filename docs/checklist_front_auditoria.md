@@ -33,10 +33,10 @@ Branch: `feature/frontend-arquitetura-auditoria`
 - [x] Exibir agregacoes no topo (modulo/status/acao).
 
 ## 5. Detalhe do evento
-- [ ] Criar drawer/modal com detalhe completo.
-- [ ] Exibir `before/after` com diff legivel.
-- [ ] Exibir metadados (`request_id`, canal, ip mascarado, hash, prev_hash, chain_valid).
-- [ ] Exibir erro tecnico (`error_code`, `error_message`) quando existir.
+- [x] Criar drawer/modal com detalhe completo.
+- [x] Exibir `before/after` com diff legivel.
+- [x] Exibir metadados (`request_id`, canal, ip mascarado, hash, prev_hash, chain_valid).
+- [x] Exibir erro tecnico (`error_code`, `error_message`) quando existir.
 
 ## 6. Exportacao
 - [x] Adicionar acao de exportar CSV/JSON com filtros correntes.
@@ -53,9 +53,9 @@ Branch: `feature/frontend-arquitetura-auditoria`
 - [x] Validar mascaramento visual de dados sensiveis (email, telefone, documento, ip quando aplicavel).
 
 ## 9. UX e padrao visual
-- [ ] Aplicar tokens semanticos (sem hardcode de cor).
-- [ ] Garantir responsividade desktop/mobile.
-- [ ] Garantir estados de loading/empty/error padronizados.
+- [x] Aplicar tokens semanticos (sem hardcode de cor).
+- [x] Garantir responsividade desktop/mobile.
+- [x] Garantir estados de loading/empty/error padronizados.
 - [ ] Revisar labels e textos conforme `docs/PADRAO_LABELS_E_TEXTOS.md`.
 
 ## 10. Homologacao e evidencias

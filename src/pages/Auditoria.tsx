@@ -5,12 +5,20 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { auditoriaApi } from "@/lib/api";
 import { useAuditEventDetail } from "@/hooks/useAuditEventDetail";
 import { useAuditEvents } from "@/hooks/useAuditEvents";
 import { useAuditExport } from "@/hooks/useAuditExport";
 import type {
+  AuditEventDetailDto,
   AuditFiltersOptionsDto,
   AuditRetentionEventDto,
   AuditSearchQueryDto,
@@ -34,10 +42,10 @@ const toDateTimeLocal = (value: string) => {
   return `${year}-${month}-${day}T${hour}:${minute}`;
 };
 
-const statusBadgeVariant: Record<AuditStatus, string> = {
-  SUCCESS: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  ERROR: "bg-red-100 text-red-700 border-red-200",
-  DENIED: "bg-amber-100 text-amber-700 border-amber-200",
+const statusBadgeClass: Record<AuditStatus, string> = {
+  SUCCESS: "bg-primary/10 text-primary border-primary/30",
+  ERROR: "bg-destructive/10 text-destructive border-destructive/30",
+  DENIED: "bg-muted text-muted-foreground border-border",
 };
 
 const maskIpAddress = (ipAddress: string | null) => {
@@ -47,6 +55,29 @@ const maskIpAddress = (ipAddress: string | null) => {
   return `${chunks[0]}.${chunks[1]}.***.***`;
 };
 
+const toComparableString = (value: unknown) => JSON.stringify(value ?? null);
+
+const buildDiffEntries = (detail: AuditEventDetailDto | null) => {
+  if (!detail) return [];
+  const before = detail.before ?? {};
+  const after = detail.after ?? {};
+  const allKeys = Array.from(new Set([...Object.keys(before), ...Object.keys(after)])).sort();
+
+  return allKeys
+    .map((key) => {
+      const previous = before[key];
+      const current = after[key];
+      const changed = toComparableString(previous) !== toComparableString(current);
+      return {
+        key,
+        previous,
+        current,
+        changed,
+      };
+    })
+    .filter((entry) => entry.changed);
+};
+
 export default function Auditoria() {
   const {
     filters,
@@ -54,6 +85,7 @@ export default function Auditoria() {
     items,
     aggregations,
     hasNext,
+    nextCursor,
     isLoading,
     isLoadingMore,
     error,
@@ -61,9 +93,11 @@ export default function Auditoria() {
     refetch,
   } = useAuditEvents();
   const { isExporting, lastExport, exportEvents } = useAuditExport();
+
   const [filterOptions, setFilterOptions] = useState<AuditFiltersOptionsDto | null>(null);
   const [retentionEvents, setRetentionEvents] = useState<AuditRetentionEventDto[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const { eventDetail, isLoading: isLoadingDetail, error: detailError } =
     useAuditEventDetail(selectedEventId);
 
@@ -102,15 +136,6 @@ export default function Auditoria() {
     void loadRetentionEvents();
   }, [filters.from, filters.to]);
 
-  useEffect(() => {
-    if (!items.length) {
-      setSelectedEventId(null);
-      return;
-    }
-    if (selectedEventId && items.some((item) => item.id === selectedEventId)) return;
-    setSelectedEventId(items[0].id);
-  }, [items, selectedEventId]);
-
   const aggregationCards = useMemo(
     () => [
       {
@@ -129,11 +154,24 @@ export default function Auditoria() {
     [aggregations]
   );
 
+  const diffEntries = useMemo(() => buildDiffEntries(eventDetail), [eventDetail]);
+
+  const openEventDetail = (eventId: string) => {
+    setSelectedEventId(eventId);
+    setIsDetailOpen(true);
+  };
+
   const onApplyFilters = () => {
+    const fromDate = new Date(fromInput);
+    const toDate = new Date(toInput);
+    if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+      return;
+    }
+
     const nextFilters: AuditSearchQueryDto = {
       ...filters,
-      from: new Date(fromInput).toISOString(),
-      to: new Date(toInput).toISOString(),
+      from: fromDate.toISOString(),
+      to: toDate.toISOString(),
       modules: moduleInput ? [moduleInput] : undefined,
       statuses: statusInput ? [statusInput as AuditStatus] : undefined,
       requestId: requestIdInput || undefined,
@@ -151,7 +189,7 @@ export default function Auditoria() {
   };
 
   return (
-    <MainLayout title="Auditoria" subtitle="Trilha de eventos com filtros e paginação por cursor.">
+    <MainLayout title="Auditoria" subtitle="Trilha de eventos com paginacao por cursor (keyset).">
       <div className="space-y-4">
         <Card>
           <CardHeader>
@@ -229,7 +267,7 @@ export default function Auditoria() {
               </Button>
             </div>
             {lastExport ? (
-              <Alert className="border-emerald-200 bg-emerald-50">
+              <Alert>
                 <AlertTitle>Exportacao pronta</AlertTitle>
                 <AlertDescription className="text-xs">
                   <p>Download: {lastExport.downloadUrl}</p>
@@ -264,123 +302,76 @@ export default function Auditoria() {
         </div>
 
         {error ? (
-          <Alert className="border-red-200 bg-red-50">
+          <Alert variant="destructive">
             <AlertTitle>Erro ao consultar auditoria</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         ) : null}
 
-        <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
-          <Card>
-            <CardHeader>
-              <CardTitle>Eventos</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {isLoading ? (
-                <p className="text-sm text-muted-foreground">Carregando eventos...</p>
-              ) : !items.length ? (
-                <p className="text-sm text-muted-foreground">Nenhum evento encontrado no periodo informado.</p>
-              ) : (
-                <>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b text-left text-muted-foreground">
-                          <th className="py-2">Data</th>
-                          <th className="py-2">Modulo</th>
-                          <th className="py-2">Acao</th>
-                          <th className="py-2">Entidade</th>
-                          <th className="py-2">Status</th>
-                          <th className="py-2">Ator</th>
-                          <th className="py-2">Request ID</th>
+        <Card>
+          <CardHeader>
+            <CardTitle>Eventos</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {isLoading ? (
+              <p className="text-sm text-muted-foreground">Carregando eventos...</p>
+            ) : !items.length ? (
+              <p className="text-sm text-muted-foreground">Nenhum evento encontrado no periodo informado.</p>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-muted-foreground">
+                        <th className="py-2">Data</th>
+                        <th className="py-2">Modulo</th>
+                        <th className="py-2">Acao</th>
+                        <th className="py-2">Entidade</th>
+                        <th className="py-2">Status</th>
+                        <th className="py-2">Ator</th>
+                        <th className="py-2">Request ID</th>
+                        <th className="py-2 text-right">Detalhe</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {items.map((item) => (
+                        <tr key={item.id} className="border-b hover:bg-muted/40">
+                          <td className="py-2">{formatDateTime(item.createdAt)}</td>
+                          <td className="py-2">{item.module}</td>
+                          <td className="py-2">{item.action}</td>
+                          <td className="py-2">{item.entityType || "-"}</td>
+                          <td className="py-2">
+                            <Badge className={statusBadgeClass[item.status]}>{item.status}</Badge>
+                          </td>
+                          <td className="py-2">{item.actorName || "-"}</td>
+                          <td className="py-2 font-mono text-xs">{item.requestId}</td>
+                          <td className="py-2 text-right">
+                            <Button variant="outline" size="sm" onClick={() => openEventDetail(item.id)}>
+                              Ver detalhe
+                            </Button>
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {items.map((item) => (
-                          <tr
-                            key={item.id}
-                            className={`border-b cursor-pointer hover:bg-muted/60 ${selectedEventId === item.id ? "bg-muted/80" : ""}`}
-                            onClick={() => setSelectedEventId(item.id)}
-                          >
-                            <td className="py-2">{formatDateTime(item.createdAt)}</td>
-                            <td className="py-2">{item.module}</td>
-                            <td className="py-2">{item.action}</td>
-                            <td className="py-2">{item.entityType || "-"}</td>
-                            <td className="py-2">
-                              <Badge className={statusBadgeVariant[item.status]}>{item.status}</Badge>
-                            </td>
-                            <td className="py-2">{item.actorName || "-"}</td>
-                            <td className="py-2 font-mono text-xs">{item.requestId}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs text-muted-foreground">
+                    Paginacao por cursor: {hasNext ? "ha proxima pagina" : "fim da listagem"}
+                  </p>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    cursor: {nextCursor || "-"}
+                  </p>
                   {hasNext ? (
                     <Button variant="outline" onClick={() => void fetchNextPage()} disabled={isLoadingMore}>
                       {isLoadingMore ? "Carregando..." : "Carregar mais"}
                     </Button>
                   ) : null}
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Detalhe do evento</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              {isLoadingDetail ? (
-                <p className="text-muted-foreground">Carregando detalhe...</p>
-              ) : detailError ? (
-                <p className="text-red-600">{detailError}</p>
-              ) : !eventDetail ? (
-                <p className="text-muted-foreground">Selecione um evento para visualizar detalhes.</p>
-              ) : (
-                <>
-                  <div className="space-y-1">
-                    <p><span className="font-medium">Request ID:</span> <span className="font-mono">{eventDetail.requestId}</span></p>
-                    <p><span className="font-medium">Canal:</span> {eventDetail.sourceChannel}</p>
-                    <p><span className="font-medium">IP:</span> {maskIpAddress(eventDetail.ipAddress)}</p>
-                    <p><span className="font-medium">Hash:</span> <span className="font-mono text-xs">{eventDetail.eventHash}</span></p>
-                    <p><span className="font-medium">Hash anterior:</span> <span className="font-mono text-xs">{eventDetail.prevEventHash || "-"}</span></p>
-                    <p><span className="font-medium">Cadeia valida:</span> {eventDetail.chainValid ? "Sim" : "Nao"}</p>
-                  </div>
-
-                  {eventDetail.errorCode || eventDetail.errorMessage ? (
-                    <Alert className="border-red-200 bg-red-50">
-                      <AlertTitle>Erro tecnico</AlertTitle>
-                      <AlertDescription className="space-y-1">
-                        <p>Codigo: {eventDetail.errorCode || "-"}</p>
-                        <p>Mensagem: {eventDetail.errorMessage || "-"}</p>
-                      </AlertDescription>
-                    </Alert>
-                  ) : null}
-
-                  <div>
-                    <p className="font-medium mb-1">Before</p>
-                    <pre className="rounded-md bg-muted p-2 text-xs overflow-auto">
-                      {JSON.stringify(eventDetail.before, null, 2)}
-                    </pre>
-                  </div>
-                  <div>
-                    <p className="font-medium mb-1">After</p>
-                    <pre className="rounded-md bg-muted p-2 text-xs overflow-auto">
-                      {JSON.stringify(eventDetail.after, null, 2)}
-                    </pre>
-                  </div>
-                  <div>
-                    <p className="font-medium mb-1">Metadata</p>
-                    <pre className="rounded-md bg-muted p-2 text-xs overflow-auto">
-                      {JSON.stringify(eventDetail.metadata, null, 2)}
-                    </pre>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
@@ -405,6 +396,87 @@ export default function Auditoria() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Detalhe do evento</DialogTitle>
+            <DialogDescription>
+              Dados completos, metadados tecnicos e diff de alteracao.
+            </DialogDescription>
+          </DialogHeader>
+
+          {isLoadingDetail ? (
+            <p className="text-sm text-muted-foreground">Carregando detalhe...</p>
+          ) : detailError ? (
+            <Alert variant="destructive">
+              <AlertTitle>Erro ao carregar detalhe</AlertTitle>
+              <AlertDescription>{detailError}</AlertDescription>
+            </Alert>
+          ) : !eventDetail ? (
+            <p className="text-sm text-muted-foreground">Nenhum evento selecionado.</p>
+          ) : (
+            <div className="space-y-4 text-sm">
+              <div className="grid gap-2 md:grid-cols-2">
+                <p><span className="font-medium">Request ID:</span> <span className="font-mono">{eventDetail.requestId}</span></p>
+                <p><span className="font-medium">Canal:</span> {eventDetail.sourceChannel}</p>
+                <p><span className="font-medium">IP:</span> {maskIpAddress(eventDetail.ipAddress)}</p>
+                <p><span className="font-medium">Hash:</span> <span className="font-mono text-xs">{eventDetail.eventHash}</span></p>
+                <p><span className="font-medium">Hash anterior:</span> <span className="font-mono text-xs">{eventDetail.prevEventHash || "-"}</span></p>
+                <p><span className="font-medium">Cadeia valida:</span> {eventDetail.chainValid ? "Sim" : "Nao"}</p>
+              </div>
+
+              {eventDetail.errorCode || eventDetail.errorMessage ? (
+                <Alert variant="destructive">
+                  <AlertTitle>Erro tecnico</AlertTitle>
+                  <AlertDescription className="space-y-1">
+                    <p>Codigo: {eventDetail.errorCode || "-"}</p>
+                    <p>Mensagem: {eventDetail.errorMessage || "-"}</p>
+                  </AlertDescription>
+                </Alert>
+              ) : null}
+
+              <div>
+                <p className="font-medium mb-2">Diff de alteracoes</p>
+                {!diffEntries.length ? (
+                  <p className="text-muted-foreground">Sem diferencas entre before e after.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {diffEntries.map((entry) => (
+                      <div key={entry.key} className="rounded-md border p-2">
+                        <p className="font-medium">{entry.key}</p>
+                        <p className="text-xs text-muted-foreground">Antes: {JSON.stringify(entry.previous)}</p>
+                        <p className="text-xs text-muted-foreground">Depois: {JSON.stringify(entry.current)}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="grid gap-3 lg:grid-cols-3">
+                <div>
+                  <p className="font-medium mb-1">Before</p>
+                  <pre className="rounded-md bg-muted p-2 text-xs overflow-auto">
+                    {JSON.stringify(eventDetail.before, null, 2)}
+                  </pre>
+                </div>
+                <div>
+                  <p className="font-medium mb-1">After</p>
+                  <pre className="rounded-md bg-muted p-2 text-xs overflow-auto">
+                    {JSON.stringify(eventDetail.after, null, 2)}
+                  </pre>
+                </div>
+                <div>
+                  <p className="font-medium mb-1">Metadata</p>
+                  <pre className="rounded-md bg-muted p-2 text-xs overflow-auto">
+                    {JSON.stringify(eventDetail.metadata, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }
