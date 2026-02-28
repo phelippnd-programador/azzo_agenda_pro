@@ -41,8 +41,8 @@ Status: frontend concluido, backend pendente
 - [x] `[BACK]` Implementar limpeza a cada 20 min (sem sobreposicao).
 - [x] `[BACK]` Aplicar TTL: sucesso 1h, falha 24h.
 - [x] `[BACK]` Limitar limpeza por rodada (100 jobs).
-- [ ] `[BACK]` Configurar paralelismo controlado por CPU.
-- [ ] `[BACK]` Avaliar/ativar virtual threads com limite de concorrencia.
+- [x] `[BACK]` Configurar paralelismo controlado por CPU.
+- [x] `[BACK]` Avaliar/ativar virtual threads com limite de concorrencia.
 
 ## 5. Frontend - Modulo Estoque
 - [x] `[FRONT]` Criar rota protegida `/estoque`.
