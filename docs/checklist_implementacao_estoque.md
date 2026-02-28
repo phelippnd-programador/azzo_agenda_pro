@@ -7,13 +7,13 @@ Status: frontend concluido, backend pendente
 ## 1. Preparacao
 - [x] `[BACK]` Validar branch e baseline do backend (`backend/azzo-agenda-pro`).
 - [x] `[FRONT]` Validar branch e baseline do frontend (`frontend`).
-- [ ] `[BACK]` Confirmar nomenclatura final de tabelas/colunas (snake_case).
+- [x] `[BACK]` Confirmar nomenclatura final de tabelas/colunas (snake_case).
 - [x] `[BACK]` Confirmar estrategia de lock/scheduler para jobs assincronos.
 
 ## 2. Banco e Migracoes
 - [x] `[BACK]` Criar migracao `itens_estoque`.
 - [x] `[BACK]` Criar migracao `movimentacoes_estoque`.
-- [ ] `[BACK]` Criar migracao `servico_insumo` (fase 2).
+- [x] `[BACK]` Criar migracao `servico_insumo` (fase 2).
 - [x] `[BACK]` Criar migracao `importacao_estoque_job`.
 - [x] `[BACK]` Criar migracao `importacao_estoque_erro_linha`.
 - [x] `[BACK]` Criar indices/constraints (SKU unico por tenant, FKs, etc.).
