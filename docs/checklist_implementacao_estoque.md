@@ -59,7 +59,7 @@ Status: frontend concluido, backend pendente
 - [x] `[FRONT]` Exibir `atualizadoEm` e estado de defasagem analitica.
 
 ## 6. Qualidade e Testes
-- [ ] `[BACK]` Testes unitarios de regras de saldo e custo.
+- [x] `[BACK]` Testes unitarios de regras de saldo e custo.
 - [x] `[BACK]` Testes de integracao dos endpoints principais.
 - [ ] `[BACK]` Testes de importacao assincrona (sucesso/erro/cancelamento).
 - [ ] `[BACK]` Testes de lock e nao sobreposicao do scheduler.
