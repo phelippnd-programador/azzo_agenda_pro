@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/ui/pagination-controls";
@@ -12,6 +12,7 @@ import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import type { CreateStockMovementRequest, StockItem, StockMovement, StockMovementType } from "@/types/stock";
 import { ArrowDownCircle, ArrowLeftRight, ArrowUpCircle, Scale } from "lucide-react";
+import { Link, useMatch, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { formatDateTime, getListItems } from "./utils";
 
@@ -26,6 +27,8 @@ const defaultForm: CreateStockMovementRequest = {
 };
 
 export default function StockMovementsPage() {
+  const navigate = useNavigate();
+  const isCreateRoute = !!useMatch("/estoque/movimentacoes/nova");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -56,6 +59,12 @@ export default function StockMovementsPage() {
   useEffect(() => {
     void load();
   }, []);
+
+  useEffect(() => {
+    if (isCreateRoute) {
+      setIsDialogOpen(true);
+    }
+  }, [isCreateRoute]);
 
   const filteredMovements = useMemo(() => {
     return movements.filter((movement) => {
@@ -113,10 +122,18 @@ export default function StockMovementsPage() {
       <CardHeader className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle>Movimentacoes de estoque</CardTitle>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="gap-2"><ArrowLeftRight className="h-4 w-4" />Nova movimentacao</Button>
-            </DialogTrigger>
+          <Dialog
+            open={isDialogOpen}
+            onOpenChange={(open) => {
+              setIsDialogOpen(open);
+              if (!open && isCreateRoute) {
+                navigate("/estoque/movimentacoes", { replace: true });
+              }
+            }}
+          >
+            <Button variant="outline" className="gap-2" asChild>
+              <Link to="/estoque/movimentacoes/nova"><ArrowLeftRight className="h-4 w-4" />Nova movimentacao</Link>
+            </Button>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Nova movimentacao</DialogTitle>
@@ -154,7 +171,15 @@ export default function StockMovementsPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsDialogOpen(false);
+                    if (isCreateRoute) navigate("/estoque/movimentacoes", { replace: true });
+                  }}
+                >
+                  Cancelar
+                </Button>
                 <Button onClick={() => void handleCreate()} disabled={isSaving}>{isSaving ? "Salvando..." : "Registrar"}</Button>
               </DialogFooter>
             </DialogContent>
@@ -181,7 +206,7 @@ export default function StockMovementsPage() {
             description="Registre uma entrada, saida ou ajuste para iniciar o historico."
             action={{
               label: "Nova movimentacao",
-              onClick: () => setIsDialogOpen(true),
+              onClick: () => navigate("/estoque/movimentacoes/nova"),
             }}
           />
         ) : (

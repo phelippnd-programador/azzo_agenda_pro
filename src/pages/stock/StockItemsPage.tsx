@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/ui/pagination-controls";
@@ -12,6 +12,7 @@ import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import type { CreateStockItemRequest, StockItem } from "@/types/stock";
 import { Edit, Plus, Power } from "lucide-react";
+import { Link, useMatch, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { getListItems } from "./utils";
 
@@ -24,6 +25,10 @@ const initialForm: CreateStockItemRequest = {
 };
 
 export default function StockItemsPage() {
+  const navigate = useNavigate();
+  const isCreateRoute = !!useMatch("/estoque/itens/novo");
+  const editRouteMatch = useMatch("/estoque/itens/:id/editar");
+  const editRouteItemId = editRouteMatch?.params.id;
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -50,6 +55,25 @@ export default function StockItemsPage() {
   useEffect(() => {
     void load();
   }, []);
+
+  useEffect(() => {
+    if (isCreateRoute) {
+      setEditingItem(null);
+      resetForm();
+      setIsCreateOpen(true);
+    }
+  }, [isCreateRoute]);
+
+  useEffect(() => {
+    if (!editRouteItemId || !items.length) return;
+    const routeItem = items.find((item) => item.id === editRouteItemId);
+    if (!routeItem) {
+      toast.error("Item nao encontrado para edicao.");
+      navigate("/estoque/itens", { replace: true });
+      return;
+    }
+    openEdit(routeItem);
+  }, [editRouteItemId, items]);
 
   const filteredItems = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -170,10 +194,18 @@ export default function StockItemsPage() {
       <CardHeader className="gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle>Itens de estoque</CardTitle>
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2"><Plus className="h-4 w-4" />Novo item</Button>
-            </DialogTrigger>
+          <Dialog
+            open={isCreateOpen}
+            onOpenChange={(open) => {
+              setIsCreateOpen(open);
+              if (!open && isCreateRoute) {
+                navigate("/estoque/itens", { replace: true });
+              }
+            }}
+          >
+            <Button className="gap-2" asChild>
+              <Link to="/estoque/itens/novo"><Plus className="h-4 w-4" />Novo item</Link>
+            </Button>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Novo item</DialogTitle>
@@ -181,7 +213,15 @@ export default function StockItemsPage() {
               </DialogHeader>
               {FormFields}
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancelar</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsCreateOpen(false);
+                    if (isCreateRoute) navigate("/estoque/itens", { replace: true });
+                  }}
+                >
+                  Cancelar
+                </Button>
                 <Button onClick={() => void handleCreate()} disabled={isSaving}>{isSaving ? "Salvando..." : "Salvar"}</Button>
               </DialogFooter>
             </DialogContent>
@@ -211,7 +251,7 @@ export default function StockItemsPage() {
             description="Ajuste os filtros ou cadastre um novo item de estoque."
             action={{
               label: "Novo item",
-              onClick: () => setIsCreateOpen(true),
+              onClick: () => navigate("/estoque/itens/novo"),
             }}
           />
         ) : (
@@ -231,8 +271,8 @@ export default function StockItemsPage() {
                   <Badge variant={item.ativo ? "secondary" : "outline"}>
                     {item.ativo ? "Ativo" : "Inativo"}
                   </Badge>
-                  <Button variant="outline" size="sm" className="gap-1" onClick={() => openEdit(item)}>
-                    <Edit className="h-3 w-3" />Editar
+                  <Button variant="outline" size="sm" className="gap-1" asChild>
+                    <Link to={`/estoque/itens/${item.id}/editar`}><Edit className="h-3 w-3" />Editar</Link>
                   </Button>
                   <Button variant="outline" size="sm" className="gap-1" onClick={() => void handleToggleActive(item)}>
                     <Power className="h-3 w-3" />
@@ -252,7 +292,15 @@ export default function StockItemsPage() {
         />
       </CardContent>
 
-      <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
+      <Dialog
+        open={!!editingItem}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingItem(null);
+            if (editRouteItemId) navigate("/estoque/itens", { replace: true });
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar item</DialogTitle>
@@ -260,7 +308,15 @@ export default function StockItemsPage() {
           </DialogHeader>
           {FormFields}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingItem(null)}>Cancelar</Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditingItem(null);
+                if (editRouteItemId) navigate("/estoque/itens", { replace: true });
+              }}
+            >
+              Cancelar
+            </Button>
             <Button onClick={() => void handleUpdate()} disabled={isSaving}>{isSaving ? "Salvando..." : "Salvar alteracoes"}</Button>
           </DialogFooter>
         </DialogContent>

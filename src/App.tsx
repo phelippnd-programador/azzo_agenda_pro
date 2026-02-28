@@ -238,7 +238,10 @@ function AppRoutes() {
         >
           <Route path="visao-geral" element={<StockOverview />} />
           <Route path="itens" element={<StockItemsPage />} />
+          <Route path="itens/novo" element={<StockItemsPage />} />
+          <Route path="itens/:id/editar" element={<StockItemsPage />} />
           <Route path="movimentacoes" element={<StockMovementsPage />} />
+          <Route path="movimentacoes/nova" element={<StockMovementsPage />} />
           <Route path="importacoes" element={<StockImportsPage />} />
           <Route path="importacoes/:jobId" element={<StockImportDetailPage />} />
         </Route>
