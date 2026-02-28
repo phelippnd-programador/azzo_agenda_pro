@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import StockItemsPage from "@/pages/stock/StockItemsPage";
 
 const { getItemsMock, updateItemMock } = vi.hoisted(() => ({
@@ -58,7 +59,11 @@ describe("StockItemsPage", () => {
     updateItemMock.mockResolvedValue({});
     const user = userEvent.setup();
 
-    render(<StockItemsPage />);
+    render(
+      <MemoryRouter initialEntries={["/estoque/itens"]}>
+        <StockItemsPage />
+      </MemoryRouter>
+    );
 
     expect(await screen.findByText("Item 1")).toBeInTheDocument();
     expect(screen.getByText("Pagina 1 de 2")).toBeInTheDocument();

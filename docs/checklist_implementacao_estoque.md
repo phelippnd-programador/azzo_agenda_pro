@@ -74,6 +74,7 @@ Status: frontend fase 1, 2 e 3 base concluida; backend consolidando endpoints da
 - [x] `[FRONT]` Testes de fluxo de estoque (itens, movimentacoes, importacao).
 - [x] `[FRONT]` Testes de fluxo fase 3 (inventarios, fornecedores, pedidos, transferencias e configuracoes).
 - [x] `[FRONT]` Executar `vitest` dos testes de fase 3 com resultado verde.
+- [x] `[FRONT]` Executar suite completa de testes do frontend (`npm run test:run`) sem falhas.
 - [x] `[FRONT]` Validar mensagens de erro padrao do backend na UI.
 - [x] `[FRONT]` Definir roteiro de smoke test fase 3 (`docs/SMOKE_ESTOQUE_FASE3.md`).
 
