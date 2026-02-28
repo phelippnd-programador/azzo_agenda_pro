@@ -127,3 +127,24 @@ export type StockInventoryCountRequest = {
   quantidadeContada: number;
   observacao?: string;
 };
+
+export type StockSupplier = {
+  id: string;
+  nome: string;
+  documento?: string | null;
+  email?: string | null;
+  telefone?: string | null;
+  contato?: string | null;
+  ativo: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateStockSupplierRequest = {
+  nome: string;
+  documento?: string;
+  email?: string;
+  telefone?: string;
+  contato?: string;
+  ativo?: boolean;
+};

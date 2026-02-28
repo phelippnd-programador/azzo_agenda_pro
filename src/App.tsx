@@ -28,6 +28,7 @@ import StockImportsPage from "./pages/stock/StockImportsPage";
 import StockImportDetailPage from "./pages/stock/StockImportDetailPage";
 import StockFeaturePlaceholderPage from "./pages/stock/StockFeaturePlaceholderPage";
 import StockInventoriesPage from "./pages/stock/StockInventoriesPage";
+import StockSuppliersPage from "./pages/stock/StockSuppliersPage";
 import Financial from "./pages/Financial";
 import ProfessionalFinancial from "./pages/ProfessionalFinancial";
 import Auditoria from "./pages/Auditoria";
@@ -249,15 +250,7 @@ function AppRoutes() {
           <Route path="inventarios" element={<StockInventoriesPage />} />
           <Route path="inventarios/novo" element={<StockInventoriesPage />} />
           <Route path="inventarios/:id" element={<StockInventoriesPage />} />
-          <Route
-            path="fornecedores"
-            element={
-              <StockFeaturePlaceholderPage
-                title="Fornecedores"
-                description="Cadastro e gestao de fornecedores para compras de insumos."
-              />
-            }
-          />
+          <Route path="fornecedores" element={<StockSuppliersPage />} />
           <Route
             path="pedidos-compra"
             element={

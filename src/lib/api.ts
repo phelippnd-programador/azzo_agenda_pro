@@ -55,8 +55,10 @@ import type {
 import type {
   CreateStockInventoryRequest,
   CreateStockItemRequest,
+  CreateStockSupplierRequest,
   StockInventory,
   StockInventoryCountRequest,
+  StockSupplier,
   CreateStockMovementRequest,
   StockDashboardResponse,
   StockImportErrorLine,
@@ -278,6 +280,7 @@ type DemoState = {
   stockItems: StockItem[];
   stockMovements: StockMovement[];
   stockInventories: StockInventory[];
+  stockSuppliers: StockSupplier[];
   stockImportJobs: StockImportJob[];
   stockImportErrors: Record<string, StockImportErrorLine[]>;
 };
@@ -388,6 +391,19 @@ const createDemoState = (): DemoState => {
       observacao: "Contagem ciclica de itens de alto giro.",
       dataAbertura: nowIso,
       dataFechamento: null,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    },
+  ];
+  const stockSuppliers: StockSupplier[] = [
+    {
+      id: "demo-stock-supplier-1",
+      nome: "Distribuidora Alpha",
+      documento: "12.345.678/0001-90",
+      email: "contato@alpha.com.br",
+      telefone: "(11) 3333-1111",
+      contato: "Mariana",
+      ativo: true,
       createdAt: nowIso,
       updatedAt: nowIso,
     },
@@ -576,6 +592,7 @@ const createDemoState = (): DemoState => {
     stockItems,
     stockMovements,
     stockInventories,
+    stockSuppliers,
     stockImportJobs,
     stockImportErrors,
   };
@@ -1188,6 +1205,45 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
       inventory.dataFechamento = new Date().toISOString();
       inventory.updatedAt = inventory.dataFechamento;
       return inventory as T;
+    }
+  }
+  if (path === "/estoque/fornecedores") {
+    if (method === "GET") {
+      return state.stockSuppliers as T;
+    }
+    if (method === "POST") {
+      const payload = JSON.parse(String(options.body || "{}")) as CreateStockSupplierRequest;
+      const nowIso = new Date().toISOString();
+      const created: StockSupplier = {
+        id: `demo-stock-supplier-${Date.now()}`,
+        nome: payload.nome || "Fornecedor",
+        documento: payload.documento || null,
+        email: payload.email || null,
+        telefone: payload.telefone || null,
+        contato: payload.contato || null,
+        ativo: payload.ativo ?? true,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      };
+      state.stockSuppliers = [created, ...state.stockSuppliers];
+      return created as T;
+    }
+  }
+  if (path.startsWith("/estoque/fornecedores/")) {
+    const id = path.replace("/estoque/fornecedores/", "");
+    const supplier = state.stockSuppliers.find((item) => item.id === id);
+    if (!supplier) {
+      throw new ApiError("Fornecedor nao encontrado.", 404, null, "ESTOQUE_FORNECEDOR_NAO_ENCONTRADO");
+    }
+    if (method === "PUT") {
+      const payload = JSON.parse(String(options.body || "{}")) as Partial<CreateStockSupplierRequest>;
+      const updated: StockSupplier = {
+        ...supplier,
+        ...payload,
+        updatedAt: new Date().toISOString(),
+      };
+      state.stockSuppliers = state.stockSuppliers.map((item) => (item.id === id ? updated : item));
+      return updated as T;
     }
   }
   if (path === "/estoque/importacoes" && method === "GET") {
@@ -2484,6 +2540,17 @@ export const stockApi = {
   closeInventory: (id: string) =>
     request<StockInventory>(`/estoque/inventarios/${id}/fechamento`, {
       method: "POST",
+    }),
+  listSuppliers: () => request<StockSupplier[]>("/estoque/fornecedores"),
+  createSupplier: (payload: CreateStockSupplierRequest) =>
+    request<StockSupplier>("/estoque/fornecedores", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updateSupplier: (id: string, payload: Partial<CreateStockSupplierRequest>) =>
+    request<StockSupplier>(`/estoque/fornecedores/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
     }),
   listImportJobs: () => request<StockImportJob[]>("/estoque/importacoes"),
   downloadImportTemplate: (params: {
