@@ -67,8 +67,8 @@ Status: frontend concluido, backend pendente
 - [x] `[FRONT]` Validar mensagens de erro padrao do backend na UI.
 
 ## 7. Go-Live
-- [ ] `[BACK]` Healthcheck de storage/worker/scheduler.
-- [ ] `[BACK]` Observabilidade (metricas de job, falha, duracao, fila).
+- [x] `[BACK]` Healthcheck de storage/worker/scheduler.
+- [x] `[BACK]` Observabilidade (metricas de job, falha, duracao, fila).
 - [x] `[FRONT]` Revisao final de UX/labels e estados vazios.
 - [ ] `[BACK]` Revisao de seguranca (bucket privado, URL assinada, RBAC).
 - [ ] `[GERAL]` Atualizar matriz de homologacao com evidencias.
