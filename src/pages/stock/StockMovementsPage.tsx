@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
@@ -31,6 +32,8 @@ export default function StockMovementsPage() {
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [selectedType, setSelectedType] = useState<"all" | StockMovementType>("all");
   const [selectedItem, setSelectedItem] = useState<string>("all");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
   const [form, setForm] = useState<CreateStockMovementRequest>(defaultForm);
 
   const load = async () => {
@@ -38,7 +41,7 @@ export default function StockMovementsPage() {
       setIsLoading(true);
       const [itemsResponse, movementResponse] = await Promise.all([
         stockApi.getItems({ page: 1, limit: 300 }),
-        stockApi.getMovements({ page: 1, limit: 300 }),
+        stockApi.getMovements({ page: 1, limit: 500 }),
       ]);
       setItems(getListItems(itemsResponse));
       setMovements(getListItems(movementResponse));
@@ -60,6 +63,16 @@ export default function StockMovementsPage() {
       return matchesType && matchesItem;
     });
   }, [movements, selectedType, selectedItem]);
+
+  const pagedMovements = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredMovements.slice(start, start + pageSize);
+  }, [filteredMovements, page]);
+  const totalPages = Math.max(1, Math.ceil(filteredMovements.length / pageSize));
+
+  useEffect(() => {
+    setPage(1);
+  }, [selectedItem, selectedType]);
 
   const handleCreate = async () => {
     if (!form.itemEstoqueId || !form.motivo.trim()) {
@@ -164,7 +177,7 @@ export default function StockMovementsPage() {
         {!filteredMovements.length ? (
           <p className="text-sm text-muted-foreground">Nenhuma movimentacao encontrada.</p>
         ) : (
-          filteredMovements.map((movement) => (
+          pagedMovements.map((movement) => (
             <div key={movement.id} className="rounded-md border p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
@@ -177,6 +190,13 @@ export default function StockMovementsPage() {
             </div>
           ))
         )}
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          isLoading={isLoading}
+          onPrevious={() => setPage((prev) => Math.max(1, prev - 1))}
+          onNext={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+        />
       </CardContent>
     </Card>
   );

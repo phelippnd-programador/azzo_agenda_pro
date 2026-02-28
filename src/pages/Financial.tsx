@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageErrorState } from '@/components/ui/page-states';
+import { HighlightMetricCard } from '@/components/ui/highlight-metric-card';
 import {
   Dialog,
   DialogContent,
@@ -194,55 +195,42 @@ export default function Financial() {
       <div className="space-y-4 sm:space-y-6">
         {/* Summary Cards */}
         <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs sm:text-sm text-green-700 font-medium">Entradas</p>
-                  <p className="text-xl sm:text-2xl font-bold text-green-800">
-                    {formatCurrency(summary.totalIncome)}
-                  </p>
-                </div>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <HighlightMetricCard
+            title="Entradas"
+            value={formatCurrency(summary.totalIncome)}
+            icon={TrendingUp}
+            className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
+            titleClassName="text-green-700"
+            valueClassName="text-green-800"
+            iconContainerClassName="bg-green-100"
+            iconClassName="text-green-600"
+          />
 
-          <Card className="bg-gradient-to-br from-red-50 to-rose-50 border-red-200">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs sm:text-sm text-red-700 font-medium">Saídas</p>
-                  <p className="text-xl sm:text-2xl font-bold text-red-800">
-                    {formatCurrency(summary.totalExpenses)}
-                  </p>
-                </div>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                  <TrendingDown className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <HighlightMetricCard
+            title="Saidas"
+            value={formatCurrency(summary.totalExpenses)}
+            icon={TrendingDown}
+            className="bg-gradient-to-br from-red-50 to-rose-50 border-red-200"
+            titleClassName="text-red-700"
+            valueClassName="text-red-800"
+            iconContainerClassName="bg-red-100"
+            iconClassName="text-red-600"
+          />
 
-          <Card className={`bg-gradient-to-br ${summary.balance >= 0 ? 'from-primary/10 to-primary/5 border-primary/20' : 'from-orange-50 to-amber-50 border-orange-200'}`}>
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className={`text-xs sm:text-sm font-medium ${summary.balance >= 0 ? 'text-primary' : 'text-orange-700'}`}>
-                    Saldo
-                  </p>
-                  <p className={`text-xl sm:text-2xl font-bold ${summary.balance >= 0 ? 'text-primary' : 'text-orange-800'}`}>
-                    {formatCurrency(summary.balance)}
-                  </p>
-                </div>
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center ${summary.balance >= 0 ? 'bg-primary/15' : 'bg-orange-100'}`}>
-                  <Wallet className={`w-5 h-5 sm:w-6 sm:h-6 ${summary.balance >= 0 ? 'text-primary' : 'text-orange-600'}`} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <HighlightMetricCard
+            title="Saldo"
+            value={formatCurrency(summary.balance)}
+            icon={Wallet}
+            className={
+              summary.balance >= 0
+                ? 'bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20'
+                : 'bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200'
+            }
+            titleClassName={summary.balance >= 0 ? 'text-primary' : 'text-orange-700'}
+            valueClassName={summary.balance >= 0 ? 'text-primary' : 'text-orange-800'}
+            iconContainerClassName={summary.balance >= 0 ? 'bg-primary/15' : 'bg-orange-100'}
+            iconClassName={summary.balance >= 0 ? 'text-primary' : 'text-orange-600'}
+          />
         </div>
 
         {/* Actions and Filters */}
@@ -466,3 +454,4 @@ export default function Financial() {
     </MainLayout>
   );
 }
+

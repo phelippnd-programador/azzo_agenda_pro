@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
@@ -28,12 +29,14 @@ export default function StockItemsPage() {
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
   const [items, setItems] = useState<StockItem[]>([]);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 12;
   const [form, setForm] = useState<CreateStockItemRequest>(initialForm);
 
   const load = async () => {
     try {
       setIsLoading(true);
-      const response = await stockApi.getItems({ page: 1, limit: 200 });
+      const response = await stockApi.getItems({ page: 1, limit: 500 });
       setItems(getListItems(response));
     } catch (error) {
       toast.error(resolveUiError(error, "Nao foi possivel carregar itens de estoque.").message);
@@ -52,7 +55,17 @@ export default function StockItemsPage() {
     return items.filter((item) => `${item.nome} ${item.sku || ""}`.toLowerCase().includes(term));
   }, [items, search]);
 
+  const pagedItems = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredItems.slice(start, start + pageSize);
+  }, [filteredItems, page]);
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
+
   const resetForm = () => setForm(initialForm);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   const handleCreate = async () => {
     if (!form.nome.trim() || !form.unidadeMedida.trim()) {
@@ -162,7 +175,7 @@ export default function StockItemsPage() {
         {!filteredItems.length ? (
           <p className="text-sm text-muted-foreground">Nenhum item encontrado.</p>
         ) : (
-          filteredItems.map((item) => (
+          pagedItems.map((item) => (
             <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3">
               <div>
                 <p className="font-medium">{item.nome}</p>
@@ -183,6 +196,13 @@ export default function StockItemsPage() {
             </div>
           ))
         )}
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          isLoading={isLoading}
+          onPrevious={() => setPage((prev) => Math.max(1, prev - 1))}
+          onNext={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+        />
       </CardContent>
 
       <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>

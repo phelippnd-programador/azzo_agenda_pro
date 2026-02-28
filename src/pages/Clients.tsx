@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageErrorState } from '@/components/ui/page-states';
+import { HighlightMetricCard } from '@/components/ui/highlight-metric-card';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
@@ -289,28 +290,40 @@ export default function Clients() {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
-          <Card>
-            <CardContent className="p-3 sm:p-4 text-center">
-              <p className="text-lg sm:text-2xl font-bold text-primary">{pagination.total}</p>
-              <p className="text-xs sm:text-sm text-muted-foreground">Total de Clientes</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3 sm:p-4 text-center">
-              <p className="text-lg sm:text-2xl font-bold text-green-600">
-                {clients.filter(c => c.lastVisit && new Date(c.lastVisit) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length}
-              </p>
-              <p className="text-xs sm:text-sm text-muted-foreground">Ativos (30 dias)</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3 sm:p-4 text-center">
-              <p className="text-lg sm:text-2xl font-bold text-primary">
-                {formatCurrency(clients.reduce((sum, c) => sum + c.totalSpent, 0))}
-              </p>
-              <p className="text-xs sm:text-sm text-muted-foreground">Faturamento Total</p>
-            </CardContent>
-          </Card>
+          <HighlightMetricCard
+            title="Total de Clientes"
+            value={String(pagination.total)}
+            icon={Users}
+            className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20"
+            titleClassName="text-primary"
+            valueClassName="text-primary"
+            iconContainerClassName="bg-primary/15"
+            iconClassName="text-primary"
+          />
+          <HighlightMetricCard
+            title="Ativos (30 dias)"
+            value={String(
+              clients.filter(
+                (c) => c.lastVisit && new Date(c.lastVisit) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+              ).length
+            )}
+            icon={Calendar}
+            className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
+            titleClassName="text-green-700"
+            valueClassName="text-green-800"
+            iconContainerClassName="bg-green-100"
+            iconClassName="text-green-600"
+          />
+          <HighlightMetricCard
+            title="Faturamento Total"
+            value={formatCurrency(clients.reduce((sum, c) => sum + c.totalSpent, 0))}
+            icon={DollarSign}
+            className="bg-gradient-to-br from-indigo-50 to-blue-50 border-indigo-200"
+            titleClassName="text-indigo-700"
+            valueClassName="text-indigo-800"
+            iconContainerClassName="bg-indigo-100"
+            iconClassName="text-indigo-600"
+          />
         </div>
 
         {/* Clients List */}

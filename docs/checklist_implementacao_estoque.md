@@ -50,7 +50,7 @@ Status: em andamento
 - [x] `[FRONT]` Criar pagina base de estoque (itens + movimentacoes).
 - [x] `[FRONT]` Separar em subrotas (`/estoque/itens`, `/estoque/movimentacoes`, `/estoque/importacoes`).
 - [ ] `[FRONT]` Tela completa de CRUD de itens (editar/ativar/inativar).
-- [ ] `[FRONT]` Tela de movimentacao com filtros e paginação.
+- [x] `[FRONT]` Tela de movimentacao com filtros e paginacao.
 - [x] `[FRONT]` Tela de importacao (upload, status, erros por linha).
 - [ ] `[FRONT]` Tela de dashboard de estoque com graficos.
 - [ ] `[FRONT]` Exibir `atualizadoEm` e estado de defasagem analitica.

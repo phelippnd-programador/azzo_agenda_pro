@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import type { StockImportErrorLine, StockImportJob, StockImportType } from "@/types/stock";
@@ -21,6 +22,8 @@ export default function StockImportsPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [tipoImportacao, setTipoImportacao] = useState<StockImportType>("ENTRADAS");
   const [dryRun, setDryRun] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 8;
 
   const load = async () => {
     try {
@@ -84,6 +87,11 @@ export default function StockImportsPage() {
     () => [...jobs].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
     [jobs]
   );
+  const pagedJobs = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return sortedJobs.slice(start, start + pageSize);
+  }, [sortedJobs, page]);
+  const totalPages = Math.max(1, Math.ceil(sortedJobs.length / pageSize));
 
   return (
     <div className="space-y-4">
@@ -137,7 +145,7 @@ export default function StockImportsPage() {
           ) : !sortedJobs.length ? (
             <p className="text-sm text-muted-foreground">Nenhum job de importacao encontrado.</p>
           ) : (
-            sortedJobs.map((job) => {
+            pagedJobs.map((job) => {
               const errors = errorsByJob[job.jobId] || [];
               return (
                 <div key={job.jobId} className="rounded-md border p-3">
@@ -166,6 +174,13 @@ export default function StockImportsPage() {
               );
             })
           )}
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            isLoading={isLoading}
+            onPrevious={() => setPage((prev) => Math.max(1, prev - 1))}
+            onNext={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+          />
         </CardContent>
       </Card>
     </div>
