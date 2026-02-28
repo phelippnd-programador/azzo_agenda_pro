@@ -7,6 +7,7 @@ Escopo: modulo de estoque (itens, movimentacoes, importacao, dashboard)
 ## Status do Gate
 - Estado atual: `AGUARDANDO_APROVACAO_FINAL`
 - Motivo: requer aceite formal de negocio e operacao para entrada em producao.
+- Pronto tecnicamente: `SIM` (pendente apenas aprovacao formal).
 
 ## Evidencias tecnicas consolidadas
 - Backend:
@@ -18,9 +19,11 @@ Escopo: modulo de estoque (itens, movimentacoes, importacao, dashboard)
   - `6a31717` testes de importacao e lock de scheduler.
   - `99f10a9` healthcheck + metricas de importacao.
   - `30aefe6` hardening de seguranca no storage por tenant.
+  - `f77188b` migracao `servico_insumo` (fase 2).
 - Frontend:
   - `4a16bdd` botao de download de modelo na tela de importacao.
   - `f68f18d` ajuste de rota WhatsApp para endpoint atual.
+  - `d697122` checklist atualizado com fechamento das pendencias tecnicas.
 - Documentacao:
   - `d359c7c`, `28312b6`, `241a8b6` (especificacao/contrato/matriz/checklist).
 
