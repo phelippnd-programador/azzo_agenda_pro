@@ -8,7 +8,7 @@ Status: frontend concluido, backend pendente
 - [x] `[BACK]` Validar branch e baseline do backend (`backend/azzo-agenda-pro`).
 - [x] `[FRONT]` Validar branch e baseline do frontend (`frontend`).
 - [ ] `[BACK]` Confirmar nomenclatura final de tabelas/colunas (snake_case).
-- [ ] `[BACK]` Confirmar estrategia de lock/scheduler para jobs assincronos.
+- [x] `[BACK]` Confirmar estrategia de lock/scheduler para jobs assincronos.
 
 ## 2. Banco e Migracoes
 - [x] `[BACK]` Criar migracao `itens_estoque`.
@@ -32,13 +32,13 @@ Status: frontend concluido, backend pendente
 ## 4. Backend - Importacao Assincrona
 - [ ] `[BACK]` Integrar MinIO (upload/download/delete por `storage_key`).
 - [x] `[BACK]` Implementar `POST /estoque/importacoes` (multipart + job).
-- [ ] `[BACK]` Implementar worker de processamento em lote (batch).
+- [x] `[BACK]` Implementar worker de processamento em lote (batch).
 - [x] `[BACK]` Implementar `GET /importacoes/{jobId}` e `/erros`.
 - [x] `[BACK]` Implementar cancelamento de job.
 - [x] `[BACK]` Implementar URL assinada de resultado.
-- [ ] `[BACK]` Implementar limpeza a cada 20 min (sem sobreposicao).
-- [ ] `[BACK]` Aplicar TTL: sucesso 1h, falha 24h.
-- [ ] `[BACK]` Limitar limpeza por rodada (100 jobs).
+- [x] `[BACK]` Implementar limpeza a cada 20 min (sem sobreposicao).
+- [x] `[BACK]` Aplicar TTL: sucesso 1h, falha 24h.
+- [x] `[BACK]` Limitar limpeza por rodada (100 jobs).
 - [ ] `[BACK]` Configurar paralelismo controlado por CPU.
 - [ ] `[BACK]` Avaliar/ativar virtual threads com limite de concorrencia.
 
