@@ -69,6 +69,7 @@ Status: frontend fase 1, 2 e 3 base concluida; backend fase 3 implementado e com
 ## 6. Qualidade e Testes
 - [x] `[BACK]` Testes unitarios de regras de saldo e custo.
 - [x] `[BACK]` Testes de integracao dos endpoints principais.
+- [x] `[BACK]` Revalidar `EstoqueResourceTest` apos fase 3 e ajustes de seguranca (`./mvnw -q -Dtest=EstoqueResourceTest test` em 2026-02-28).
 - [x] `[BACK]` Testes de importacao assincrona (sucesso/erro/cancelamento).
 - [x] `[BACK]` Testes de lock e nao sobreposicao do scheduler.
 - [x] `[FRONT]` Testes de fluxo de estoque (itens, movimentacoes, importacao).
