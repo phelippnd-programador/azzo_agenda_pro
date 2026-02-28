@@ -56,6 +56,9 @@ import type {
   CreateStockItemRequest,
   CreateStockMovementRequest,
   StockDashboardResponse,
+  StockImportErrorLine,
+  StockImportJob,
+  StockImportType,
   StockItem,
   StockMovement,
 } from "@/types/stock";
@@ -270,6 +273,8 @@ type DemoState = {
   apuracaoHistorico: ApuracaoResumo[];
   stockItems: StockItem[];
   stockMovements: StockMovement[];
+  stockImportJobs: StockImportJob[];
+  stockImportErrors: Record<string, StockImportErrorLine[]>;
 };
 
 let demoState: DemoState | null = null;
@@ -370,6 +375,8 @@ const createDemoState = (): DemoState => {
       createdAt: nowIso,
     },
   ];
+  const stockImportJobs: StockImportJob[] = [];
+  const stockImportErrors: Record<string, StockImportErrorLine[]> = {};
 
   const invoiceBase: Invoice = {
     id: "demo-invoice-1",
@@ -551,6 +558,8 @@ const createDemoState = (): DemoState => {
     apuracaoHistorico,
     stockItems,
     stockMovements,
+    stockImportJobs,
+    stockImportErrors,
   };
 };
 
@@ -1109,6 +1118,78 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
       perdasValor: 0,
       margemServicos: [],
     } satisfies StockDashboardResponse as T;
+  }
+  if (path === "/estoque/importacoes" && method === "GET") {
+    return state.stockImportJobs as T;
+  }
+  if (path === "/estoque/importacoes" && method === "POST") {
+    const tipoImportacao = (query.get("tipoImportacao") ||
+      "ENTRADAS") as StockImportType;
+    const dryRun = query.get("dryRun") === "true";
+    const jobId = `demo-stock-job-${Date.now()}`;
+    const nowIso = new Date().toISOString();
+    const hasError = dryRun;
+    const job: StockImportJob = {
+      jobId,
+      tipoImportacao,
+      status: hasError ? "CONCLUIDO_COM_ERROS" : "CONCLUIDO",
+      dryRun,
+      totalLinhas: 120,
+      linhasProcessadas: 120,
+      linhasComErro: hasError ? 2 : 0,
+      arquivoSha256: `demo-hash-${jobId}`,
+      arquivoStorageKey: `tenant/demo-local-tenant/estoque/importacoes/${jobId}/arquivo-origem.xlsx`,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+      finishedAt: nowIso,
+    };
+    state.stockImportJobs = [job, ...state.stockImportJobs];
+    state.stockImportErrors[jobId] = hasError
+      ? [
+          {
+            linha: 7,
+            coluna: "quantidade",
+            codigoErro: "ESTOQUE_VALOR_INVALIDO",
+            mensagem: "Quantidade deve ser maior que zero.",
+            valorRecebido: "-10",
+          },
+          {
+            linha: 19,
+            coluna: "itemEstoqueId",
+            codigoErro: "ESTOQUE_ITEM_NAO_ENCONTRADO",
+            mensagem: "Item nao localizado para o tenant atual.",
+            valorRecebido: "xyz",
+          },
+        ]
+      : [];
+    return job as T;
+  }
+  if (path.startsWith("/estoque/importacoes/")) {
+    const suffix = path.replace("/estoque/importacoes/", "");
+    const [jobId, subPath] = suffix.split("/");
+    const job = state.stockImportJobs.find((item) => item.jobId === jobId);
+    if (!job) {
+      throw new ApiError("Job de importacao nao encontrado.", 404, null, "NOT_FOUND");
+    }
+    if (!subPath && method === "GET") return job as T;
+    if (subPath === "erros" && method === "GET") {
+      return (state.stockImportErrors[jobId] || []) as T;
+    }
+    if (subPath === "arquivo-resultado" && method === "GET") {
+      return {
+        downloadUrl: `https://demo.local/storage/${jobId}/resultado.csv`,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 10).toISOString(),
+      } as T;
+    }
+    if (subPath === "cancelar" && method === "POST") {
+      if (job.status === "CONCLUIDO" || job.status === "CONCLUIDO_COM_ERROS") {
+        throw new ApiError("Job ja finalizado.", 409, null, "ESTOQUE_IMPORTACAO_JOB_CONFLITO");
+      }
+      job.status = "CANCELADO";
+      job.updatedAt = new Date().toISOString();
+      job.finishedAt = new Date().toISOString();
+      return job as T;
+    }
   }
 
   if (path === "/services") {
@@ -1800,7 +1881,14 @@ const request = async <T>(
   const token = getToken();
 
   const headers = new Headers(options.headers || {});
-  headers.set("Content-Type", "application/json");
+  const hasBody = typeof options.body !== "undefined" && options.body !== null;
+  const isFormData =
+    typeof FormData !== "undefined" && options.body instanceof FormData;
+  if (hasBody && !isFormData) {
+    headers.set("Content-Type", "application/json");
+  } else if (isFormData) {
+    headers.delete("Content-Type");
+  }
 
   if (token && shouldAttachAuthToken(endpoint)) {
     headers.set("Authorization", `Bearer ${token}`);
@@ -2286,6 +2374,29 @@ export const stockApi = {
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return request<StockDashboardResponse>(`/estoque/dashboard${suffix}`);
   },
+  listImportJobs: () => request<StockImportJob[]>("/estoque/importacoes"),
+  createImportJob: (params: { arquivo: File; tipoImportacao: StockImportType; dryRun?: boolean }) => {
+    const query = new URLSearchParams();
+    query.set("tipoImportacao", params.tipoImportacao);
+    if (typeof params.dryRun === "boolean") query.set("dryRun", String(params.dryRun));
+    const formData = new FormData();
+    formData.append("arquivo", params.arquivo);
+    return request<StockImportJob>(`/estoque/importacoes?${query.toString()}`, {
+      method: "POST",
+      body: formData,
+    });
+  },
+  getImportJobById: (jobId: string) => request<StockImportJob>(`/estoque/importacoes/${jobId}`),
+  getImportErrors: (jobId: string) =>
+    request<StockImportErrorLine[]>(`/estoque/importacoes/${jobId}/erros`),
+  getImportResultFile: (jobId: string) =>
+    request<{ downloadUrl: string; expiresAt: string }>(
+      `/estoque/importacoes/${jobId}/arquivo-resultado`
+    ),
+  cancelImportJob: (jobId: string) =>
+    request<StockImportJob>(`/estoque/importacoes/${jobId}/cancelar`, {
+      method: "POST",
+    }),
 };
 
 /* ================= FINANCE ================= */

@@ -147,7 +147,9 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
           <ScrollArea className="flex-1 py-4">
             <nav className="px-2 sm:px-3 space-y-1">
               {visibleMenuItems.map((item) => {
-                const isActive = location.pathname === item.path;
+                const isActive =
+                  location.pathname === item.path ||
+                  location.pathname.startsWith(`${item.path}/`);
                 return (
                   <Link
                     key={item.path}

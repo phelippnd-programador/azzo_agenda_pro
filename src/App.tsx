@@ -21,6 +21,10 @@ import Specialties from "./pages/Specialties";
 import Professionals from "./pages/Professionals";
 import Clients from "./pages/Clients";
 import Stock from "./pages/Stock";
+import StockOverview from "./pages/stock/StockOverview";
+import StockItemsPage from "./pages/stock/StockItemsPage";
+import StockMovementsPage from "./pages/stock/StockMovementsPage";
+import StockImportsPage from "./pages/stock/StockImportsPage";
 import Financial from "./pages/Financial";
 import ProfessionalFinancial from "./pages/ProfessionalFinancial";
 import Auditoria from "./pages/Auditoria";
@@ -230,7 +234,12 @@ function AppRoutes() {
               <Stock />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route path="visao-geral" element={<StockOverview />} />
+          <Route path="itens" element={<StockItemsPage />} />
+          <Route path="movimentacoes" element={<StockMovementsPage />} />
+          <Route path="importacoes" element={<StockImportsPage />} />
+        </Route>
         <Route
           path="/financeiro"
           element={

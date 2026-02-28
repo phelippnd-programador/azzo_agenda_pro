@@ -69,3 +69,36 @@ export type StockDashboardResponse = {
     margemBruta: number;
   }>;
 };
+
+export type StockImportType = "ITENS" | "ENTRADAS" | "AJUSTES";
+export type StockImportStatus =
+  | "RECEBIDO"
+  | "EM_VALIDACAO"
+  | "PROCESSANDO"
+  | "CONCLUIDO"
+  | "CONCLUIDO_COM_ERROS"
+  | "FALHOU"
+  | "CANCELADO";
+
+export type StockImportJob = {
+  jobId: string;
+  tipoImportacao: StockImportType;
+  status: StockImportStatus;
+  dryRun: boolean;
+  totalLinhas: number;
+  linhasProcessadas: number;
+  linhasComErro: number;
+  arquivoSha256?: string;
+  arquivoStorageKey?: string;
+  createdAt: string;
+  updatedAt: string;
+  finishedAt?: string | null;
+};
+
+export type StockImportErrorLine = {
+  linha: number;
+  coluna: string;
+  codigoErro: string;
+  mensagem: string;
+  valorRecebido: string;
+};
