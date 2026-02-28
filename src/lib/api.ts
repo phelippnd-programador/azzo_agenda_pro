@@ -53,7 +53,10 @@ import type {
   PublicLegalResponse,
 } from "@/types/terms";
 import type {
+  CreateStockInventoryRequest,
   CreateStockItemRequest,
+  StockInventory,
+  StockInventoryCountRequest,
   CreateStockMovementRequest,
   StockDashboardResponse,
   StockImportErrorLine,
@@ -274,6 +277,7 @@ type DemoState = {
   apuracaoHistorico: ApuracaoResumo[];
   stockItems: StockItem[];
   stockMovements: StockMovement[];
+  stockInventories: StockInventory[];
   stockImportJobs: StockImportJob[];
   stockImportErrors: Record<string, StockImportErrorLine[]>;
 };
@@ -374,6 +378,18 @@ const createDemoState = (): DemoState => {
       valorTotalMovimentacao: 63,
       usuarioId: "demo-local-user",
       createdAt: nowIso,
+    },
+  ];
+  const stockInventories: StockInventory[] = [
+    {
+      id: "demo-stock-inventory-1",
+      nome: "Inventario mensal - Fevereiro/2026",
+      status: "EM_CONTAGEM",
+      observacao: "Contagem ciclica de itens de alto giro.",
+      dataAbertura: nowIso,
+      dataFechamento: null,
+      createdAt: nowIso,
+      updatedAt: nowIso,
     },
   ];
   const stockImportJobs: StockImportJob[] = [];
@@ -559,6 +575,7 @@ const createDemoState = (): DemoState => {
     apuracaoHistorico,
     stockItems,
     stockMovements,
+    stockInventories,
     stockImportJobs,
     stockImportErrors,
   };
@@ -1119,6 +1136,59 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
       perdasValor: 0,
       margemServicos: [],
     } satisfies StockDashboardResponse as T;
+  }
+  if (path === "/estoque/inventarios") {
+    if (method === "GET") {
+      return state.stockInventories as T;
+    }
+    if (method === "POST") {
+      const payload = JSON.parse(String(options.body || "{}")) as CreateStockInventoryRequest;
+      const nowIso = new Date().toISOString();
+      const created: StockInventory = {
+        id: `demo-stock-inventory-${Date.now()}`,
+        nome: payload.nome || "Inventario",
+        status: "ABERTO",
+        observacao: payload.observacao || null,
+        dataAbertura: nowIso,
+        dataFechamento: null,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      };
+      state.stockInventories = [created, ...state.stockInventories];
+      return created as T;
+    }
+  }
+  if (path.startsWith("/estoque/inventarios/")) {
+    const suffix = path.replace("/estoque/inventarios/", "");
+    const [inventoryId, subPath] = suffix.split("/");
+    const inventory = state.stockInventories.find((item) => item.id === inventoryId);
+    if (!inventory) {
+      throw new ApiError("Inventario nao encontrado.", 404, null, "ESTOQUE_INVENTARIO_NAO_ENCONTRADO");
+    }
+    if (!subPath && method === "GET") {
+      return inventory as T;
+    }
+    if (subPath === "contagens" && method === "POST") {
+      const payload = JSON.parse(String(options.body || "{}")) as StockInventoryCountRequest;
+      const item = state.stockItems.find((stockItem) => stockItem.id === payload.itemEstoqueId);
+      if (!item) {
+        throw new ApiError("Item de estoque nao encontrado.", 404, null, "ESTOQUE_ITEM_NAO_ENCONTRADO");
+      }
+      item.saldoAtual = Number(payload.quantidadeContada || 0);
+      item.updatedAt = new Date().toISOString();
+      inventory.status = "EM_CONTAGEM";
+      inventory.updatedAt = new Date().toISOString();
+      return inventory as T;
+    }
+    if (subPath === "fechamento" && method === "POST") {
+      if (inventory.status === "FECHADO") {
+        throw new ApiError("Inventario ja fechado.", 409, null, "ESTOQUE_INVENTARIO_CONFLITO");
+      }
+      inventory.status = "FECHADO";
+      inventory.dataFechamento = new Date().toISOString();
+      inventory.updatedAt = inventory.dataFechamento;
+      return inventory as T;
+    }
   }
   if (path === "/estoque/importacoes" && method === "GET") {
     return state.stockImportJobs as T;
@@ -2399,6 +2469,22 @@ export const stockApi = {
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return request<StockDashboardResponse>(`/estoque/dashboard${suffix}`);
   },
+  listInventories: () => request<StockInventory[]>("/estoque/inventarios"),
+  createInventory: (payload: CreateStockInventoryRequest) =>
+    request<StockInventory>("/estoque/inventarios", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getInventoryById: (id: string) => request<StockInventory>(`/estoque/inventarios/${id}`),
+  registerInventoryCount: (id: string, payload: StockInventoryCountRequest) =>
+    request<StockInventory>(`/estoque/inventarios/${id}/contagens`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  closeInventory: (id: string) =>
+    request<StockInventory>(`/estoque/inventarios/${id}/fechamento`, {
+      method: "POST",
+    }),
   listImportJobs: () => request<StockImportJob[]>("/estoque/importacoes"),
   downloadImportTemplate: (params: {
     tipoImportacao: StockImportType;

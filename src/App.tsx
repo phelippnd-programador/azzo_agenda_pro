@@ -27,6 +27,7 @@ import StockMovementsPage from "./pages/stock/StockMovementsPage";
 import StockImportsPage from "./pages/stock/StockImportsPage";
 import StockImportDetailPage from "./pages/stock/StockImportDetailPage";
 import StockFeaturePlaceholderPage from "./pages/stock/StockFeaturePlaceholderPage";
+import StockInventoriesPage from "./pages/stock/StockInventoriesPage";
 import Financial from "./pages/Financial";
 import ProfessionalFinancial from "./pages/ProfessionalFinancial";
 import Auditoria from "./pages/Auditoria";
@@ -245,33 +246,9 @@ function AppRoutes() {
           <Route path="movimentacoes/nova" element={<StockMovementsPage />} />
           <Route path="importacoes" element={<StockImportsPage />} />
           <Route path="importacoes/:jobId" element={<StockImportDetailPage />} />
-          <Route
-            path="inventarios"
-            element={
-              <StockFeaturePlaceholderPage
-                title="Inventarios"
-                description="Contagem ciclica e conciliacao de divergencias de estoque."
-              />
-            }
-          />
-          <Route
-            path="inventarios/novo"
-            element={
-              <StockFeaturePlaceholderPage
-                title="Novo inventario"
-                description="Abertura de inventario para contagem por periodo, item ou categoria."
-              />
-            }
-          />
-          <Route
-            path="inventarios/:id"
-            element={
-              <StockFeaturePlaceholderPage
-                title="Detalhe de inventario"
-                description="Acompanhamento da contagem, divergencias e fechamento do inventario."
-              />
-            }
-          />
+          <Route path="inventarios" element={<StockInventoriesPage />} />
+          <Route path="inventarios/novo" element={<StockInventoriesPage />} />
+          <Route path="inventarios/:id" element={<StockInventoriesPage />} />
           <Route
             path="fornecedores"
             element={

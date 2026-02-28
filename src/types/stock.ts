@@ -103,3 +103,27 @@ export type StockImportErrorLine = {
   mensagem: string;
   valorRecebido: string;
 };
+
+export type StockInventoryStatus = "ABERTO" | "EM_CONTAGEM" | "FECHADO" | "CANCELADO";
+
+export type StockInventory = {
+  id: string;
+  nome: string;
+  status: StockInventoryStatus;
+  observacao?: string | null;
+  dataAbertura: string;
+  dataFechamento?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateStockInventoryRequest = {
+  nome: string;
+  observacao?: string;
+};
+
+export type StockInventoryCountRequest = {
+  itemEstoqueId: string;
+  quantidadeContada: number;
+  observacao?: string;
+};
