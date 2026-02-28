@@ -243,9 +243,9 @@ export default function Login() {
 
         <p className="text-center text-xs text-muted-foreground mt-4 sm:mt-6">
           Ao entrar, voce concorda com nossos{' '}
-          <a href="#" className="text-primary hover:underline">Termos de Uso</a>
+          <Link to="/termos-de-uso" className="text-primary hover:underline">Termos de Uso</Link>
           {' '}e{' '}
-          <a href="#" className="text-primary hover:underline">Politica de Privacidade</a>
+          <Link to="/politica-privacidade" className="text-primary hover:underline">Politica de Privacidade</Link>
         </p>
       </div>
     </div>

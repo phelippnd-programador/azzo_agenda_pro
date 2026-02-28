@@ -1,14 +1,15 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Scissors, Eye, EyeOff, ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { ApiError } from '@/lib/api';
-import { resolveUiError } from '@/lib/error-utils';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Loader2, Scissors } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
+import { ApiError } from "@/lib/api";
+import { resolveUiError } from "@/lib/error-utils";
+import { toast } from "sonner";
 
 const getPasswordStrengthStatus = (value: string) => {
   let score = 0;
@@ -19,12 +20,12 @@ const getPasswordStrengthStatus = (value: string) => {
   if (/[^A-Za-z0-9]/.test(value)) score += 1;
 
   if (score <= 2) {
-    return { label: 'Fraca', width: '33%', barClassName: 'bg-red-500', textClassName: 'text-red-600' };
+    return { label: "Fraca", width: "33%", barClassName: "bg-red-500", textClassName: "text-red-600" };
   }
   if (score <= 4) {
-    return { label: 'Media', width: '66%', barClassName: 'bg-amber-500', textClassName: 'text-amber-600' };
+    return { label: "Media", width: "66%", barClassName: "bg-amber-500", textClassName: "text-amber-600" };
   }
-  return { label: 'Forte', width: '100%', barClassName: 'bg-emerald-500', textClassName: 'text-emerald-600' };
+  return { label: "Forte", width: "100%", barClassName: "bg-emerald-500", textClassName: "text-emerald-600" };
 };
 
 export default function Register() {
@@ -33,30 +34,34 @@ export default function Register() {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
-  // Step 1 - Personal data
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  
-  // Step 2 - Salon data
-  const [salonName, setSalonName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [cpfCnpj, setCpfCnpj] = useState('');
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [salonName, setSalonName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [cpfCnpj, setCpfCnpj] = useState("");
+  const [acceptedLegalTerms, setAcceptedLegalTerms] = useState(false);
+
   const passwordStrength = getPasswordStrengthStatus(password);
 
   const handleNextStep = () => {
     if (!name || !email || !password || !confirmPassword) {
-      toast.error('Preencha todos os campos');
+      toast.error("Preencha todos os campos");
       return;
     }
     if (password.length < 8) {
-      toast.error('A senha deve ter pelo menos 8 caracteres');
+      toast.error("A senha deve ter pelo menos 8 caracteres");
       return;
     }
     if (password !== confirmPassword) {
-      toast.error('As senhas nao conferem');
+      toast.error("As senhas nao conferem");
+      return;
+    }
+    if (!acceptedLegalTerms) {
+      toast.error("Voce precisa aceitar os Termos de Uso e a Politica de Privacidade");
       return;
     }
     setStep(2);
@@ -64,19 +69,18 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const cpfCnpjDigits = cpfCnpj.replace(/\D/g, "");
     if (!salonName || !phone || !cpfCnpjDigits) {
-      toast.error('Preencha todos os campos');
+      toast.error("Preencha todos os campos");
       return;
     }
     if (![11, 14].includes(cpfCnpjDigits.length)) {
-      toast.error('Informe um CPF ou CNPJ valido');
+      toast.error("Informe um CPF ou CNPJ valido");
       return;
     }
 
     setIsLoading(true);
-    
     try {
       await register({
         name,
@@ -86,13 +90,14 @@ export default function Register() {
         phone,
         cpfCnpj: cpfCnpjDigits,
       });
-      toast.success('Conta criada com sucesso!');
-      navigate('/dashboard');
+
+      toast.success("Conta criada com sucesso!");
+      navigate("/dashboard");
     } catch (error) {
       if (error instanceof ApiError && error.status === 429) {
-        toast.error('Muitas tentativas. Aguarde um momento e tente novamente.');
+        toast.error("Muitas tentativas. Aguarde um momento e tente novamente.");
       } else {
-        const uiError = resolveUiError(error, 'Erro ao criar conta. Tente novamente.');
+        const uiError = resolveUiError(error, "Erro ao criar conta. Tente novamente.");
         toast.error(uiError.message);
       }
     } finally {
@@ -103,7 +108,6 @@ export default function Register() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-card p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-6 sm:mb-8">
           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-xl flex items-center justify-center">
             <Scissors className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -118,20 +122,22 @@ export default function Register() {
           <CardHeader className="text-center pb-2 sm:pb-4">
             <CardTitle className="text-xl sm:text-2xl">Crie sua conta</CardTitle>
             <CardDescription className="text-sm">
-              {step === 1 ? 'Seus dados pessoais' : 'Dados do seu salão'}
+              {step === 1 ? "Seus dados pessoais" : "Dados do seu salao"}
             </CardDescription>
-            
-            {/* Progress indicator */}
             <div className="flex items-center justify-center gap-2 mt-4">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step >= 1 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-              }`}>
-                {step > 1 ? <Check className="w-4 h-4" /> : '1'}
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  step >= 1 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {step > 1 ? <Check className="w-4 h-4" /> : "1"}
               </div>
-              <div className={`w-12 h-1 rounded ${step >= 2 ? 'bg-primary' : 'bg-muted'}`} />
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step >= 2 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-              }`}>
+              <div className={`w-12 h-1 rounded ${step >= 2 ? "bg-primary" : "bg-muted"}`} />
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  step >= 2 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                }`}
+              >
                 2
               </div>
             </div>
@@ -167,7 +173,7 @@ export default function Register() {
                   <div className="relative">
                     <Input
                       id="password"
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       placeholder="Minimo 8 caracteres"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -190,12 +196,14 @@ export default function Register() {
                   <div className="space-y-1">
                     <div className="h-1.5 w-full rounded bg-muted">
                       <div
-                        className={`h-full rounded transition-all ${password ? passwordStrength.barClassName : 'bg-muted-foreground/40'}`}
-                        style={{ width: password ? passwordStrength.width : '0%' }}
+                        className={`h-full rounded transition-all ${
+                          password ? passwordStrength.barClassName : "bg-muted-foreground/40"
+                        }`}
+                        style={{ width: password ? passwordStrength.width : "0%" }}
                       />
                     </div>
-                    <p className={`text-xs ${password ? passwordStrength.textClassName : 'text-muted-foreground'}`}>
-                      Seguranca da senha: {password ? passwordStrength.label : 'Nao definida'}
+                    <p className={`text-xs ${password ? passwordStrength.textClassName : "text-muted-foreground"}`}>
+                      Seguranca da senha: {password ? passwordStrength.label : "Nao definida"}
                     </p>
                   </div>
                 </div>
@@ -204,7 +212,7 @@ export default function Register() {
                   <Label htmlFor="confirmPassword" className="text-sm">Confirmar senha</Label>
                   <Input
                     id="confirmPassword"
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     placeholder="Repita a senha"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -212,11 +220,26 @@ export default function Register() {
                   />
                 </div>
 
-                <Button
-                  type="button"
-                  className="w-full h-10 sm:h-11 "
-                  onClick={handleNextStep}
-                >
+                <div className="flex items-start gap-2 rounded-md border border-input p-3">
+                  <Checkbox
+                    id="acceptLegalTerms"
+                    checked={acceptedLegalTerms}
+                    onCheckedChange={(checked) => setAcceptedLegalTerms(Boolean(checked))}
+                  />
+                  <Label htmlFor="acceptLegalTerms" className="text-xs leading-relaxed text-muted-foreground">
+                    Li e aceito os{" "}
+                    <Link to="/termos-de-uso" className="text-primary hover:underline">
+                      Termos de Uso
+                    </Link>{" "}
+                    e a{" "}
+                    <Link to="/politica-privacidade" className="text-primary hover:underline">
+                      Politica de Privacidade
+                    </Link>
+                    .
+                  </Label>
+                </div>
+
+                <Button type="button" className="w-full h-10 sm:h-11" onClick={handleNextStep}>
                   Continuar
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -224,7 +247,7 @@ export default function Register() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="salonName" className="text-sm">Nome do Salão</Label>
+                  <Label htmlFor="salonName" className="text-sm">Nome do Salao</Label>
                   <Input
                     id="salonName"
                     placeholder="Ex: Bella Studio"
@@ -270,18 +293,14 @@ export default function Register() {
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Voltar
                   </Button>
-                  <Button
-                    type="submit"
-                    className="flex-1 h-10 sm:h-11 "
-                    disabled={isLoading}
-                  >
+                  <Button type="submit" className="flex-1 h-10 sm:h-11" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Criando...
                       </>
                     ) : (
-                      'Criar Conta'
+                      "Criar Conta"
                     )}
                   </Button>
                 </div>
@@ -289,22 +308,21 @@ export default function Register() {
             )}
 
             <p className="text-center text-xs sm:text-sm text-muted-foreground mt-4 sm:mt-6">
-              Já tem uma conta?{' '}
+              Ja tem uma conta?{" "}
               <Link to="/login" className="text-primary hover:opacity-90 font-medium">
-                Faça login
+                Faca login
               </Link>
             </p>
           </CardContent>
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-4 sm:mt-6">
-          Ao criar sua conta, você concorda com nossos{' '}
-          <a href="#" className="text-primary hover:underline">Termos de Uso</a>
-          {' '}e{' '}
-          <a href="#" className="text-primary hover:underline">Política de Privacidade</a>
+          Ao criar sua conta, voce concorda com nossos{" "}
+          <Link to="/termos-de-uso" className="text-primary hover:underline">Termos de Uso</Link>
+          {" "}e{" "}
+          <Link to="/politica-privacidade" className="text-primary hover:underline">Politica de Privacidade</Link>
         </p>
       </div>
     </div>
   );
 }
-
