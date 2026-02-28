@@ -20,6 +20,7 @@ import Services from "./pages/Services";
 import Specialties from "./pages/Specialties";
 import Professionals from "./pages/Professionals";
 import Clients from "./pages/Clients";
+import Stock from "./pages/Stock";
 import Financial from "./pages/Financial";
 import ProfessionalFinancial from "./pages/ProfessionalFinancial";
 import Auditoria from "./pages/Auditoria";
@@ -219,6 +220,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Clients />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/estoque"
+          element={
+            <ProtectedRoute>
+              <Stock />
             </ProtectedRoute>
           }
         />

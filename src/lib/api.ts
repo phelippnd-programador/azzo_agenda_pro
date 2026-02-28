@@ -52,6 +52,13 @@ import type {
   LegalDocumentResponse,
   PublicLegalResponse,
 } from "@/types/terms";
+import type {
+  CreateStockItemRequest,
+  CreateStockMovementRequest,
+  StockDashboardResponse,
+  StockItem,
+  StockMovement,
+} from "@/types/stock";
 import {
   mockAppointments,
   mockClients,
@@ -182,6 +189,7 @@ const ALL_LOCAL_DEMO_ROUTES = [
   "/configuracoes",
   "/configuracoes/integracoes/whatsapp",
   "/auditoria",
+  "/estoque",
   "/perfil-salao",
   "/unauthorized",
 ];
@@ -190,6 +198,7 @@ const PROFESSIONAL_LOCAL_DEMO_ROUTES = [
   "/dashboard",
   "/agenda",
   "/financeiro/profissionais",
+  "/estoque",
   "/configuracoes",
   "/perfil-salao",
   "/unauthorized",
@@ -259,6 +268,8 @@ type DemoState = {
   billingPayments: BillingPaymentItem[];
   apuracaoAtual: ApuracaoMensal;
   apuracaoHistorico: ApuracaoResumo[];
+  stockItems: StockItem[];
+  stockMovements: StockMovement[];
 };
 
 let demoState: DemoState | null = null;
@@ -301,6 +312,64 @@ const createDemoState = (): DemoState => {
   const appointments = mockAppointments.map((appointment) => ({ ...appointment }));
   const transactions = mockTransactions.map((transaction) => ({ ...transaction }));
   const specialties = toSpecialties(services);
+  const stockItems: StockItem[] = [
+    {
+      id: "demo-stock-item-1",
+      nome: "Shampoo Profissional",
+      sku: "SHAMP-001",
+      unidadeMedida: "ML",
+      saldoAtual: 860,
+      estoqueMinimo: 500,
+      custoMedioUnitario: 0.45,
+      ativo: true,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    },
+    {
+      id: "demo-stock-item-2",
+      nome: "Pomada Modeladora",
+      sku: "POMA-001",
+      unidadeMedida: "G",
+      saldoAtual: 120,
+      estoqueMinimo: 80,
+      custoMedioUnitario: 1.35,
+      ativo: true,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    },
+  ];
+  const stockMovements: StockMovement[] = [
+    {
+      id: "demo-stock-movement-1",
+      itemEstoqueId: "demo-stock-item-1",
+      tipo: "ENTRADA",
+      quantidade: 1000,
+      saldoAnterior: 0,
+      saldoPosterior: 1000,
+      motivo: "Carga inicial",
+      origem: "COMPRA",
+      valorUnitarioPago: 0.45,
+      valorTotalMovimentacao: 450,
+      gerarLancamentoFinanceiro: true,
+      transacaoFinanceiraId: "demo-transaction-stock-1",
+      usuarioId: "demo-local-user",
+      createdAt: nowIso,
+    },
+    {
+      id: "demo-stock-movement-2",
+      itemEstoqueId: "demo-stock-item-1",
+      tipo: "SAIDA",
+      quantidade: 140,
+      saldoAnterior: 1000,
+      saldoPosterior: 860,
+      motivo: "Consumo em atendimentos",
+      origem: "SERVICO",
+      valorUnitarioPago: 0.45,
+      valorTotalMovimentacao: 63,
+      usuarioId: "demo-local-user",
+      createdAt: nowIso,
+    },
+  ];
 
   const invoiceBase: Invoice = {
     id: "demo-invoice-1",
@@ -480,6 +549,8 @@ const createDemoState = (): DemoState => {
     billingPayments,
     apuracaoAtual,
     apuracaoHistorico,
+    stockItems,
+    stockMovements,
   };
 };
 
@@ -914,6 +985,130 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
       nextCursor: null,
       hasNext: false,
     } as T;
+  }
+
+  if (path === "/estoque/itens") {
+    if (method === "GET") {
+      const search = (query.get("search") || "").toLowerCase();
+      const ativo = query.get("ativo");
+      const abaixoMinimo = query.get("abaixoMinimo");
+      let items = state.stockItems;
+
+      if (search) {
+        items = items.filter((item) =>
+          `${item.nome} ${item.sku || ""}`.toLowerCase().includes(search)
+        );
+      }
+      if (ativo === "true") items = items.filter((item) => item.ativo);
+      if (ativo === "false") items = items.filter((item) => !item.ativo);
+      if (abaixoMinimo === "true") {
+        items = items.filter((item) => item.saldoAtual <= item.estoqueMinimo);
+      }
+      return items as T;
+    }
+    if (method === "POST") {
+      const payload = JSON.parse(String(options.body || "{}")) as CreateStockItemRequest;
+      const created: StockItem = {
+        id: `demo-stock-item-${Date.now()}`,
+        nome: payload.nome || "Item Estoque",
+        sku: payload.sku || null,
+        unidadeMedida: payload.unidadeMedida || "UN",
+        saldoAtual: 0,
+        estoqueMinimo: Number(payload.estoqueMinimo || 0),
+        custoMedioUnitario: null,
+        ativo: payload.ativo ?? true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      state.stockItems = [created, ...state.stockItems];
+      return created as T;
+    }
+  }
+  if (path.startsWith("/estoque/itens/")) {
+    const id = path.replace("/estoque/itens/", "");
+    if (method === "GET") {
+      return (state.stockItems.find((item) => item.id === id) || null) as T;
+    }
+    if (method === "PUT") {
+      const payload = JSON.parse(String(options.body || "{}")) as Partial<CreateStockItemRequest>;
+      state.stockItems = state.stockItems.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              ...payload,
+              updatedAt: new Date().toISOString(),
+            }
+          : item
+      );
+      return (state.stockItems.find((item) => item.id === id) || null) as T;
+    }
+  }
+  if (path === "/estoque/movimentacoes") {
+    if (method === "GET") {
+      const itemId = query.get("itemId");
+      const tipo = query.get("tipo");
+      let items = state.stockMovements;
+      if (itemId) items = items.filter((movement) => movement.itemEstoqueId === itemId);
+      if (tipo) items = items.filter((movement) => movement.tipo === tipo);
+      return items as T;
+    }
+    if (method === "POST") {
+      const payload = JSON.parse(String(options.body || "{}")) as CreateStockMovementRequest;
+      const target = state.stockItems.find((item) => item.id === payload.itemEstoqueId);
+      if (!target) {
+        throw new ApiError("Item de estoque nao encontrado.", 404, null, "ESTOQUE_ITEM_NAO_ENCONTRADO");
+      }
+      const quantidade = Number(payload.quantidade || 0);
+      const saldoAnterior = Number(target.saldoAtual || 0);
+      const isEntrada = payload.tipo === "ENTRADA";
+      const saldoPosterior = isEntrada ? saldoAnterior + quantidade : saldoAnterior - quantidade;
+      if (!isEntrada && saldoPosterior < 0) {
+        throw new ApiError("Saldo insuficiente para movimentacao.", 409, null, "ESTOQUE_SALDO_INSUFICIENTE");
+      }
+
+      target.saldoAtual = saldoPosterior;
+      target.updatedAt = new Date().toISOString();
+      const valorUnitarioPago = payload.valorUnitarioPago ?? target.custoMedioUnitario ?? 0;
+      const movement: StockMovement = {
+        id: `demo-stock-movement-${Date.now()}`,
+        itemEstoqueId: payload.itemEstoqueId,
+        tipo: payload.tipo,
+        quantidade,
+        saldoAnterior,
+        saldoPosterior,
+        motivo: payload.motivo || "Movimentacao manual",
+        origem: payload.origem || "MANUAL",
+        valorUnitarioPago,
+        valorTotalMovimentacao: Number((quantidade * Number(valorUnitarioPago || 0)).toFixed(2)),
+        gerarLancamentoFinanceiro: payload.gerarLancamentoFinanceiro ?? false,
+        transacaoFinanceiraId: null,
+        usuarioId: "demo-local-user",
+        createdAt: new Date().toISOString(),
+      };
+      state.stockMovements = [movement, ...state.stockMovements];
+      return movement as T;
+    }
+  }
+  if (path === "/estoque/dashboard" && method === "GET") {
+    const itensAbaixoMinimo = state.stockItems.filter(
+      (item) => item.saldoAtual <= item.estoqueMinimo
+    ).length;
+    const itensZerados = state.stockItems.filter((item) => item.saldoAtual <= 0).length;
+    const valorEstoqueCustoMedio = state.stockItems.reduce(
+      (sum, item) => sum + item.saldoAtual * Number(item.custoMedioUnitario || 0),
+      0
+    );
+    return {
+      atualizadoEm: new Date().toISOString(),
+      itensAbaixoMinimo,
+      itensZerados,
+      valorEstoqueCustoMedio,
+      rupturaTaxa: state.stockItems.length
+        ? Number((itensZerados / state.stockItems.length).toFixed(2))
+        : 0,
+      perdasValor: 0,
+      margemServicos: [],
+    } satisfies StockDashboardResponse as T;
   }
 
   if (path === "/services") {
@@ -2045,6 +2240,52 @@ export const appointmentsApi = {
     request<void>(`/appointments/${id}`, {
       method: "DELETE",
     }),
+};
+
+/* ================= STOCK ================= */
+
+export const stockApi = {
+  getItems: (params?: ListQueryParams & { ativo?: boolean; abaixoMinimo?: boolean }) => {
+    const query = buildListQuery(params);
+    if (typeof params?.ativo === "boolean") query.set("ativo", String(params.ativo));
+    if (typeof params?.abaixoMinimo === "boolean") {
+      query.set("abaixoMinimo", String(params.abaixoMinimo));
+    }
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<ListResponse<StockItem>>(`/estoque/itens${suffix}`);
+  },
+  getItemById: (id: string) => request<StockItem>(`/estoque/itens/${id}`),
+  createItem: (payload: CreateStockItemRequest) =>
+    request<StockItem>("/estoque/itens", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updateItem: (id: string, payload: Partial<CreateStockItemRequest>) =>
+    request<StockItem>(`/estoque/itens/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  getMovements: (params?: ListQueryParams & { itemId?: string; tipo?: string }) => {
+    const query = buildListQuery(params);
+    if (params?.itemId) query.set("itemId", params.itemId);
+    if (params?.tipo) query.set("tipo", params.tipo);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<ListResponse<StockMovement>>(`/estoque/movimentacoes${suffix}`);
+  },
+  createMovement: (payload: CreateStockMovementRequest) =>
+    request<StockMovement>("/estoque/movimentacoes", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getDashboard: (params?: { inicio?: string; fim?: string; serviceId?: string; itemId?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.inicio) query.set("inicio", params.inicio);
+    if (params?.fim) query.set("fim", params.fim);
+    if (params?.serviceId) query.set("serviceId", params.serviceId);
+    if (params?.itemId) query.set("itemId", params.itemId);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<StockDashboardResponse>(`/estoque/dashboard${suffix}`);
+  },
 };
 
 /* ================= FINANCE ================= */

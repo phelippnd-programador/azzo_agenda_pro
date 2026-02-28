@@ -27,6 +27,7 @@ import {
   CreditCard,
   BarChart3,
   ShieldCheck,
+  Boxes,
 } from "lucide-react";
 
 const MENU_REGISTRY = {
@@ -37,6 +38,7 @@ const MENU_REGISTRY = {
   "/especialidades": { icon: Tag, label: "Especialidades", path: "/especialidades" },
   "/profissionais": { icon: Users, label: "Profissionais", path: "/profissionais" },
   "/clientes": { icon: UserCircle, label: "Clientes", path: "/clientes" },
+  "/estoque": { icon: Boxes, label: "Estoque", path: "/estoque" },
   "/financeiro": { icon: DollarSign, label: "Financeiro", path: "/financeiro" },
   "/financeiro/profissionais": {
     icon: BarChart3,
@@ -65,6 +67,7 @@ const MAIN_MENU_ORDER = [
   "/especialidades",
   "/profissionais",
   "/clientes",
+  "/estoque",
   "/financeiro",
   "/financeiro/profissionais",
   "/financeiro/licenca",
