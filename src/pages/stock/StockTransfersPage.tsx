@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageEmptyState } from "@/components/ui/page-states";
 import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
@@ -26,7 +27,15 @@ export default function StockTransfersPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [transfers, setTransfers] = useState<StockTransfer[]>([]);
   const [items, setItems] = useState<StockItem[]>([]);
+  const [page, setPage] = useState(1);
+  const pageSize = 8;
   const [form, setForm] = useState<CreateStockTransferRequest>(initialForm);
+  const totalPages = Math.max(1, Math.ceil(transfers.length / pageSize));
+  const pagedTransfers = transfers.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const load = async () => {
     try {
@@ -122,7 +131,7 @@ export default function StockTransfersPage() {
             action={{ label: "Nova transferencia", onClick: () => setIsDialogOpen(true) }}
           />
         ) : (
-          transfers.map((transfer) => (
+          pagedTransfers.map((transfer) => (
             <div key={transfer.id} className="rounded-md border p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-medium">
@@ -154,6 +163,13 @@ export default function StockTransfersPage() {
             </div>
           ))
         )}
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          isLoading={isLoading}
+          onPrevious={() => setPage((prev) => Math.max(1, prev - 1))}
+          onNext={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+        />
       </CardContent>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

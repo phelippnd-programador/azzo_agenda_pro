@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageEmptyState } from "@/components/ui/page-states";
 import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
@@ -28,6 +29,8 @@ export default function StockSuppliersPage() {
   const [suppliers, setSuppliers] = useState<StockSupplier[]>([]);
   const [editingSupplier, setEditingSupplier] = useState<StockSupplier | null>(null);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
   const [form, setForm] = useState<CreateStockSupplierRequest>(initialForm);
 
   const load = async () => {
@@ -53,6 +56,15 @@ export default function StockSuppliersPage() {
       `${supplier.nome} ${supplier.documento || ""} ${supplier.email || ""}`.toLowerCase().includes(term)
     );
   }, [suppliers, search]);
+  const totalPages = Math.max(1, Math.ceil(filteredSuppliers.length / pageSize));
+  const pagedSuppliers = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredSuppliers.slice(start, start + pageSize);
+  }, [filteredSuppliers, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   const openCreate = () => {
     setEditingSupplier(null);
@@ -123,7 +135,7 @@ export default function StockSuppliersPage() {
             action={{ label: "Novo fornecedor", onClick: openCreate }}
           />
         ) : (
-          filteredSuppliers.map((supplier) => (
+          pagedSuppliers.map((supplier) => (
             <div key={supplier.id} className="rounded-md border p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-medium">{supplier.nome}</p>
@@ -143,6 +155,13 @@ export default function StockSuppliersPage() {
             </div>
           ))
         )}
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          isLoading={isLoading}
+          onPrevious={() => setPage((prev) => Math.max(1, prev - 1))}
+          onNext={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+        />
       </CardContent>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

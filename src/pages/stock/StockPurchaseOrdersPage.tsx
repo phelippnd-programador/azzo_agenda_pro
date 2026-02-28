@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageEmptyState } from "@/components/ui/page-states";
 import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
@@ -42,6 +43,8 @@ export default function StockPurchaseOrdersPage() {
   const [isSavingReceive, setIsSavingReceive] = useState(false);
   const [orders, setOrders] = useState<StockPurchaseOrder[]>([]);
   const [suppliers, setSuppliers] = useState<StockSupplier[]>([]);
+  const [page, setPage] = useState(1);
+  const pageSize = 8;
   const [createForm, setCreateForm] = useState<CreateStockPurchaseOrderRequest>(initialCreateForm);
   const [receiveForm, setReceiveForm] = useState<ReceiveStockPurchaseOrderRequest>(initialReceiveForm);
 
@@ -69,6 +72,15 @@ export default function StockPurchaseOrdersPage() {
     () => orders.find((order) => order.id === orderId) || null,
     [orders, orderId]
   );
+  const totalPages = Math.max(1, Math.ceil(orders.length / pageSize));
+  const pagedOrders = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return orders.slice(start, start + pageSize);
+  }, [orders, page]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   useEffect(() => {
     if (!orderId || isLoading) return;
@@ -158,7 +170,7 @@ export default function StockPurchaseOrdersPage() {
               action={{ label: "Novo pedido", onClick: () => setIsCreateOpen(true) }}
             />
           ) : (
-            orders.map((order) => (
+            pagedOrders.map((order) => (
               <Link
                 key={order.id}
                 to={`/estoque/pedidos-compra/${order.id}`}
@@ -175,6 +187,13 @@ export default function StockPurchaseOrdersPage() {
               </Link>
             ))
           )}
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            isLoading={isLoading}
+            onPrevious={() => setPage((prev) => Math.max(1, prev - 1))}
+            onNext={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+          />
         </CardContent>
       </Card>
 

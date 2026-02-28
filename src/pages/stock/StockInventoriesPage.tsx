@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageEmptyState } from "@/components/ui/page-states";
 import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
@@ -43,6 +44,8 @@ export default function StockInventoriesPage() {
   const [isClosing, setIsClosing] = useState(false);
   const [inventories, setInventories] = useState<StockInventory[]>([]);
   const [items, setItems] = useState<StockItem[]>([]);
+  const [page, setPage] = useState(1);
+  const pageSize = 8;
   const [inventoryForm, setInventoryForm] = useState<CreateStockInventoryRequest>(initialInventoryForm);
   const [countForm, setCountForm] = useState<StockInventoryCountRequest>(initialCountForm);
 
@@ -78,6 +81,15 @@ export default function StockInventoriesPage() {
     () => inventories.find((inventory) => inventory.id === inventoryId) || null,
     [inventories, inventoryId]
   );
+  const totalPages = Math.max(1, Math.ceil(inventories.length / pageSize));
+  const pagedInventories = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return inventories.slice(start, start + pageSize);
+  }, [inventories, page]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   useEffect(() => {
     if (!inventoryId || isLoading) return;
@@ -183,7 +195,7 @@ export default function StockInventoriesPage() {
               action={{ label: "Novo inventario", onClick: () => navigate("/estoque/inventarios/novo") }}
             />
           ) : (
-            inventories.map((inventory) => (
+            pagedInventories.map((inventory) => (
               <Link
                 key={inventory.id}
                 to={`/estoque/inventarios/${inventory.id}`}
@@ -200,6 +212,13 @@ export default function StockInventoriesPage() {
               </Link>
             ))
           )}
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            isLoading={isLoading}
+            onPrevious={() => setPage((prev) => Math.max(1, prev - 1))}
+            onNext={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+          />
         </CardContent>
       </Card>
 
