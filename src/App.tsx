@@ -26,6 +26,7 @@ import StockItemsPage from "./pages/stock/StockItemsPage";
 import StockMovementsPage from "./pages/stock/StockMovementsPage";
 import StockImportsPage from "./pages/stock/StockImportsPage";
 import StockImportDetailPage from "./pages/stock/StockImportDetailPage";
+import StockFeaturePlaceholderPage from "./pages/stock/StockFeaturePlaceholderPage";
 import Financial from "./pages/Financial";
 import ProfessionalFinancial from "./pages/ProfessionalFinancial";
 import Auditoria from "./pages/Auditoria";
@@ -244,6 +245,78 @@ function AppRoutes() {
           <Route path="movimentacoes/nova" element={<StockMovementsPage />} />
           <Route path="importacoes" element={<StockImportsPage />} />
           <Route path="importacoes/:jobId" element={<StockImportDetailPage />} />
+          <Route
+            path="inventarios"
+            element={
+              <StockFeaturePlaceholderPage
+                title="Inventarios"
+                description="Contagem ciclica e conciliacao de divergencias de estoque."
+              />
+            }
+          />
+          <Route
+            path="inventarios/novo"
+            element={
+              <StockFeaturePlaceholderPage
+                title="Novo inventario"
+                description="Abertura de inventario para contagem por periodo, item ou categoria."
+              />
+            }
+          />
+          <Route
+            path="inventarios/:id"
+            element={
+              <StockFeaturePlaceholderPage
+                title="Detalhe de inventario"
+                description="Acompanhamento da contagem, divergencias e fechamento do inventario."
+              />
+            }
+          />
+          <Route
+            path="fornecedores"
+            element={
+              <StockFeaturePlaceholderPage
+                title="Fornecedores"
+                description="Cadastro e gestao de fornecedores para compras de insumos."
+              />
+            }
+          />
+          <Route
+            path="pedidos-compra"
+            element={
+              <StockFeaturePlaceholderPage
+                title="Pedidos de compra"
+                description="Fluxo de criacao, envio e recebimento de pedidos de compra."
+              />
+            }
+          />
+          <Route
+            path="pedidos-compra/:id"
+            element={
+              <StockFeaturePlaceholderPage
+                title="Detalhe do pedido de compra"
+                description="Itens, status de recebimento parcial e lancamentos financeiros relacionados."
+              />
+            }
+          />
+          <Route
+            path="transferencias"
+            element={
+              <StockFeaturePlaceholderPage
+                title="Transferencias"
+                description="Transferencia de estoque entre filiais e controle de envio/recebimento."
+              />
+            }
+          />
+          <Route
+            path="configuracoes"
+            element={
+              <StockFeaturePlaceholderPage
+                title="Configuracoes de estoque"
+                description="Parametros operacionais, alertas e politicas de reposicao."
+              />
+            }
+          />
         </Route>
         <Route
           path="/financeiro"
