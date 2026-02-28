@@ -17,7 +17,7 @@ Status: frontend concluido, backend pendente
 - [x] `[BACK]` Criar migracao `importacao_estoque_job`.
 - [x] `[BACK]` Criar migracao `importacao_estoque_erro_linha`.
 - [x] `[BACK]` Criar indices/constraints (SKU unico por tenant, FKs, etc.).
-- [ ] `[BACK]` Criar MVs e estrutura de refresh/log.
+- [x] `[BACK]` Criar MVs e estrutura de refresh/log.
 - [x] `[BACK]` Criar migracao de menu/permissoes para rotas de estoque.
 
 ## 3. Backend - Dominio e API
