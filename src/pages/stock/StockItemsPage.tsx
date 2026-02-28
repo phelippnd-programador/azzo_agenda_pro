@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { PageEmptyState } from "@/components/ui/page-states";
 import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
@@ -205,7 +206,14 @@ export default function StockItemsPage() {
       </CardHeader>
       <CardContent className="space-y-2">
         {!filteredItems.length ? (
-          <p className="text-sm text-muted-foreground">Nenhum item encontrado.</p>
+          <PageEmptyState
+            title="Nenhum item encontrado"
+            description="Ajuste os filtros ou cadastre um novo item de estoque."
+            action={{
+              label: "Novo item",
+              onClick: () => setIsCreateOpen(true),
+            }}
+          />
         ) : (
           pagedItems.map((item) => (
             <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3">

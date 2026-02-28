@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { PageEmptyState } from "@/components/ui/page-states";
 import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import type { StockImportErrorLine, StockImportJob, StockImportType } from "@/types/stock";
@@ -169,7 +170,10 @@ export default function StockImportsPage() {
           {isLoading ? (
             <p className="text-sm text-muted-foreground">Carregando...</p>
           ) : !sortedJobs.length ? (
-            <p className="text-sm text-muted-foreground">Nenhum job de importacao encontrado.</p>
+            <PageEmptyState
+              title="Nenhuma importacao encontrada"
+              description="Envie um arquivo para criar o primeiro job de importacao."
+            />
           ) : (
             pagedJobs.map((job) => {
               const errors = errorsByJob[job.jobId] || [];

@@ -66,7 +66,7 @@ Status: em andamento
 ## 7. Go-Live
 - [ ] `[BACK]` Healthcheck de storage/worker/scheduler.
 - [ ] `[BACK]` Observabilidade (metricas de job, falha, duracao, fila).
-- [ ] `[FRONT]` Revisao final de UX/labels e estados vazios.
+- [x] `[FRONT]` Revisao final de UX/labels e estados vazios.
 - [ ] `[BACK]` Revisao de seguranca (bucket privado, URL assinada, RBAC).
 - [ ] `[GERAL]` Atualizar matriz de homologacao com evidencias.
 - [ ] `[GERAL]` Aprovar gate de release da feature.

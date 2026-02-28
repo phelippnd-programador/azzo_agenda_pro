@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { PageEmptyState } from "@/components/ui/page-states";
 import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
@@ -175,7 +176,14 @@ export default function StockMovementsPage() {
       </CardHeader>
       <CardContent className="space-y-2">
         {!filteredMovements.length ? (
-          <p className="text-sm text-muted-foreground">Nenhuma movimentacao encontrada.</p>
+          <PageEmptyState
+            title="Nenhuma movimentacao encontrada"
+            description="Registre uma entrada, saida ou ajuste para iniciar o historico."
+            action={{
+              label: "Nova movimentacao",
+              onClick: () => setIsDialogOpen(true),
+            }}
+          />
         ) : (
           pagedMovements.map((movement) => {
             const isEntrada = movement.tipo === "ENTRADA";
