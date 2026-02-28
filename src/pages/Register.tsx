@@ -1,14 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Loader2, Scissors } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import rehypeSanitize from "rehype-sanitize";
+import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { ApiError } from "@/lib/api";
+import { ApiError, publicLegalApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
+import type { LegalDocumentResponse, TermsDocumentType } from "@/types/terms";
 import { toast } from "sonner";
 
 const getPasswordStrengthStatus = (value: string) => {
@@ -44,8 +49,29 @@ export default function Register() {
   const [phone, setPhone] = useState("");
   const [cpfCnpj, setCpfCnpj] = useState("");
   const [acceptedLegalTerms, setAcceptedLegalTerms] = useState(false);
+  const [termsOfUseVersion, setTermsOfUseVersion] = useState("");
+  const [privacyPolicyVersion, setPrivacyPolicyVersion] = useState("");
+  const [isLegalOpen, setIsLegalOpen] = useState(false);
+  const [legalType, setLegalType] = useState<TermsDocumentType>("TERMS_OF_USE");
+  const [legalDocument, setLegalDocument] = useState<LegalDocumentResponse | null>(null);
+  const [isLoadingLegal, setIsLoadingLegal] = useState(false);
+  const [legalError, setLegalError] = useState<string | null>(null);
 
   const passwordStrength = getPasswordStrengthStatus(password);
+
+  useEffect(() => {
+    const loadLegalVersions = async () => {
+      try {
+        const legal = await publicLegalApi.getAll();
+        setTermsOfUseVersion(legal.termsOfUse?.version || "");
+        setPrivacyPolicyVersion(legal.privacyPolicy?.version || "");
+      } catch {
+        setTermsOfUseVersion("");
+        setPrivacyPolicyVersion("");
+      }
+    };
+    void loadLegalVersions();
+  }, []);
 
   const handleNextStep = () => {
     if (!name || !email || !password || !confirmPassword) {
@@ -79,6 +105,10 @@ export default function Register() {
       toast.error("Informe um CPF ou CNPJ valido");
       return;
     }
+    if (!termsOfUseVersion || !privacyPolicyVersion) {
+      toast.error("Nao foi possivel carregar a versao dos termos legais.");
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -89,10 +119,14 @@ export default function Register() {
         salonName,
         phone,
         cpfCnpj: cpfCnpjDigits,
+        acceptedTermsOfUse: true,
+        acceptedPrivacyPolicy: true,
+        termsOfUseVersion,
+        privacyPolicyVersion,
       });
 
       toast.success("Conta criada com sucesso!");
-      navigate("/dashboard");
+      navigate("/", { replace: true });
     } catch (error) {
       if (error instanceof ApiError && error.status === 429) {
         toast.error("Muitas tentativas. Aguarde um momento e tente novamente.");
@@ -102,6 +136,26 @@ export default function Register() {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const openLegalDialog = async (type: TermsDocumentType) => {
+    try {
+      setIsLegalOpen(true);
+      setIsLoadingLegal(true);
+      setLegalError(null);
+      setLegalType(type);
+      const data =
+        type === "PRIVACY_POLICY"
+          ? await publicLegalApi.getPrivacyPolicy()
+          : await publicLegalApi.getTermsOfUse();
+      setLegalDocument(data);
+    } catch (error) {
+      const uiError = resolveUiError(error, "Nao foi possivel carregar o documento.");
+      setLegalError(uiError.message);
+      setLegalDocument(null);
+    } finally {
+      setIsLoadingLegal(false);
     }
   };
 
@@ -228,13 +282,21 @@ export default function Register() {
                   />
                   <Label htmlFor="acceptLegalTerms" className="text-xs leading-relaxed text-muted-foreground">
                     Li e aceito os{" "}
-                    <Link to="/termos-de-uso" className="text-primary hover:underline">
+                    <button
+                      type="button"
+                      className="text-primary hover:underline"
+                      onClick={() => void openLegalDialog("TERMS_OF_USE")}
+                    >
                       Termos de Uso
-                    </Link>{" "}
+                    </button>{" "}
                     e a{" "}
-                    <Link to="/politica-privacidade" className="text-primary hover:underline">
+                    <button
+                      type="button"
+                      className="text-primary hover:underline"
+                      onClick={() => void openLegalDialog("PRIVACY_POLICY")}
+                    >
                       Politica de Privacidade
-                    </Link>
+                    </button>
                     .
                   </Label>
                 </div>
@@ -318,11 +380,56 @@ export default function Register() {
 
         <p className="text-center text-xs text-muted-foreground mt-4 sm:mt-6">
           Ao criar sua conta, voce concorda com nossos{" "}
-          <Link to="/termos-de-uso" className="text-primary hover:underline">Termos de Uso</Link>
+          <button
+            type="button"
+            className="text-primary hover:underline"
+            onClick={() => void openLegalDialog("TERMS_OF_USE")}
+          >
+            Termos de Uso
+          </button>
           {" "}e{" "}
-          <Link to="/politica-privacidade" className="text-primary hover:underline">Politica de Privacidade</Link>
+          <button
+            type="button"
+            className="text-primary hover:underline"
+            onClick={() => void openLegalDialog("PRIVACY_POLICY")}
+          >
+            Politica de Privacidade
+          </button>
         </p>
       </div>
+
+      <Dialog open={isLegalOpen} onOpenChange={setIsLegalOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {legalDocument?.title ||
+                (legalType === "PRIVACY_POLICY" ? "Politica de Privacidade" : "Termos de Uso")}
+            </DialogTitle>
+          </DialogHeader>
+          {isLoadingLegal ? (
+            <p className="text-sm text-muted-foreground">Carregando documento...</p>
+          ) : legalError ? (
+            <p className="text-sm text-destructive">{legalError}</p>
+          ) : (
+            <div className="space-y-3">
+              <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+                <p>Versao: {legalDocument?.version || "-"}</p>
+                <p>
+                  Publicado em:{" "}
+                  {legalDocument?.createdAt
+                    ? new Date(legalDocument.createdAt).toLocaleString("pt-BR")
+                    : "-"}
+                </p>
+              </div>
+              <div className="prose prose-sm max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
+                  {legalDocument?.content || "Documento indisponivel no momento."}
+                </ReactMarkdown>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

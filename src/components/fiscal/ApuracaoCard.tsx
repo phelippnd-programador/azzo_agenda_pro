@@ -10,6 +10,14 @@ interface ApuracaoCardProps {
 }
 
 export function ApuracaoCard({ apuracao, showDetails = true }: ApuracaoCardProps) {
+  const toSafeNumber = (value: unknown) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+  const valorTotalServicos = toSafeNumber(apuracao.valorTotalServicos);
+  const valorTotalImpostos = toSafeNumber(apuracao.valorTotalImpostos);
+  const quantidadeDocumentos = toSafeNumber(apuracao.quantidadeDocumentos);
+
   const statusColor =
     STATUS_COLORS[apuracao.status] ?? {
       bg: 'bg-muted/40',
@@ -45,7 +53,7 @@ export function ApuracaoCard({ apuracao, showDetails = true }: ApuracaoCardProps
             <div>
               <p className="text-sm text-muted-foreground">Total de Servicos</p>
               <p className="text-lg font-semibold text-blue-700">
-                {formatCurrency(apuracao.valorTotalServicos)}
+                {formatCurrency(valorTotalServicos)}
               </p>
             </div>
           </div>
@@ -58,7 +66,7 @@ export function ApuracaoCard({ apuracao, showDetails = true }: ApuracaoCardProps
             <div>
               <p className="text-sm text-muted-foreground">Total a Pagar</p>
               <p className="text-lg font-semibold text-red-700">
-                {formatCurrency(apuracao.valorTotalImpostos)}
+                {formatCurrency(valorTotalImpostos)}
               </p>
             </div>
           </div>
@@ -71,7 +79,7 @@ export function ApuracaoCard({ apuracao, showDetails = true }: ApuracaoCardProps
             <div>
               <p className="text-sm text-muted-foreground">Notas Emitidas</p>
               <p className="text-lg font-semibold text-green-700">
-                {apuracao.quantidadeDocumentos}
+                {quantidadeDocumentos}
               </p>
             </div>
           </div>

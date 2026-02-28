@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
-import { PageEmptyState, PageErrorState } from '@/components/ui/page-states';
+import { PageErrorState } from '@/components/ui/page-states';
 import {
   Select,
   SelectContent,
@@ -56,6 +56,7 @@ import {
   Receipt,
 } from 'lucide-react';
 import { useAppointments, Appointment } from '@/hooks/useAppointments';
+import { appointmentsApi } from '@/lib/api';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { useClients } from '@/hooks/useClients';
 import { useServices } from '@/hooks/useServices';
@@ -82,6 +83,20 @@ const normalizeTimeToHourMinute = (value?: string | null) => {
 const toMinutes = (time: string) => {
   const [hours = '0', minutes = '0'] = time.split(':');
   return Number(hours) * 60 + Number(minutes);
+};
+
+const toDateKey = (value: string | Date) => {
+  if (value instanceof Date) {
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    const day = String(value.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  const directMatch = value.match(/^\d{4}-\d{2}-\d{2}/);
+  if (directMatch) return directMatch[0];
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return toDateKey(parsed);
 };
 
 const getStatusColor = (status: string) => {
@@ -119,7 +134,8 @@ export default function Agenda() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+  const [viewMode, setViewMode] = useState<'day' | 'month'>('day');
+  const [dayAppointmentsFallback, setDayAppointmentsFallback] = useState<Appointment[] | null>(null);
   const [selectedProfessional, setSelectedProfessional] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
@@ -137,10 +153,14 @@ export default function Agenda() {
   const [newClientId, setNewClientId] = useState('');
   const [newProfessionalId, setNewProfessionalId] = useState('');
   const [newServiceId, setNewServiceId] = useState('');
-  const [newDate, setNewDate] = useState(currentDate.toISOString().split('T')[0]);
+  const [newDate, setNewDate] = useState(toDateKey(currentDate));
   const [newStartTime, setNewStartTime] = useState('');
   const [newEndTime, setNewEndTime] = useState('');
-  const dateString = currentDate.toISOString().split('T')[0];
+  const dateString = toDateKey(currentDate);
+  const dateFilter = viewMode === 'day' ? dateString : undefined;
+  const [monthlyMetrics, setMonthlyMetrics] = useState<Array<{ dia: number; mes: number; quantidadeAgendamentos: number }>>([]);
+  const [isLoadingMonthlyMetrics, setIsLoadingMonthlyMetrics] = useState(false);
+  const defaultAppointmentsLimit = 20;
 
   const {
     appointments,
@@ -154,13 +174,17 @@ export default function Agenda() {
     deleteAppointment,
     reassignAppointmentProfessional,
   } = useAppointments({
-    date: dateString,
+    date: dateFilter,
     professionalId: selectedProfessional !== 'all' ? selectedProfessional : undefined,
     status: selectedStatus !== 'all' ? selectedStatus : undefined,
+  }, {
+    defaultLimit: defaultAppointmentsLimit,
+    enabled: viewMode === 'day',
   });
   const { professionals } = useProfessionals();
-  const { clients } = useClients();
-  const { services } = useServices();
+  const shouldLoadAppointmentCatalogs = isNewAppointmentOpen;
+  const { clients } = useClients({ enabled: shouldLoadAppointmentCatalogs });
+  const { services } = useServices({ enabled: shouldLoadAppointmentCatalogs });
 
   const activeProfessionals = professionals.filter(p => p.isActive);
   const canReassignAppointments = activeProfessionals.length > 1;
@@ -194,16 +218,105 @@ export default function Agenda() {
     if (viewMode === 'day') {
       newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
     } else {
-      newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
+      newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
+    }
+    if (viewMode === 'day') {
+      setDayAppointmentsFallback(null);
     }
     setCurrentDate(newDate);
   };
 
   const goToToday = () => {
+    setDayAppointmentsFallback(null);
     setCurrentDate(new Date());
   };
 
-  const filteredAppointments = appointments;
+  const openDayView = (date: Date, fallbackAppointments?: Appointment[]) => {
+    setCurrentDate(date);
+    setViewMode('day');
+    setDayAppointmentsFallback(fallbackAppointments && fallbackAppointments.length ? fallbackAppointments : null);
+  };
+
+  useEffect(() => {
+    if (viewMode !== 'month') return;
+    let active = true;
+    const loadMonthlyMetrics = async () => {
+      try {
+        setIsLoadingMonthlyMetrics(true);
+        const data = await appointmentsApi.getMonthlyMetric(currentDate.getMonth() + 1, currentDate.getFullYear());
+        if (!active) return;
+        setMonthlyMetrics(data);
+      } catch {
+        if (!active) return;
+        toast.error('Nao foi possivel carregar os totais mensais de agendamentos.');
+        setMonthlyMetrics([]);
+      } finally {
+        if (active) setIsLoadingMonthlyMetrics(false);
+      }
+    };
+    void loadMonthlyMetrics();
+    return () => {
+      active = false;
+    };
+  }, [currentDate, viewMode]);
+
+  const monthCalendarDays = useMemo(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const firstWeekday = firstDay.getDay(); // 0 Sunday ... 6 Saturday
+    const leadingEmpty = (firstWeekday + 6) % 7; // Monday first
+    const totalDays = lastDay.getDate();
+
+    const days: Array<{ date: Date; key: string; day: number } | null> = [];
+    for (let i = 0; i < leadingEmpty; i += 1) {
+      days.push(null);
+    }
+    for (let day = 1; day <= totalDays; day += 1) {
+      const date = new Date(year, month, day);
+      days.push({
+        date,
+        key: toDateKey(date),
+        day,
+      });
+    }
+    return days;
+  }, [currentDate]);
+
+  const monthAppointmentsByDay = useMemo(() => {
+    const map = new Map<string, number>();
+    monthCalendarDays.forEach((day) => {
+      if (!day) return;
+      map.set(day.key, 0);
+    });
+
+    monthlyMetrics.forEach((metric) => {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), metric.dia);
+      const key = toDateKey(date);
+      if (!map.has(key)) return;
+      map.set(key, metric.quantidadeAgendamentos);
+    });
+    return map;
+  }, [currentDate, monthCalendarDays, monthlyMetrics]);
+  const totalAppointmentsInMonth = useMemo(
+    () => monthlyMetrics.reduce((sum, metric) => sum + metric.quantidadeAgendamentos, 0),
+    [monthlyMetrics]
+  );
+
+  const filteredAppointments =
+    viewMode === 'month'
+      ? appointments.filter((appointment) => {
+          const appointmentDateKey = toDateKey(appointment.date);
+          return monthCalendarDays.some((day) => day?.key === appointmentDateKey);
+        })
+      : (() => {
+          const dayItems = appointments.filter((appointment) => toDateKey(appointment.date) === dateString);
+          if (dayItems.length > 0) return dayItems;
+          return dayAppointmentsFallback && toDateKey(currentDate) === dateString
+            ? dayAppointmentsFallback
+            : [];
+        })();
 
   const displayedTimeSlots = useMemo(() => {
     const appointmentTimes = filteredAppointments
@@ -224,6 +337,10 @@ export default function Agenda() {
     setNewStartTime('');
     setNewEndTime('');
   }, [newDate, newProfessionalId, newServiceId]);
+
+  useEffect(() => {
+    setNewDate(toDateKey(currentDate));
+  }, [currentDate]);
 
   const handleCreateAppointment = async () => {
     if (!newClientId || !newProfessionalId || !newServiceId || !newDate || !newStartTime || !newEndTime) {
@@ -336,20 +453,32 @@ export default function Agenda() {
     }
   };
 
-  const formattedDate = currentDate.toLocaleDateString('pt-BR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
+  const formattedDate =
+    viewMode === 'day'
+      ? currentDate.toLocaleDateString('pt-BR', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+        })
+      : viewMode === 'month'
+      ? currentDate.toLocaleDateString('pt-BR', {
+          month: 'long',
+          year: 'numeric',
+        })
+      : '';
 
   // Get details for selected appointment
-  const selectedClient = selectedAppointment ? clients.find(c => c.id === selectedAppointment.clientId) : null;
+  const selectedClient = selectedAppointment ? findClientByAppointment(selectedAppointment) : null;
   const selectedProfessionalData = selectedAppointment ? professionals.find(p => p.id === selectedAppointment.professionalId) : null;
-  const selectedService = selectedAppointment ? services.find(s => s.id === selectedAppointment.serviceId) : null;
+  const selectedService = selectedAppointment ? findServiceByAppointment(selectedAppointment) : null;
   const reassignTargetProfessionals = useMemo(() => {
     if (!appointmentToReassign) return [];
     return activeProfessionals.filter((prof) => prof.id !== appointmentToReassign.professionalId);
   }, [activeProfessionals, appointmentToReassign]);
+  const findClientByAppointment = (appointment: Appointment) =>
+    appointment.client ?? clients.find((client) => client.id === appointment.clientId) ?? null;
+  const findServiceByAppointment = (appointment: Appointment) =>
+    appointment.service ?? services.find((service) => service.id === appointment.serviceId) ?? null;
 
   if (isLoading) {
     return (
@@ -389,7 +518,7 @@ export default function Agenda() {
             <Button variant="outline" size="icon" onClick={() => navigateDate('next')} className="h-8 w-8 sm:h-9 sm:w-9">
               <ChevronRight className="w-4 h-4" />
             </Button>
-            <span className="text-sm sm:text-lg font-medium text-foreground capitalize truncate">
+            <span className="text-xs sm:text-base font-medium text-foreground capitalize truncate">
               {formattedDate}
             </span>
           </div>
@@ -437,18 +566,21 @@ export default function Agenda() {
               <Button
                 variant={viewMode === 'day' ? 'secondary' : 'ghost'}
                 size="sm"
-                onClick={() => setViewMode('day')}
+                onClick={() => {
+                  setViewMode('day');
+                  setDayAppointmentsFallback(null);
+                }}
                 className="rounded-none text-xs sm:text-sm h-8 sm:h-9"
               >
                 Dia
               </Button>
               <Button
-                variant={viewMode === 'week' ? 'secondary' : 'ghost'}
+                variant={viewMode === 'month' ? 'secondary' : 'ghost'}
                 size="sm"
-                onClick={() => setViewMode('week')}
+                onClick={() => setViewMode('month')}
                 className="rounded-none text-xs sm:text-sm h-8 sm:h-9"
               >
-                Semana
+                Mensal
               </Button>
             </div>
 
@@ -571,16 +703,64 @@ export default function Agenda() {
         </div>
 
         {/* Calendar Grid */}
-        {filteredAppointments.length === 0 ? (
-          <PageEmptyState
-            title="Nenhum agendamento para este filtro"
-            description="Altere a data, os filtros ou crie um novo agendamento."
-          />
+        {viewMode === 'month' ? (
+          <Card>
+            <CardContent className="p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground capitalize">
+                  {currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                </p>
+                <Badge variant="outline">{totalAppointmentsInMonth} agendamento(s)</Badge>
+              </div>
+
+              <div className="grid grid-cols-7 gap-2 text-xs text-muted-foreground uppercase">
+                <span>Seg</span>
+                <span>Ter</span>
+                <span>Qua</span>
+                <span>Qui</span>
+                <span>Sex</span>
+                <span>Sab</span>
+                <span>Dom</span>
+              </div>
+
+              <div className="grid grid-cols-7 gap-2">
+                {monthCalendarDays.map((day, index) =>
+                  day ? (
+                    <Button
+                      key={day.key}
+                      type="button"
+                      variant="outline"
+                      className="h-auto min-h-24 justify-start p-2 text-left"
+                      onClick={() => openDayView(day.date)}
+                    >
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold">{day.day}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {monthAppointmentsByDay.get(day.key) || 0} agendamento(s)
+                        </p>
+                      </div>
+                    </Button>
+                  ) : (
+                    <div key={`empty-${index}`} className="min-h-24 rounded-md border border-dashed border-muted" />
+                  )
+                )}
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Clique em um dia para abrir a grade por horario.
+              </p>
+            </CardContent>
+          </Card>
         ) : (
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <div className="min-w-[600px]">
+          <Card>
+            <CardContent className="p-0">
+              {filteredAppointments.length === 0 ? (
+                <div className="px-3 py-2 text-xs text-muted-foreground border-b bg-muted/20">
+                  Nenhum agendamento neste dia. A grade de horarios permanece visivel para facilitar novos encaixes.
+                </div>
+              ) : null}
+              <div className="overflow-x-auto">
+                <div className="min-w-[600px]">
                 {/* Time slots header */}
                 <div className="grid grid-cols-[60px_1fr] sm:grid-cols-[80px_1fr] border-b">
                   <div className="p-2 sm:p-3 bg-muted/40 border-r">
@@ -608,9 +788,9 @@ export default function Agenda() {
                         </div>
                         <div className="p-1 sm:p-2">
                           {slotAppointments.map((apt) => {
-                            const client = clients.find(c => c.id === apt.clientId);
+                            const client = findClientByAppointment(apt);
                             const professional = professionals.find(p => p.id === apt.professionalId);
-                            const service = services.find(s => s.id === apt.serviceId);
+                            const service = findServiceByAppointment(apt);
 
                             return (
                               <div

@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMenuPermissions } from "@/contexts/MenuPermissionsContext";
-import { salonApi } from "@/lib/api";
 import {
   LayoutDashboard,
   Calendar,
@@ -93,17 +92,10 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const [salonSlug, setSalonSlug] = useState("meu-salao");
 
   useEffect(() => {
-    let mounted = true;
-    salonApi
-      .getProfile()
-      .then((profile) => {
-        if (!mounted) return;
-        if (profile.salonSlug) setSalonSlug(profile.salonSlug);
-      })
-      .catch(() => undefined);
-    return () => {
-      mounted = false;
-    };
+    const cachedSlug = localStorage.getItem("salon_public_slug");
+    if (cachedSlug?.trim()) {
+      setSalonSlug(cachedSlug.trim());
+    }
   }, []);
 
   const handleLogout = async () => {

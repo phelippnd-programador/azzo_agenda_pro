@@ -12,6 +12,11 @@ type AppointmentFilters = {
   status?: string;
 };
 
+type UseAppointmentsOptions = {
+  defaultLimit?: number;
+  enabled?: boolean;
+};
+
 type PaginationState = {
   page: number;
   limit: number;
@@ -19,21 +24,24 @@ type PaginationState = {
   hasMore: boolean;
 };
 
-export function useAppointments(filters?: AppointmentFilters) {
+export function useAppointments(filters?: AppointmentFilters, options?: UseAppointmentsOptions) {
+  const defaultLimit = options?.defaultLimit ?? DEFAULT_LIMIT;
+  const enabled = options?.enabled ?? true;
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<PaginationState>({
     page: DEFAULT_PAGE,
-    limit: DEFAULT_LIMIT,
+    limit: defaultLimit,
     total: 0,
     hasMore: false,
   });
 
   const fetchAppointments = useCallback(
     async (options?: { page?: number; limit?: number }) => {
+      if (!enabled) return;
       const page = options?.page ?? DEFAULT_PAGE;
-      const limit = options?.limit ?? DEFAULT_LIMIT;
+      const limit = options?.limit ?? defaultLimit;
     try {
       setIsLoading(true);
       const data = await appointmentsApi.getAll({
@@ -76,12 +84,24 @@ export function useAppointments(filters?: AppointmentFilters) {
       setIsLoading(false);
     }
     },
-    [filters?.date, filters?.professionalId, filters?.status]
+    [defaultLimit, enabled, filters?.date, filters?.professionalId, filters?.status]
   );
 
   useEffect(() => {
-    fetchAppointments({ page: DEFAULT_PAGE, limit: DEFAULT_LIMIT });
-  }, [fetchAppointments]);
+    if (!enabled) {
+      setAppointments([]);
+      setPagination({
+        page: DEFAULT_PAGE,
+        limit: defaultLimit,
+        total: 0,
+        hasMore: false,
+      });
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
+    fetchAppointments({ page: DEFAULT_PAGE, limit: defaultLimit });
+  }, [defaultLimit, enabled, fetchAppointments]);
 
   const createAppointment = async (data: Omit<Appointment, "id" | "createdAt">) => {
     try {

@@ -13,9 +13,14 @@ type PaginationState = {
   hasMore: boolean;
 };
 
-export function useServices() {
+type UseServicesOptions = {
+  enabled?: boolean;
+};
+
+export function useServices(options?: UseServicesOptions) {
+  const enabled = options?.enabled ?? true;
   const [services, setServices] = useState<Service[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<PaginationState>({
     page: DEFAULT_PAGE,
@@ -25,6 +30,7 @@ export function useServices() {
   });
 
   const fetchServices = useCallback(async (options?: { page?: number; limit?: number }) => {
+    if (!enabled) return;
     const page = options?.page ?? DEFAULT_PAGE;
     const limit = options?.limit ?? DEFAULT_LIMIT;
     try {
@@ -62,11 +68,23 @@ export function useServices() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
+    if (!enabled) {
+      setServices([]);
+      setPagination({
+        page: DEFAULT_PAGE,
+        limit: DEFAULT_LIMIT,
+        total: 0,
+        hasMore: false,
+      });
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
     fetchServices({ page: DEFAULT_PAGE, limit: DEFAULT_LIMIT });
-  }, [fetchServices]);
+  }, [enabled, fetchServices]);
 
   const createService = async (data: Omit<Service, "id" | "createdAt">) => {
     try {

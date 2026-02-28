@@ -97,7 +97,7 @@ export default function Professionals() {
     updateProfessional,
     deleteProfessional,
     resetProfessionalPassword,
-  } = useProfessionals();
+  } = useProfessionals({ fetchLimits: true });
   const {
     specialties,
     isLoading: isLoadingSpecialties,

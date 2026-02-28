@@ -91,6 +91,12 @@ export type AppointmentsListParams = ListQueryParams & {
   status?: string;
 };
 
+export type AppointmentMonthlyMetric = {
+  dia: number;
+  mes: number;
+  quantidadeAgendamentos: number;
+};
+
 export type ListResponse<T> =
   | T[]
   | {
@@ -1106,6 +1112,27 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
       return created as T;
     }
   }
+  if (path === "/appointments/metric" && method === "GET") {
+    const mes = Number(query.get("mes") || 0);
+    const ano = Number(query.get("ano") || 0);
+    const counts = new Map<number, number>();
+
+    state.appointments.forEach((appointment) => {
+      const date = appointment.date instanceof Date ? appointment.date : new Date(appointment.date);
+      if (Number.isNaN(date.getTime())) return;
+      if (date.getMonth() + 1 !== mes || date.getFullYear() !== ano) return;
+      const day = date.getDate();
+      counts.set(day, (counts.get(day) ?? 0) + 1);
+    });
+
+    return Array.from(counts.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([dia, quantidadeAgendamentos]) => ({
+        dia,
+        mes,
+        quantidadeAgendamentos,
+      })) as T;
+  }
   if (path === "/appointments/available-slots") {
     return [
       { startTime: "09:00", endTime: "09:30" },
@@ -1735,6 +1762,10 @@ export const authApi = {
     salonName: string;
     phone: string;
     cpfCnpj: string;
+    acceptedTermsOfUse: boolean;
+    acceptedPrivacyPolicy: boolean;
+    termsOfUseVersion: string;
+    privacyPolicyVersion: string;
   }) {
     const response = await request<AuthResponse>("/auth/register", {
       method: "POST",
@@ -1997,6 +2028,8 @@ export const appointmentsApi = {
     });
     return request<TimeSlotResponse[]>(`/appointments/available-slots?${query.toString()}`);
   },
+  getMonthlyMetric: (mes: number, ano: number) =>
+    request<AppointmentMonthlyMetric[]>(`/appointments/metric?mes=${mes}&ano=${ano}`),
   updateStatus: (id: string, status: string) =>
     request<Appointment>(`/appointments/${id}/status?value=${status}`, {
       method: "PATCH",

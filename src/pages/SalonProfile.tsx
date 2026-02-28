@@ -80,6 +80,10 @@ export default function SalonProfile() {
   const [zipCode, setZipCode] = useState('');
 
   const [businessHours, setBusinessHours] = useState<BusinessHours[]>(defaultBusinessHours);
+  const persistSalonSlug = (value: string) => {
+    if (!value?.trim()) return;
+    localStorage.setItem("salon_public_slug", value.trim());
+  };
 
   const normalizeCep = (value: string) => value.replace(/\D/g, '').slice(0, 8);
   const formatCep = (value: string) => {
@@ -107,7 +111,9 @@ export default function SalonProfile() {
       .getProfile()
       .then((data) => {
         setSalonName(data.salonName || '');
-        setSalonSlug(data.salonSlug || 'meu-salao');
+        const resolvedSlug = data.salonSlug || "meu-salao";
+        setSalonSlug(resolvedSlug);
+        persistSalonSlug(resolvedSlug);
         setSalonDescription(data.salonDescription || '');
         setSalonPhone(data.salonPhone || '');
         setSalonWhatsapp(data.salonWhatsapp || '');
@@ -208,6 +214,7 @@ export default function SalonProfile() {
       };
 
       await salonApi.updateProfile(profileData);
+      persistSalonSlug(salonSlug);
       toast.success('Perfil do salao atualizado com sucesso');
     } catch (error) {
       toast.error(resolveUiError(error, 'Erro ao salvar perfil').message);

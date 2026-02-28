@@ -13,9 +13,14 @@ type PaginationState = {
   hasMore: boolean;
 };
 
-export function useClients() {
+type UseClientsOptions = {
+  enabled?: boolean;
+};
+
+export function useClients(options?: UseClientsOptions) {
+  const enabled = options?.enabled ?? true;
   const [clients, setClients] = useState<Client[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<PaginationState>({
     page: DEFAULT_PAGE,
@@ -25,6 +30,7 @@ export function useClients() {
   });
 
   const fetchClients = useCallback(async (options?: { page?: number; limit?: number }) => {
+    if (!enabled) return;
     const page = options?.page ?? DEFAULT_PAGE;
     const limit = options?.limit ?? DEFAULT_LIMIT;
     try {
@@ -62,11 +68,23 @@ export function useClients() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
+    if (!enabled) {
+      setClients([]);
+      setPagination({
+        page: DEFAULT_PAGE,
+        limit: DEFAULT_LIMIT,
+        total: 0,
+        hasMore: false,
+      });
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
     fetchClients({ page: DEFAULT_PAGE, limit: DEFAULT_LIMIT });
-  }, [fetchClients]);
+  }, [enabled, fetchClients]);
 
   const createClient = async (data: Omit<Client, "id" | "createdAt" | "totalVisits" | "totalSpent">) => {
     try {

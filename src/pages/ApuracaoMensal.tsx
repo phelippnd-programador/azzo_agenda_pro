@@ -19,6 +19,11 @@ import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ApuracaoMensal() {
+  const toSafeNumber = (value: unknown) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
   const [apuracaoAtual, setApuracaoAtual] = useState<ApuracaoMensalType | null>(null);
   const [apuracaoSelecionada, setApuracaoSelecionada] = useState<ApuracaoMensalType | null>(null);
   const [historico, setHistorico] = useState<ApuracaoResumo[]>([]);
@@ -40,9 +45,16 @@ export default function ApuracaoMensal() {
   useEffect(() => {
     fiscalApi
       .getResumoAnual(anoSelecionado)
-      .then(setResumoAno)
+      .then((data: any) =>
+        setResumoAno({
+          totalServicos: toSafeNumber(data?.totalServicos ?? data?.valorTotalServicos),
+          totalImpostos: toSafeNumber(data?.totalImpostos ?? data?.valorTotalImpostos),
+          totalDocumentos: toSafeNumber(data?.totalDocumentos ?? data?.quantidadeDocumentos),
+          meses: Array.isArray(data?.meses) ? data.meses : [],
+        })
+      )
       .catch(() => setResumoAno(null));
-  }, [anoSelecionado, historico.length]);
+  }, [anoSelecionado]);
 
   useEffect(() => {
     if (mesSelecionado === null) return;

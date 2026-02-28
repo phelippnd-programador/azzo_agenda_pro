@@ -18,11 +18,16 @@ type PaginationState = {
   hasMore: boolean;
 };
 
-export function useProfessionals() {
+type UseProfessionalsOptions = {
+  fetchLimits?: boolean;
+};
+
+export function useProfessionals(options?: UseProfessionalsOptions) {
+  const shouldFetchLimits = options?.fetchLimits ?? false;
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [professionalLimits, setProfessionalLimits] = useState<ProfessionalLimits | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLimitsLoading, setIsLimitsLoading] = useState(true);
+  const [isLimitsLoading, setIsLimitsLoading] = useState(shouldFetchLimits);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<PaginationState>({
     page: DEFAULT_PAGE,
@@ -72,6 +77,11 @@ export function useProfessionals() {
   }, []);
 
   const fetchProfessionalLimits = useCallback(async () => {
+    if (!shouldFetchLimits) {
+      setIsLimitsLoading(false);
+      return;
+    }
+
     try {
       setIsLimitsLoading(true);
       const data = await professionalsApi.getLimits();
@@ -83,12 +93,16 @@ export function useProfessionals() {
     } finally {
       setIsLimitsLoading(false);
     }
-  }, []);
+  }, [shouldFetchLimits]);
 
   useEffect(() => {
     fetchProfessionals({ page: DEFAULT_PAGE, limit: DEFAULT_LIMIT });
-    fetchProfessionalLimits();
-  }, [fetchProfessionals, fetchProfessionalLimits]);
+    if (shouldFetchLimits) {
+      fetchProfessionalLimits();
+    } else {
+      setIsLimitsLoading(false);
+    }
+  }, [fetchProfessionals, fetchProfessionalLimits, shouldFetchLimits]);
 
   const createProfessional = async (data: Partial<Professional>) => {
     try {

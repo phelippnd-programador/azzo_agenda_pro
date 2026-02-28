@@ -14,6 +14,10 @@ interface AuthContextType {
     salonName: string;
     phone: string;
     cpfCnpj: string;
+    acceptedTermsOfUse: boolean;
+    acceptedPrivacyPolicy: boolean;
+    termsOfUseVersion: string;
+    privacyPolicyVersion: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -82,6 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     salonName: string;
     phone: string;
     cpfCnpj: string;
+    acceptedTermsOfUse: boolean;
+    acceptedPrivacyPolicy: boolean;
+    termsOfUseVersion: string;
+    privacyPolicyVersion: string;
   }) => {
     const response = await authApi.register(data);
     if (response.user) {

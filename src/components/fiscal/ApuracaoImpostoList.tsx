@@ -12,7 +12,7 @@ import { formatCurrency } from '@/lib/tax-calculator';
 import { Receipt } from 'lucide-react';
 
 interface ApuracaoImpostoListProps {
-  impostos: ApuracaoImposto[];
+  impostos?: ApuracaoImposto[] | null;
   showZeroValues?: boolean;
 }
 
@@ -31,10 +31,11 @@ export function ApuracaoImpostoList({
   impostos,
   showZeroValues = false,
 }: ApuracaoImpostoListProps) {
+  const listaImpostos = Array.isArray(impostos) ? impostos : [];
   // Filtrar impostos com valor zero se nao for para mostrar
   const impostosFiltrados = showZeroValues
-    ? impostos
-    : impostos.filter((imp) => imp.valorApurado > 0 || imp.baseCalculo > 0);
+    ? listaImpostos
+    : listaImpostos.filter((imp) => imp.valorApurado > 0 || imp.baseCalculo > 0);
 
   // Calcular total
   const totalImpostos = impostosFiltrados.reduce((sum, imp) => sum + imp.valorApurado, 0);

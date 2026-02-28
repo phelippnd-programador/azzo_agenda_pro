@@ -45,7 +45,7 @@ export default function Dashboard() {
   const {
     professionals,
     isLoading: professionalsLoading,
-  } = useProfessionals();
+  } = useProfessionals({ fetchLimits: false });
   const { clients } = useClients();
   const { services } = useServices();
 
