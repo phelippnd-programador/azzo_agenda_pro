@@ -265,6 +265,7 @@ Responses:
 - Operacoes de estoque e financeiro (quando vinculadas) devem ser transacionais por lote.
 - Importacao assincrona deve retornar `jobId` e permitir acompanhamento por status.
 - Upload de arquivo deve persistir no MinIO; banco guarda apenas metadados.
+- Antes da validacao da linha, backend deve normalizar campos textuais com `java.text.Normalizer` (NFKC).
 - Remocao de arquivo segue politica:
   - sucesso: 1h
   - falha: 24h

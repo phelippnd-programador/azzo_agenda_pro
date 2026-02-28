@@ -33,6 +33,7 @@ Status: frontend concluido, backend pendente
 - [x] `[BACK]` Integrar MinIO (upload/download/delete por `storage_key`).
 - [x] `[BACK]` Implementar `GET /estoque/importacoes/modelo` (xlsx/csv por tipo).
 - [x] `[BACK]` Implementar `POST /estoque/importacoes` (multipart + job).
+- [ ] `[BACK]` Aplicar normalizacao de dados na carga com `java.text.Normalizer` antes da validacao.
 - [x] `[BACK]` Implementar worker de processamento em lote (batch).
 - [x] `[BACK]` Implementar `GET /importacoes/{jobId}` e `/erros`.
 - [x] `[BACK]` Implementar cancelamento de job.

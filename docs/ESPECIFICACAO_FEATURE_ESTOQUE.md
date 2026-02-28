@@ -549,6 +549,29 @@ Exemplo:
 - linhas validas de outros lotes nao devem ser perdidas.
 - sempre registrar auditoria de inicio/fim, usuario e resumo do job.
 
+### 13.10.1 Normalizacao de dados na carga (Java)
+Objetivo:
+- reduzir erro de layout e inconsistencias causadas por variacao de acento, espaco e caixa.
+
+Implementacao:
+- aplicar normalizacao antes da validacao de negocio, usando `java.text.Normalizer`.
+- forma recomendada: `Normalizer.Form.NFKC`.
+- em campos textuais livres, aplicar fluxo:
+  - trim de espacos nas extremidades,
+  - colapso de espacos duplos internos,
+  - remocao de caracteres de controle invisiveis,
+  - normalizacao Unicode (`NFKC`),
+  - padronizacao de caixa quando aplicavel (ex.: `sku` em uppercase).
+
+Regras por campo (minimo):
+- `sku`: `trim` + `NFKC` + uppercase.
+- `unidadeMedida`: `trim` + `NFKC` + uppercase.
+- `nomeItem`/`motivo`/`categoriaFinanceira`: `trim` + `NFKC`.
+- booleanos textuais (`true/false`): aceitar variacoes com espacos e caixa.
+
+Rastreabilidade:
+- em erro de linha, registrar `valorRecebido` original e `valorNormalizado` no detalhe tecnico do job.
+
 ### 13.11 Criterios de aceite da importacao
 - CA-EST-301: importar 10.000 linhas sem estouro de memoria.
 - CA-EST-302: retornar progresso em tempo real por job.
@@ -556,6 +579,7 @@ Exemplo:
 - CA-EST-304: em `dryRun=true`, nao persistir dados.
 - CA-EST-305: com financeiro habilitado, manter consistencia estoque+financeiro.
 - CA-EST-306: disponibilizar download do modelo padrao por tipo de importacao com cabecalho correto.
+- CA-EST-307: aplicar normalizacao `Normalizer` antes da validacao e manter consistencia de `sku`/`unidadeMedida`.
 
 ### 13.12 Download de modelo padrao
 Objetivo:
