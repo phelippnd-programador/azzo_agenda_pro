@@ -60,7 +60,7 @@ Status: em andamento
 - [ ] `[BACK]` Testes de integracao dos endpoints principais.
 - [ ] `[BACK]` Testes de importacao assincrona (sucesso/erro/cancelamento).
 - [ ] `[BACK]` Testes de lock e nao sobreposicao do scheduler.
-- [ ] `[FRONT]` Testes de fluxo de estoque (itens, movimentacoes, importacao).
+- [x] `[FRONT]` Testes de fluxo de estoque (itens, movimentacoes, importacao).
 - [x] `[FRONT]` Validar mensagens de erro padrao do backend na UI.
 
 ## 7. Go-Live
