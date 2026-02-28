@@ -180,3 +180,34 @@ export type ReceiveStockPurchaseOrderRequest = {
   quantidadeRecebida: number;
   observacao?: string;
 };
+
+export type StockTransferStatus = "RASCUNHO" | "ENVIADA" | "RECEBIDA" | "CANCELADA";
+
+export type StockTransfer = {
+  id: string;
+  origem: string;
+  destino: string;
+  status: StockTransferStatus;
+  itemEstoqueId: string;
+  itemNome: string;
+  quantidade: number;
+  observacao?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateStockTransferRequest = {
+  origem: string;
+  destino: string;
+  itemEstoqueId: string;
+  quantidade: number;
+  observacao?: string;
+};
+
+export type StockSettings = {
+  alertaEstoqueMinimoAtivo: boolean;
+  bloquearSaidaSemSaldo: boolean;
+  permitirAjusteNegativoComPermissao: boolean;
+  diasCoberturaMeta: number;
+  updatedAt: string;
+};

@@ -56,12 +56,15 @@ import type {
   CreateStockInventoryRequest,
   CreateStockItemRequest,
   CreateStockPurchaseOrderRequest,
+  CreateStockTransferRequest,
   CreateStockSupplierRequest,
   ReceiveStockPurchaseOrderRequest,
   StockInventory,
   StockInventoryCountRequest,
   StockPurchaseOrder,
+  StockSettings,
   StockSupplier,
+  StockTransfer,
   CreateStockMovementRequest,
   StockDashboardResponse,
   StockImportErrorLine,
@@ -285,6 +288,8 @@ type DemoState = {
   stockInventories: StockInventory[];
   stockSuppliers: StockSupplier[];
   stockPurchaseOrders: StockPurchaseOrder[];
+  stockTransfers: StockTransfer[];
+  stockSettings: StockSettings;
   stockImportJobs: StockImportJob[];
   stockImportErrors: Record<string, StockImportErrorLine[]>;
 };
@@ -426,6 +431,27 @@ const createDemoState = (): DemoState => {
       updatedAt: nowIso,
     },
   ];
+  const stockTransfers: StockTransfer[] = [
+    {
+      id: "demo-stock-transfer-1",
+      origem: "Matriz",
+      destino: "Filial Centro",
+      status: "ENVIADA",
+      itemEstoqueId: "demo-stock-item-1",
+      itemNome: "Shampoo Profissional",
+      quantidade: 80,
+      observacao: "Reposicao semanal da filial.",
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    },
+  ];
+  const stockSettings: StockSettings = {
+    alertaEstoqueMinimoAtivo: true,
+    bloquearSaidaSemSaldo: true,
+    permitirAjusteNegativoComPermissao: false,
+    diasCoberturaMeta: 15,
+    updatedAt: nowIso,
+  };
   const stockImportJobs: StockImportJob[] = [];
   const stockImportErrors: Record<string, StockImportErrorLine[]> = {};
 
@@ -612,6 +638,8 @@ const createDemoState = (): DemoState => {
     stockInventories,
     stockSuppliers,
     stockPurchaseOrders,
+    stockTransfers,
+    stockSettings,
     stockImportJobs,
     stockImportErrors,
   };
@@ -1313,6 +1341,72 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
       order.status = order.quantidadePendente === 0 ? "RECEBIDO" : "PARCIALMENTE_RECEBIDO";
       order.updatedAt = new Date().toISOString();
       return order as T;
+    }
+  }
+  if (path === "/estoque/transferencias") {
+    if (method === "GET") {
+      return state.stockTransfers as T;
+    }
+    if (method === "POST") {
+      const payload = JSON.parse(String(options.body || "{}")) as CreateStockTransferRequest;
+      const item = state.stockItems.find((stockItem) => stockItem.id === payload.itemEstoqueId);
+      if (!item) {
+        throw new ApiError("Item de estoque nao encontrado.", 404, null, "ESTOQUE_ITEM_NAO_ENCONTRADO");
+      }
+      const nowIso = new Date().toISOString();
+      const created: StockTransfer = {
+        id: `demo-stock-transfer-${Date.now()}`,
+        origem: payload.origem || "Origem",
+        destino: payload.destino || "Destino",
+        status: "RASCUNHO",
+        itemEstoqueId: item.id,
+        itemNome: item.nome,
+        quantidade: Number(payload.quantidade || 0),
+        observacao: payload.observacao || null,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      };
+      state.stockTransfers = [created, ...state.stockTransfers];
+      return created as T;
+    }
+  }
+  if (path.startsWith("/estoque/transferencias/")) {
+    const suffix = path.replace("/estoque/transferencias/", "");
+    const [transferId, subPath] = suffix.split("/");
+    const transfer = state.stockTransfers.find((item) => item.id === transferId);
+    if (!transfer) {
+      throw new ApiError("Transferencia nao encontrada.", 404, null, "ESTOQUE_TRANSFERENCIA_NAO_ENCONTRADA");
+    }
+    if (!subPath && method === "GET") return transfer as T;
+    if (subPath === "enviar" && method === "POST") {
+      if (transfer.status !== "RASCUNHO") {
+        throw new ApiError("Transferencia nao pode ser enviada neste status.", 409, null, "ESTOQUE_TRANSFERENCIA_CONFLITO");
+      }
+      transfer.status = "ENVIADA";
+      transfer.updatedAt = new Date().toISOString();
+      return transfer as T;
+    }
+    if (subPath === "receber" && method === "POST") {
+      if (transfer.status !== "ENVIADA") {
+        throw new ApiError("Transferencia precisa estar enviada para receber.", 409, null, "ESTOQUE_TRANSFERENCIA_CONFLITO");
+      }
+      transfer.status = "RECEBIDA";
+      transfer.updatedAt = new Date().toISOString();
+      return transfer as T;
+    }
+  }
+  if (path === "/estoque/configuracoes") {
+    if (method === "GET") {
+      return state.stockSettings as T;
+    }
+    if (method === "PUT") {
+      const payload = JSON.parse(String(options.body || "{}")) as Partial<StockSettings>;
+      state.stockSettings = {
+        ...state.stockSettings,
+        ...payload,
+        updatedAt: new Date().toISOString(),
+      };
+      return state.stockSettings as T;
     }
   }
   if (path === "/estoque/importacoes" && method === "GET") {
@@ -2631,6 +2725,26 @@ export const stockApi = {
   receivePurchaseOrder: (id: string, payload: ReceiveStockPurchaseOrderRequest) =>
     request<StockPurchaseOrder>(`/estoque/pedidos-compra/${id}/recebimento`, {
       method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  listTransfers: () => request<StockTransfer[]>("/estoque/transferencias"),
+  createTransfer: (payload: CreateStockTransferRequest) =>
+    request<StockTransfer>("/estoque/transferencias", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  sendTransfer: (id: string) =>
+    request<StockTransfer>(`/estoque/transferencias/${id}/enviar`, {
+      method: "POST",
+    }),
+  receiveTransfer: (id: string) =>
+    request<StockTransfer>(`/estoque/transferencias/${id}/receber`, {
+      method: "POST",
+    }),
+  getSettings: () => request<StockSettings>("/estoque/configuracoes"),
+  updateSettings: (payload: Partial<StockSettings>) =>
+    request<StockSettings>("/estoque/configuracoes", {
+      method: "PUT",
       body: JSON.stringify(payload),
     }),
   listImportJobs: () => request<StockImportJob[]>("/estoque/importacoes"),

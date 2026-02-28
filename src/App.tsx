@@ -26,10 +26,11 @@ import StockItemsPage from "./pages/stock/StockItemsPage";
 import StockMovementsPage from "./pages/stock/StockMovementsPage";
 import StockImportsPage from "./pages/stock/StockImportsPage";
 import StockImportDetailPage from "./pages/stock/StockImportDetailPage";
-import StockFeaturePlaceholderPage from "./pages/stock/StockFeaturePlaceholderPage";
 import StockInventoriesPage from "./pages/stock/StockInventoriesPage";
 import StockSuppliersPage from "./pages/stock/StockSuppliersPage";
 import StockPurchaseOrdersPage from "./pages/stock/StockPurchaseOrdersPage";
+import StockTransfersPage from "./pages/stock/StockTransfersPage";
+import StockSettingsPage from "./pages/stock/StockSettingsPage";
 import Financial from "./pages/Financial";
 import ProfessionalFinancial from "./pages/ProfessionalFinancial";
 import Auditoria from "./pages/Auditoria";
@@ -254,24 +255,8 @@ function AppRoutes() {
           <Route path="fornecedores" element={<StockSuppliersPage />} />
           <Route path="pedidos-compra" element={<StockPurchaseOrdersPage />} />
           <Route path="pedidos-compra/:id" element={<StockPurchaseOrdersPage />} />
-          <Route
-            path="transferencias"
-            element={
-              <StockFeaturePlaceholderPage
-                title="Transferencias"
-                description="Transferencia de estoque entre filiais e controle de envio/recebimento."
-              />
-            }
-          />
-          <Route
-            path="configuracoes"
-            element={
-              <StockFeaturePlaceholderPage
-                title="Configuracoes de estoque"
-                description="Parametros operacionais, alertas e politicas de reposicao."
-              />
-            }
-          />
+          <Route path="transferencias" element={<StockTransfersPage />} />
+          <Route path="configuracoes" element={<StockSettingsPage />} />
         </Route>
         <Route
           path="/financeiro"

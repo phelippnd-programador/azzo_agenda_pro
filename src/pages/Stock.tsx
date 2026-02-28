@@ -10,6 +10,8 @@ const tabs = [
   { to: "/estoque/inventarios", label: "Inventarios" },
   { to: "/estoque/fornecedores", label: "Fornecedores" },
   { to: "/estoque/pedidos-compra", label: "Pedidos" },
+  { to: "/estoque/transferencias", label: "Transferencias" },
+  { to: "/estoque/configuracoes", label: "Configuracoes" },
 ];
 
 export default function Stock() {
