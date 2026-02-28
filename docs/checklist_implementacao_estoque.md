@@ -6,7 +6,7 @@ Status: em andamento
 
 ## 1. Preparacao
 - [ ] `[BACK]` Validar branch e baseline do backend (`backend/azzo-agenda-pro`).
-- [ ] `[FRONT]` Validar branch e baseline do frontend (`frontend`).
+- [x] `[FRONT]` Validar branch e baseline do frontend (`frontend`).
 - [ ] `[BACK]` Confirmar nomenclatura final de tabelas/colunas (snake_case).
 - [ ] `[BACK]` Confirmar estrategia de lock/scheduler para jobs assincronos.
 
