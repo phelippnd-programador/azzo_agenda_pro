@@ -207,6 +207,22 @@ Responses:
 - `201` processado sincrono (apenas cenarios pequenos).
 - `400`, `401`, `403`, `409`, `413`, `415`, `422`, `500`.
 
+#### GET `/estoque/importacoes/modelo`
+Descricao:
+- baixa arquivo de modelo padrao para importacao.
+
+Query:
+- `tipoImportacao` (`ITENS|ENTRADAS|AJUSTES`) - obrigatorio.
+- `formato` (`xlsx|csv`) - opcional, default `xlsx`.
+
+Responses:
+- `200` arquivo retornado com `Content-Disposition: attachment`.
+- `400` query invalida.
+- `401` nao autenticado.
+- `403` sem permissao.
+- `404` tipo/formato de modelo nao disponivel.
+- `500` erro interno.
+
 #### GET `/estoque/importacoes/{jobId}`
 Responses:
 - `200`, `401`, `403`, `404`, `500`.

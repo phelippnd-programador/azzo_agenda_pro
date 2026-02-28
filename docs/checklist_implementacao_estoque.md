@@ -31,6 +31,7 @@ Status: frontend concluido, backend pendente
 
 ## 4. Backend - Importacao Assincrona
 - [x] `[BACK]` Integrar MinIO (upload/download/delete por `storage_key`).
+- [ ] `[BACK]` Implementar `GET /estoque/importacoes/modelo` (xlsx/csv por tipo).
 - [x] `[BACK]` Implementar `POST /estoque/importacoes` (multipart + job).
 - [x] `[BACK]` Implementar worker de processamento em lote (batch).
 - [x] `[BACK]` Implementar `GET /importacoes/{jobId}` e `/erros`.
@@ -52,6 +53,7 @@ Status: frontend concluido, backend pendente
 - [x] `[FRONT]` Tela completa de CRUD de itens (editar/ativar/inativar).
 - [x] `[FRONT]` Tela de movimentacao com filtros e paginacao.
 - [x] `[FRONT]` Tela de importacao (upload, status, erros por linha).
+- [ ] `[FRONT]` Adicionar botao "Baixar modelo" na tela de importacao com seletor de tipo/formato.
 - [x] `[FRONT]` Tela de dashboard de estoque com graficos.
 - [x] `[FRONT]` Exibir `atualizadoEm` e estado de defasagem analitica.
 

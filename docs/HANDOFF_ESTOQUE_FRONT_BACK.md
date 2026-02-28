@@ -27,6 +27,9 @@ Objetivo: consolidar o contrato que o frontend ja implementou para o modulo de e
 ### 1.4 Importacoes
 - `GET /api/v1/estoque/importacoes`
   - Resposta: `StockImportJob[]`
+- `GET /api/v1/estoque/importacoes/modelo?tipoImportacao={ITENS|ENTRADAS|AJUSTES}&formato={xlsx|csv}`
+  - Resposta: arquivo binario
+  - Header esperado: `Content-Disposition: attachment`
 - `POST /api/v1/estoque/importacoes?tipoImportacao={ITENS|ENTRADAS|AJUSTES}&dryRun={true|false}`
   - `multipart/form-data` com campo `arquivo`
   - Resposta: `StockImportJob`

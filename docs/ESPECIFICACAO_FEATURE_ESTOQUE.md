@@ -500,6 +500,7 @@ Boas praticas:
 
 ### 13.8 API sugerida para importacao
 - `POST /api/v1/estoque/importacoes` (upload + criacao de job)
+- `GET /api/v1/estoque/importacoes/modelo` (download de modelo padrao por tipo)
 - `GET /api/v1/estoque/importacoes/{jobId}` (status e progresso)
 - `GET /api/v1/estoque/importacoes/{jobId}/erros` (lista paginada de erros)
 - `GET /api/v1/estoque/importacoes/{jobId}/arquivo-resultado` (xlsx/csv com retorno por linha)
@@ -554,6 +555,24 @@ Exemplo:
 - CA-EST-303: gerar relatorio de erros por linha.
 - CA-EST-304: em `dryRun=true`, nao persistir dados.
 - CA-EST-305: com financeiro habilitado, manter consistencia estoque+financeiro.
+- CA-EST-306: disponibilizar download do modelo padrao por tipo de importacao com cabecalho correto.
+
+### 13.12 Download de modelo padrao
+Objetivo:
+- reduzir erro de layout na importacao e acelerar onboarding.
+
+Endpoint:
+- `GET /api/v1/estoque/importacoes/modelo?tipoImportacao=ITENS|ENTRADAS|AJUSTES&formato=xlsx|csv`
+
+Regras:
+- `tipoImportacao` obrigatorio.
+- `formato` opcional; default `xlsx`.
+- resposta deve retornar arquivo com `Content-Disposition: attachment`.
+- cabecalho deve conter exatamente os campos obrigatorios e opcionais do tipo selecionado.
+- para `ENTRADAS`, incluir exemplo de linha com `gerarLancamentoFinanceiro`.
+
+Permissao:
+- `ESTOQUE_IMPORTACAO` (ou permissao equivalente de escrita de importacao).
 
 ## 14. Camada Analitica com Materialized View
 
