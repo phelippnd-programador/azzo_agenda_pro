@@ -72,6 +72,8 @@ Status: frontend fase 1, 2 e 3 base concluida; backend consolidando endpoints da
 - [x] `[BACK]` Testes de importacao assincrona (sucesso/erro/cancelamento).
 - [x] `[BACK]` Testes de lock e nao sobreposicao do scheduler.
 - [x] `[FRONT]` Testes de fluxo de estoque (itens, movimentacoes, importacao).
+- [x] `[FRONT]` Testes de fluxo fase 3 (inventarios, fornecedores, transferencias e configuracoes).
+- [x] `[FRONT]` Executar `vitest` dos testes de fase 3 com resultado verde.
 - [x] `[FRONT]` Validar mensagens de erro padrao do backend na UI.
 - [x] `[FRONT]` Definir roteiro de smoke test fase 3 (`docs/SMOKE_ESTOQUE_FASE3.md`).
 
