@@ -30,7 +30,7 @@ Status: frontend concluido, backend pendente
 - [x] `[BACK]` Implementar RBAC/policy por permissao fina.
 
 ## 4. Backend - Importacao Assincrona
-- [ ] `[BACK]` Integrar MinIO (upload/download/delete por `storage_key`).
+- [x] `[BACK]` Integrar MinIO (upload/download/delete por `storage_key`).
 - [x] `[BACK]` Implementar `POST /estoque/importacoes` (multipart + job).
 - [x] `[BACK]` Implementar worker de processamento em lote (batch).
 - [x] `[BACK]` Implementar `GET /importacoes/{jobId}` e `/erros`.
