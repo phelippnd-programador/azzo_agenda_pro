@@ -1578,7 +1578,7 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
   }
   if (path === "/users/me/password" && method === "PUT") return {} as T;
 
-  if ((path === "/tenant/whatsapp" || path === "/whatsapp/config") && method === "GET") {
+  if (path === "/tenant/whatsapp" && method === "GET") {
     return {
       enabled: true,
       whatsappEnabled: true,
@@ -1591,17 +1591,14 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
       webhookVerifyToken: "demo-verify-token",
     } as T;
   }
-  if ((path === "/tenant/whatsapp" || path === "/whatsapp/config") && method === "PUT") {
+  if (path === "/tenant/whatsapp" && method === "PUT") {
     const payload = JSON.parse(String(options.body || "{}"));
     return {
       ...payload,
       accessTokenConfigured: true,
     } as T;
   }
-  if (
-    (path === "/tenant/whatsapp/test" || path === "/whatsapp/config/testar-conexao") &&
-    method === "POST"
-  ) {
+  if (path === "/tenant/whatsapp/test" && method === "POST") {
     return {
       success: true,
       message: "Conexao validada em modo demo local.",
@@ -2589,46 +2586,16 @@ export const usersApi = {
 };
 
 export const tenantApi = {
-  getWhatsAppConfig: async () => {
-    try {
-      return await request<WhatsAppConfigResponse>("/whatsapp/config");
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 404) {
-        return request<WhatsAppConfigResponse>("/tenant/whatsapp");
-      }
-      throw error;
-    }
-  },
-  saveWhatsAppConfig: async (data: WhatsAppConfigRequest) => {
-    try {
-      return await request<WhatsAppConfigResponse>("/whatsapp/config", {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 404) {
-        return request<WhatsAppConfigResponse>("/tenant/whatsapp", {
-          method: "PUT",
-          body: JSON.stringify(data),
-        });
-      }
-      throw error;
-    }
-  },
-  testWhatsAppConnection: async () => {
-    try {
-      return await request<WhatsAppTestResponse>("/whatsapp/config/testar-conexao", {
-        method: "POST",
-      });
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 404) {
-        return request<WhatsAppTestResponse>("/tenant/whatsapp/test", {
-          method: "POST",
-        });
-      }
-      throw error;
-    }
-  },
+  getWhatsAppConfig: () => request<WhatsAppConfigResponse>("/tenant/whatsapp"),
+  saveWhatsAppConfig: (data: WhatsAppConfigRequest) =>
+    request<WhatsAppConfigResponse>("/tenant/whatsapp", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  testWhatsAppConnection: () =>
+    request<WhatsAppTestResponse>("/tenant/whatsapp/test", {
+      method: "POST",
+    }),
 };
 
 export const configApi = {
