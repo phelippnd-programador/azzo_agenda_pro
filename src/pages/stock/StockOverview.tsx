@@ -7,6 +7,7 @@ import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import type { StockDashboardResponse, StockItem, StockMovement } from "@/types/stock";
 import { ArrowDownCircle, ArrowUpCircle, Scale } from "lucide-react";
+import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
 import { buildStockSummary, formatCurrency, formatDateTime, getListItems } from "./utils";
 
@@ -48,6 +49,37 @@ export default function StockOverview() {
   }
 
   const summary = buildStockSummary(items, movements);
+  const updatedAt = dashboard?.atualizadoEm ?? null;
+  const updatedAtDate = updatedAt ? new Date(updatedAt) : null;
+  const staleMinutes = updatedAtDate
+    ? Math.floor((Date.now() - updatedAtDate.getTime()) / (1000 * 60))
+    : null;
+  const staleText =
+    staleMinutes === null
+      ? "Sem informacao de atualizacao"
+      : staleMinutes < 60
+        ? `Atualizado ha ${staleMinutes} min`
+        : `Atualizado ha ${Math.floor(staleMinutes / 60)} h`;
+  const staleBadgeClass =
+    staleMinutes === null
+      ? "secondary"
+      : staleMinutes > 120
+        ? "destructive"
+        : ("secondary" as const);
+
+  const estoqueByItem = [...items]
+    .sort((a, b) => b.saldoAtual - a.saldoAtual)
+    .slice(0, 8)
+    .map((item) => ({
+      nome: item.nome.length > 18 ? `${item.nome.slice(0, 18)}...` : item.nome,
+      saldo: Number(item.saldoAtual || 0),
+    }));
+
+  const movementByType = ["ENTRADA", "SAIDA", "AJUSTE"].map((tipo) => ({
+    name: tipo,
+    value: movements.filter((movement) => movement.tipo === tipo).length,
+  }));
+  const pieColors = ["#22c55e", "#ef4444", "#6366f1"];
 
   return (
     <div className="space-y-4">
@@ -116,7 +148,13 @@ export default function StockOverview() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Ultimas movimentacoes</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle>Ultimas movimentacoes</CardTitle>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">{updatedAt ? `Atualizado em ${formatDateTime(updatedAt)}` : "Sem data de atualizacao"}</p>
+              <Badge variant={staleBadgeClass}>{staleText}</Badge>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-2">
           {!movements.length ? (
@@ -173,6 +211,63 @@ export default function StockOverview() {
           )}
         </CardContent>
       </Card>
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Saldo por item (top 8)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {estoqueByItem.length ? (
+              <div className="h-[260px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={estoqueByItem}>
+                    <XAxis dataKey="nome" tick={{ fontSize: 11 }} interval={0} angle={-15} textAnchor="end" height={60} />
+                    <YAxis tick={{ fontSize: 11 }} />
+                    <Tooltip />
+                    <Bar dataKey="saldo" fill="#0ea5e9" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Sem dados de estoque para gerar grafico.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Movimentacoes por tipo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {movementByType.some((item) => item.value > 0) ? (
+              <div className="h-[260px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={movementByType}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={90}
+                      dataKey="value"
+                      nameKey="name"
+                      label
+                    >
+                      {movementByType.map((entry, index) => (
+                        <Cell key={entry.name} fill={pieColors[index % pieColors.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Sem movimentacoes para gerar grafico.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

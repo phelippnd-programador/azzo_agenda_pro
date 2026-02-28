@@ -52,8 +52,8 @@ Status: em andamento
 - [x] `[FRONT]` Tela completa de CRUD de itens (editar/ativar/inativar).
 - [x] `[FRONT]` Tela de movimentacao com filtros e paginacao.
 - [x] `[FRONT]` Tela de importacao (upload, status, erros por linha).
-- [ ] `[FRONT]` Tela de dashboard de estoque com graficos.
-- [ ] `[FRONT]` Exibir `atualizadoEm` e estado de defasagem analitica.
+- [x] `[FRONT]` Tela de dashboard de estoque com graficos.
+- [x] `[FRONT]` Exibir `atualizadoEm` e estado de defasagem analitica.
 
 ## 6. Qualidade e Testes
 - [ ] `[BACK]` Testes unitarios de regras de saldo e custo.
