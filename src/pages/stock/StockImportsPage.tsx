@@ -107,6 +107,13 @@ export default function StockImportsPage() {
   }, [sortedJobs, page]);
   const totalPages = Math.max(1, Math.ceil(sortedJobs.length / pageSize));
 
+  const getStatusVariant = (status: StockImportJob["status"]) => {
+    if (status === "FALHOU" || status === "CONCLUIDO_COM_ERROS") return "destructive" as const;
+    if (status === "CONCLUIDO") return "secondary" as const;
+    if (status === "CANCELADO") return "outline" as const;
+    return "default" as const;
+  };
+
   return (
     <div className="space-y-4">
       <Card>
@@ -151,7 +158,12 @@ export default function StockImportsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Historico de importacoes</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle>Historico de importacoes</CardTitle>
+            {hasRunningJob ? (
+              <Badge variant="default">Atualizando automaticamente</Badge>
+            ) : null}
+          </div>
         </CardHeader>
         <CardContent className="space-y-2">
           {isLoading ? (
@@ -167,7 +179,7 @@ export default function StockImportsPage() {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">{job.tipoImportacao}</Badge>
-                      <Badge variant={job.status.includes("ERROS") || job.status === "FALHOU" ? "destructive" : "secondary"}>{job.status}</Badge>
+                      <Badge variant={getStatusVariant(job.status)}>{job.status}</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">Criado em: {formatDateTime(job.createdAt)}</p>
                   </div>
