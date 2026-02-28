@@ -8,8 +8,13 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageEmptyState } from "@/components/ui/page-states";
 import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
-import type { StockImportErrorLine, StockImportJob, StockImportType } from "@/types/stock";
-import { Upload } from "lucide-react";
+import type {
+  StockImportErrorLine,
+  StockImportJob,
+  StockImportTemplateFormat,
+  StockImportType,
+} from "@/types/stock";
+import { Download, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { formatDateTime } from "./utils";
 
@@ -22,7 +27,9 @@ export default function StockImportsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [tipoImportacao, setTipoImportacao] = useState<StockImportType>("ENTRADAS");
+  const [formatoModelo, setFormatoModelo] = useState<StockImportTemplateFormat>("xlsx");
   const [dryRun, setDryRun] = useState(false);
+  const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 8;
 
@@ -98,6 +105,30 @@ export default function StockImportsPage() {
     }
   };
 
+  const handleDownloadTemplate = async () => {
+    try {
+      setIsDownloadingTemplate(true);
+      const blob = await stockApi.downloadImportTemplate({
+        tipoImportacao,
+        formato: formatoModelo,
+      });
+      const fileName = `modelo-importacao-${tipoImportacao.toLowerCase()}.${formatoModelo}`;
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Modelo baixado com sucesso.");
+    } catch (error) {
+      toast.error(resolveUiError(error, "Nao foi possivel baixar o modelo.").message);
+    } finally {
+      setIsDownloadingTemplate(false);
+    }
+  };
+
   const sortedJobs = useMemo(
     () => [...jobs].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
     [jobs]
@@ -122,7 +153,7 @@ export default function StockImportsPage() {
           <CardTitle>Nova importacao</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
             <div className="space-y-1">
               <Label>Tipo de importacao</Label>
               <select
@@ -133,6 +164,17 @@ export default function StockImportsPage() {
                 {IMPORT_TYPE_OPTIONS.map((option) => (
                   <option key={option} value={option}>{option}</option>
                 ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label>Formato do modelo</Label>
+              <select
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                value={formatoModelo}
+                onChange={(e) => setFormatoModelo(e.target.value as StockImportTemplateFormat)}
+              >
+                <option value="xlsx">XLSX</option>
+                <option value="csv">CSV</option>
               </select>
             </div>
             <div className="space-y-1 md:col-span-2">
@@ -150,10 +192,21 @@ export default function StockImportsPage() {
             Rodar em modo dry-run
           </label>
 
-          <Button className="gap-2" onClick={() => void handleSubmit()} disabled={isSubmitting}>
-            <Upload className="h-4 w-4" />
-            {isSubmitting ? "Enviando..." : "Enviar importacao"}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => void handleDownloadTemplate()}
+              disabled={isDownloadingTemplate}
+            >
+              <Download className="h-4 w-4" />
+              {isDownloadingTemplate ? "Baixando..." : "Baixar modelo"}
+            </Button>
+            <Button className="gap-2" onClick={() => void handleSubmit()} disabled={isSubmitting}>
+              <Upload className="h-4 w-4" />
+              {isSubmitting ? "Enviando..." : "Enviar importacao"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

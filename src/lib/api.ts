@@ -58,6 +58,7 @@ import type {
   StockDashboardResponse,
   StockImportErrorLine,
   StockImportJob,
+  StockImportTemplateFormat,
   StockImportType,
   StockItem,
   StockMovement,
@@ -1935,6 +1936,33 @@ const requestBlob = async (
   retryOnAuthError = true
 ): Promise<Blob> => {
   if (isLocalDemoModeEnabled()) {
+    if (endpoint.startsWith("/estoque/importacoes/modelo")) {
+      const [, queryString = ""] = endpoint.split("?");
+      const query = new URLSearchParams(queryString);
+      const tipoImportacao = (query.get("tipoImportacao") || "ENTRADAS").toUpperCase();
+      const formato = (query.get("formato") || "xlsx").toLowerCase();
+      const cabecalho = {
+        ITENS: "nome,sku,unidadeMedida,estoqueMinimo,ativo",
+        ENTRADAS:
+          "sku,quantidade,unidadeMedida,valorUnitarioPago,motivo,gerarLancamentoFinanceiro,categoriaFinanceira,formaPagamento,dataMovimento",
+        AJUSTES: "sku,quantidade,motivo,origem,dataMovimento",
+      }[tipoImportacao] || "sku,quantidade,motivo";
+      const exemplo = {
+        ITENS: "Shampoo Profissional,SHAMP-001,ML,500,true",
+        ENTRADAS:
+          "SHAMP-001,1000,ML,0.45,Reposicao mensal,true,Compra de insumos,PIX,2026-02-28",
+        AJUSTES: "SHAMP-001,25,Ajuste inventario,INVENTARIO,2026-02-28",
+      }[tipoImportacao] || "SHAMP-001,1,Ajuste";
+      const csvContent = `${cabecalho}\n${exemplo}\n`;
+      if (formato === "csv") {
+        return Promise.resolve(new Blob([csvContent], { type: "text/csv" }));
+      }
+      return Promise.resolve(
+        new Blob([csvContent], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        })
+      );
+    }
     const emptyPdfBlob = new Blob(["%PDF-1.4\n% Demo local\n"], {
       type: "application/pdf",
     });
@@ -2372,6 +2400,15 @@ export const stockApi = {
     return request<StockDashboardResponse>(`/estoque/dashboard${suffix}`);
   },
   listImportJobs: () => request<StockImportJob[]>("/estoque/importacoes"),
+  downloadImportTemplate: (params: {
+    tipoImportacao: StockImportType;
+    formato?: StockImportTemplateFormat;
+  }) => {
+    const query = new URLSearchParams();
+    query.set("tipoImportacao", params.tipoImportacao);
+    query.set("formato", params.formato ?? "xlsx");
+    return requestBlob(`/estoque/importacoes/modelo?${query.toString()}`);
+  },
   createImportJob: (params: { arquivo: File; tipoImportacao: StockImportType; dryRun?: boolean }) => {
     const query = new URLSearchParams();
     query.set("tipoImportacao", params.tipoImportacao);

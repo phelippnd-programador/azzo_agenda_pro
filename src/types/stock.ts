@@ -71,6 +71,7 @@ export type StockDashboardResponse = {
 };
 
 export type StockImportType = "ITENS" | "ENTRADAS" | "AJUSTES";
+export type StockImportTemplateFormat = "xlsx" | "csv";
 export type StockImportStatus =
   | "RECEBIDO"
   | "EM_VALIDACAO"
