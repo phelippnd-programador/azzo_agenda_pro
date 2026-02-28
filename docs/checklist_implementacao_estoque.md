@@ -75,6 +75,7 @@ Status: frontend fase 1, 2 e 3 base concluida; backend fase 3 implementado e com
 - [x] `[FRONT]` Testes de fluxo fase 3 (inventarios, fornecedores, pedidos, transferencias e configuracoes).
 - [x] `[FRONT]` Executar `vitest` dos testes de fase 3 com resultado verde.
 - [x] `[FRONT]` Executar suite completa de testes do frontend (`npm run test:run`) sem falhas.
+- [x] `[GERAL]` Revalidar frontend (`npm run test:run` + `npm run build`) e backend (`./mvnw -q -DskipTests compile`) apos fechamento da fase 3 (2026-02-28).
 - [x] `[FRONT]` Validar mensagens de erro padrao do backend na UI.
 - [x] `[FRONT]` Definir roteiro de smoke test fase 3 (`docs/SMOKE_ESTOQUE_FASE3.md`).
 
