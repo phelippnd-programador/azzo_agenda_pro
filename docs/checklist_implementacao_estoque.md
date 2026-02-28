@@ -49,7 +49,7 @@ Status: em andamento
 - [x] `[FRONT]` Criar API client `stockApi` no `src/lib/api.ts`.
 - [x] `[FRONT]` Criar pagina base de estoque (itens + movimentacoes).
 - [x] `[FRONT]` Separar em subrotas (`/estoque/itens`, `/estoque/movimentacoes`, `/estoque/importacoes`).
-- [ ] `[FRONT]` Tela completa de CRUD de itens (editar/ativar/inativar).
+- [x] `[FRONT]` Tela completa de CRUD de itens (editar/ativar/inativar).
 - [x] `[FRONT]` Tela de movimentacao com filtros e paginacao.
 - [x] `[FRONT]` Tela de importacao (upload, status, erros por linha).
 - [ ] `[FRONT]` Tela de dashboard de estoque com graficos.

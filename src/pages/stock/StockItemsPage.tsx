@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import type { CreateStockItemRequest, StockItem } from "@/types/stock";
-import { Edit, Plus } from "lucide-react";
+import { Edit, Plus, Power } from "lucide-react";
 import { toast } from "sonner";
 import { getListItems } from "./utils";
 
@@ -29,6 +29,7 @@ export default function StockItemsPage() {
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
   const [items, setItems] = useState<StockItem[]>([]);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [page, setPage] = useState(1);
   const pageSize = 12;
   const [form, setForm] = useState<CreateStockItemRequest>(initialForm);
@@ -51,9 +52,15 @@ export default function StockItemsPage() {
 
   const filteredItems = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return items;
-    return items.filter((item) => `${item.nome} ${item.sku || ""}`.toLowerCase().includes(term));
-  }, [items, search]);
+    return items.filter((item) => {
+      const matchesTerm = !term || `${item.nome} ${item.sku || ""}`.toLowerCase().includes(term);
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && item.ativo) ||
+        (statusFilter === "inactive" && !item.ativo);
+      return matchesTerm && matchesStatus;
+    });
+  }, [items, search, statusFilter]);
 
   const pagedItems = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -65,7 +72,17 @@ export default function StockItemsPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search]);
+  }, [search, statusFilter]);
+
+  const handleToggleActive = async (item: StockItem) => {
+    try {
+      await stockApi.updateItem(item.id, { ativo: !item.ativo });
+      toast.success(item.ativo ? "Item inativado com sucesso." : "Item ativado com sucesso.");
+      await load();
+    } catch (error) {
+      toast.error(resolveUiError(error, "Erro ao atualizar status do item.").message);
+    }
+  };
 
   const handleCreate = async () => {
     if (!form.nome.trim() || !form.unidadeMedida.trim()) {
@@ -169,7 +186,22 @@ export default function StockItemsPage() {
             </DialogContent>
           </Dialog>
         </div>
-        <Input placeholder="Buscar por nome ou SKU" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+          <Input
+            placeholder="Buscar por nome ou SKU"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <select
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+          >
+            <option value="all">Todos os status</option>
+            <option value="active">Ativos</option>
+            <option value="inactive">Inativos</option>
+          </select>
+        </div>
       </CardHeader>
       <CardContent className="space-y-2">
         {!filteredItems.length ? (
@@ -188,8 +220,15 @@ export default function StockItemsPage() {
                   <Badge variant={item.saldoAtual <= item.estoqueMinimo ? "destructive" : "outline"}>
                     {item.saldoAtual <= item.estoqueMinimo ? "Abaixo do minimo" : "Normal"}
                   </Badge>
+                  <Badge variant={item.ativo ? "secondary" : "outline"}>
+                    {item.ativo ? "Ativo" : "Inativo"}
+                  </Badge>
                   <Button variant="outline" size="sm" className="gap-1" onClick={() => openEdit(item)}>
                     <Edit className="h-3 w-3" />Editar
+                  </Button>
+                  <Button variant="outline" size="sm" className="gap-1" onClick={() => void handleToggleActive(item)}>
+                    <Power className="h-3 w-3" />
+                    {item.ativo ? "Inativar" : "Ativar"}
                   </Button>
                 </div>
               </div>
