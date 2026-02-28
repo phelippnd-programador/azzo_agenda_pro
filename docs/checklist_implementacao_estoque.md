@@ -61,7 +61,7 @@ Status: em andamento
 - [ ] `[BACK]` Testes de importacao assincrona (sucesso/erro/cancelamento).
 - [ ] `[BACK]` Testes de lock e nao sobreposicao do scheduler.
 - [ ] `[FRONT]` Testes de fluxo de estoque (itens, movimentacoes, importacao).
-- [ ] `[FRONT]` Validar mensagens de erro padrao do backend na UI.
+- [x] `[FRONT]` Validar mensagens de erro padrao do backend na UI.
 
 ## 7. Go-Live
 - [ ] `[BACK]` Healthcheck de storage/worker/scheduler.
