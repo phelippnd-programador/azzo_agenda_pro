@@ -25,6 +25,7 @@ import StockOverview from "./pages/stock/StockOverview";
 import StockItemsPage from "./pages/stock/StockItemsPage";
 import StockMovementsPage from "./pages/stock/StockMovementsPage";
 import StockImportsPage from "./pages/stock/StockImportsPage";
+import StockImportDetailPage from "./pages/stock/StockImportDetailPage";
 import Financial from "./pages/Financial";
 import ProfessionalFinancial from "./pages/ProfessionalFinancial";
 import Auditoria from "./pages/Auditoria";
@@ -239,6 +240,7 @@ function AppRoutes() {
           <Route path="itens" element={<StockItemsPage />} />
           <Route path="movimentacoes" element={<StockMovementsPage />} />
           <Route path="importacoes" element={<StockImportsPage />} />
+          <Route path="importacoes/:jobId" element={<StockImportDetailPage />} />
         </Route>
         <Route
           path="/financeiro"

@@ -15,6 +15,7 @@ import type {
   StockImportType,
 } from "@/types/stock";
 import { Download, Upload } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { formatDateTime } from "./utils";
 
@@ -244,6 +245,9 @@ export default function StockImportsPage() {
                     Processadas: {job.linhasProcessadas}/{job.totalLinhas} | Erros: {job.linhasComErro}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to={`/estoque/importacoes/${job.jobId}`}>Detalhes</Link>
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => void handleLoadErrors(job.jobId)}>Ver erros</Button>
                     <Button variant="outline" size="sm" onClick={() => void handleCancel(job.jobId)} disabled={!canCancel}>
                       Cancelar
