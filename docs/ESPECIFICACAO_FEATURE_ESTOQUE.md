@@ -2078,6 +2078,77 @@ app.storage.bucket=estoque-importacoes
 - CA-EST-803: objeto persiste apos restart do container (volume).
 - CA-EST-804: limpeza remove objetos conforme politica de status/TTL.
 
+## 27. Itens fechados para inicio do desenvolvimento
+
+### 27.1 Padrao final de banco (nomenclatura e convencoes)
+Decisao:
+- banco relacional PostgreSQL.
+- convencao `snake_case`.
+- nomes de tabela no plural.
+- PK `id` UUID.
+- FK com sufixo `_id`.
+- colunas de tenant obrigatorias: `tenant_id`.
+- auditoria temporal minima: `created_at`, `updated_at`.
+
+Padrao fechado para modulo:
+- `itens_estoque`
+- `movimentacoes_estoque`
+- `servico_insumo`
+- `importacao_estoque_job`
+- `importacao_estoque_erro_linha`
+- `estoque_mv_refresh_log`
+- (fase 3) `estoque_lotes`, `fornecedores`, `pedidos_compra`, `pedido_compra_itens`, `transferencias_estoque`
+
+### 27.2 Decisao de infraestrutura (fila/scheduler/lock)
+Decisao:
+- processamento assincrono por job com retorno HTTP `202`.
+- storage oficial: MinIO.
+- lock de execucao (nao sobreposicao): obrigatorio.
+
+Implementacao recomendada:
+- Scheduler Quarkus para limpeza/refresh periodico.
+- lock distribuido via banco (advisory lock) ou Redis, conforme ambiente.
+- processamento em lotes de 200 linhas (ajustavel).
+- limite de 100 jobs por ciclo de limpeza.
+- paralelismo controlado por CPU e limite configuravel.
+
+### 27.3 Politica final de permissao por perfil
+OWNER:
+- acesso total ao modulo estoque.
+
+PROFESSIONAL:
+- baseline somente leitura:
+  - `/estoque`
+  - `/estoque/itens`
+  - `/estoque/movimentacoes`
+- operacoes de escrita apenas com permissao fina explicita.
+
+Permissoes finais:
+- `ESTOQUE_LEITURA`
+- `ESTOQUE_ENTRADA`
+- `ESTOQUE_SAIDA`
+- `ESTOQUE_AJUSTE`
+- `ESTOQUE_IMPORTACAO`
+- `ESTOQUE_INVENTARIO`
+- `ESTOQUE_PARAMETROS`
+- `ESTOQUE_FORNECEDOR_COMPRA`
+- `ESTOQUE_TRANSFERENCIA`
+
+### 27.4 Contrato OpenAPI
+Decisao:
+- contrato formal do modulo consolidado em documento dedicado:
+  - `docs/CONTRATO_OPENAPI_ESTOQUE.md`
+- qualquer alteracao de endpoint/dto/status deve ser refletida primeiro no contrato.
+
+### 27.5 Gate de inicio de desenvolvimento backend
+Inicio permitido quando:
+- [x] regras de negocio fechadas
+- [x] paths e status por endpoint fechados
+- [x] dto/entidades/relacionamentos fechados
+- [x] estrategia de importacao assincrona com MinIO fechada
+- [x] politica de permissoes e rotas fechada
+- [x] contrato OpenAPI criado
+
 ## 23. Diagrama de sequencia (texto)
 
 ### 23.1 Upload e enfileiramento
