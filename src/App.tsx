@@ -29,6 +29,7 @@ import StockImportDetailPage from "./pages/stock/StockImportDetailPage";
 import StockFeaturePlaceholderPage from "./pages/stock/StockFeaturePlaceholderPage";
 import StockInventoriesPage from "./pages/stock/StockInventoriesPage";
 import StockSuppliersPage from "./pages/stock/StockSuppliersPage";
+import StockPurchaseOrdersPage from "./pages/stock/StockPurchaseOrdersPage";
 import Financial from "./pages/Financial";
 import ProfessionalFinancial from "./pages/ProfessionalFinancial";
 import Auditoria from "./pages/Auditoria";
@@ -251,24 +252,8 @@ function AppRoutes() {
           <Route path="inventarios/novo" element={<StockInventoriesPage />} />
           <Route path="inventarios/:id" element={<StockInventoriesPage />} />
           <Route path="fornecedores" element={<StockSuppliersPage />} />
-          <Route
-            path="pedidos-compra"
-            element={
-              <StockFeaturePlaceholderPage
-                title="Pedidos de compra"
-                description="Fluxo de criacao, envio e recebimento de pedidos de compra."
-              />
-            }
-          />
-          <Route
-            path="pedidos-compra/:id"
-            element={
-              <StockFeaturePlaceholderPage
-                title="Detalhe do pedido de compra"
-                description="Itens, status de recebimento parcial e lancamentos financeiros relacionados."
-              />
-            }
-          />
+          <Route path="pedidos-compra" element={<StockPurchaseOrdersPage />} />
+          <Route path="pedidos-compra/:id" element={<StockPurchaseOrdersPage />} />
           <Route
             path="transferencias"
             element={

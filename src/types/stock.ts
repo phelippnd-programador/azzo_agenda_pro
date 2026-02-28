@@ -148,3 +148,35 @@ export type CreateStockSupplierRequest = {
   contato?: string;
   ativo?: boolean;
 };
+
+export type StockPurchaseOrderStatus =
+  | "RASCUNHO"
+  | "ENVIADO"
+  | "PARCIALMENTE_RECEBIDO"
+  | "RECEBIDO"
+  | "CANCELADO";
+
+export type StockPurchaseOrder = {
+  id: string;
+  fornecedorId: string;
+  fornecedorNome: string;
+  status: StockPurchaseOrderStatus;
+  valorTotal: number;
+  quantidadeItens: number;
+  quantidadePendente: number;
+  observacao?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateStockPurchaseOrderRequest = {
+  fornecedorId: string;
+  valorTotal: number;
+  quantidadeItens: number;
+  observacao?: string;
+};
+
+export type ReceiveStockPurchaseOrderRequest = {
+  quantidadeRecebida: number;
+  observacao?: string;
+};

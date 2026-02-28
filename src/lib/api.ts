@@ -55,9 +55,12 @@ import type {
 import type {
   CreateStockInventoryRequest,
   CreateStockItemRequest,
+  CreateStockPurchaseOrderRequest,
   CreateStockSupplierRequest,
+  ReceiveStockPurchaseOrderRequest,
   StockInventory,
   StockInventoryCountRequest,
+  StockPurchaseOrder,
   StockSupplier,
   CreateStockMovementRequest,
   StockDashboardResponse,
@@ -281,6 +284,7 @@ type DemoState = {
   stockMovements: StockMovement[];
   stockInventories: StockInventory[];
   stockSuppliers: StockSupplier[];
+  stockPurchaseOrders: StockPurchaseOrder[];
   stockImportJobs: StockImportJob[];
   stockImportErrors: Record<string, StockImportErrorLine[]>;
 };
@@ -404,6 +408,20 @@ const createDemoState = (): DemoState => {
       telefone: "(11) 3333-1111",
       contato: "Mariana",
       ativo: true,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    },
+  ];
+  const stockPurchaseOrders: StockPurchaseOrder[] = [
+    {
+      id: "demo-stock-po-1",
+      fornecedorId: "demo-stock-supplier-1",
+      fornecedorNome: "Distribuidora Alpha",
+      status: "PARCIALMENTE_RECEBIDO",
+      valorTotal: 1450,
+      quantidadeItens: 100,
+      quantidadePendente: 40,
+      observacao: "Pedido mensal de reposicao.",
       createdAt: nowIso,
       updatedAt: nowIso,
     },
@@ -593,6 +611,7 @@ const createDemoState = (): DemoState => {
     stockMovements,
     stockInventories,
     stockSuppliers,
+    stockPurchaseOrders,
     stockImportJobs,
     stockImportErrors,
   };
@@ -1244,6 +1263,56 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
       };
       state.stockSuppliers = state.stockSuppliers.map((item) => (item.id === id ? updated : item));
       return updated as T;
+    }
+  }
+  if (path === "/estoque/pedidos-compra") {
+    if (method === "GET") {
+      return state.stockPurchaseOrders as T;
+    }
+    if (method === "POST") {
+      const payload = JSON.parse(String(options.body || "{}")) as CreateStockPurchaseOrderRequest;
+      const supplier = state.stockSuppliers.find((item) => item.id === payload.fornecedorId);
+      if (!supplier) {
+        throw new ApiError("Fornecedor nao encontrado.", 404, null, "ESTOQUE_FORNECEDOR_NAO_ENCONTRADO");
+      }
+      const nowIso = new Date().toISOString();
+      const created: StockPurchaseOrder = {
+        id: `demo-stock-po-${Date.now()}`,
+        fornecedorId: supplier.id,
+        fornecedorNome: supplier.nome,
+        status: "ENVIADO",
+        valorTotal: Number(payload.valorTotal || 0),
+        quantidadeItens: Number(payload.quantidadeItens || 0),
+        quantidadePendente: Number(payload.quantidadeItens || 0),
+        observacao: payload.observacao || null,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      };
+      state.stockPurchaseOrders = [created, ...state.stockPurchaseOrders];
+      return created as T;
+    }
+  }
+  if (path.startsWith("/estoque/pedidos-compra/")) {
+    const suffix = path.replace("/estoque/pedidos-compra/", "");
+    const [orderId, subPath] = suffix.split("/");
+    const order = state.stockPurchaseOrders.find((item) => item.id === orderId);
+    if (!order) {
+      throw new ApiError("Pedido de compra nao encontrado.", 404, null, "ESTOQUE_PEDIDO_NAO_ENCONTRADO");
+    }
+    if (!subPath && method === "GET") return order as T;
+    if (subPath === "recebimento" && method === "POST") {
+      const payload = JSON.parse(String(options.body || "{}")) as ReceiveStockPurchaseOrderRequest;
+      const recebida = Number(payload.quantidadeRecebida || 0);
+      if (recebida <= 0) {
+        throw new ApiError("Quantidade recebida invalida.", 422, null, "ESTOQUE_RECEBIMENTO_INVALIDO");
+      }
+      if (recebida > order.quantidadePendente) {
+        throw new ApiError("Quantidade recebida maior que o pendente.", 422, null, "ESTOQUE_RECEBIMENTO_EXCEDENTE");
+      }
+      order.quantidadePendente = Math.max(0, order.quantidadePendente - recebida);
+      order.status = order.quantidadePendente === 0 ? "RECEBIDO" : "PARCIALMENTE_RECEBIDO";
+      order.updatedAt = new Date().toISOString();
+      return order as T;
     }
   }
   if (path === "/estoque/importacoes" && method === "GET") {
@@ -2550,6 +2619,18 @@ export const stockApi = {
   updateSupplier: (id: string, payload: Partial<CreateStockSupplierRequest>) =>
     request<StockSupplier>(`/estoque/fornecedores/${id}`, {
       method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  listPurchaseOrders: () => request<StockPurchaseOrder[]>("/estoque/pedidos-compra"),
+  createPurchaseOrder: (payload: CreateStockPurchaseOrderRequest) =>
+    request<StockPurchaseOrder>("/estoque/pedidos-compra", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getPurchaseOrderById: (id: string) => request<StockPurchaseOrder>(`/estoque/pedidos-compra/${id}`),
+  receivePurchaseOrder: (id: string, payload: ReceiveStockPurchaseOrderRequest) =>
+    request<StockPurchaseOrder>(`/estoque/pedidos-compra/${id}/recebimento`, {
+      method: "POST",
       body: JSON.stringify(payload),
     }),
   listImportJobs: () => request<StockImportJob[]>("/estoque/importacoes"),
