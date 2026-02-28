@@ -5,37 +5,37 @@ Base: `docs/ESPECIFICACAO_FEATURE_ESTOQUE.md` + `docs/CONTRATO_OPENAPI_ESTOQUE.m
 Status: frontend concluido, backend pendente
 
 ## 1. Preparacao
-- [ ] `[BACK]` Validar branch e baseline do backend (`backend/azzo-agenda-pro`).
+- [x] `[BACK]` Validar branch e baseline do backend (`backend/azzo-agenda-pro`).
 - [x] `[FRONT]` Validar branch e baseline do frontend (`frontend`).
 - [ ] `[BACK]` Confirmar nomenclatura final de tabelas/colunas (snake_case).
 - [ ] `[BACK]` Confirmar estrategia de lock/scheduler para jobs assincronos.
 
 ## 2. Banco e Migracoes
-- [ ] `[BACK]` Criar migracao `itens_estoque`.
-- [ ] `[BACK]` Criar migracao `movimentacoes_estoque`.
+- [x] `[BACK]` Criar migracao `itens_estoque`.
+- [x] `[BACK]` Criar migracao `movimentacoes_estoque`.
 - [ ] `[BACK]` Criar migracao `servico_insumo` (fase 2).
-- [ ] `[BACK]` Criar migracao `importacao_estoque_job`.
-- [ ] `[BACK]` Criar migracao `importacao_estoque_erro_linha`.
-- [ ] `[BACK]` Criar indices/constraints (SKU unico por tenant, FKs, etc.).
+- [x] `[BACK]` Criar migracao `importacao_estoque_job`.
+- [x] `[BACK]` Criar migracao `importacao_estoque_erro_linha`.
+- [x] `[BACK]` Criar indices/constraints (SKU unico por tenant, FKs, etc.).
 - [ ] `[BACK]` Criar MVs e estrutura de refresh/log.
-- [ ] `[BACK]` Criar migracao de menu/permissoes para rotas de estoque.
+- [x] `[BACK]` Criar migracao de menu/permissoes para rotas de estoque.
 
 ## 3. Backend - Dominio e API
-- [ ] `[BACK]` Implementar entidades e repositorios de estoque.
-- [ ] `[BACK]` Implementar regras de negocio (saldo, ajuste, validacoes).
-- [ ] `[BACK]` Implementar `GET/POST/PUT` de itens.
-- [ ] `[BACK]` Implementar `GET/POST` de movimentacoes.
-- [ ] `[BACK]` Implementar endpoint de dashboard agregado.
-- [ ] `[BACK]` Implementar erro padrao por endpoint conforme contrato.
-- [ ] `[BACK]` Implementar RBAC/policy por permissao fina.
+- [x] `[BACK]` Implementar entidades e repositorios de estoque.
+- [x] `[BACK]` Implementar regras de negocio (saldo, ajuste, validacoes).
+- [x] `[BACK]` Implementar `GET/POST/PUT` de itens.
+- [x] `[BACK]` Implementar `GET/POST` de movimentacoes.
+- [x] `[BACK]` Implementar endpoint de dashboard agregado.
+- [x] `[BACK]` Implementar erro padrao por endpoint conforme contrato.
+- [x] `[BACK]` Implementar RBAC/policy por permissao fina.
 
 ## 4. Backend - Importacao Assincrona
 - [ ] `[BACK]` Integrar MinIO (upload/download/delete por `storage_key`).
-- [ ] `[BACK]` Implementar `POST /estoque/importacoes` (multipart + job).
+- [x] `[BACK]` Implementar `POST /estoque/importacoes` (multipart + job).
 - [ ] `[BACK]` Implementar worker de processamento em lote (batch).
-- [ ] `[BACK]` Implementar `GET /importacoes/{jobId}` e `/erros`.
-- [ ] `[BACK]` Implementar cancelamento de job.
-- [ ] `[BACK]` Implementar URL assinada de resultado.
+- [x] `[BACK]` Implementar `GET /importacoes/{jobId}` e `/erros`.
+- [x] `[BACK]` Implementar cancelamento de job.
+- [x] `[BACK]` Implementar URL assinada de resultado.
 - [ ] `[BACK]` Implementar limpeza a cada 20 min (sem sobreposicao).
 - [ ] `[BACK]` Aplicar TTL: sucesso 1h, falha 24h.
 - [ ] `[BACK]` Limitar limpeza por rodada (100 jobs).
