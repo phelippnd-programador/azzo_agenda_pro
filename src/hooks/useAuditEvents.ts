@@ -28,6 +28,20 @@ const INITIAL_RESPONSE: AuditSearchResponseDto = {
   },
 };
 
+const normalizeAuditResponse = (
+  data: Partial<AuditSearchResponseDto> | null | undefined
+): AuditSearchResponseDto => ({
+  items: Array.isArray(data?.items) ? data.items : [],
+  nextCursor: data?.nextCursor ?? null,
+  limit: typeof data?.limit === "number" ? data.limit : 50,
+  hasNext: Boolean(data?.hasNext),
+  aggregations: {
+    byModule: Array.isArray(data?.aggregations?.byModule) ? data.aggregations.byModule : [],
+    byStatus: Array.isArray(data?.aggregations?.byStatus) ? data.aggregations.byStatus : [],
+    byAction: Array.isArray(data?.aggregations?.byAction) ? data.aggregations.byAction : [],
+  },
+});
+
 export function useAuditEvents() {
   const defaultPeriod = useMemo(createDefaultPeriod, []);
   const [filters, setFilters] = useState<AuditSearchQueryDto>({
@@ -51,14 +65,15 @@ export function useAuditEvents() {
           ...filters,
           cursor: nextCursor || undefined,
         });
+        const normalized = normalizeAuditResponse(data);
 
         setResponse((prev) =>
           append
             ? {
-                ...data,
-                items: [...prev.items, ...data.items],
+                ...normalized,
+                items: [...prev.items, ...normalized.items],
               }
-            : data
+            : normalized
         );
         setError(null);
       } catch (err) {

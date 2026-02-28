@@ -112,7 +112,13 @@ export default function Auditoria() {
     const loadFilterOptions = async () => {
       try {
         const options = await auditoriaApi.getFilterOptions(filters.from, filters.to);
-        setFilterOptions(options);
+        setFilterOptions({
+          modules: Array.isArray(options?.modules) ? options.modules : [],
+          statuses: Array.isArray(options?.statuses) ? options.statuses : [],
+          actions: Array.isArray(options?.actions) ? options.actions : [],
+          entityTypes: Array.isArray(options?.entityTypes) ? options.entityTypes : [],
+          sourceChannels: Array.isArray(options?.sourceChannels) ? options.sourceChannels : [],
+        });
       } catch {
         setFilterOptions(null);
       }
@@ -128,7 +134,7 @@ export default function Auditoria() {
           to: filters.to,
           limit: 20,
         });
-        setRetentionEvents(response.items);
+        setRetentionEvents(Array.isArray(response?.items) ? response.items : []);
       } catch {
         setRetentionEvents([]);
       }
