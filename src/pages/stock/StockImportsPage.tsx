@@ -41,6 +41,19 @@ export default function StockImportsPage() {
     void load();
   }, []);
 
+  const hasRunningJob = useMemo(
+    () => jobs.some((job) => ["RECEBIDO", "EM_VALIDACAO", "PROCESSANDO"].includes(job.status)),
+    [jobs]
+  );
+
+  useEffect(() => {
+    if (!hasRunningJob) return;
+    const timer = window.setInterval(() => {
+      void load();
+    }, 10000);
+    return () => window.clearInterval(timer);
+  }, [hasRunningJob]);
+
   const handleSubmit = async () => {
     if (!selectedFile) {
       toast.error("Selecione um arquivo para importar.");
@@ -57,6 +70,7 @@ export default function StockImportsPage() {
       toast.success("Importacao enviada com sucesso.");
       setJobs((prev) => [created, ...prev]);
       setSelectedFile(null);
+      setPage(1);
     } catch (error) {
       toast.error(resolveUiError(error, "Erro ao enviar importacao.").message);
     } finally {
@@ -147,6 +161,7 @@ export default function StockImportsPage() {
           ) : (
             pagedJobs.map((job) => {
               const errors = errorsByJob[job.jobId] || [];
+              const canCancel = ["RECEBIDO", "EM_VALIDACAO", "PROCESSANDO"].includes(job.status);
               return (
                 <div key={job.jobId} className="rounded-md border p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -161,7 +176,9 @@ export default function StockImportsPage() {
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <Button variant="outline" size="sm" onClick={() => void handleLoadErrors(job.jobId)}>Ver erros</Button>
-                    <Button variant="outline" size="sm" onClick={() => void handleCancel(job.jobId)}>Cancelar</Button>
+                    <Button variant="outline" size="sm" onClick={() => void handleCancel(job.jobId)} disabled={!canCancel}>
+                      Cancelar
+                    </Button>
                   </div>
                   {!!errors.length && (
                     <div className="mt-2 rounded-md bg-muted p-2 text-xs">
