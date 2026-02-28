@@ -37,6 +37,7 @@ import InvoiceEmission from "./pages/InvoiceEmission";
 import ApuracaoMensal from "./pages/ApuracaoMensal";
 import WhatsAppIntegration from "./pages/WhatsAppIntegration";
 import Unauthorized from "./pages/Unauthorized";
+import LegalDocument from "./pages/LegalDocument";
 import { NotificationsProvider } from "@/providers/NotificationsProvider";
 import { FullScreenLoader } from "@/components/ui/full-screen-loader";
 
@@ -146,6 +147,19 @@ function AppRoutes() {
           }
         />
         <Route path="/agendar/:slug" element={<PublicBooking />} />
+        <Route
+          path="/termos-de-uso"
+          element={<LegalDocument documentType="TERMS_OF_USE" fallbackTitle="Termos de Uso" />}
+        />
+        <Route
+          path="/politica-privacidade"
+          element={
+            <LegalDocument
+              documentType="PRIVACY_POLICY"
+              fallbackTitle="Politica de Privacidade"
+            />
+          }
+        />
         <Route path="/compras" element={<SalePage />} />
         <Route path="/compras/:productId" element={<SalePage />} />
         <Route path="/success" element={<CheckoutSuccess />} />

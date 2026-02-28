@@ -48,6 +48,10 @@ import type {
   AuditSearchResponseDto,
   AuditStatus,
 } from "@/types/auditoria";
+import type {
+  LegalDocumentResponse,
+  PublicLegalResponse,
+} from "@/types/terms";
 import {
   mockAppointments,
   mockClients,
@@ -644,6 +648,68 @@ const localDemoRequest = <T>(endpoint: string, options: RequestInit = {}): T => 
   }
 
   if (path === "/dashboard/metrics") return mockDashboardMetrics as T;
+  if (path.startsWith("/public/legal") && method === "GET") {
+    const termsOfUse: LegalDocumentResponse = {
+      documentType: "TERMS_OF_USE",
+      version: "2026.02",
+      title: "Termos de Uso",
+      content: `# Termos de Uso
+
+## 1. Aceitacao
+Ao usar o **Azzo Agenda Pro**, voce concorda com este termo.
+
+## 2. Regras de uso
+- Nao compartilhar credenciais.
+- Respeitar as politicas de seguranca.
+- Nao usar o sistema para fins ilegais.
+
+## 3. Responsabilidades
+| Parte | Responsabilidade |
+|---|---|
+| Cliente | Manter dados corretos e acessos sob controle |
+| Plataforma | Disponibilidade e seguranca operacional |
+
+## 4. Auditoria
+Eventos criticos podem ser registrados para seguranca e compliance.`,
+      contentHash: "demo-hash-terms-of-use",
+      createdAt: new Date().toISOString(),
+    };
+    const privacyPolicy: LegalDocumentResponse = {
+      documentType: "PRIVACY_POLICY",
+      version: "2026.02",
+      title: "Politica de Privacidade",
+      content: `# Politica de Privacidade
+
+## 1. Dados coletados
+- Nome, email e telefone
+- Dados operacionais de agendamento
+- Endereco IP para seguranca e auditoria
+
+## 2. Finalidades
+Usamos os dados para operacao do sistema, seguranca e cumprimento legal.
+
+## 3. Retencao
+Os dados sao mantidos conforme politica vigente e requisitos legais.
+
+## 4. Direitos do titular
+Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
+      contentHash: "demo-hash-privacy-policy",
+      createdAt: new Date().toISOString(),
+    };
+
+    if (path === "/public/legal") {
+      return {
+        termsOfUse,
+        privacyPolicy,
+      } as T;
+    }
+    if (path === "/public/legal/terms-of-use") {
+      return termsOfUse as T;
+    }
+    if (path === "/public/legal/privacy-policy") {
+      return privacyPolicy as T;
+    }
+  }
   if (path === "/dashboard/revenue/weekly") {
     const points = [
       { day: "Seg", date: "", value: 1250 },
@@ -2183,6 +2249,12 @@ export const tenantApi = {
 export const configApi = {
   getCurrentMenus: () =>
     request<CurrentMenuPermissionsResponse>("/config/menus/current"),
+};
+
+export const publicLegalApi = {
+  getAll: () => request<PublicLegalResponse>("/public/legal"),
+  getTermsOfUse: () => request<LegalDocumentResponse>("/public/legal/terms-of-use"),
+  getPrivacyPolicy: () => request<LegalDocumentResponse>("/public/legal/privacy-policy"),
 };
 
 export const checkoutApi = {
