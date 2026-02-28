@@ -2,7 +2,7 @@
 
 Projeto: Azzo Agenda Pro  
 Base: `docs/ESPECIFICACAO_FEATURE_ESTOQUE.md` + `docs/CONTRATO_OPENAPI_ESTOQUE.md`  
-Status: em andamento
+Status: frontend concluido, backend pendente
 
 ## 1. Preparacao
 - [ ] `[BACK]` Validar branch e baseline do backend (`backend/azzo-agenda-pro`).
