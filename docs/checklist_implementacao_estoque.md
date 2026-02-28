@@ -61,8 +61,8 @@ Status: frontend concluido, backend pendente
 ## 6. Qualidade e Testes
 - [x] `[BACK]` Testes unitarios de regras de saldo e custo.
 - [x] `[BACK]` Testes de integracao dos endpoints principais.
-- [ ] `[BACK]` Testes de importacao assincrona (sucesso/erro/cancelamento).
-- [ ] `[BACK]` Testes de lock e nao sobreposicao do scheduler.
+- [x] `[BACK]` Testes de importacao assincrona (sucesso/erro/cancelamento).
+- [x] `[BACK]` Testes de lock e nao sobreposicao do scheduler.
 - [x] `[FRONT]` Testes de fluxo de estoque (itens, movimentacoes, importacao).
 - [x] `[FRONT]` Validar mensagens de erro padrao do backend na UI.
 
