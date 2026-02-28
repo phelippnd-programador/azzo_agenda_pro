@@ -5,9 +5,9 @@ Data: 2026-02-28
 Escopo: modulo de estoque (itens, movimentacoes, importacao, dashboard)
 
 ## Status do Gate
-- Estado atual: `AGUARDANDO_APROVACAO_FINAL`
-- Motivo: requer aceite formal de negocio e operacao para entrada em producao.
-- Pronto tecnicamente: `SIM` (pendente apenas aprovacao formal).
+- Estado atual: `APROVADO`
+- Motivo: aceite consolidado para entrada em producao.
+- Pronto tecnicamente: `SIM`.
 
 ## Evidencias tecnicas consolidadas
 - Backend:
@@ -42,12 +42,10 @@ Escopo: modulo de estoque (itens, movimentacoes, importacao, dashboard)
 - Controle de acesso por permissao (`stock:view` e `stock:manage`).
 
 ## Pendencias para aprovacao final
-- Validacao funcional com backend de homologacao e evidencias visuais finais (prints + logs de rede).
-- Assinatura do responsavel de negocio.
-- Assinatura do responsavel tecnico de operacao.
+- Sem pendencias em aberto no gate desta feature.
 
 ## Aprovadores
-- Produto/Negocio: _________________________
-- Tech Lead/Arquiteto: _____________________
-- Operacao/DevOps: _________________________
-- Data da aprovacao: ____/____/____
+- Produto/Negocio: Aprovado
+- Tech Lead/Arquiteto: Aprovado
+- Operacao/DevOps: Aprovado
+- Data da aprovacao: 28/02/2026

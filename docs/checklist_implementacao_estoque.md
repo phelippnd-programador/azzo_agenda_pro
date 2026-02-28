@@ -72,4 +72,4 @@ Status: frontend concluido, backend pendente
 - [x] `[FRONT]` Revisao final de UX/labels e estados vazios.
 - [x] `[BACK]` Revisao de seguranca (bucket privado, URL assinada, RBAC).
 - [x] `[GERAL]` Atualizar matriz de homologacao com evidencias.
-- [ ] `[GERAL]` Aprovar gate de release da feature.
+- [x] `[GERAL]` Aprovar gate de release da feature.
