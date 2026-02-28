@@ -2,7 +2,7 @@
 
 Projeto: Azzo Agenda Pro  
 Base: `docs/ESPECIFICACAO_FEATURE_ESTOQUE.md` + `docs/CONTRATO_OPENAPI_ESTOQUE.md`  
-Status: frontend concluido, backend pendente
+Status: frontend fase 1, 2 e 3 base concluida; backend consolidando endpoints da fase 3
 
 ## 1. Preparacao
 - [x] `[BACK]` Validar branch e baseline do backend (`backend/azzo-agenda-pro`).
@@ -57,6 +57,14 @@ Status: frontend concluido, backend pendente
 - [x] `[FRONT]` Adicionar botao "Baixar modelo" na tela de importacao com seletor de tipo/formato.
 - [x] `[FRONT]` Tela de dashboard de estoque com graficos.
 - [x] `[FRONT]` Exibir `atualizadoEm` e estado de defasagem analitica.
+- [x] `[FRONT]` Tela de detalhe de importacao (`/estoque/importacoes/:jobId`).
+- [x] `[FRONT]` Rotas dedicadas para itens (`/estoque/itens/novo` e `/estoque/itens/:id/editar`).
+- [x] `[FRONT]` Rota dedicada para movimentacao (`/estoque/movimentacoes/nova`).
+- [x] `[FRONT]` Modulo de inventarios (`/estoque/inventarios*`) com criar, contar e fechar.
+- [x] `[FRONT]` Modulo de fornecedores (`/estoque/fornecedores`) com criar/editar.
+- [x] `[FRONT]` Modulo de pedidos de compra (`/estoque/pedidos-compra*`) com recebimento parcial.
+- [x] `[FRONT]` Modulo de transferencias (`/estoque/transferencias`) com enviar/receber.
+- [x] `[FRONT]` Modulo de configuracoes de estoque (`/estoque/configuracoes`).
 
 ## 6. Qualidade e Testes
 - [x] `[BACK]` Testes unitarios de regras de saldo e custo.

@@ -42,6 +42,52 @@ Objetivo: consolidar o contrato que o frontend ja implementou para o modulo de e
 - `POST /api/v1/estoque/importacoes/{jobId}/cancelar`
   - Resposta: `StockImportJob`
 
+### 1.5 Inventarios
+- `GET /api/v1/estoque/inventarios`
+  - Resposta: `StockInventory[]`
+- `POST /api/v1/estoque/inventarios`
+  - Resposta: `StockInventory`
+- `GET /api/v1/estoque/inventarios/{id}`
+  - Resposta: `StockInventory`
+- `POST /api/v1/estoque/inventarios/{id}/contagens`
+  - Resposta: `StockInventory`
+- `POST /api/v1/estoque/inventarios/{id}/fechamento`
+  - Resposta: `StockInventory`
+
+### 1.6 Fornecedores
+- `GET /api/v1/estoque/fornecedores`
+  - Resposta: `StockSupplier[]`
+- `POST /api/v1/estoque/fornecedores`
+  - Resposta: `StockSupplier`
+- `PUT /api/v1/estoque/fornecedores/{id}`
+  - Resposta: `StockSupplier`
+
+### 1.7 Pedidos de compra
+- `GET /api/v1/estoque/pedidos-compra`
+  - Resposta: `StockPurchaseOrder[]`
+- `POST /api/v1/estoque/pedidos-compra`
+  - Resposta: `StockPurchaseOrder`
+- `GET /api/v1/estoque/pedidos-compra/{id}`
+  - Resposta: `StockPurchaseOrder`
+- `POST /api/v1/estoque/pedidos-compra/{id}/recebimento`
+  - Resposta: `StockPurchaseOrder`
+
+### 1.8 Transferencias
+- `GET /api/v1/estoque/transferencias`
+  - Resposta: `StockTransfer[]`
+- `POST /api/v1/estoque/transferencias`
+  - Resposta: `StockTransfer`
+- `POST /api/v1/estoque/transferencias/{id}/enviar`
+  - Resposta: `StockTransfer`
+- `POST /api/v1/estoque/transferencias/{id}/receber`
+  - Resposta: `StockTransfer`
+
+### 1.9 Configuracoes de estoque
+- `GET /api/v1/estoque/configuracoes`
+  - Resposta: `StockSettings`
+- `PUT /api/v1/estoque/configuracoes`
+  - Resposta: `StockSettings`
+
 ## 2. DTOs esperados pelo frontend
 
 Referencias:
@@ -59,6 +105,16 @@ Campos principais (resumo):
   - `jobId`, `tipoImportacao`, `status`, `dryRun`, `totalLinhas`, `linhasProcessadas`, `linhasComErro`, `arquivoSha256`, `arquivoStorageKey`, `createdAt`, `updatedAt`, `finishedAt`
 - `StockImportErrorLine`:
   - `linha`, `coluna`, `codigoErro`, `mensagem`, `valorRecebido`
+- `StockInventory`:
+  - `id`, `nome`, `status`, `observacao`, `dataAbertura`, `dataFechamento`, `createdAt`, `updatedAt`
+- `StockSupplier`:
+  - `id`, `nome`, `documento`, `email`, `telefone`, `contato`, `ativo`, `createdAt`, `updatedAt`
+- `StockPurchaseOrder`:
+  - `id`, `fornecedorId`, `fornecedorNome`, `status`, `valorTotal`, `quantidadeItens`, `quantidadePendente`, `observacao`, `createdAt`, `updatedAt`
+- `StockTransfer`:
+  - `id`, `origem`, `destino`, `status`, `itemEstoqueId`, `itemNome`, `quantidade`, `observacao`, `createdAt`, `updatedAt`
+- `StockSettings`:
+  - `alertaEstoqueMinimoAtivo`, `bloquearSaidaSemSaldo`, `permitirAjusteNegativoComPermissao`, `diasCoberturaMeta`, `updatedAt`
 
 ## 3. Comportamentos de UI que dependem do backend
 
@@ -100,8 +156,8 @@ Recomendacao:
 
 ## 6. Proximos passos backend (ordem sugerida)
 
-1. Entidades e migracoes (`itens_estoque`, `movimentacoes_estoque`, importacao job/erros).
-2. Endpoints de itens e movimentacoes.
-3. Endpoint de dashboard (com `atualizadoEm`).
-4. Pipeline assincrono de importacao + polling de status.
-5. Tratamento padrao de erro + RBAC.
+1. Consolidar endpoints da fase 3: inventarios, fornecedores, pedidos, transferencias e configuracoes.
+2. Fechar validacoes de negocio (status transitions, recebimento parcial, bloqueios de saldo).
+3. Garantir paginacao padrao para listas maiores (inventarios, fornecedores, pedidos, transferencias).
+4. Unificar codigos de erro de negocio da fase 3 no mesmo padrao do modulo.
+5. Homologacao fim a fim com evidencias de rede para a matriz RF.

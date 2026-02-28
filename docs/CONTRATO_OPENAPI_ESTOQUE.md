@@ -250,6 +250,90 @@ Query:
 Responses:
 - `200`, `400`, `401`, `403`, `500`, `503`.
 
+### 3.6 Inventarios
+
+#### GET `/estoque/inventarios`
+Responses:
+- `200`, `401`, `403`, `500`.
+
+#### POST `/estoque/inventarios`
+Body: `{ "nome": "Inventario mensal", "observacao": "opcional" }`
+Responses:
+- `201`, `400`, `401`, `403`, `422`, `500`.
+
+#### GET `/estoque/inventarios/{id}`
+Responses:
+- `200`, `401`, `403`, `404`, `500`.
+
+#### POST `/estoque/inventarios/{id}/contagens`
+Body: `{ "itemEstoqueId": "uuid", "quantidadeContada": 120.0, "observacao": "opcional" }`
+Responses:
+- `200`, `400`, `401`, `403`, `404`, `422`, `500`.
+
+#### POST `/estoque/inventarios/{id}/fechamento`
+Responses:
+- `200`, `401`, `403`, `404`, `409`, `500`.
+
+### 3.7 Fornecedores
+
+#### GET `/estoque/fornecedores`
+Responses:
+- `200`, `401`, `403`, `500`.
+
+#### POST `/estoque/fornecedores`
+Responses:
+- `201`, `400`, `401`, `403`, `422`, `500`.
+
+#### PUT `/estoque/fornecedores/{id}`
+Responses:
+- `200`, `400`, `401`, `403`, `404`, `422`, `500`.
+
+### 3.8 Pedidos de compra
+
+#### GET `/estoque/pedidos-compra`
+Responses:
+- `200`, `401`, `403`, `500`.
+
+#### POST `/estoque/pedidos-compra`
+Responses:
+- `201`, `400`, `401`, `403`, `404`, `422`, `500`.
+
+#### GET `/estoque/pedidos-compra/{id}`
+Responses:
+- `200`, `401`, `403`, `404`, `500`.
+
+#### POST `/estoque/pedidos-compra/{id}/recebimento`
+Responses:
+- `200`, `400`, `401`, `403`, `404`, `409`, `422`, `500`.
+
+### 3.9 Transferencias
+
+#### GET `/estoque/transferencias`
+Responses:
+- `200`, `401`, `403`, `500`.
+
+#### POST `/estoque/transferencias`
+Responses:
+- `201`, `400`, `401`, `403`, `404`, `422`, `500`.
+
+#### POST `/estoque/transferencias/{id}/enviar`
+Responses:
+- `200`, `401`, `403`, `404`, `409`, `500`.
+
+#### POST `/estoque/transferencias/{id}/receber`
+Responses:
+- `200`, `401`, `403`, `404`, `409`, `500`.
+
+### 3.10 Configuracoes de estoque
+
+#### GET `/estoque/configuracoes`
+Responses:
+- `200`, `401`, `403`, `500`.
+
+#### PUT `/estoque/configuracoes`
+Responses:
+- `200`, `400`, `401`, `403`, `422`, `500`.
+
 ## 4. Codigos de erro de negocio (padrao)
 - `ESTOQUE_ITEM_NAO_ENCONTRADO`
 - `ESTOQUE_SALDO_INSUFICIENTE`
@@ -260,6 +344,13 @@ Responses:
 - `ESTOQUE_IMPORTACAO_TIPO_NAO_SUPORTADO`
 - `ESTOQUE_IMPORTACAO_JOB_CONFLITO`
 - `ESTOQUE_ANALITICO_INDISPONIVEL`
+- `ESTOQUE_INVENTARIO_NAO_ENCONTRADO`
+- `ESTOQUE_FORNECEDOR_NAO_ENCONTRADO`
+- `ESTOQUE_PEDIDO_NAO_ENCONTRADO`
+- `ESTOQUE_RECEBIMENTO_INVALIDO`
+- `ESTOQUE_RECEBIMENTO_EXCEDENTE`
+- `ESTOQUE_TRANSFERENCIA_NAO_ENCONTRADA`
+- `ESTOQUE_TRANSFERENCIA_CONFLITO`
 
 ## 5. Regras transversais
 - Operacoes de estoque e financeiro (quando vinculadas) devem ser transacionais por lote.
