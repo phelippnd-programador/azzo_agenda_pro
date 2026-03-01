@@ -52,6 +52,28 @@ import type {
   LegalDocumentResponse,
   PublicLegalResponse,
 } from "@/types/terms";
+import type {
+  CreateStockInventoryRequest,
+  CreateStockItemRequest,
+  CreateStockPurchaseOrderRequest,
+  CreateStockTransferRequest,
+  CreateStockSupplierRequest,
+  ReceiveStockPurchaseOrderRequest,
+  StockInventory,
+  StockInventoryCountRequest,
+  StockPurchaseOrder,
+  StockSettings,
+  StockSupplier,
+  StockTransfer,
+  CreateStockMovementRequest,
+  StockDashboardResponse,
+  StockImportErrorLine,
+  StockImportJob,
+  StockImportTemplateFormat,
+  StockImportType,
+  StockItem,
+  StockMovement,
+} from "@/types/stock";
 import {
   mockAppointments,
   mockClients,
@@ -182,6 +204,7 @@ const ALL_LOCAL_DEMO_ROUTES = [
   "/configuracoes",
   "/configuracoes/integracoes/whatsapp",
   "/auditoria",
+  "/estoque",
   "/perfil-salao",
   "/unauthorized",
 ];
@@ -190,6 +213,7 @@ const PROFESSIONAL_LOCAL_DEMO_ROUTES = [
   "/dashboard",
   "/agenda",
   "/financeiro/profissionais",
+  "/estoque",
   "/configuracoes",
   "/perfil-salao",
   "/unauthorized",
@@ -259,6 +283,15 @@ type DemoState = {
   billingPayments: BillingPaymentItem[];
   apuracaoAtual: ApuracaoMensal;
   apuracaoHistorico: ApuracaoResumo[];
+  stockItems: StockItem[];
+  stockMovements: StockMovement[];
+  stockInventories: StockInventory[];
+  stockSuppliers: StockSupplier[];
+  stockPurchaseOrders: StockPurchaseOrder[];
+  stockTransfers: StockTransfer[];
+  stockSettings: StockSettings;
+  stockImportJobs: StockImportJob[];
+  stockImportErrors: Record<string, StockImportErrorLine[]>;
 };
 
 let demoState: DemoState | null = null;
@@ -301,6 +334,126 @@ const createDemoState = (): DemoState => {
   const appointments = mockAppointments.map((appointment) => ({ ...appointment }));
   const transactions = mockTransactions.map((transaction) => ({ ...transaction }));
   const specialties = toSpecialties(services);
+  const stockItems: StockItem[] = [
+    {
+      id: "demo-stock-item-1",
+      nome: "Shampoo Profissional",
+      sku: "SHAMP-001",
+      unidadeMedida: "ML",
+      saldoAtual: 860,
+      estoqueMinimo: 500,
+      custoMedioUnitario: 0.45,
+      ativo: true,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    },
+    {
+      id: "demo-stock-item-2",
+      nome: "Pomada Modeladora",
+      sku: "POMA-001",
+      unidadeMedida: "G",
+      saldoAtual: 120,
+      estoqueMinimo: 80,
+      custoMedioUnitario: 1.35,
+      ativo: true,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    },
+  ];
+  const stockMovements: StockMovement[] = [
+    {
+      id: "demo-stock-movement-1",
+      itemEstoqueId: "demo-stock-item-1",
+      tipo: "ENTRADA",
+      quantidade: 1000,
+      saldoAnterior: 0,
+      saldoPosterior: 1000,
+      motivo: "Carga inicial",
+      origem: "COMPRA",
+      valorUnitarioPago: 0.45,
+      valorTotalMovimentacao: 450,
+      gerarLancamentoFinanceiro: true,
+      transacaoFinanceiraId: "demo-transaction-stock-1",
+      usuarioId: "demo-local-user",
+      createdAt: nowIso,
+    },
+    {
+      id: "demo-stock-movement-2",
+      itemEstoqueId: "demo-stock-item-1",
+      tipo: "SAIDA",
+      quantidade: 140,
+      saldoAnterior: 1000,
+      saldoPosterior: 860,
+      motivo: "Consumo em atendimentos",
+      origem: "SERVICO",
+      valorUnitarioPago: 0.45,
+      valorTotalMovimentacao: 63,
+      usuarioId: "demo-local-user",
+      createdAt: nowIso,
+    },
+  ];
+  const stockInventories: StockInventory[] = [
+    {
+      id: "demo-stock-inventory-1",
+      nome: "Inventario mensal - Fevereiro/2026",
+      status: "EM_CONTAGEM",
+      observacao: "Contagem ciclica de itens de alto giro.",
+      dataAbertura: nowIso,
+      dataFechamento: null,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    },
+  ];
+  const stockSuppliers: StockSupplier[] = [
+    {
+      id: "demo-stock-supplier-1",
+      nome: "Distribuidora Alpha",
+      documento: "12.345.678/0001-90",
+      email: "contato@alpha.com.br",
+      telefone: "(11) 3333-1111",
+      contato: "Mariana",
+      ativo: true,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    },
+  ];
+  const stockPurchaseOrders: StockPurchaseOrder[] = [
+    {
+      id: "demo-stock-po-1",
+      fornecedorId: "demo-stock-supplier-1",
+      fornecedorNome: "Distribuidora Alpha",
+      status: "PARCIALMENTE_RECEBIDO",
+      valorTotal: 1450,
+      quantidadeItens: 100,
+      quantidadePendente: 40,
+      observacao: "Pedido mensal de reposicao.",
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    },
+  ];
+  const stockTransfers: StockTransfer[] = [
+    {
+      id: "demo-stock-transfer-1",
+      origem: "Matriz",
+      destino: "Filial Centro",
+      status: "ENVIADA",
+      itemEstoqueId: "demo-stock-item-1",
+      itemNome: "Shampoo Profissional",
+      quantidade: 80,
+      observacao: "Reposicao semanal da filial.",
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    },
+  ];
+  const stockSettings: StockSettings = {
+    alertaEstoqueMinimoAtivo: true,
+    bloquearSaidaSemSaldo: true,
+    permitirAjusteNegativoComPermissao: false,
+    diasCoberturaMeta: 15,
+    updatedAt: nowIso,
+  };
+  const stockImportJobs: StockImportJob[] = [];
+  const stockImportErrors: Record<string, StockImportErrorLine[]> = {};
 
   const invoiceBase: Invoice = {
     id: "demo-invoice-1",
@@ -480,6 +633,15 @@ const createDemoState = (): DemoState => {
     billingPayments,
     apuracaoAtual,
     apuracaoHistorico,
+    stockItems,
+    stockMovements,
+    stockInventories,
+    stockSuppliers,
+    stockPurchaseOrders,
+    stockTransfers,
+    stockSettings,
+    stockImportJobs,
+    stockImportErrors,
   };
 };
 
@@ -916,6 +1078,410 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
     } as T;
   }
 
+  if (path === "/estoque/itens") {
+    if (method === "GET") {
+      const search = (query.get("search") || "").toLowerCase();
+      const ativo = query.get("ativo");
+      const abaixoMinimo = query.get("abaixoMinimo");
+      let items = state.stockItems;
+
+      if (search) {
+        items = items.filter((item) =>
+          `${item.nome} ${item.sku || ""}`.toLowerCase().includes(search)
+        );
+      }
+      if (ativo === "true") items = items.filter((item) => item.ativo);
+      if (ativo === "false") items = items.filter((item) => !item.ativo);
+      if (abaixoMinimo === "true") {
+        items = items.filter((item) => item.saldoAtual <= item.estoqueMinimo);
+      }
+      return items as T;
+    }
+    if (method === "POST") {
+      const payload = JSON.parse(String(options.body || "{}")) as CreateStockItemRequest;
+      const created: StockItem = {
+        id: `demo-stock-item-${Date.now()}`,
+        nome: payload.nome || "Item Estoque",
+        sku: payload.sku || null,
+        unidadeMedida: payload.unidadeMedida || "UN",
+        saldoAtual: 0,
+        estoqueMinimo: Number(payload.estoqueMinimo || 0),
+        custoMedioUnitario: null,
+        ativo: payload.ativo ?? true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      state.stockItems = [created, ...state.stockItems];
+      return created as T;
+    }
+  }
+  if (path.startsWith("/estoque/itens/")) {
+    const id = path.replace("/estoque/itens/", "");
+    if (method === "GET") {
+      return (state.stockItems.find((item) => item.id === id) || null) as T;
+    }
+    if (method === "PUT") {
+      const payload = JSON.parse(String(options.body || "{}")) as Partial<CreateStockItemRequest>;
+      state.stockItems = state.stockItems.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              ...payload,
+              updatedAt: new Date().toISOString(),
+            }
+          : item
+      );
+      return (state.stockItems.find((item) => item.id === id) || null) as T;
+    }
+  }
+  if (path === "/estoque/movimentacoes") {
+    if (method === "GET") {
+      const itemId = query.get("itemId");
+      const tipo = query.get("tipo");
+      let items = state.stockMovements;
+      if (itemId) items = items.filter((movement) => movement.itemEstoqueId === itemId);
+      if (tipo) items = items.filter((movement) => movement.tipo === tipo);
+      return items as T;
+    }
+    if (method === "POST") {
+      const payload = JSON.parse(String(options.body || "{}")) as CreateStockMovementRequest;
+      const target = state.stockItems.find((item) => item.id === payload.itemEstoqueId);
+      if (!target) {
+        throw new ApiError("Item de estoque nao encontrado.", 404, null, "ESTOQUE_ITEM_NAO_ENCONTRADO");
+      }
+      const quantidade = Number(payload.quantidade || 0);
+      const saldoAnterior = Number(target.saldoAtual || 0);
+      const isEntrada = payload.tipo === "ENTRADA";
+      const saldoPosterior = isEntrada ? saldoAnterior + quantidade : saldoAnterior - quantidade;
+      if (!isEntrada && saldoPosterior < 0) {
+        throw new ApiError("Saldo insuficiente para movimentacao.", 409, null, "ESTOQUE_SALDO_INSUFICIENTE");
+      }
+
+      target.saldoAtual = saldoPosterior;
+      target.updatedAt = new Date().toISOString();
+      const valorUnitarioPago = payload.valorUnitarioPago ?? target.custoMedioUnitario ?? 0;
+      const movement: StockMovement = {
+        id: `demo-stock-movement-${Date.now()}`,
+        itemEstoqueId: payload.itemEstoqueId,
+        tipo: payload.tipo,
+        quantidade,
+        saldoAnterior,
+        saldoPosterior,
+        motivo: payload.motivo || "Movimentacao manual",
+        origem: payload.origem || "MANUAL",
+        valorUnitarioPago,
+        valorTotalMovimentacao: Number((quantidade * Number(valorUnitarioPago || 0)).toFixed(2)),
+        gerarLancamentoFinanceiro: payload.gerarLancamentoFinanceiro ?? false,
+        transacaoFinanceiraId: null,
+        usuarioId: "demo-local-user",
+        createdAt: new Date().toISOString(),
+      };
+      state.stockMovements = [movement, ...state.stockMovements];
+      return movement as T;
+    }
+  }
+  if (path === "/estoque/dashboard" && method === "GET") {
+    const itensAbaixoMinimo = state.stockItems.filter(
+      (item) => item.saldoAtual <= item.estoqueMinimo
+    ).length;
+    const itensZerados = state.stockItems.filter((item) => item.saldoAtual <= 0).length;
+    const valorEstoqueCustoMedio = state.stockItems.reduce(
+      (sum, item) => sum + item.saldoAtual * Number(item.custoMedioUnitario || 0),
+      0
+    );
+    return {
+      atualizadoEm: new Date().toISOString(),
+      itensAbaixoMinimo,
+      itensZerados,
+      valorEstoqueCustoMedio,
+      rupturaTaxa: state.stockItems.length
+        ? Number((itensZerados / state.stockItems.length).toFixed(2))
+        : 0,
+      perdasValor: 0,
+      margemServicos: [],
+    } satisfies StockDashboardResponse as T;
+  }
+  if (path === "/estoque/inventarios") {
+    if (method === "GET") {
+      return state.stockInventories as T;
+    }
+    if (method === "POST") {
+      const payload = JSON.parse(String(options.body || "{}")) as CreateStockInventoryRequest;
+      const nowIso = new Date().toISOString();
+      const created: StockInventory = {
+        id: `demo-stock-inventory-${Date.now()}`,
+        nome: payload.nome || "Inventario",
+        status: "ABERTO",
+        observacao: payload.observacao || null,
+        dataAbertura: nowIso,
+        dataFechamento: null,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      };
+      state.stockInventories = [created, ...state.stockInventories];
+      return created as T;
+    }
+  }
+  if (path.startsWith("/estoque/inventarios/")) {
+    const suffix = path.replace("/estoque/inventarios/", "");
+    const [inventoryId, subPath] = suffix.split("/");
+    const inventory = state.stockInventories.find((item) => item.id === inventoryId);
+    if (!inventory) {
+      throw new ApiError("Inventario nao encontrado.", 404, null, "ESTOQUE_INVENTARIO_NAO_ENCONTRADO");
+    }
+    if (!subPath && method === "GET") {
+      return inventory as T;
+    }
+    if (subPath === "contagens" && method === "POST") {
+      const payload = JSON.parse(String(options.body || "{}")) as StockInventoryCountRequest;
+      const item = state.stockItems.find((stockItem) => stockItem.id === payload.itemEstoqueId);
+      if (!item) {
+        throw new ApiError("Item de estoque nao encontrado.", 404, null, "ESTOQUE_ITEM_NAO_ENCONTRADO");
+      }
+      item.saldoAtual = Number(payload.quantidadeContada || 0);
+      item.updatedAt = new Date().toISOString();
+      inventory.status = "EM_CONTAGEM";
+      inventory.updatedAt = new Date().toISOString();
+      return inventory as T;
+    }
+    if (subPath === "fechamento" && method === "POST") {
+      if (inventory.status === "FECHADO") {
+        throw new ApiError("Inventario ja fechado.", 409, null, "ESTOQUE_INVENTARIO_CONFLITO");
+      }
+      inventory.status = "FECHADO";
+      inventory.dataFechamento = new Date().toISOString();
+      inventory.updatedAt = inventory.dataFechamento;
+      return inventory as T;
+    }
+  }
+  if (path === "/estoque/fornecedores") {
+    if (method === "GET") {
+      return state.stockSuppliers as T;
+    }
+    if (method === "POST") {
+      const payload = JSON.parse(String(options.body || "{}")) as CreateStockSupplierRequest;
+      const nowIso = new Date().toISOString();
+      const created: StockSupplier = {
+        id: `demo-stock-supplier-${Date.now()}`,
+        nome: payload.nome || "Fornecedor",
+        documento: payload.documento || null,
+        email: payload.email || null,
+        telefone: payload.telefone || null,
+        contato: payload.contato || null,
+        ativo: payload.ativo ?? true,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      };
+      state.stockSuppliers = [created, ...state.stockSuppliers];
+      return created as T;
+    }
+  }
+  if (path.startsWith("/estoque/fornecedores/")) {
+    const id = path.replace("/estoque/fornecedores/", "");
+    const supplier = state.stockSuppliers.find((item) => item.id === id);
+    if (!supplier) {
+      throw new ApiError("Fornecedor nao encontrado.", 404, null, "ESTOQUE_FORNECEDOR_NAO_ENCONTRADO");
+    }
+    if (method === "PUT") {
+      const payload = JSON.parse(String(options.body || "{}")) as Partial<CreateStockSupplierRequest>;
+      const updated: StockSupplier = {
+        ...supplier,
+        ...payload,
+        updatedAt: new Date().toISOString(),
+      };
+      state.stockSuppliers = state.stockSuppliers.map((item) => (item.id === id ? updated : item));
+      return updated as T;
+    }
+  }
+  if (path === "/estoque/pedidos-compra") {
+    if (method === "GET") {
+      return state.stockPurchaseOrders as T;
+    }
+    if (method === "POST") {
+      const payload = JSON.parse(String(options.body || "{}")) as CreateStockPurchaseOrderRequest;
+      const supplier = state.stockSuppliers.find((item) => item.id === payload.fornecedorId);
+      if (!supplier) {
+        throw new ApiError("Fornecedor nao encontrado.", 404, null, "ESTOQUE_FORNECEDOR_NAO_ENCONTRADO");
+      }
+      const nowIso = new Date().toISOString();
+      const created: StockPurchaseOrder = {
+        id: `demo-stock-po-${Date.now()}`,
+        fornecedorId: supplier.id,
+        fornecedorNome: supplier.nome,
+        status: "ENVIADO",
+        valorTotal: Number(payload.valorTotal || 0),
+        quantidadeItens: Number(payload.quantidadeItens || 0),
+        quantidadePendente: Number(payload.quantidadeItens || 0),
+        observacao: payload.observacao || null,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      };
+      state.stockPurchaseOrders = [created, ...state.stockPurchaseOrders];
+      return created as T;
+    }
+  }
+  if (path.startsWith("/estoque/pedidos-compra/")) {
+    const suffix = path.replace("/estoque/pedidos-compra/", "");
+    const [orderId, subPath] = suffix.split("/");
+    const order = state.stockPurchaseOrders.find((item) => item.id === orderId);
+    if (!order) {
+      throw new ApiError("Pedido de compra nao encontrado.", 404, null, "ESTOQUE_PEDIDO_NAO_ENCONTRADO");
+    }
+    if (!subPath && method === "GET") return order as T;
+    if (subPath === "recebimento" && method === "POST") {
+      const payload = JSON.parse(String(options.body || "{}")) as ReceiveStockPurchaseOrderRequest;
+      const recebida = Number(payload.quantidadeRecebida || 0);
+      if (recebida <= 0) {
+        throw new ApiError("Quantidade recebida invalida.", 422, null, "ESTOQUE_RECEBIMENTO_INVALIDO");
+      }
+      if (recebida > order.quantidadePendente) {
+        throw new ApiError("Quantidade recebida maior que o pendente.", 422, null, "ESTOQUE_RECEBIMENTO_EXCEDENTE");
+      }
+      order.quantidadePendente = Math.max(0, order.quantidadePendente - recebida);
+      order.status = order.quantidadePendente === 0 ? "RECEBIDO" : "PARCIALMENTE_RECEBIDO";
+      order.updatedAt = new Date().toISOString();
+      return order as T;
+    }
+  }
+  if (path === "/estoque/transferencias") {
+    if (method === "GET") {
+      return state.stockTransfers as T;
+    }
+    if (method === "POST") {
+      const payload = JSON.parse(String(options.body || "{}")) as CreateStockTransferRequest;
+      const item = state.stockItems.find((stockItem) => stockItem.id === payload.itemEstoqueId);
+      if (!item) {
+        throw new ApiError("Item de estoque nao encontrado.", 404, null, "ESTOQUE_ITEM_NAO_ENCONTRADO");
+      }
+      const nowIso = new Date().toISOString();
+      const created: StockTransfer = {
+        id: `demo-stock-transfer-${Date.now()}`,
+        origem: payload.origem || "Origem",
+        destino: payload.destino || "Destino",
+        status: "RASCUNHO",
+        itemEstoqueId: item.id,
+        itemNome: item.nome,
+        quantidade: Number(payload.quantidade || 0),
+        observacao: payload.observacao || null,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      };
+      state.stockTransfers = [created, ...state.stockTransfers];
+      return created as T;
+    }
+  }
+  if (path.startsWith("/estoque/transferencias/")) {
+    const suffix = path.replace("/estoque/transferencias/", "");
+    const [transferId, subPath] = suffix.split("/");
+    const transfer = state.stockTransfers.find((item) => item.id === transferId);
+    if (!transfer) {
+      throw new ApiError("Transferencia nao encontrada.", 404, null, "ESTOQUE_TRANSFERENCIA_NAO_ENCONTRADA");
+    }
+    if (!subPath && method === "GET") return transfer as T;
+    if (subPath === "enviar" && method === "POST") {
+      if (transfer.status !== "RASCUNHO") {
+        throw new ApiError("Transferencia nao pode ser enviada neste status.", 409, null, "ESTOQUE_TRANSFERENCIA_CONFLITO");
+      }
+      transfer.status = "ENVIADA";
+      transfer.updatedAt = new Date().toISOString();
+      return transfer as T;
+    }
+    if (subPath === "receber" && method === "POST") {
+      if (transfer.status !== "ENVIADA") {
+        throw new ApiError("Transferencia precisa estar enviada para receber.", 409, null, "ESTOQUE_TRANSFERENCIA_CONFLITO");
+      }
+      transfer.status = "RECEBIDA";
+      transfer.updatedAt = new Date().toISOString();
+      return transfer as T;
+    }
+  }
+  if (path === "/estoque/configuracoes") {
+    if (method === "GET") {
+      return state.stockSettings as T;
+    }
+    if (method === "PUT") {
+      const payload = JSON.parse(String(options.body || "{}")) as Partial<StockSettings>;
+      state.stockSettings = {
+        ...state.stockSettings,
+        ...payload,
+        updatedAt: new Date().toISOString(),
+      };
+      return state.stockSettings as T;
+    }
+  }
+  if (path === "/estoque/importacoes" && method === "GET") {
+    return state.stockImportJobs as T;
+  }
+  if (path === "/estoque/importacoes" && method === "POST") {
+    const tipoImportacao = (query.get("tipoImportacao") ||
+      "ENTRADAS") as StockImportType;
+    const dryRun = query.get("dryRun") === "true";
+    const jobId = `demo-stock-job-${Date.now()}`;
+    const nowIso = new Date().toISOString();
+    const hasError = dryRun;
+    const job: StockImportJob = {
+      jobId,
+      tipoImportacao,
+      status: hasError ? "CONCLUIDO_COM_ERROS" : "CONCLUIDO",
+      dryRun,
+      totalLinhas: 120,
+      linhasProcessadas: 120,
+      linhasComErro: hasError ? 2 : 0,
+      arquivoSha256: `demo-hash-${jobId}`,
+      arquivoStorageKey: `tenant/demo-local-tenant/estoque/importacoes/${jobId}/arquivo-origem.xlsx`,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+      finishedAt: nowIso,
+    };
+    state.stockImportJobs = [job, ...state.stockImportJobs];
+    state.stockImportErrors[jobId] = hasError
+      ? [
+          {
+            linha: 7,
+            coluna: "quantidade",
+            codigoErro: "ESTOQUE_VALOR_INVALIDO",
+            mensagem: "Quantidade deve ser maior que zero.",
+            valorRecebido: "-10",
+          },
+          {
+            linha: 19,
+            coluna: "itemEstoqueId",
+            codigoErro: "ESTOQUE_ITEM_NAO_ENCONTRADO",
+            mensagem: "Item nao localizado para o tenant atual.",
+            valorRecebido: "xyz",
+          },
+        ]
+      : [];
+    return job as T;
+  }
+  if (path.startsWith("/estoque/importacoes/")) {
+    const suffix = path.replace("/estoque/importacoes/", "");
+    const [jobId, subPath] = suffix.split("/");
+    const job = state.stockImportJobs.find((item) => item.jobId === jobId);
+    if (!job) {
+      throw new ApiError("Job de importacao nao encontrado.", 404, null, "NOT_FOUND");
+    }
+    if (!subPath && method === "GET") return job as T;
+    if (subPath === "erros" && method === "GET") {
+      return (state.stockImportErrors[jobId] || []) as T;
+    }
+    if (subPath === "arquivo-resultado" && method === "GET") {
+      return {
+        downloadUrl: `https://demo.local/storage/${jobId}/resultado.csv`,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 10).toISOString(),
+      } as T;
+    }
+    if (subPath === "cancelar" && method === "POST") {
+      if (job.status === "CONCLUIDO" || job.status === "CONCLUIDO_COM_ERROS") {
+        throw new ApiError("Job ja finalizado.", 409, null, "ESTOQUE_IMPORTACAO_JOB_CONFLITO");
+      }
+      job.status = "CANCELADO";
+      job.updatedAt = new Date().toISOString();
+      job.finishedAt = new Date().toISOString();
+      return job as T;
+    }
+  }
+
   if (path === "/services") {
     if (method === "GET") return state.services as T;
     if (method === "POST") {
@@ -1302,7 +1868,7 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
   }
   if (path === "/users/me/password" && method === "PUT") return {} as T;
 
-  if ((path === "/tenant/whatsapp" || path === "/whatsapp/config") && method === "GET") {
+  if (path === "/tenant/whatsapp" && method === "GET") {
     return {
       enabled: true,
       whatsappEnabled: true,
@@ -1315,17 +1881,14 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
       webhookVerifyToken: "demo-verify-token",
     } as T;
   }
-  if ((path === "/tenant/whatsapp" || path === "/whatsapp/config") && method === "PUT") {
+  if (path === "/tenant/whatsapp" && method === "PUT") {
     const payload = JSON.parse(String(options.body || "{}"));
     return {
       ...payload,
       accessTokenConfigured: true,
     } as T;
   }
-  if (
-    (path === "/tenant/whatsapp/test" || path === "/whatsapp/config/testar-conexao") &&
-    method === "POST"
-  ) {
+  if (path === "/tenant/whatsapp/test" && method === "POST") {
     return {
       success: true,
       message: "Conexao validada em modo demo local.",
@@ -1605,7 +2168,14 @@ const request = async <T>(
   const token = getToken();
 
   const headers = new Headers(options.headers || {});
-  headers.set("Content-Type", "application/json");
+  const hasBody = typeof options.body !== "undefined" && options.body !== null;
+  const isFormData =
+    typeof FormData !== "undefined" && options.body instanceof FormData;
+  if (hasBody && !isFormData) {
+    headers.set("Content-Type", "application/json");
+  } else if (isFormData) {
+    headers.delete("Content-Type");
+  }
 
   if (token && shouldAttachAuthToken(endpoint)) {
     headers.set("Authorization", `Bearer ${token}`);
@@ -1655,6 +2225,33 @@ const requestBlob = async (
   retryOnAuthError = true
 ): Promise<Blob> => {
   if (isLocalDemoModeEnabled()) {
+    if (endpoint.startsWith("/estoque/importacoes/modelo")) {
+      const [, queryString = ""] = endpoint.split("?");
+      const query = new URLSearchParams(queryString);
+      const tipoImportacao = (query.get("tipoImportacao") || "ENTRADAS").toUpperCase();
+      const formato = (query.get("formato") || "xlsx").toLowerCase();
+      const cabecalho = {
+        ITENS: "nome,sku,unidadeMedida,estoqueMinimo,ativo",
+        ENTRADAS:
+          "sku,quantidade,unidadeMedida,valorUnitarioPago,motivo,gerarLancamentoFinanceiro,categoriaFinanceira,formaPagamento,dataMovimento",
+        AJUSTES: "sku,quantidade,motivo,origem,dataMovimento",
+      }[tipoImportacao] || "sku,quantidade,motivo";
+      const exemplo = {
+        ITENS: "Shampoo Profissional,SHAMP-001,ML,500,true",
+        ENTRADAS:
+          "SHAMP-001,1000,ML,0.45,Reposicao mensal,true,Compra de insumos,PIX,2026-02-28",
+        AJUSTES: "SHAMP-001,25,Ajuste inventario,INVENTARIO,2026-02-28",
+      }[tipoImportacao] || "SHAMP-001,1,Ajuste";
+      const csvContent = `${cabecalho}\n${exemplo}\n`;
+      if (formato === "csv") {
+        return Promise.resolve(new Blob([csvContent], { type: "text/csv" }));
+      }
+      return Promise.resolve(
+        new Blob([csvContent], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        })
+      );
+    }
     const emptyPdfBlob = new Blob(["%PDF-1.4\n% Demo local\n"], {
       type: "application/pdf",
     });
@@ -2047,6 +2644,143 @@ export const appointmentsApi = {
     }),
 };
 
+/* ================= STOCK ================= */
+
+export const stockApi = {
+  getItems: (params?: ListQueryParams & { ativo?: boolean; abaixoMinimo?: boolean }) => {
+    const query = buildListQuery(params);
+    if (typeof params?.ativo === "boolean") query.set("ativo", String(params.ativo));
+    if (typeof params?.abaixoMinimo === "boolean") {
+      query.set("abaixoMinimo", String(params.abaixoMinimo));
+    }
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<ListResponse<StockItem>>(`/estoque/itens${suffix}`);
+  },
+  getItemById: (id: string) => request<StockItem>(`/estoque/itens/${id}`),
+  createItem: (payload: CreateStockItemRequest) =>
+    request<StockItem>("/estoque/itens", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updateItem: (id: string, payload: Partial<CreateStockItemRequest>) =>
+    request<StockItem>(`/estoque/itens/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  getMovements: (params?: ListQueryParams & { itemId?: string; tipo?: string }) => {
+    const query = buildListQuery(params);
+    if (params?.itemId) query.set("itemId", params.itemId);
+    if (params?.tipo) query.set("tipo", params.tipo);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<ListResponse<StockMovement>>(`/estoque/movimentacoes${suffix}`);
+  },
+  createMovement: (payload: CreateStockMovementRequest) =>
+    request<StockMovement>("/estoque/movimentacoes", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getDashboard: (params?: { inicio?: string; fim?: string; serviceId?: string; itemId?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.inicio) query.set("inicio", params.inicio);
+    if (params?.fim) query.set("fim", params.fim);
+    if (params?.serviceId) query.set("serviceId", params.serviceId);
+    if (params?.itemId) query.set("itemId", params.itemId);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<StockDashboardResponse>(`/estoque/dashboard${suffix}`);
+  },
+  listInventories: () => request<StockInventory[]>("/estoque/inventarios"),
+  createInventory: (payload: CreateStockInventoryRequest) =>
+    request<StockInventory>("/estoque/inventarios", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getInventoryById: (id: string) => request<StockInventory>(`/estoque/inventarios/${id}`),
+  registerInventoryCount: (id: string, payload: StockInventoryCountRequest) =>
+    request<StockInventory>(`/estoque/inventarios/${id}/contagens`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  closeInventory: (id: string) =>
+    request<StockInventory>(`/estoque/inventarios/${id}/fechamento`, {
+      method: "POST",
+    }),
+  listSuppliers: () => request<StockSupplier[]>("/estoque/fornecedores"),
+  createSupplier: (payload: CreateStockSupplierRequest) =>
+    request<StockSupplier>("/estoque/fornecedores", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updateSupplier: (id: string, payload: Partial<CreateStockSupplierRequest>) =>
+    request<StockSupplier>(`/estoque/fornecedores/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  listPurchaseOrders: () => request<StockPurchaseOrder[]>("/estoque/pedidos-compra"),
+  createPurchaseOrder: (payload: CreateStockPurchaseOrderRequest) =>
+    request<StockPurchaseOrder>("/estoque/pedidos-compra", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getPurchaseOrderById: (id: string) => request<StockPurchaseOrder>(`/estoque/pedidos-compra/${id}`),
+  receivePurchaseOrder: (id: string, payload: ReceiveStockPurchaseOrderRequest) =>
+    request<StockPurchaseOrder>(`/estoque/pedidos-compra/${id}/recebimento`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  listTransfers: () => request<StockTransfer[]>("/estoque/transferencias"),
+  createTransfer: (payload: CreateStockTransferRequest) =>
+    request<StockTransfer>("/estoque/transferencias", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  sendTransfer: (id: string) =>
+    request<StockTransfer>(`/estoque/transferencias/${id}/enviar`, {
+      method: "POST",
+    }),
+  receiveTransfer: (id: string) =>
+    request<StockTransfer>(`/estoque/transferencias/${id}/receber`, {
+      method: "POST",
+    }),
+  getSettings: () => request<StockSettings>("/estoque/configuracoes"),
+  updateSettings: (payload: Partial<StockSettings>) =>
+    request<StockSettings>("/estoque/configuracoes", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  listImportJobs: () => request<StockImportJob[]>("/estoque/importacoes"),
+  downloadImportTemplate: (params: {
+    tipoImportacao: StockImportType;
+    formato?: StockImportTemplateFormat;
+  }) => {
+    const query = new URLSearchParams();
+    query.set("tipoImportacao", params.tipoImportacao);
+    query.set("formato", params.formato ?? "xlsx");
+    return requestBlob(`/estoque/importacoes/modelo?${query.toString()}`);
+  },
+  createImportJob: (params: { arquivo: File; tipoImportacao: StockImportType; dryRun?: boolean }) => {
+    const query = new URLSearchParams();
+    query.set("tipoImportacao", params.tipoImportacao);
+    if (typeof params.dryRun === "boolean") query.set("dryRun", String(params.dryRun));
+    const formData = new FormData();
+    formData.append("arquivo", params.arquivo);
+    return request<StockImportJob>(`/estoque/importacoes?${query.toString()}`, {
+      method: "POST",
+      body: formData,
+    });
+  },
+  getImportJobById: (jobId: string) => request<StockImportJob>(`/estoque/importacoes/${jobId}`),
+  getImportErrors: (jobId: string) =>
+    request<StockImportErrorLine[]>(`/estoque/importacoes/${jobId}/erros`),
+  getImportResultFile: (jobId: string) =>
+    request<{ downloadUrl: string; expiresAt: string }>(
+      `/estoque/importacoes/${jobId}/arquivo-resultado`
+    ),
+  cancelImportJob: (jobId: string) =>
+    request<StockImportJob>(`/estoque/importacoes/${jobId}/cancelar`, {
+      method: "POST",
+    }),
+};
+
 /* ================= FINANCE ================= */
 
 export const transactionsApi = {
@@ -2237,46 +2971,16 @@ export const usersApi = {
 };
 
 export const tenantApi = {
-  getWhatsAppConfig: async () => {
-    try {
-      return await request<WhatsAppConfigResponse>("/whatsapp/config");
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 404) {
-        return request<WhatsAppConfigResponse>("/tenant/whatsapp");
-      }
-      throw error;
-    }
-  },
-  saveWhatsAppConfig: async (data: WhatsAppConfigRequest) => {
-    try {
-      return await request<WhatsAppConfigResponse>("/whatsapp/config", {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 404) {
-        return request<WhatsAppConfigResponse>("/tenant/whatsapp", {
-          method: "PUT",
-          body: JSON.stringify(data),
-        });
-      }
-      throw error;
-    }
-  },
-  testWhatsAppConnection: async () => {
-    try {
-      return await request<WhatsAppTestResponse>("/whatsapp/config/testar-conexao", {
-        method: "POST",
-      });
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 404) {
-        return request<WhatsAppTestResponse>("/tenant/whatsapp/test", {
-          method: "POST",
-        });
-      }
-      throw error;
-    }
-  },
+  getWhatsAppConfig: () => request<WhatsAppConfigResponse>("/tenant/whatsapp"),
+  saveWhatsAppConfig: (data: WhatsAppConfigRequest) =>
+    request<WhatsAppConfigResponse>("/tenant/whatsapp", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  testWhatsAppConnection: () =>
+    request<WhatsAppTestResponse>("/tenant/whatsapp/test", {
+      method: "POST",
+    }),
 };
 
 export const configApi = {

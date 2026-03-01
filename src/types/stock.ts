@@ -1,0 +1,213 @@
+export type StockItem = {
+  id: string;
+  nome: string;
+  sku?: string | null;
+  unidadeMedida: string;
+  saldoAtual: number;
+  estoqueMinimo: number;
+  custoMedioUnitario?: number | null;
+  ativo: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type StockMovementType = "ENTRADA" | "SAIDA" | "AJUSTE";
+export type StockMovementOrigin = "MANUAL" | "COMPRA" | "SERVICO" | "INVENTARIO";
+
+export type StockMovement = {
+  id: string;
+  itemEstoqueId: string;
+  tipo: StockMovementType;
+  quantidade: number;
+  saldoAnterior: number;
+  saldoPosterior: number;
+  motivo: string;
+  origem: StockMovementOrigin;
+  valorUnitarioPago?: number | null;
+  valorTotalMovimentacao?: number | null;
+  gerarLancamentoFinanceiro?: boolean;
+  transacaoFinanceiraId?: string | null;
+  usuarioId?: string | null;
+  createdAt: string;
+};
+
+export type CreateStockItemRequest = {
+  nome: string;
+  sku?: string;
+  unidadeMedida: string;
+  estoqueMinimo: number;
+  ativo?: boolean;
+};
+
+export type CreateStockMovementRequest = {
+  itemEstoqueId: string;
+  tipo: StockMovementType;
+  quantidade: number;
+  motivo: string;
+  origem?: StockMovementOrigin;
+  valorUnitarioPago?: number;
+  gerarLancamentoFinanceiro?: boolean;
+  financeiro?: {
+    categoria: string;
+    descricao?: string;
+    formaPagamento?: string;
+    dataPagamento?: string;
+  };
+};
+
+export type StockDashboardResponse = {
+  atualizadoEm: string;
+  itensAbaixoMinimo: number;
+  itensZerados: number;
+  valorEstoqueCustoMedio: number;
+  rupturaTaxa: number;
+  perdasValor: number;
+  margemServicos: Array<{
+    serviceId: string;
+    receitaTotal: number;
+    custoInsumosTotal: number;
+    margemBruta: number;
+  }>;
+};
+
+export type StockImportType = "ITENS" | "ENTRADAS" | "AJUSTES";
+export type StockImportTemplateFormat = "xlsx" | "csv";
+export type StockImportStatus =
+  | "RECEBIDO"
+  | "EM_VALIDACAO"
+  | "PROCESSANDO"
+  | "CONCLUIDO"
+  | "CONCLUIDO_COM_ERROS"
+  | "FALHOU"
+  | "CANCELADO";
+
+export type StockImportJob = {
+  jobId: string;
+  tipoImportacao: StockImportType;
+  status: StockImportStatus;
+  dryRun: boolean;
+  totalLinhas: number;
+  linhasProcessadas: number;
+  linhasComErro: number;
+  arquivoSha256?: string;
+  arquivoStorageKey?: string;
+  createdAt: string;
+  updatedAt: string;
+  finishedAt?: string | null;
+};
+
+export type StockImportErrorLine = {
+  linha: number;
+  coluna: string;
+  codigoErro: string;
+  mensagem: string;
+  valorRecebido: string;
+};
+
+export type StockInventoryStatus = "ABERTO" | "EM_CONTAGEM" | "FECHADO" | "CANCELADO";
+
+export type StockInventory = {
+  id: string;
+  nome: string;
+  status: StockInventoryStatus;
+  observacao?: string | null;
+  dataAbertura: string;
+  dataFechamento?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateStockInventoryRequest = {
+  nome: string;
+  observacao?: string;
+};
+
+export type StockInventoryCountRequest = {
+  itemEstoqueId: string;
+  quantidadeContada: number;
+  observacao?: string;
+};
+
+export type StockSupplier = {
+  id: string;
+  nome: string;
+  documento?: string | null;
+  email?: string | null;
+  telefone?: string | null;
+  contato?: string | null;
+  ativo: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateStockSupplierRequest = {
+  nome: string;
+  documento?: string;
+  email?: string;
+  telefone?: string;
+  contato?: string;
+  ativo?: boolean;
+};
+
+export type StockPurchaseOrderStatus =
+  | "RASCUNHO"
+  | "ENVIADO"
+  | "PARCIALMENTE_RECEBIDO"
+  | "RECEBIDO"
+  | "CANCELADO";
+
+export type StockPurchaseOrder = {
+  id: string;
+  fornecedorId: string;
+  fornecedorNome: string;
+  status: StockPurchaseOrderStatus;
+  valorTotal: number;
+  quantidadeItens: number;
+  quantidadePendente: number;
+  observacao?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateStockPurchaseOrderRequest = {
+  fornecedorId: string;
+  valorTotal: number;
+  quantidadeItens: number;
+  observacao?: string;
+};
+
+export type ReceiveStockPurchaseOrderRequest = {
+  quantidadeRecebida: number;
+  observacao?: string;
+};
+
+export type StockTransferStatus = "RASCUNHO" | "ENVIADA" | "RECEBIDA" | "CANCELADA";
+
+export type StockTransfer = {
+  id: string;
+  origem: string;
+  destino: string;
+  status: StockTransferStatus;
+  itemEstoqueId: string;
+  itemNome: string;
+  quantidade: number;
+  observacao?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateStockTransferRequest = {
+  origem: string;
+  destino: string;
+  itemEstoqueId: string;
+  quantidade: number;
+  observacao?: string;
+};
+
+export type StockSettings = {
+  alertaEstoqueMinimoAtivo: boolean;
+  bloquearSaidaSemSaldo: boolean;
+  permitirAjusteNegativoComPermissao: boolean;
+  diasCoberturaMeta: number;
+  updatedAt: string;
+};
