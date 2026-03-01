@@ -6,6 +6,7 @@ Objetivo: consolidar o contrato que o frontend ja implementou para o modulo de e
 
 ### 1.1 Itens
 - `GET /api/v1/estoque/itens?page={n}&limit={n}&search={termo}&ativo={true|false}&abaixoMinimo={true|false}`
+  - Cursor opcional (keyset): `cursorCreatedAt={ISO-8601}&cursorId={uuid}`
   - Resposta aceita pelo front:
     - Lista simples: `StockItem[]`
     - Ou paginada: `{ items: StockItem[], total, page, pageSize, hasMore }`
@@ -15,6 +16,7 @@ Objetivo: consolidar o contrato que o frontend ja implementou para o modulo de e
 
 ### 1.2 Movimentacoes
 - `GET /api/v1/estoque/movimentacoes?page={n}&limit={n}&itemId={id}&tipo={ENTRADA|SAIDA|AJUSTE}`
+  - Cursor opcional (keyset): `cursorCreatedAt={ISO-8601}&cursorId={uuid}`
   - Resposta aceita pelo front:
     - Lista simples: `StockMovement[]`
     - Ou paginada: `{ items: StockMovement[], total, page, pageSize, hasMore }`
@@ -43,7 +45,7 @@ Objetivo: consolidar o contrato que o frontend ja implementou para o modulo de e
   - Resposta: `StockImportJob`
 
 ### 1.5 Inventarios
-- `GET /api/v1/estoque/inventarios?page={n}&limit={n}`
+- `GET /api/v1/estoque/inventarios?page={n}&limit={n}&cursorCreatedAt={ISO-8601}&cursorId={uuid}`
   - Resposta: `StockInventory[]`
 - `POST /api/v1/estoque/inventarios`
   - Resposta: `StockInventory`
@@ -55,7 +57,7 @@ Objetivo: consolidar o contrato que o frontend ja implementou para o modulo de e
   - Resposta: `StockInventory`
 
 ### 1.6 Fornecedores
-- `GET /api/v1/estoque/fornecedores?page={n}&limit={n}`
+- `GET /api/v1/estoque/fornecedores?page={n}&limit={n}&cursorCreatedAt={ISO-8601}&cursorId={uuid}`
   - Resposta: `StockSupplier[]`
 - `POST /api/v1/estoque/fornecedores`
   - Resposta: `StockSupplier`
@@ -63,7 +65,7 @@ Objetivo: consolidar o contrato que o frontend ja implementou para o modulo de e
   - Resposta: `StockSupplier`
 
 ### 1.7 Pedidos de compra
-- `GET /api/v1/estoque/pedidos-compra?page={n}&limit={n}`
+- `GET /api/v1/estoque/pedidos-compra?page={n}&limit={n}&cursorCreatedAt={ISO-8601}&cursorId={uuid}`
   - Resposta: `StockPurchaseOrder[]`
 - `POST /api/v1/estoque/pedidos-compra`
   - Resposta: `StockPurchaseOrder`
@@ -73,7 +75,7 @@ Objetivo: consolidar o contrato que o frontend ja implementou para o modulo de e
   - Resposta: `StockPurchaseOrder`
 
 ### 1.8 Transferencias
-- `GET /api/v1/estoque/transferencias?page={n}&limit={n}`
+- `GET /api/v1/estoque/transferencias?page={n}&limit={n}&cursorCreatedAt={ISO-8601}&cursorId={uuid}`
   - Resposta: `StockTransfer[]`
 - `POST /api/v1/estoque/transferencias`
   - Resposta: `StockTransfer`
