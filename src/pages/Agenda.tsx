@@ -467,6 +467,11 @@ export default function Agenda() {
         })
       : '';
 
+  const findClientByAppointment = (appointment: Appointment) =>
+    appointment.client ?? clients.find((client) => client.id === appointment.clientId) ?? null;
+  const findServiceByAppointment = (appointment: Appointment) =>
+    appointment.service ?? services.find((service) => service.id === appointment.serviceId) ?? null;
+
   // Get details for selected appointment
   const selectedClient = selectedAppointment ? findClientByAppointment(selectedAppointment) : null;
   const selectedProfessionalData = selectedAppointment ? professionals.find(p => p.id === selectedAppointment.professionalId) : null;
@@ -475,10 +480,6 @@ export default function Agenda() {
     if (!appointmentToReassign) return [];
     return activeProfessionals.filter((prof) => prof.id !== appointmentToReassign.professionalId);
   }, [activeProfessionals, appointmentToReassign]);
-  const findClientByAppointment = (appointment: Appointment) =>
-    appointment.client ?? clients.find((client) => client.id === appointment.clientId) ?? null;
-  const findServiceByAppointment = (appointment: Appointment) =>
-    appointment.service ?? services.find((service) => service.id === appointment.serviceId) ?? null;
 
   if (isLoading) {
     return (

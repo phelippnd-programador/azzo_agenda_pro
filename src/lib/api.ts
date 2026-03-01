@@ -2647,8 +2647,17 @@ export const appointmentsApi = {
 /* ================= STOCK ================= */
 
 export const stockApi = {
-  getItems: (params?: ListQueryParams & { ativo?: boolean; abaixoMinimo?: boolean }) => {
+  getItems: (
+    params?: ListQueryParams & {
+      ativo?: boolean;
+      abaixoMinimo?: boolean;
+      cursorCreatedAt?: string;
+      cursorId?: string;
+    }
+  ) => {
     const query = buildListQuery(params);
+    if (params?.cursorCreatedAt) query.set("cursorCreatedAt", params.cursorCreatedAt);
+    if (params?.cursorId) query.set("cursorId", params.cursorId);
     if (typeof params?.ativo === "boolean") query.set("ativo", String(params.ativo));
     if (typeof params?.abaixoMinimo === "boolean") {
       query.set("abaixoMinimo", String(params.abaixoMinimo));
@@ -2667,8 +2676,12 @@ export const stockApi = {
       method: "PUT",
       body: JSON.stringify(payload),
     }),
-  getMovements: (params?: ListQueryParams & { itemId?: string; tipo?: string }) => {
+  getMovements: (
+    params?: ListQueryParams & { itemId?: string; tipo?: string; cursorCreatedAt?: string; cursorId?: string }
+  ) => {
     const query = buildListQuery(params);
+    if (params?.cursorCreatedAt) query.set("cursorCreatedAt", params.cursorCreatedAt);
+    if (params?.cursorId) query.set("cursorId", params.cursorId);
     if (params?.itemId) query.set("itemId", params.itemId);
     if (params?.tipo) query.set("tipo", params.tipo);
     const suffix = query.toString() ? `?${query.toString()}` : "";
@@ -2688,7 +2701,13 @@ export const stockApi = {
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return request<StockDashboardResponse>(`/estoque/dashboard${suffix}`);
   },
-  listInventories: () => request<StockInventory[]>("/estoque/inventarios"),
+  listInventories: (params?: ListQueryParams & { cursorCreatedAt?: string; cursorId?: string }) => {
+    const query = buildListQuery(params);
+    if (params?.cursorCreatedAt) query.set("cursorCreatedAt", params.cursorCreatedAt);
+    if (params?.cursorId) query.set("cursorId", params.cursorId);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<StockInventory[]>(`/estoque/inventarios${suffix}`);
+  },
   createInventory: (payload: CreateStockInventoryRequest) =>
     request<StockInventory>("/estoque/inventarios", {
       method: "POST",
@@ -2704,7 +2723,13 @@ export const stockApi = {
     request<StockInventory>(`/estoque/inventarios/${id}/fechamento`, {
       method: "POST",
     }),
-  listSuppliers: () => request<StockSupplier[]>("/estoque/fornecedores"),
+  listSuppliers: (params?: ListQueryParams & { cursorCreatedAt?: string; cursorId?: string }) => {
+    const query = buildListQuery(params);
+    if (params?.cursorCreatedAt) query.set("cursorCreatedAt", params.cursorCreatedAt);
+    if (params?.cursorId) query.set("cursorId", params.cursorId);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<StockSupplier[]>(`/estoque/fornecedores${suffix}`);
+  },
   createSupplier: (payload: CreateStockSupplierRequest) =>
     request<StockSupplier>("/estoque/fornecedores", {
       method: "POST",
@@ -2715,7 +2740,13 @@ export const stockApi = {
       method: "PUT",
       body: JSON.stringify(payload),
     }),
-  listPurchaseOrders: () => request<StockPurchaseOrder[]>("/estoque/pedidos-compra"),
+  listPurchaseOrders: (params?: ListQueryParams & { cursorCreatedAt?: string; cursorId?: string }) => {
+    const query = buildListQuery(params);
+    if (params?.cursorCreatedAt) query.set("cursorCreatedAt", params.cursorCreatedAt);
+    if (params?.cursorId) query.set("cursorId", params.cursorId);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<StockPurchaseOrder[]>(`/estoque/pedidos-compra${suffix}`);
+  },
   createPurchaseOrder: (payload: CreateStockPurchaseOrderRequest) =>
     request<StockPurchaseOrder>("/estoque/pedidos-compra", {
       method: "POST",
@@ -2727,7 +2758,13 @@ export const stockApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  listTransfers: () => request<StockTransfer[]>("/estoque/transferencias"),
+  listTransfers: (params?: ListQueryParams & { cursorCreatedAt?: string; cursorId?: string }) => {
+    const query = buildListQuery(params);
+    if (params?.cursorCreatedAt) query.set("cursorCreatedAt", params.cursorCreatedAt);
+    if (params?.cursorId) query.set("cursorId", params.cursorId);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<StockTransfer[]>(`/estoque/transferencias${suffix}`);
+  },
   createTransfer: (payload: CreateStockTransferRequest) =>
     request<StockTransfer>("/estoque/transferencias", {
       method: "POST",
