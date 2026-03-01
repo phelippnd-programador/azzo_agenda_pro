@@ -21,6 +21,8 @@ export default function Login() {
   const { login, loginLocalDemo } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [mfaCode, setMfaCode] = useState('');
+  const [mfaRequired, setMfaRequired] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -47,11 +49,18 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      await login(email, password, mfaRequired ? mfaCode : undefined);
       toast.success('Login realizado com sucesso!');
+      setMfaRequired(false);
+      setMfaCode('');
       const redirectPath = await getPostLoginRoute();
       navigate(redirectPath);
     } catch (error) {
+      if (error instanceof ApiError && error.status === 428) {
+        setMfaRequired(true);
+        toast.error('Digite o codigo de 6 digitos do seu aplicativo autenticador.');
+        return;
+      }
       const uiError = resolveUiError(
         error,
         isDemoLoginEnabled
@@ -166,6 +175,23 @@ export default function Login() {
                   </Button>
                 </div>
               </div>
+
+              {mfaRequired ? (
+                <div className="space-y-2">
+                  <Label htmlFor="mfaCode" className="text-sm">Codigo MFA (6 digitos)</Label>
+                  <Input
+                    id="mfaCode"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="000000"
+                    value={mfaCode}
+                    onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    disabled={isLoading}
+                    className="h-10 sm:h-11"
+                  />
+                </div>
+              ) : null}
 
               <Button
                 type="submit"

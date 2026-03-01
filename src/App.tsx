@@ -34,6 +34,7 @@ import StockSettingsPage from "./pages/stock/StockSettingsPage";
 import Financial from "./pages/Financial";
 import ProfessionalFinancial from "./pages/ProfessionalFinancial";
 import Auditoria from "./pages/Auditoria";
+import LgpdRequests from "./pages/LgpdRequests";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import Register from "./pages/Register";
@@ -51,6 +52,7 @@ import Unauthorized from "./pages/Unauthorized";
 import LegalDocument from "./pages/LegalDocument";
 import { NotificationsProvider } from "@/providers/NotificationsProvider";
 import { FullScreenLoader } from "@/components/ui/full-screen-loader";
+import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
 
 const SalePage = lazy(() => import("./pages/SalePage"));
 const CheckoutSuccess = lazy(() => import("./pages/CheckoutSuccess"));
@@ -291,6 +293,14 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/auditoria/lgpd"
+          element={
+            <ProtectedRoute>
+              <LgpdRequests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/configuracoes"
           element={
             <ProtectedRoute>
@@ -368,6 +378,7 @@ const App = () => (
           <BrowserRouter>
             <NotificationsProvider>
               <AppRoutes />
+              <CookieConsentBanner />
             </NotificationsProvider>
           </BrowserRouter>
         </TooltipProvider>

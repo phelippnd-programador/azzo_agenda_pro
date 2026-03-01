@@ -18,6 +18,7 @@ export interface User {
   role: 'OWNER' | 'PROFESSIONAL' | 'CLIENT';
   avatar?: string;
   salonName?: string | null;
+  mfaEnabled?: boolean;
   createdAt: Date;
 }
 

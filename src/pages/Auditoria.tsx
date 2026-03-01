@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Download, RefreshCw, Search } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -197,6 +198,12 @@ export default function Auditoria() {
   return (
     <MainLayout title="Auditoria" subtitle="Trilha de eventos com paginacao por cursor (keyset).">
       <div className="space-y-4">
+        <div className="flex justify-end">
+          <Button asChild variant="outline">
+            <Link to="/auditoria/lgpd">Abrir painel LGPD</Link>
+          </Button>
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle>Filtros de consulta</CardTitle>
