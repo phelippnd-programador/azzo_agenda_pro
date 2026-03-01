@@ -52,6 +52,7 @@ import Unauthorized from "./pages/Unauthorized";
 import LegalDocument from "./pages/LegalDocument";
 import { NotificationsProvider } from "@/providers/NotificationsProvider";
 import { FullScreenLoader } from "@/components/ui/full-screen-loader";
+import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
 
 const SalePage = lazy(() => import("./pages/SalePage"));
 const CheckoutSuccess = lazy(() => import("./pages/CheckoutSuccess"));
@@ -377,6 +378,7 @@ const App = () => (
           <BrowserRouter>
             <NotificationsProvider>
               <AppRoutes />
+              <CookieConsentBanner />
             </NotificationsProvider>
           </BrowserRouter>
         </TooltipProvider>
