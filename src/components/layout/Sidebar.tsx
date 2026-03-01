@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,6 +28,7 @@ import {
   BarChart3,
   ShieldCheck,
   Boxes,
+  ChevronDown,
 } from "lucide-react";
 
 const MENU_REGISTRY = {
@@ -39,13 +40,17 @@ const MENU_REGISTRY = {
   "/profissionais": { icon: Users, label: "Profissionais", path: "/profissionais" },
   "/clientes": { icon: UserCircle, label: "Clientes", path: "/clientes" },
   "/estoque": { icon: Boxes, label: "Estoque", path: "/estoque" },
-  "/financeiro": { icon: DollarSign, label: "Financeiro", path: "/financeiro" },
+  "/financeiro": { icon: DollarSign, label: "Resumo Financeiro", path: "/financeiro" },
   "/financeiro/profissionais": {
     icon: BarChart3,
     label: "Financeiro Profissionais",
     path: "/financeiro/profissionais",
   },
-  "/financeiro/licenca": { icon: CreditCard, label: "Licenca", path: "/financeiro/licenca" },
+  "/financeiro/licenca": {
+    icon: CreditCard,
+    label: "Assinatura e Licenca",
+    path: "/financeiro/licenca",
+  },
   "/auditoria": { icon: ShieldCheck, label: "Auditoria", path: "/auditoria" },
   "/emitir-nota": { icon: FileText, label: "Emitir Nota Fiscal", path: "/emitir-nota" },
   "/nota-fiscal": { icon: Eye, label: "Pre-visualizacao de NF", path: "/nota-fiscal" },
@@ -83,16 +88,60 @@ interface SidebarProps {
   onToggle: () => void;
 }
 
+type MenuItem = (typeof MENU_REGISTRY)[keyof typeof MENU_REGISTRY];
+type VisibleMenuEntry =
+  | { type: "item"; item: MenuItem }
+  | { type: "group"; key: string; label: string; icon: MenuItem["icon"]; items: MenuItem[] };
+
 export function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
   const { allowedRoutes } = useMenuPermissions();
   const allowedSet = new Set(allowedRoutes ?? []);
-  const visibleMenuItems = MAIN_MENU_ORDER
-    .filter((route) => allowedSet.has(route))
-    .map((route) => MENU_REGISTRY[route]);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+
+  const visibleMenuEntries: VisibleMenuEntry[] = useMemo(() => {
+    const financialGroupPaths = [
+      "/financeiro",
+      "/financeiro/profissionais",
+      "/financeiro/licenca",
+    ] as const;
+    const financialItems = financialGroupPaths
+      .filter((route) => allowedSet.has(route))
+      .map((route) => MENU_REGISTRY[route]);
+
+    const entries: VisibleMenuEntry[] = [];
+    MAIN_MENU_ORDER.forEach((route) => {
+      if (financialGroupPaths.includes(route)) return;
+      if (!allowedSet.has(route)) return;
+      entries.push({ type: "item", item: MENU_REGISTRY[route] });
+    });
+
+    if (financialItems.length > 0) {
+      const financeInsertIndex = entries.findIndex(
+        (entry) => entry.type === "item" && entry.item.path === "/auditoria"
+      );
+      const financialGroup: VisibleMenuEntry = {
+        type: "group",
+        key: "financeiro",
+        label: "Financeiro",
+        icon: DollarSign,
+        items: financialItems,
+      };
+      if (financeInsertIndex >= 0) entries.splice(financeInsertIndex, 0, financialGroup);
+      else entries.push(financialGroup);
+    }
+
+    return entries;
+  }, [allowedSet]);
   const [salonSlug, setSalonSlug] = useState("meu-salao");
+
+  useEffect(() => {
+    const shouldOpenFinanceGroup = location.pathname.startsWith("/financeiro");
+    if (!shouldOpenFinanceGroup) return;
+    setExpandedGroups((prev) => (prev.financeiro ? prev : { ...prev, financeiro: true }));
+  }, [location.pathname]);
 
   useEffect(() => {
     const cachedSlug = localStorage.getItem("salon_public_slug");
@@ -146,29 +195,94 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
           <ScrollArea className="flex-1 py-4">
             <nav className="px-2 sm:px-3 space-y-1">
-              {visibleMenuItems.map((item) => {
-                const isActive =
-                  location.pathname === item.path ||
-                  location.pathname.startsWith(`${item.path}/`);
+              {visibleMenuEntries.map((entry) => {
+                if (entry.type === "item") {
+                  const isActive =
+                    location.pathname === entry.item.path ||
+                    location.pathname.startsWith(`${entry.item.path}/`);
+                  return (
+                    <Link
+                      key={entry.item.path}
+                      to={entry.item.path}
+                      onClick={() => {
+                        if (window.innerWidth < 1024) onToggle();
+                      }}
+                    >
+                      <Button
+                        variant={isActive ? "secondary" : "ghost"}
+                        className={cn(
+                          "w-full justify-start gap-3 h-10 sm:h-11 text-sm",
+                          isActive && "bg-primary/10 text-primary hover:bg-primary/10"
+                        )}
+                      >
+                        <entry.item.icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                        <span className="truncate">{entry.item.label}</span>
+                      </Button>
+                    </Link>
+                  );
+                }
+
+                const isOpen = expandedGroups[entry.key] ?? location.pathname.startsWith("/financeiro");
+                const activeChildPath =
+                  entry.items
+                    .filter(
+                      (item) =>
+                        location.pathname === item.path ||
+                        location.pathname.startsWith(`${item.path}/`)
+                    )
+                    .sort((left, right) => right.path.length - left.path.length)[0]?.path ?? null;
+                const isGroupActive = Boolean(activeChildPath);
+
                 return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => {
-                      if (window.innerWidth < 1024) onToggle();
-                    }}
-                  >
+                  <div key={entry.key} className="space-y-1">
                     <Button
-                      variant={isActive ? "secondary" : "ghost"}
-                    className={cn(
-                      "w-full justify-start gap-3 h-10 sm:h-11 text-sm",
-                      isActive && "bg-primary/10 text-primary hover:bg-primary/10"
-                    )}
-                  >
-                      <item.icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                      <span className="truncate">{item.label}</span>
+                      variant="ghost"
+                      onClick={() =>
+                        setExpandedGroups((prev) => ({ ...prev, [entry.key]: !isOpen }))
+                      }
+                      className={cn(
+                        "w-full justify-start gap-3 h-10 sm:h-11 text-sm",
+                        isGroupActive && "text-primary"
+                      )}
+                    >
+                      <entry.icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                      <span className="truncate flex-1 text-left">{entry.label}</span>
+                      <ChevronDown
+                        className={cn(
+                          "w-4 h-4 transition-transform",
+                          isOpen ? "rotate-180" : "rotate-0"
+                        )}
+                      />
                     </Button>
-                  </Link>
+                    {isOpen ? (
+                      <div className="ml-4 border-l border-border pl-2 space-y-1">
+                        {entry.items.map((item) => {
+                          const isChildActive = activeChildPath === item.path;
+                          return (
+                            <Link
+                              key={item.path}
+                              to={item.path}
+                              onClick={() => {
+                                if (window.innerWidth < 1024) onToggle();
+                              }}
+                            >
+                              <Button
+                                variant={isChildActive ? "secondary" : "ghost"}
+                                className={cn(
+                                  "w-full justify-start gap-3 h-9 text-sm",
+                                  isChildActive &&
+                                    "bg-primary/10 text-primary hover:bg-primary/10"
+                                )}
+                              >
+                                <item.icon className="w-4 h-4 flex-shrink-0" />
+                                <span className="truncate">{item.label}</span>
+                              </Button>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
                 );
               })}
             </nav>
