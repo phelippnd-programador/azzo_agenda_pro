@@ -12,4 +12,11 @@ export type LegalDocumentResponse = {
 export type PublicLegalResponse = {
   termsOfUse: LegalDocumentResponse | null;
   privacyPolicy: LegalDocumentResponse | null;
+  lgpdContact?: LgpdContactResponse | null;
+};
+
+export type LgpdContactResponse = {
+  email: string | null;
+  channel: string | null;
+  responseSla: string | null;
 };
