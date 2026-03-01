@@ -28,6 +28,7 @@ Status: frontend fase 1, 2 e 3 base concluida; backend fase 3 implementado e com
 - [x] `[BACK]` Implementar endpoint de dashboard agregado.
 - [x] `[BACK]` Implementar erro padrao por endpoint conforme contrato.
 - [x] `[BACK]` Implementar RBAC/policy por permissao fina.
+- [x] `[BACK]` Revisar paginacao dos endpoints de lista (itens, movimentacoes, inventarios, fornecedores, pedidos e transferencias) com suporte a `page/limit`.
 
 ## 4. Backend - Importacao Assincrona
 - [x] `[BACK]` Integrar MinIO (upload/download/delete por `storage_key`).

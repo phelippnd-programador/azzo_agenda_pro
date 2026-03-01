@@ -43,7 +43,7 @@ Objetivo: consolidar o contrato que o frontend ja implementou para o modulo de e
   - Resposta: `StockImportJob`
 
 ### 1.5 Inventarios
-- `GET /api/v1/estoque/inventarios`
+- `GET /api/v1/estoque/inventarios?page={n}&limit={n}`
   - Resposta: `StockInventory[]`
 - `POST /api/v1/estoque/inventarios`
   - Resposta: `StockInventory`
@@ -55,7 +55,7 @@ Objetivo: consolidar o contrato que o frontend ja implementou para o modulo de e
   - Resposta: `StockInventory`
 
 ### 1.6 Fornecedores
-- `GET /api/v1/estoque/fornecedores`
+- `GET /api/v1/estoque/fornecedores?page={n}&limit={n}`
   - Resposta: `StockSupplier[]`
 - `POST /api/v1/estoque/fornecedores`
   - Resposta: `StockSupplier`
@@ -63,7 +63,7 @@ Objetivo: consolidar o contrato que o frontend ja implementou para o modulo de e
   - Resposta: `StockSupplier`
 
 ### 1.7 Pedidos de compra
-- `GET /api/v1/estoque/pedidos-compra`
+- `GET /api/v1/estoque/pedidos-compra?page={n}&limit={n}`
   - Resposta: `StockPurchaseOrder[]`
 - `POST /api/v1/estoque/pedidos-compra`
   - Resposta: `StockPurchaseOrder`
@@ -73,7 +73,7 @@ Objetivo: consolidar o contrato que o frontend ja implementou para o modulo de e
   - Resposta: `StockPurchaseOrder`
 
 ### 1.8 Transferencias
-- `GET /api/v1/estoque/transferencias`
+- `GET /api/v1/estoque/transferencias?page={n}&limit={n}`
   - Resposta: `StockTransfer[]`
 - `POST /api/v1/estoque/transferencias`
   - Resposta: `StockTransfer`
