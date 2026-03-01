@@ -27,6 +27,7 @@ import {
   CreditCard,
   BarChart3,
   ShieldCheck,
+  Boxes,
 } from "lucide-react";
 
 const MENU_REGISTRY = {
@@ -37,6 +38,7 @@ const MENU_REGISTRY = {
   "/especialidades": { icon: Tag, label: "Especialidades", path: "/especialidades" },
   "/profissionais": { icon: Users, label: "Profissionais", path: "/profissionais" },
   "/clientes": { icon: UserCircle, label: "Clientes", path: "/clientes" },
+  "/estoque": { icon: Boxes, label: "Estoque", path: "/estoque" },
   "/financeiro": { icon: DollarSign, label: "Financeiro", path: "/financeiro" },
   "/financeiro/profissionais": {
     icon: BarChart3,
@@ -65,6 +67,7 @@ const MAIN_MENU_ORDER = [
   "/especialidades",
   "/profissionais",
   "/clientes",
+  "/estoque",
   "/financeiro",
   "/financeiro/profissionais",
   "/financeiro/licenca",
@@ -144,7 +147,9 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
           <ScrollArea className="flex-1 py-4">
             <nav className="px-2 sm:px-3 space-y-1">
               {visibleMenuItems.map((item) => {
-                const isActive = location.pathname === item.path;
+                const isActive =
+                  location.pathname === item.path ||
+                  location.pathname.startsWith(`${item.path}/`);
                 return (
                   <Link
                     key={item.path}
