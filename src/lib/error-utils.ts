@@ -54,6 +54,9 @@ export function resolveUiError(error: unknown, fallbackMessage: string): UiError
       details?.message ||
       details?.error ||
       constraintMessage ||
+      (error.status === 428
+        ? "Segundo fator obrigatorio para este usuario. Informe o codigo MFA."
+        : null) ||
       (error.status === 429
         ? "Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente."
         : null) ||

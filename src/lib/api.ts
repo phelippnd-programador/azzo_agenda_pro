@@ -1875,6 +1875,39 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
     return nextUser as T;
   }
   if (path === "/users/me/password" && method === "PUT") return {} as T;
+  if (path === "/users/me/mfa/status" && method === "GET") {
+    return {
+      enabled: false,
+      enrolled: false,
+      enrollmentUri: null,
+      secretMasked: null,
+    } as T;
+  }
+  if (path === "/users/me/mfa/setup" && method === "POST") {
+    return {
+      secret: "JBSWY3DPEHPK3PXP",
+      otpauthUri:
+        "otpauth://totp/Azzo%20Agenda%20Pro:demo.local%40azzo.com?secret=JBSWY3DPEHPK3PXP&issuer=Azzo%20Agenda%20Pro&digits=6&period=30",
+      issuer: "Azzo Agenda Pro",
+      accountName: "demo.local@azzo.com",
+    } as T;
+  }
+  if (path === "/users/me/mfa/enable" && method === "POST") {
+    return {
+      enabled: true,
+      enrolled: true,
+      enrollmentUri: null,
+      secretMasked: "******",
+    } as T;
+  }
+  if (path === "/users/me/mfa/disable" && method === "POST") {
+    return {
+      enabled: false,
+      enrolled: false,
+      enrollmentUri: null,
+      secretMasked: null,
+    } as T;
+  }
 
   if (path === "/tenant/whatsapp" && method === "GET") {
     return {
@@ -2329,8 +2362,22 @@ type AuthResponse = {
   user?: User;
 };
 
+export type MfaStatusResponse = {
+  enabled: boolean;
+  enrolled: boolean;
+  enrollmentUri?: string | null;
+  secretMasked?: string | null;
+};
+
+export type MfaSetupResponse = {
+  secret: string;
+  otpauthUri: string;
+  issuer: string;
+  accountName: string;
+};
+
 export const authApi = {
-  async login(email: string, password: string) {
+  async login(email: string, password: string, mfaCode?: string) {
     if (isLocalDemoModeEnabled() || (email === "demo@azzo.com" && password === "demo123")) {
       setLocalDemoMode(true);
       if (!localStorage.getItem(LOCAL_DEMO_ROLE_KEY)) {
@@ -2348,7 +2395,7 @@ export const authApi = {
 
     const data = await request<AuthResponse>("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, mfaCode }),
     });
 
     const token = data.access_token || data.token;
@@ -3012,6 +3059,21 @@ export const usersApi = {
     request<void>("/users/me/password", {
       method: "PUT",
       body: JSON.stringify(data),
+    }),
+  getMfaStatus: () => request<MfaStatusResponse>("/users/me/mfa/status"),
+  setupMfa: () =>
+    request<MfaSetupResponse>("/users/me/mfa/setup", {
+      method: "POST",
+    }),
+  enableMfa: (code: string) =>
+    request<MfaStatusResponse>("/users/me/mfa/enable", {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    }),
+  disableMfa: (currentPassword: string, code: string) =>
+    request<MfaStatusResponse>("/users/me/mfa/disable", {
+      method: "POST",
+      body: JSON.stringify({ currentPassword, code }),
     }),
 };
 

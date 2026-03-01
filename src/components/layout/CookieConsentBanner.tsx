@@ -1,29 +1,21 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-
-const COOKIE_CONSENT_KEY = "azzo_cookie_consent_v1";
-
-type CookieConsent = "accepted" | "rejected";
-
-const getStoredConsent = (): CookieConsent | null => {
-  if (typeof window === "undefined") return null;
-  const value = localStorage.getItem(COOKIE_CONSENT_KEY);
-  if (value === "accepted" || value === "rejected") return value;
-  return null;
-};
+import {
+  type CookieConsentChoice,
+  persistCookieConsent,
+  readCookieConsent,
+} from "@/lib/cookie-consent";
 
 export function CookieConsentBanner() {
-  const [consent, setConsent] = useState<CookieConsent | null>(null);
+  const [consent, setConsent] = useState<CookieConsentChoice | null>(null);
 
   useEffect(() => {
-    setConsent(getStoredConsent());
+    setConsent(readCookieConsent()?.choice ?? null);
   }, []);
 
-  const persistConsent = (value: CookieConsent) => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(COOKIE_CONSENT_KEY, value);
-    }
+  const persistConsent = (value: CookieConsentChoice) => {
+    persistCookieConsent(value);
     setConsent(value);
   };
 

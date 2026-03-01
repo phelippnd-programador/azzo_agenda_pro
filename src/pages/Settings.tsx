@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { PlugZap, Building2 } from "lucide-react";
+import { PlugZap, Building2, ShieldCheck } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { settingsApi, usersApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
+import {
+  hasNonEssentialCookieConsent,
+  readCookieConsent,
+  revokeCookieConsent,
+} from "@/lib/cookie-consent";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -27,6 +32,14 @@ export default function Settings() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [mfaEnabled, setMfaEnabled] = useState(false);
+  const [mfaEnrolled, setMfaEnrolled] = useState(false);
+  const [mfaSecret, setMfaSecret] = useState("");
+  const [mfaUri, setMfaUri] = useState("");
+  const [mfaEnableCode, setMfaEnableCode] = useState("");
+  const [mfaDisableCode, setMfaDisableCode] = useState("");
+  const [mfaDisablePassword, setMfaDisablePassword] = useState("");
+  const [cookieStatusText, setCookieStatusText] = useState("Nao definido");
 
   useEffect(() => {
     setUserName(user?.name || "");
@@ -43,6 +56,29 @@ export default function Settings() {
         setReminderHours(String(data.notifications.reminderHours));
       })
       .catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    usersApi
+      .getMfaStatus()
+      .then((data) => {
+        setMfaEnabled(Boolean(data.enabled));
+        setMfaEnrolled(Boolean(data.enrolled));
+      })
+      .catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    const record = readCookieConsent();
+    if (!record) {
+      setCookieStatusText("Nao definido");
+      return;
+    }
+    setCookieStatusText(
+      hasNonEssentialCookieConsent()
+        ? `Aceito (expira em ${new Date(record.expiresAt).toLocaleDateString("pt-BR")})`
+        : `Rejeitado (expira em ${new Date(record.expiresAt).toLocaleDateString("pt-BR")})`
+    );
   }, []);
 
   const handleSaveNotifications = async () => {
@@ -97,6 +133,71 @@ export default function Settings() {
     }
   };
 
+  const handlePrepareMfa = async () => {
+    try {
+      setIsSaving(true);
+      const data = await usersApi.setupMfa();
+      setMfaSecret(data.secret);
+      setMfaUri(data.otpauthUri);
+      setMfaEnrolled(true);
+      setMfaEnabled(false);
+      toast.success("MFA preparado. Escaneie o URI no app autenticador e confirme o codigo.");
+    } catch (error) {
+      toast.error(resolveUiError(error, "Erro ao preparar MFA").message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleEnableMfa = async () => {
+    if (!mfaEnableCode || mfaEnableCode.length !== 6) {
+      toast.error("Informe o codigo MFA de 6 digitos");
+      return;
+    }
+    try {
+      setIsSaving(true);
+      const data = await usersApi.enableMfa(mfaEnableCode);
+      setMfaEnabled(Boolean(data.enabled));
+      setMfaEnrolled(Boolean(data.enrolled));
+      setMfaEnableCode("");
+      setMfaSecret("");
+      setMfaUri("");
+      toast.success("MFA habilitado com sucesso.");
+    } catch (error) {
+      toast.error(resolveUiError(error, "Erro ao habilitar MFA").message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDisableMfa = async () => {
+    if (!mfaDisablePassword || !mfaDisableCode || mfaDisableCode.length !== 6) {
+      toast.error("Informe senha atual e codigo MFA de 6 digitos");
+      return;
+    }
+    try {
+      setIsSaving(true);
+      const data = await usersApi.disableMfa(mfaDisablePassword, mfaDisableCode);
+      setMfaEnabled(Boolean(data.enabled));
+      setMfaEnrolled(Boolean(data.enrolled));
+      setMfaDisableCode("");
+      setMfaDisablePassword("");
+      setMfaSecret("");
+      setMfaUri("");
+      toast.success("MFA desabilitado com sucesso.");
+    } catch (error) {
+      toast.error(resolveUiError(error, "Erro ao desabilitar MFA").message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRevokeCookieConsent = () => {
+    revokeCookieConsent();
+    setCookieStatusText("Nao definido");
+    toast.success("Consentimento de cookies revogado. O banner sera exibido novamente.");
+  };
+
   return (
     <MainLayout
       title="Configuracoes"
@@ -138,6 +239,21 @@ export default function Settings() {
               </div>
               <Button onClick={handleSaveNotifications} disabled={isSaving}>
                 Salvar
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Privacidade de Cookies</CardTitle>
+              <CardDescription>
+                Gerencie seu consentimento para cookies nao essenciais.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">Status atual: {cookieStatusText}</p>
+              <Button variant="outline" onClick={handleRevokeCookieConsent}>
+                Revogar consentimento
               </Button>
             </CardContent>
           </Card>
@@ -197,6 +313,78 @@ export default function Settings() {
               </Button>
             </CardContent>
           </Card>
+
+          {user?.role === "OWNER" ? (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-primary" />
+                  MFA / 2FA (Administrador)
+                </CardTitle>
+                <CardDescription>
+                  Ative segundo fator por aplicativo autenticador (TOTP) para proteger o acesso administrativo.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-sm">
+                  Status:{" "}
+                  <span className={mfaEnabled ? "text-green-600 font-medium" : "text-amber-600 font-medium"}>
+                    {mfaEnabled ? "Habilitado" : "Desabilitado"}
+                  </span>
+                </div>
+
+                {!mfaEnabled ? (
+                  <>
+                    <Button variant="outline" onClick={handlePrepareMfa} disabled={isSaving}>
+                      Preparar MFA
+                    </Button>
+
+                    {mfaEnrolled && mfaSecret ? (
+                      <div className="space-y-3 rounded-md border p-3">
+                        <div className="space-y-1">
+                          <Label>Secret (backup manual)</Label>
+                          <Input value={mfaSecret} readOnly />
+                        </div>
+                        <div className="space-y-1">
+                          <Label>URI do autenticador (otpauth)</Label>
+                          <Input value={mfaUri} readOnly />
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Codigo atual do app</Label>
+                          <Input
+                            value={mfaEnableCode}
+                            onChange={(e) => setMfaEnableCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                            placeholder="000000"
+                          />
+                        </div>
+                        <Button onClick={handleEnableMfa} disabled={isSaving}>
+                          Confirmar e habilitar MFA
+                        </Button>
+                      </div>
+                    ) : null}
+                  </>
+                ) : (
+                  <div className="space-y-3 rounded-md border p-3">
+                    <Label>Desabilitar MFA (exige senha atual + codigo do app)</Label>
+                    <Input
+                      type="password"
+                      placeholder="Senha atual"
+                      value={mfaDisablePassword}
+                      onChange={(e) => setMfaDisablePassword(e.target.value)}
+                    />
+                    <Input
+                      placeholder="Codigo MFA (6 digitos)"
+                      value={mfaDisableCode}
+                      onChange={(e) => setMfaDisableCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    />
+                    <Button variant="destructive" onClick={handleDisableMfa} disabled={isSaving}>
+                      Desabilitar MFA
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ) : null}
         </TabsContent>
 
         <TabsContent value="integrations">

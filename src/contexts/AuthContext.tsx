@@ -5,7 +5,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, mfaCode?: string) => Promise<void>;
   loginLocalDemo: (role?: "OWNER" | "PROFESSIONAL") => Promise<void>;
   register: (data: {
     name: string;
@@ -63,8 +63,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const login = async (email: string, password: string) => {
-    const response = await authApi.login(email, password);
+  const login = async (email: string, password: string, mfaCode?: string) => {
+    const response = await authApi.login(email, password, mfaCode);
     if (response.user) {
       setUser(response.user);
       return;
