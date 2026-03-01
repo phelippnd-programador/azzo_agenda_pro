@@ -8,7 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { publicLegalApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
-import type { LegalDocumentResponse, TermsDocumentType } from "@/types/terms";
+import type {
+  LegalDocumentResponse,
+  LgpdContactResponse,
+  TermsDocumentType,
+} from "@/types/terms";
 
 type LegalDocumentProps = {
   documentType: TermsDocumentType;
@@ -17,6 +21,7 @@ type LegalDocumentProps = {
 
 export default function LegalDocument({ documentType, fallbackTitle }: LegalDocumentProps) {
   const [document, setDocument] = useState<LegalDocumentResponse | null>(null);
+  const [lgpdContact, setLgpdContact] = useState<LgpdContactResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,6 +34,8 @@ export default function LegalDocument({ documentType, fallbackTitle }: LegalDocu
             ? await publicLegalApi.getPrivacyPolicy()
             : await publicLegalApi.getTermsOfUse();
         setDocument(data);
+        const contact = await publicLegalApi.getContact().catch(() => null);
+        setLgpdContact(contact);
         setError(null);
       } catch (err) {
         const uiError = resolveUiError(err, `Erro ao carregar ${fallbackTitle.toLowerCase()}.`);
@@ -68,6 +75,14 @@ export default function LegalDocument({ documentType, fallbackTitle }: LegalDocu
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
             {!isLoading && !error ? (
               <>
+                {lgpdContact?.email || lgpdContact?.channel ? (
+                  <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground space-y-1">
+                    <p className="font-medium text-foreground">Contato LGPD</p>
+                    <p>E-mail: {lgpdContact.email || "-"}</p>
+                    <p>Canal: {lgpdContact.channel || "-"}</p>
+                    <p>SLA: {lgpdContact.responseSla || "-"}</p>
+                  </div>
+                ) : null}
 
                 <div className="prose prose-sm max-w-none text-foreground">
                   <ReactMarkdown

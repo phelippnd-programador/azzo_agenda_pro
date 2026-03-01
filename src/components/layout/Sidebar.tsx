@@ -27,6 +27,7 @@ import {
   CreditCard,
   BarChart3,
   ShieldCheck,
+  FileSearch,
   Boxes,
   ChevronDown,
 } from "lucide-react";
@@ -52,6 +53,7 @@ const MENU_REGISTRY = {
     path: "/financeiro/licenca",
   },
   "/auditoria": { icon: ShieldCheck, label: "Auditoria", path: "/auditoria" },
+  "/auditoria/lgpd": { icon: FileSearch, label: "LGPD Titulares", path: "/auditoria/lgpd" },
   "/emitir-nota": { icon: FileText, label: "Emitir Nota Fiscal", path: "/emitir-nota" },
   "/nota-fiscal": { icon: Eye, label: "Pre-visualizacao de NF", path: "/nota-fiscal" },
   "/config-impostos": {
@@ -77,6 +79,7 @@ const MAIN_MENU_ORDER = [
   "/financeiro/profissionais",
   "/financeiro/licenca",
   "/auditoria",
+  "/auditoria/lgpd",
   "/emitir-nota",
   "/nota-fiscal",
   "/config-impostos",
@@ -114,7 +117,11 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
     const entries: VisibleMenuEntry[] = [];
     MAIN_MENU_ORDER.forEach((route) => {
       if (financialGroupPaths.includes(route)) return;
-      if (!allowedSet.has(route)) return;
+      if (route === "/auditoria/lgpd") {
+        if (!allowedSet.has("/auditoria") && !allowedSet.has("/auditoria/lgpd")) return;
+      } else if (!allowedSet.has(route)) {
+        return;
+      }
       entries.push({ type: "item", item: MENU_REGISTRY[route] });
     });
 
@@ -197,9 +204,11 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
             <nav className="px-2 sm:px-3 space-y-1">
               {visibleMenuEntries.map((entry) => {
                 if (entry.type === "item") {
+                  const isLgpdSubPage = location.pathname.startsWith("/auditoria/lgpd");
                   const isActive =
-                    location.pathname === entry.item.path ||
-                    location.pathname.startsWith(`${entry.item.path}/`);
+                    (location.pathname === entry.item.path ||
+                      location.pathname.startsWith(`${entry.item.path}/`)) &&
+                    !(entry.item.path === "/auditoria" && isLgpdSubPage);
                   return (
                     <Link
                       key={entry.item.path}

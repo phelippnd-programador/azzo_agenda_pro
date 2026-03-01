@@ -34,6 +34,7 @@ import StockSettingsPage from "./pages/stock/StockSettingsPage";
 import Financial from "./pages/Financial";
 import ProfessionalFinancial from "./pages/ProfessionalFinancial";
 import Auditoria from "./pages/Auditoria";
+import LgpdRequests from "./pages/LgpdRequests";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import Register from "./pages/Register";
@@ -287,6 +288,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Auditoria />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/auditoria/lgpd"
+          element={
+            <ProtectedRoute>
+              <LgpdRequests />
             </ProtectedRoute>
           }
         />
