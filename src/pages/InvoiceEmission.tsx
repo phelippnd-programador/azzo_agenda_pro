@@ -40,7 +40,10 @@ export default function InvoiceEmission() {
   const [invoiceToReprocess, setInvoiceToReprocess] = useState<Invoice | null>(null);
   const [authMode, setAuthMode] = useState<'CREATE_AND_AUTHORIZE' | 'REPROCESS_AUTHORIZE'>('CREATE_AND_AUTHORIZE');
   const [certificatePassword, setCertificatePassword] = useState('');
+  const [certificatePasswordTouched, setCertificatePasswordTouched] = useState(false);
   const [isAuthorizing, setIsAuthorizing] = useState(false);
+  const passwordMinLength = 4;
+  const isCertificatePasswordValid = certificatePassword.trim().length >= passwordMinLength;
 
   useEffect(() => {
     loadInvoices();
@@ -78,12 +81,14 @@ export default function InvoiceEmission() {
     setInvoiceToReprocess(null);
     setAuthMode('CREATE_AND_AUTHORIZE');
     setCertificatePassword('');
+    setCertificatePasswordTouched(false);
     setAuthDialogOpen(true);
   };
 
   const handleAuthorizeEmission = async () => {
-    if (!certificatePassword.trim()) {
-      toast.error('Senha do certificado obrigatoria para autorizar a nota.');
+    if (!isCertificatePasswordValid) {
+      setCertificatePasswordTouched(true);
+      toast.error(`Senha do certificado deve ter ao menos ${passwordMinLength} caracteres.`);
       return;
     }
 
@@ -119,6 +124,7 @@ export default function InvoiceEmission() {
       setPendingInvoiceData(null);
       setInvoiceToReprocess(null);
       setCertificatePassword('');
+      setCertificatePasswordTouched(false);
     } catch (error) {
       toast.error(resolveUiError(error, 'Erro ao processar nota fiscal').message);
       console.error(error);
@@ -189,6 +195,7 @@ export default function InvoiceEmission() {
     setPendingInvoiceData(null);
     setAuthMode('REPROCESS_AUTHORIZE');
     setCertificatePassword('');
+    setCertificatePasswordTouched(false);
     setAuthDialogOpen(true);
   };
 
@@ -277,6 +284,7 @@ export default function InvoiceEmission() {
                 setPendingInvoiceData(null);
                 setInvoiceToReprocess(null);
                 setCertificatePassword('');
+                setCertificatePasswordTouched(false);
               }
             }
           }}
@@ -296,8 +304,14 @@ export default function InvoiceEmission() {
                 placeholder="Senha do certificado"
                 value={certificatePassword}
                 onChange={(e) => setCertificatePassword(e.target.value)}
+                onBlur={() => setCertificatePasswordTouched(true)}
                 autoFocus
               />
+              {certificatePasswordTouched && !isCertificatePasswordValid && (
+                <p className="text-xs text-red-600">
+                  Informe uma senha com pelo menos {passwordMinLength} caracteres.
+                </p>
+              )}
             </div>
             <div className="flex justify-end gap-2">
               <Button
@@ -305,13 +319,18 @@ export default function InvoiceEmission() {
                 onClick={() => {
                   setAuthDialogOpen(false);
                   setPendingInvoiceData(null);
+                  setInvoiceToReprocess(null);
                   setCertificatePassword('');
+                  setCertificatePasswordTouched(false);
                 }}
                 disabled={isAuthorizing}
               >
                 Cancelar
               </Button>
-              <Button onClick={handleAuthorizeEmission} disabled={isAuthorizing}>
+              <Button
+                onClick={handleAuthorizeEmission}
+                disabled={isAuthorizing || !isCertificatePasswordValid}
+              >
                 {isAuthorizing
                   ? 'Processando...'
                   : authMode === 'REPROCESS_AUTHORIZE'
