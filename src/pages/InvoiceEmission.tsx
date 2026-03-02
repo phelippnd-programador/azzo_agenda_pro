@@ -34,6 +34,8 @@ export default function InvoiceEmission() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [invoiceToCancel, setInvoiceToCancel] = useState<Invoice | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelReasonTouched, setCancelReasonTouched] = useState(false);
   const [activeTab, setActiveTab] = useState('new');
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [pendingInvoiceData, setPendingInvoiceData] = useState<InvoiceFormData | null>(null);
@@ -188,6 +190,8 @@ export default function InvoiceEmission() {
 
   const handleCancelRequest = (invoice: Invoice) => {
     setInvoiceToCancel(invoice);
+    setCancelReason('');
+    setCancelReasonTouched(false);
   };
 
   const handleReprocessAuthorizeRequest = (invoice: Invoice) => {
@@ -201,12 +205,19 @@ export default function InvoiceEmission() {
 
   const handleCancelConfirm = async () => {
     if (!invoiceToCancel) return;
+    if (!cancelReason.trim()) {
+      setCancelReasonTouched(true);
+      toast.error('Informe o motivo do cancelamento.');
+      return;
+    }
 
     try {
-      await fiscalApi.cancelInvoice(invoiceToCancel.id);
+      await fiscalApi.cancelInvoice(invoiceToCancel.id, cancelReason.trim());
       await loadInvoices();
       toast.success(`Nota fiscal ${invoiceToCancel.number} cancelada com sucesso`);
       setInvoiceToCancel(null);
+      setCancelReason('');
+      setCancelReasonTouched(false);
     } catch (error) {
       toast.error(resolveUiError(error, 'Erro ao cancelar nota fiscal').message);
       console.error(error);
@@ -258,7 +269,16 @@ export default function InvoiceEmission() {
           </DialogContent>
         </Dialog>
 
-        <AlertDialog open={!!invoiceToCancel} onOpenChange={() => setInvoiceToCancel(null)}>
+        <AlertDialog
+          open={!!invoiceToCancel}
+          onOpenChange={(open) => {
+            if (!open) {
+              setInvoiceToCancel(null);
+              setCancelReason('');
+              setCancelReasonTouched(false);
+            }
+          }}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Cancelar Nota Fiscal?</AlertDialogTitle>
@@ -266,9 +286,24 @@ export default function InvoiceEmission() {
                 Tem certeza que deseja cancelar a nota fiscal {invoiceToCancel?.number}? Esta acao nao pode ser desfeita.
               </AlertDialogDescription>
             </AlertDialogHeader>
+            <div className="space-y-2">
+              <Input
+                placeholder="Motivo do cancelamento"
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                onBlur={() => setCancelReasonTouched(true)}
+              />
+              {cancelReasonTouched && !cancelReason.trim() && (
+                <p className="text-xs text-red-600">Motivo do cancelamento e obrigatorio.</p>
+              )}
+            </div>
             <AlertDialogFooter>
               <AlertDialogCancel>Nao, manter nota</AlertDialogCancel>
-              <AlertDialogAction onClick={handleCancelConfirm} className="bg-red-600 hover:bg-red-700">
+              <AlertDialogAction
+                onClick={handleCancelConfirm}
+                className="bg-red-600 hover:bg-red-700"
+                disabled={!cancelReason.trim()}
+              >
                 Sim, cancelar nota
               </AlertDialogAction>
             </AlertDialogFooter>
