@@ -3203,7 +3203,15 @@ type FiscalInvoiceApi = Partial<Invoice> & {
 const mapInvoiceStatusToUi = (status?: string): Invoice["status"] => {
   const normalized = (status || "").toUpperCase();
   if (normalized === "AUTHORIZED" || normalized === "ISSUED") return "ISSUED";
+  if (normalized === "GENERATED") return "GENERATED";
+  if (normalized === "SIGNED") return "SIGNED";
+  if (normalized === "SUBMITTED") return "SUBMITTED";
+  if (normalized === "CONTINGENCY_PENDING") return "CONTINGENCY_PENDING";
+  if (normalized === "REJECTED") return "REJECTED";
+  if (normalized === "CANCEL_PENDING") return "CANCEL_PENDING";
   if (normalized === "CANCELLED") return "CANCELLED";
+  if (normalized === "INUTILIZED") return "INUTILIZED";
+  if (normalized === "ERROR_FINAL") return "ERROR_FINAL";
   return "DRAFT";
 };
 

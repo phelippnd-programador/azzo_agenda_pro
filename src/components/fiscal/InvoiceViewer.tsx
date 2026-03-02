@@ -1,29 +1,45 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Invoice } from '@/types/invoice';
+import { Invoice, InvoiceStatus } from '@/types/invoice';
 import { FileText, User, Calendar, DollarSign, Hash } from 'lucide-react';
 
 interface InvoiceViewerProps {
   invoice: Invoice;
 }
 
-const getStatusColor = (status: string) => {
+const getStatusColor = (status: InvoiceStatus) => {
   const colors = {
     ISSUED: 'bg-green-100 text-green-700 border-green-200',
     DRAFT: 'bg-amber-100 text-amber-700 border-amber-200',
+    GENERATED: 'bg-blue-100 text-blue-700 border-blue-200',
+    SIGNED: 'bg-blue-100 text-blue-700 border-blue-200',
+    SUBMITTED: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+    CONTINGENCY_PENDING: 'bg-orange-100 text-orange-700 border-orange-200',
+    REJECTED: 'bg-red-100 text-red-700 border-red-200',
+    CANCEL_PENDING: 'bg-zinc-100 text-zinc-700 border-zinc-200',
     CANCELLED: 'bg-red-100 text-red-700 border-red-200',
+    INUTILIZED: 'bg-zinc-100 text-zinc-700 border-zinc-200',
+    ERROR_FINAL: 'bg-rose-100 text-rose-700 border-rose-200',
   };
-  return colors[status as keyof typeof colors];
+  return colors[status] || 'bg-zinc-100 text-zinc-700 border-zinc-200';
 };
 
-const getStatusLabel = (status: string) => {
+const getStatusLabel = (status: InvoiceStatus) => {
   const labels = {
     ISSUED: 'Emitida',
     DRAFT: 'Rascunho',
+    GENERATED: 'Gerada',
+    SIGNED: 'Assinada',
+    SUBMITTED: 'Enviada',
+    CONTINGENCY_PENDING: 'Contingencia',
+    REJECTED: 'Rejeitada',
+    CANCEL_PENDING: 'Canc. pendente',
     CANCELLED: 'Cancelada',
+    INUTILIZED: 'Inutilizada',
+    ERROR_FINAL: 'Erro final',
   };
-  return labels[status as keyof typeof labels];
+  return labels[status] || status;
 };
 
 export function InvoiceViewer({ invoice }: InvoiceViewerProps) {

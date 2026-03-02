@@ -36,6 +36,8 @@ export default function InvoiceEmission() {
   const [activeTab, setActiveTab] = useState('new');
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [pendingInvoiceData, setPendingInvoiceData] = useState<InvoiceFormData | null>(null);
+  const [invoiceToReprocess, setInvoiceToReprocess] = useState<Invoice | null>(null);
+  const [authMode, setAuthMode] = useState<'CREATE_AND_AUTHORIZE' | 'REPROCESS_AUTHORIZE'>('CREATE_AND_AUTHORIZE');
   const [certificatePassword, setCertificatePassword] = useState('');
   const [isAuthorizing, setIsAuthorizing] = useState(false);
 
@@ -72,12 +74,13 @@ export default function InvoiceEmission() {
     }
 
     setPendingInvoiceData(formData);
+    setInvoiceToReprocess(null);
+    setAuthMode('CREATE_AND_AUTHORIZE');
     setCertificatePassword('');
     setAuthDialogOpen(true);
   };
 
   const handleAuthorizeEmission = async () => {
-    if (!pendingInvoiceData) return;
     if (!certificatePassword.trim()) {
       toast.error('Senha do certificado obrigatoria para autorizar a nota.');
       return;
@@ -85,18 +88,35 @@ export default function InvoiceEmission() {
 
     setIsAuthorizing(true);
     try {
-      const createdInvoice = await fiscalApi.createInvoice({ ...pendingInvoiceData, status: 'ISSUED' });
-      const invoice = await fiscalApi.authorizeInvoice(createdInvoice.id, certificatePassword.trim());
+      let invoice: Invoice;
+      if (authMode === 'CREATE_AND_AUTHORIZE') {
+        if (!pendingInvoiceData) {
+          toast.error('Dados da nota fiscal nao encontrados para autorizacao.');
+          return;
+        }
+        const createdInvoice = await fiscalApi.createInvoice({ ...pendingInvoiceData, status: 'ISSUED' });
+        invoice = await fiscalApi.authorizeInvoice(createdInvoice.id, certificatePassword.trim());
+      } else {
+        if (!invoiceToReprocess) {
+          toast.error('Nota fiscal nao encontrada para reprocessamento.');
+          return;
+        }
+        invoice = await fiscalApi.reprocessAuthorizeInvoice(
+          invoiceToReprocess.id,
+          certificatePassword.trim()
+        );
+      }
       await loadInvoices();
 
-      toast.success(`Nota fiscal ${invoice.number} emitida com sucesso!`, {
-        description: 'A nota foi autorizada e esta disponivel para DANFE.',
+      toast.success(`Nota fiscal ${invoice.number} autorizada com sucesso!`, {
+        description: 'A nota esta disponivel para DANFE.',
       });
       setSelectedInvoice(invoice);
       setIsViewerOpen(true);
       setActiveTab('list');
       setAuthDialogOpen(false);
       setPendingInvoiceData(null);
+      setInvoiceToReprocess(null);
       setCertificatePassword('');
     } catch (error) {
       toast.error(resolveUiError(error, 'Erro ao processar nota fiscal').message);
@@ -163,6 +183,14 @@ export default function InvoiceEmission() {
     setInvoiceToCancel(invoice);
   };
 
+  const handleReprocessAuthorizeRequest = (invoice: Invoice) => {
+    setInvoiceToReprocess(invoice);
+    setPendingInvoiceData(null);
+    setAuthMode('REPROCESS_AUTHORIZE');
+    setCertificatePassword('');
+    setAuthDialogOpen(true);
+  };
+
   const handleCancelConfirm = async () => {
     if (!invoiceToCancel) return;
 
@@ -207,6 +235,7 @@ export default function InvoiceEmission() {
               onView={handleView}
               onPrint={handlePrint}
               onCancel={handleCancelRequest}
+              onReprocessAuthorize={handleReprocessAuthorizeRequest}
             />
           </TabsContent>
         </Tabs>
@@ -245,6 +274,7 @@ export default function InvoiceEmission() {
               setAuthDialogOpen(open);
               if (!open) {
                 setPendingInvoiceData(null);
+                setInvoiceToReprocess(null);
                 setCertificatePassword('');
               }
             }
@@ -254,7 +284,9 @@ export default function InvoiceEmission() {
             <DialogHeader>
               <DialogTitle>Autorizar Nota Fiscal</DialogTitle>
               <DialogDescription>
-                Informe a senha do certificado digital para concluir a autorizacao da nota.
+                {authMode === 'REPROCESS_AUTHORIZE'
+                  ? 'Informe a senha do certificado digital para reprocessar a autorizacao da nota.'
+                  : 'Informe a senha do certificado digital para concluir a autorizacao da nota.'}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2">
@@ -279,7 +311,11 @@ export default function InvoiceEmission() {
                 Cancelar
               </Button>
               <Button onClick={handleAuthorizeEmission} disabled={isAuthorizing}>
-                {isAuthorizing ? 'Autorizando...' : 'Autorizar Nota'}
+                {isAuthorizing
+                  ? 'Processando...'
+                  : authMode === 'REPROCESS_AUTHORIZE'
+                  ? 'Reprocessar Autorizacao'
+                  : 'Autorizar Nota'}
               </Button>
             </div>
           </DialogContent>

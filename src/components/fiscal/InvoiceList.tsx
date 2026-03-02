@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Eye, Printer, XCircle, Search } from 'lucide-react';
+import { Eye, Printer, XCircle, Search, RotateCcw } from 'lucide-react';
 import { Invoice, InvoiceStatus } from '@/types/invoice';
 
 interface InvoiceListProps {
@@ -26,31 +26,51 @@ interface InvoiceListProps {
   onView: (invoice: Invoice) => void;
   onPrint: (invoice: Invoice) => void;
   onCancel: (invoice: Invoice) => void;
+  onReprocessAuthorize: (invoice: Invoice) => void;
 }
 
 const getStatusColor = (status: InvoiceStatus) => {
   const colors = {
     ISSUED: 'bg-green-100 text-green-700 border-green-200',
     DRAFT: 'bg-amber-100 text-amber-700 border-amber-200',
+    GENERATED: 'bg-blue-100 text-blue-700 border-blue-200',
+    SIGNED: 'bg-blue-100 text-blue-700 border-blue-200',
+    SUBMITTED: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+    CONTINGENCY_PENDING: 'bg-orange-100 text-orange-700 border-orange-200',
+    REJECTED: 'bg-red-100 text-red-700 border-red-200',
+    CANCEL_PENDING: 'bg-zinc-100 text-zinc-700 border-zinc-200',
     CANCELLED: 'bg-red-100 text-red-700 border-red-200',
+    INUTILIZED: 'bg-zinc-100 text-zinc-700 border-zinc-200',
+    ERROR_FINAL: 'bg-rose-100 text-rose-700 border-rose-200',
   };
-  return colors[status];
+  return colors[status] || 'bg-zinc-100 text-zinc-700 border-zinc-200';
 };
 
 const getStatusLabel = (status: InvoiceStatus) => {
   const labels = {
     ISSUED: 'Emitida',
     DRAFT: 'Rascunho',
+    GENERATED: 'Gerada',
+    SIGNED: 'Assinada',
+    SUBMITTED: 'Enviada',
+    CONTINGENCY_PENDING: 'Contingencia',
+    REJECTED: 'Rejeitada',
+    CANCEL_PENDING: 'Canc. pendente',
     CANCELLED: 'Cancelada',
+    INUTILIZED: 'Inutilizada',
+    ERROR_FINAL: 'Erro final',
   };
-  return labels[status];
+  return labels[status] || status;
 };
 
 const getTypeLabel = (type: 'NFE' | 'NFCE') => {
   return type === 'NFE' ? 'NF-e (55)' : 'NFC-e (65)';
 };
 
-export function InvoiceList({ invoices, onView, onPrint, onCancel }: InvoiceListProps) {
+const canReprocessAuthorize = (status: InvoiceStatus) =>
+  status === 'ERROR_FINAL' || status === 'CONTINGENCY_PENDING';
+
+export function InvoiceList({ invoices, onView, onPrint, onCancel, onReprocessAuthorize }: InvoiceListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -105,6 +125,8 @@ export function InvoiceList({ invoices, onView, onPrint, onCancel }: InvoiceList
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="ISSUED">Emitidas</SelectItem>
                 <SelectItem value="DRAFT">Rascunhos</SelectItem>
+                <SelectItem value="ERROR_FINAL">Erro final</SelectItem>
+                <SelectItem value="CONTINGENCY_PENDING">Contingencia</SelectItem>
                 <SelectItem value="CANCELLED">Canceladas</SelectItem>
               </SelectContent>
             </Select>
@@ -175,6 +197,16 @@ export function InvoiceList({ invoices, onView, onPrint, onCancel }: InvoiceList
                               <XCircle className="w-4 h-4" />
                             </Button>
                           </>
+                        )}
+                        {canReprocessAuthorize(invoice.status) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onReprocessAuthorize(invoice)}
+                            title="Reprocessar autorizacao"
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </Button>
                         )}
                       </div>
                     </TableCell>
