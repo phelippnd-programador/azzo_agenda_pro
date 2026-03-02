@@ -81,14 +81,50 @@ export default function InvoiceEmission() {
   };
 
   const handlePrint = async (invoice: Invoice) => {
+    const toastId = toast.loading('Gerando DANFE em segundo plano...');
+
     try {
-      const blob = await fiscalApi.getInvoicePdf(invoice.id);
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
-    } catch {
+      const job = await fiscalApi.requestInvoicePdfJob(invoice.id);
+      let attempts = 0;
+      const maxAttempts = 30;
+
+      while (attempts < maxAttempts) {
+        const status = await fiscalApi.getInvoicePdfJobStatus(invoice.id, job.jobId);
+
+        if (status.status === 'DONE') {
+          if (status.downloadUrl) {
+            window.open(status.downloadUrl, '_blank', 'noopener,noreferrer');
+          } else {
+            const blob = await fiscalApi.getInvoicePdf(invoice.id);
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            setTimeout(() => URL.revokeObjectURL(url), 10000);
+          }
+          toast.success('DANFE gerado com sucesso.', {
+            id: toastId,
+          });
+          return;
+        }
+
+        if (status.status === 'ERROR') {
+          toast.error(status.errorMessage || 'Falha ao gerar DANFE.', {
+            id: toastId,
+          });
+          return;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        attempts += 1;
+      }
+
+      toast.warning('Geracao do DANFE ainda em andamento. Tente novamente em instantes.', {
+        id: toastId,
+      });
+    } catch (error) {
       handleView(invoice);
-      toast.info('PDF indisponivel no servidor, exibindo detalhes da nota.');
+      toast.info(resolveUiError(error, 'PDF indisponivel no servidor, exibindo detalhes da nota.').message, {
+        id: toastId,
+      });
     }
   };
 

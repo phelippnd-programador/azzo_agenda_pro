@@ -3159,6 +3159,17 @@ export type TaxConfig = {
   cofinsRate: number;
 };
 
+export type DanfeJobResponse = {
+  jobId: string;
+  invoiceId: string;
+  status: "QUEUED" | "PROCESSING" | "DONE" | "ERROR";
+  downloadUrl?: string;
+  errorCode?: string;
+  errorMessage?: string;
+  requestedAt?: string;
+  finishedAt?: string;
+};
+
 export const fiscalApi = {
   getTaxConfig: () => request<TaxConfig>("/fiscal/tax-config"),
   updateTaxConfig: (data: TaxConfig) =>
@@ -3199,6 +3210,12 @@ export const fiscalApi = {
     request<Invoice>(`/fiscal/invoices/${id}/authorize`, {
       method: "POST",
     }),
+  requestInvoicePdfJob: (id: string) =>
+    request<DanfeJobResponse>(`/fiscal/invoices/${id}/pdf/jobs`, {
+      method: "POST",
+    }),
+  getInvoicePdfJobStatus: (id: string, jobId: string) =>
+    request<DanfeJobResponse>(`/fiscal/invoices/${id}/pdf/jobs/${jobId}`),
   getInvoicePdf: (id: string) => requestBlob(`/fiscal/invoices/${id}/pdf`),
   getCurrentApuracao: () => request<ApuracaoMensal>("/fiscal/apuracoes/current"),
   getApuracaoByPeriodo: (ano: number, mes: number) =>
