@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { PlugZap, Building2, ShieldCheck } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { PlugZap, Building2, ShieldCheck, Receipt } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,9 @@ import {
 } from "@/lib/cookie-consent";
 
 export default function Settings() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || "notifications";
+  const [activeTab, setActiveTab] = useState(initialTab);
   const { user } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -198,16 +201,29 @@ export default function Settings() {
     toast.success("Consentimento de cookies revogado. O banner sera exibido novamente.");
   };
 
+  useEffect(() => {
+    const tab = searchParams.get("tab") || "notifications";
+    setActiveTab(tab);
+  }, [searchParams]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", tab);
+    setSearchParams(next, { replace: true });
+  };
+
   return (
     <MainLayout
       title="Configuracoes"
       subtitle="Gerencie conta, notificacoes e integracoes. Dados do salao ficam em Perfil do Salao."
     >
-      <Tabs defaultValue="notifications" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-2 h-auto">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-2 h-auto">
           <TabsTrigger value="notifications">Notificacoes</TabsTrigger>
           <TabsTrigger value="account">Conta</TabsTrigger>
           <TabsTrigger value="integrations">Integracoes</TabsTrigger>
+          <TabsTrigger value="fiscal">Fiscal</TabsTrigger>
           <TabsTrigger value="salon">Perfil do Salao</TabsTrigger>
         </TabsList>
 
@@ -406,6 +422,33 @@ export default function Settings() {
                 </div>
                 <Button asChild>
                   <Link to="/configuracoes/integracoes/whatsapp">Abrir configuracao</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="fiscal">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configuracoes Fiscais</CardTitle>
+              <CardDescription>
+                Toda configuracao fiscal deve ser acessada a partir desta aba.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <p className="font-medium flex items-center gap-2">
+                    <Receipt className="h-4 w-4 text-primary" />
+                    Configuracao de Impostos
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Defina regime, aliquotas e parametros fiscais.
+                  </p>
+                </div>
+                <Button asChild>
+                  <Link to="/configuracoes/fiscal/impostos">Abrir configuracao</Link>
                 </Button>
               </div>
             </CardContent>
