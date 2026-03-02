@@ -3170,6 +3170,18 @@ export type DanfeJobResponse = {
   finishedAt?: string;
 };
 
+const generateIdempotencyKey = (prefix: string) => {
+  const randomPart =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  return `${prefix}-${randomPart}`;
+};
+
+const withIdempotencyHeader = (prefix: string) => ({
+  "X-Idempotency-Key": generateIdempotencyKey(prefix),
+});
+
 export const fiscalApi = {
   getTaxConfig: () => request<TaxConfig>("/fiscal/tax-config"),
   updateTaxConfig: (data: TaxConfig) =>
@@ -3199,16 +3211,25 @@ export const fiscalApi = {
   createInvoice: (data: InvoiceFormData & { status?: "DRAFT" | "ISSUED" }) =>
     request<Invoice>("/fiscal/invoices", {
       method: "POST",
+      headers: withIdempotencyHeader("fiscal-create-invoice"),
       body: JSON.stringify(data),
     }),
   cancelInvoice: (id: string, reason?: string) =>
     request<Invoice>(`/fiscal/invoices/${id}/cancel`, {
       method: "PATCH",
+      headers: withIdempotencyHeader(`fiscal-cancel-${id}`),
       body: JSON.stringify(reason ? { reason } : {}),
     }),
   authorizeInvoice: (id: string) =>
     request<Invoice>(`/fiscal/invoices/${id}/authorize`, {
       method: "POST",
+      headers: withIdempotencyHeader(`fiscal-authorize-${id}`),
+    }),
+  reprocessAuthorizeInvoice: (id: string, certificatePassword?: string) =>
+    request<Invoice>(`/fiscal/invoices/${id}/reprocess-authorize`, {
+      method: "POST",
+      headers: withIdempotencyHeader(`fiscal-reprocess-authorize-${id}`),
+      body: JSON.stringify({ certificatePassword }),
     }),
   requestInvoicePdfJob: (id: string) =>
     request<DanfeJobResponse>(`/fiscal/invoices/${id}/pdf/jobs`, {
