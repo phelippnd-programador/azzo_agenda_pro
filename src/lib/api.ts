@@ -3182,6 +3182,92 @@ const withIdempotencyHeader = (prefix: string) => ({
   "X-Idempotency-Key": generateIdempotencyKey(prefix),
 });
 
+type FiscalInvoiceApi = Partial<Invoice> & {
+  numeroNf?: string;
+  serieNf?: string;
+  totalAmount?: number;
+  createdAt?: string;
+  status?: string;
+  type?: string;
+  items?: Array<{
+    id?: string;
+    description?: string;
+    quantity?: number;
+    unitPrice?: number;
+    totalPrice?: number;
+    cfop?: string;
+    cst?: string;
+  }>;
+};
+
+const mapInvoiceStatusToUi = (status?: string): Invoice["status"] => {
+  const normalized = (status || "").toUpperCase();
+  if (normalized === "AUTHORIZED" || normalized === "ISSUED") return "ISSUED";
+  if (normalized === "CANCELLED") return "CANCELLED";
+  return "DRAFT";
+};
+
+const mapInvoiceTypeToUi = (type?: string): Invoice["type"] => {
+  const normalized = (type || "").toUpperCase();
+  if (normalized === "NFCE" || normalized === "65") return "NFCE";
+  return "NFE";
+};
+
+const mapInvoiceStatusToApiFilter = (
+  status?: "DRAFT" | "ISSUED" | "CANCELLED"
+) => {
+  if (!status) return undefined;
+  if (status === "ISSUED") return "AUTHORIZED";
+  return status;
+};
+
+const mapFiscalInvoiceToUi = (invoice: FiscalInvoiceApi): Invoice => {
+  const items = Array.isArray(invoice.items)
+    ? invoice.items.map((item, index) => ({
+        id: item.id || String(index + 1),
+        description: item.description || "Item fiscal",
+        quantity: Number(item.quantity || 1),
+        unitPrice: Number(item.unitPrice || 0),
+        totalPrice: Number(item.totalPrice || 0),
+        cfop: item.cfop || "",
+        cst: item.cst || "",
+      }))
+    : [];
+
+  const totalValue =
+    typeof invoice.totalValue === "number"
+      ? invoice.totalValue
+      : typeof invoice.totalAmount === "number"
+      ? invoice.totalAmount
+      : items.reduce((sum, item) => sum + item.totalPrice, 0);
+
+  return {
+    id: invoice.id || "",
+    number: invoice.number || invoice.numeroNf || "-",
+    series: invoice.series || invoice.serieNf || "1",
+    type: mapInvoiceTypeToUi(invoice.type),
+    status: mapInvoiceStatusToUi(invoice.status),
+    customer: invoice.customer || {
+      type: "CPF",
+      document: "",
+      name: "Cliente",
+    },
+    items,
+    operationNature: invoice.operationNature || "Prestacao de servicos",
+    issueDate: invoice.issueDate || invoice.createdAt || new Date().toISOString(),
+    totalValue,
+    taxBreakdown: invoice.taxBreakdown || {
+      icms: 0,
+      pis: 0,
+      cofins: 0,
+    },
+    notes: invoice.notes,
+    appointmentId: invoice.appointmentId,
+    accessKey: invoice.accessKey,
+    authorizationProtocol: invoice.authorizationProtocol,
+  };
+};
+
 export const fiscalApi = {
   getTaxConfig: () => request<TaxConfig>("/fiscal/tax-config"),
   updateTaxConfig: (data: TaxConfig) =>
@@ -3197,40 +3283,46 @@ export const fiscalApi = {
     pageSize?: number;
   }) => {
     const query = new URLSearchParams();
-    if (params?.status) query.set("status", params.status);
+    const mappedStatus = mapInvoiceStatusToApiFilter(params?.status);
+    if (mappedStatus) query.set("status", mappedStatus);
     if (params?.from) query.set("from", params.from);
     if (params?.to) query.set("to", params.to);
     if (params?.page) query.set("page", String(params.page));
     if (params?.pageSize) query.set("pageSize", String(params.pageSize));
     const suffix = query.toString() ? `?${query}` : "";
-    return request<{ items: Invoice[]; total: number; page: number; pageSize: number }>(
+    return request<{ items: FiscalInvoiceApi[]; total: number; page: number; pageSize: number }>(
       `/fiscal/invoices${suffix}`
-    );
+    ).then((response) => ({
+      ...response,
+      items: (response.items || []).map(mapFiscalInvoiceToUi),
+    }));
   },
-  getInvoice: (id: string) => request<Invoice>(`/fiscal/invoices/${id}`),
+  getInvoice: (id: string) =>
+    request<FiscalInvoiceApi>(`/fiscal/invoices/${id}`).then(mapFiscalInvoiceToUi),
   createInvoice: (data: InvoiceFormData & { status?: "DRAFT" | "ISSUED" }) =>
-    request<Invoice>("/fiscal/invoices", {
+    request<FiscalInvoiceApi>("/fiscal/invoices", {
       method: "POST",
       headers: withIdempotencyHeader("fiscal-create-invoice"),
       body: JSON.stringify(data),
-    }),
+    }).then(mapFiscalInvoiceToUi),
   cancelInvoice: (id: string, reason?: string) =>
-    request<Invoice>(`/fiscal/invoices/${id}/cancel`, {
+    request<FiscalInvoiceApi>(`/fiscal/invoices/${id}/cancel`, {
       method: "PATCH",
       headers: withIdempotencyHeader(`fiscal-cancel-${id}`),
       body: JSON.stringify(reason ? { reason } : {}),
-    }),
-  authorizeInvoice: (id: string) =>
-    request<Invoice>(`/fiscal/invoices/${id}/authorize`, {
+    }).then(mapFiscalInvoiceToUi),
+  authorizeInvoice: (id: string, certificatePassword?: string) =>
+    request<FiscalInvoiceApi>(`/fiscal/invoices/${id}/authorize`, {
       method: "POST",
       headers: withIdempotencyHeader(`fiscal-authorize-${id}`),
-    }),
+      body: JSON.stringify({ certificatePassword }),
+    }).then(mapFiscalInvoiceToUi),
   reprocessAuthorizeInvoice: (id: string, certificatePassword?: string) =>
-    request<Invoice>(`/fiscal/invoices/${id}/reprocess-authorize`, {
+    request<FiscalInvoiceApi>(`/fiscal/invoices/${id}/reprocess-authorize`, {
       method: "POST",
       headers: withIdempotencyHeader(`fiscal-reprocess-authorize-${id}`),
       body: JSON.stringify({ certificatePassword }),
-    }),
+    }).then(mapFiscalInvoiceToUi),
   requestInvoicePdfJob: (id: string) =>
     request<DanfeJobResponse>(`/fiscal/invoices/${id}/pdf/jobs`, {
       method: "POST",

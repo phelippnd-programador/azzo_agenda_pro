@@ -54,7 +54,21 @@ export default function InvoiceEmission() {
   const handleSubmit = async (formData: InvoiceFormData, isDraft: boolean) => {
     try {
       const status = isDraft ? 'DRAFT' : 'ISSUED';
-      const invoice = await fiscalApi.createInvoice({ ...formData, status });
+      const createdInvoice = await fiscalApi.createInvoice({ ...formData, status });
+      let invoice = createdInvoice;
+
+      if (!isDraft) {
+        const certificatePassword = window.prompt(
+          'Informe a senha do certificado para autorizar a nota fiscal:'
+        );
+
+        if (!certificatePassword || !certificatePassword.trim()) {
+          toast.error('Senha do certificado obrigatoria para autorizar a nota.');
+          return;
+        }
+
+        invoice = await fiscalApi.authorizeInvoice(createdInvoice.id, certificatePassword.trim());
+      }
 
       await loadInvoices();
 
@@ -62,7 +76,7 @@ export default function InvoiceEmission() {
         toast.success('Rascunho salvo com sucesso!');
       } else {
         toast.success(`Nota fiscal ${invoice.number} emitida com sucesso!`, {
-          description: 'A nota foi registrada e esta disponivel para impressao.',
+          description: 'A nota foi autorizada e esta disponivel para DANFE.',
         });
         setSelectedInvoice(invoice);
         setIsViewerOpen(true);
