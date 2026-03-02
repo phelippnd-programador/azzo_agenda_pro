@@ -70,6 +70,9 @@ const getTypeLabel = (type: 'NFE' | 'NFCE') => {
 const canReprocessAuthorize = (status: InvoiceStatus) =>
   status === 'ERROR_FINAL' || status === 'CONTINGENCY_PENDING';
 
+const canCancelInvoice = (status: InvoiceStatus) => status === 'ISSUED';
+const canPrintInvoice = (status: InvoiceStatus) => status === 'ISSUED';
+
 export function InvoiceList({ invoices, onView, onPrint, onCancel, onReprocessAuthorize }: InvoiceListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -179,7 +182,7 @@ export function InvoiceList({ invoices, onView, onPrint, onCancel, onReprocessAu
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
-                        {invoice.status === 'ISSUED' && (
+                        {canPrintInvoice(invoice.status) && (
                           <>
                             <Button
                               variant="ghost"
@@ -188,6 +191,10 @@ export function InvoiceList({ invoices, onView, onPrint, onCancel, onReprocessAu
                             >
                               <Printer className="w-4 h-4" />
                             </Button>
+                          </>
+                        )}
+                        {canCancelInvoice(invoice.status) && (
+                          <>
                             <Button
                               variant="ghost"
                               size="sm"

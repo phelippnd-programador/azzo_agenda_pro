@@ -189,6 +189,10 @@ export default function InvoiceEmission() {
   };
 
   const handleCancelRequest = (invoice: Invoice) => {
+    if (invoice.status !== 'ISSUED') {
+      toast.error('Somente notas emitidas/autorizadas podem ser canceladas.');
+      return;
+    }
     setInvoiceToCancel(invoice);
     setCancelReason('');
     setCancelReasonTouched(false);
