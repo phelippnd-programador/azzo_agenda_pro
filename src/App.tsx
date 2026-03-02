@@ -317,12 +317,16 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/config-impostos"
+          path="/configuracoes/fiscal/impostos"
           element={
             <ProtectedRoute>
               <TaxConfig />
             </ProtectedRoute>
           }
+        />
+        <Route
+          path="/config-impostos"
+          element={<Navigate to="/configuracoes/fiscal/impostos" replace />}
         />
         <Route
           path="/nota-fiscal"

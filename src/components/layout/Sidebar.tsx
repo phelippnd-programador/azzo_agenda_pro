@@ -56,10 +56,10 @@ const MENU_REGISTRY = {
   "/auditoria/lgpd": { icon: FileSearch, label: "LGPD Titulares", path: "/auditoria/lgpd" },
   "/emitir-nota": { icon: FileText, label: "Emitir Nota Fiscal", path: "/emitir-nota" },
   "/nota-fiscal": { icon: Eye, label: "Pre-visualizacao de NF", path: "/nota-fiscal" },
-  "/config-impostos": {
+  "/configuracoes/fiscal/impostos": {
     icon: Receipt,
     label: "Configuracao de Impostos",
-    path: "/config-impostos",
+    path: "/configuracoes/fiscal/impostos",
   },
   "/apuracao-mensal": { icon: Calculator, label: "Apuracao Mensal", path: "/apuracao-mensal" },
   "/configuracoes": { icon: Settings, label: "Configuracoes", path: "/configuracoes" },
@@ -82,7 +82,7 @@ const MAIN_MENU_ORDER = [
   "/auditoria/lgpd",
   "/emitir-nota",
   "/nota-fiscal",
-  "/config-impostos",
+  "/configuracoes/fiscal/impostos",
   "/apuracao-mensal",
 ] as const;
 

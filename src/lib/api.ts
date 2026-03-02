@@ -207,7 +207,7 @@ const ALL_LOCAL_DEMO_ROUTES = [
   "/financeiro/licenca",
   "/emitir-nota",
   "/nota-fiscal",
-  "/config-impostos",
+  "/configuracoes/fiscal/impostos",
   "/apuracao-mensal",
   "/configuracoes",
   "/configuracoes/integracoes/whatsapp",

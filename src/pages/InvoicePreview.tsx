@@ -191,7 +191,7 @@ export default function InvoicePreview() {
                     </Select>
                     <p className="text-xs text-muted-foreground">
                       Regime definido em{" "}
-                      <Link to="/config-impostos" className="text-primary hover:underline">
+                      <Link to="/configuracoes/fiscal/impostos" className="text-primary hover:underline">
                         Config. Impostos
                       </Link>
                       .
