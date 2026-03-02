@@ -21,6 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
 import { Invoice, InvoiceFormData } from '@/types/invoice';
 import { fiscalApi } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
@@ -33,6 +34,10 @@ export default function InvoiceEmission() {
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [invoiceToCancel, setInvoiceToCancel] = useState<Invoice | null>(null);
   const [activeTab, setActiveTab] = useState('new');
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [pendingInvoiceData, setPendingInvoiceData] = useState<InvoiceFormData | null>(null);
+  const [certificatePassword, setCertificatePassword] = useState('');
+  const [isAuthorizing, setIsAuthorizing] = useState(false);
 
   useEffect(() => {
     loadInvoices();
@@ -52,40 +57,52 @@ export default function InvoiceEmission() {
   };
 
   const handleSubmit = async (formData: InvoiceFormData, isDraft: boolean) => {
-    try {
-      const status = isDraft ? 'DRAFT' : 'ISSUED';
-      const createdInvoice = await fiscalApi.createInvoice({ ...formData, status });
-      let invoice = createdInvoice;
-
-      if (!isDraft) {
-        const certificatePassword = window.prompt(
-          'Informe a senha do certificado para autorizar a nota fiscal:'
-        );
-
-        if (!certificatePassword || !certificatePassword.trim()) {
-          toast.error('Senha do certificado obrigatoria para autorizar a nota.');
-          return;
-        }
-
-        invoice = await fiscalApi.authorizeInvoice(createdInvoice.id, certificatePassword.trim());
+    if (isDraft) {
+      try {
+        const invoice = await fiscalApi.createInvoice({ ...formData, status: 'DRAFT' });
+        await loadInvoices();
+        toast.success('Rascunho salvo com sucesso!');
+        setSelectedInvoice(invoice);
+        setActiveTab('list');
+      } catch (error) {
+        toast.error(resolveUiError(error, 'Erro ao salvar rascunho').message);
+        console.error(error);
       }
+      return;
+    }
 
+    setPendingInvoiceData(formData);
+    setCertificatePassword('');
+    setAuthDialogOpen(true);
+  };
+
+  const handleAuthorizeEmission = async () => {
+    if (!pendingInvoiceData) return;
+    if (!certificatePassword.trim()) {
+      toast.error('Senha do certificado obrigatoria para autorizar a nota.');
+      return;
+    }
+
+    setIsAuthorizing(true);
+    try {
+      const createdInvoice = await fiscalApi.createInvoice({ ...pendingInvoiceData, status: 'ISSUED' });
+      const invoice = await fiscalApi.authorizeInvoice(createdInvoice.id, certificatePassword.trim());
       await loadInvoices();
 
-      if (isDraft) {
-        toast.success('Rascunho salvo com sucesso!');
-      } else {
-        toast.success(`Nota fiscal ${invoice.number} emitida com sucesso!`, {
-          description: 'A nota foi autorizada e esta disponivel para DANFE.',
-        });
-        setSelectedInvoice(invoice);
-        setIsViewerOpen(true);
-      }
-
+      toast.success(`Nota fiscal ${invoice.number} emitida com sucesso!`, {
+        description: 'A nota foi autorizada e esta disponivel para DANFE.',
+      });
+      setSelectedInvoice(invoice);
+      setIsViewerOpen(true);
       setActiveTab('list');
+      setAuthDialogOpen(false);
+      setPendingInvoiceData(null);
+      setCertificatePassword('');
     } catch (error) {
       toast.error(resolveUiError(error, 'Erro ao processar nota fiscal').message);
       console.error(error);
+    } finally {
+      setIsAuthorizing(false);
     }
   };
 
@@ -220,6 +237,53 @@ export default function InvoiceEmission() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <Dialog
+          open={authDialogOpen}
+          onOpenChange={(open) => {
+            if (!isAuthorizing) {
+              setAuthDialogOpen(open);
+              if (!open) {
+                setPendingInvoiceData(null);
+                setCertificatePassword('');
+              }
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Autorizar Nota Fiscal</DialogTitle>
+              <DialogDescription>
+                Informe a senha do certificado digital para concluir a autorizacao da nota.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <Input
+                type="password"
+                placeholder="Senha do certificado"
+                value={certificatePassword}
+                onChange={(e) => setCertificatePassword(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setAuthDialogOpen(false);
+                  setPendingInvoiceData(null);
+                  setCertificatePassword('');
+                }}
+                disabled={isAuthorizing}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleAuthorizeEmission} disabled={isAuthorizing}>
+                {isAuthorizing ? 'Autorizando...' : 'Autorizar Nota'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );
