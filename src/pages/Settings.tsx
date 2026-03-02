@@ -451,6 +451,20 @@ export default function Settings() {
                   <Link to="/configuracoes/fiscal/impostos">Abrir configuracao</Link>
                 </Button>
               </div>
+              <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <p className="font-medium flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-primary" />
+                    Certificados Fiscais
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Gerencie upload, ativacao e remocao de certificado A1 do tenant.
+                  </p>
+                </div>
+                <Button asChild variant="outline">
+                  <Link to="/configuracoes/fiscal/certificados">Abrir certificados</Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

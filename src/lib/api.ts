@@ -3170,6 +3170,15 @@ export type DanfeJobResponse = {
   finishedAt?: string;
 };
 
+export type FiscalCertificateResponse = {
+  id: string;
+  thumbprint: string;
+  subjectName: string;
+  validTo: string;
+  status: "ACTIVE" | "INACTIVE" | "DELETED" | string;
+  createdAt: string;
+};
+
 const generateIdempotencyKey = (prefix: string) => {
   const randomPart =
     typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -3331,6 +3340,21 @@ export const fiscalApi = {
       headers: withIdempotencyHeader(`fiscal-reprocess-authorize-${id}`),
       body: JSON.stringify({ certificatePassword }),
     }).then(mapFiscalInvoiceToUi),
+  listCertificates: () =>
+    request<FiscalCertificateResponse[]>("/fiscal/certificates"),
+  uploadCertificate: (pfxBase64: string, password: string) =>
+    request<FiscalCertificateResponse>("/fiscal/certificates", {
+      method: "POST",
+      body: JSON.stringify({ pfxBase64, password }),
+    }),
+  activateCertificate: (id: string) =>
+    request<FiscalCertificateResponse>(`/fiscal/certificates/${id}/activate`, {
+      method: "POST",
+    }),
+  deleteCertificate: (id: string) =>
+    request<void>(`/fiscal/certificates/${id}/delete`, {
+      method: "PATCH",
+    }),
   requestInvoicePdfJob: (id: string) =>
     request<DanfeJobResponse>(`/fiscal/invoices/${id}/pdf/jobs`, {
       method: "POST",

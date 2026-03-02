@@ -44,6 +44,7 @@ import Settings from "./pages/Settings";
 import LicensePage from "./pages/LicensePage";
 import SalonProfile from "./pages/SalonProfile";
 import TaxConfig from "./pages/TaxConfig";
+import FiscalCertificatesSettings from "./pages/FiscalCertificatesSettings";
 import InvoicePreview from "./pages/InvoicePreview";
 import InvoiceEmission from "./pages/InvoiceEmission";
 import ApuracaoMensal from "./pages/ApuracaoMensal";
@@ -321,6 +322,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <TaxConfig />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/configuracoes/fiscal/certificados"
+          element={
+            <ProtectedRoute>
+              <FiscalCertificatesSettings />
             </ProtectedRoute>
           }
         />
