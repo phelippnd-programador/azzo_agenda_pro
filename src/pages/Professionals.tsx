@@ -38,6 +38,7 @@ import {
 import { Search, Plus, MoreVertical, Phone, Mail, Percent, Users, Loader2 } from "lucide-react";
 import { useProfessionals } from "@/hooks/useProfessionals";
 import { useSpecialties } from "@/hooks/useSpecialties";
+import { maskPhoneBr } from "@/lib/input-masks";
 import type { WorkingHours } from "@/types";
 import { toast } from "sonner";
 import { ProfessionalLimitMeter } from "@/components/professionals/ProfessionalLimitMeter";
@@ -338,7 +339,7 @@ export default function Professionals() {
                     <Input
                       placeholder="(11) 99999-0000"
                       value={formPhone}
-                      onChange={(e) => setFormPhone(e.target.value)}
+                      onChange={(e) => setFormPhone(maskPhoneBr(e.target.value))}
                       disabled={!!editingProfessional}
                     />
                   </div>

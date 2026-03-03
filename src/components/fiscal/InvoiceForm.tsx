@@ -15,6 +15,7 @@ import { Plus, Trash2, AlertCircle } from 'lucide-react';
 import { InvoiceFormData, InvoiceItem, InvoiceCustomer } from '@/types/invoice';
 import { CFOP_CODES, CSOSN_CODES, CST_CODES, TaxRegime } from '@/types/fiscal';
 import { fiscalApi } from '@/lib/api';
+import { maskCpf, maskCnpj, maskPhoneBr } from '@/lib/input-masks';
 import { toast } from 'sonner';
 
 interface InvoiceFormProps {
@@ -240,7 +241,11 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
               <Select
                 value={customer.type}
                 onValueChange={(value: 'CPF' | 'CNPJ') =>
-                  setCustomer({ ...customer, type: value })
+                  setCustomer((prev) => ({
+                    ...prev,
+                    type: value,
+                    document: value === 'CPF' ? maskCpf(prev.document) : maskCnpj(prev.document),
+                  }))
                 }
               >
                 <SelectTrigger>
@@ -257,7 +262,12 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
               <Input
                 placeholder={customer.type === 'CPF' ? '000.000.000-00' : '00.000.000/0000-00'}
                 value={customer.document}
-                onChange={(e) => setCustomer({ ...customer, document: e.target.value })}
+                onChange={(e) =>
+                  setCustomer({
+                    ...customer,
+                    document: customer.type === 'CPF' ? maskCpf(e.target.value) : maskCnpj(e.target.value),
+                  })
+                }
               />
             </div>
             <div className="space-y-2">
@@ -284,7 +294,7 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
               <Input
                 placeholder="(00) 00000-0000"
                 value={customer.phone || ''}
-                onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
+                onChange={(e) => setCustomer({ ...customer, phone: maskPhoneBr(e.target.value) })}
               />
             </div>
           </div>

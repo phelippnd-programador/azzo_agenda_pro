@@ -43,6 +43,13 @@ const getStatusLabel = (status: InvoiceStatus) => {
 };
 
 export function InvoiceViewer({ invoice }: InvoiceViewerProps) {
+  const fiscalNumber = invoice.status === 'DRAFT' || !(invoice.number || '').trim()
+    ? '—'
+    : invoice.number;
+  const fiscalSeries = invoice.status === 'DRAFT' || !(invoice.series || '').trim()
+    ? '—'
+    : invoice.series;
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -78,11 +85,16 @@ export function InvoiceViewer({ invoice }: InvoiceViewerProps) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Numero</p>
-              <p className="font-medium">{invoice.number}</p>
+              <p className="font-medium">{fiscalNumber}</p>
+              {invoice.status === 'DRAFT' && (
+                <p className="text-xs text-muted-foreground">
+                  Sera definido na emissao/autorizacao
+                </p>
+              )}
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Serie</p>
-              <p className="font-medium">{invoice.series}</p>
+              <p className="font-medium">{fiscalSeries}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Data de Emissao</p>

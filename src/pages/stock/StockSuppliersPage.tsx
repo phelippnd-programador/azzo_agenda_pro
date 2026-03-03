@@ -11,6 +11,7 @@ import { PageEmptyState } from "@/components/ui/page-states";
 import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
+import { maskCpfCnpj, maskPhoneBr } from "@/lib/input-masks";
 import type { CreateStockSupplierRequest, StockSupplier } from "@/types/stock";
 
 const initialForm: CreateStockSupplierRequest = {
@@ -185,7 +186,9 @@ export default function StockSuppliersPage() {
                 <Label>Documento</Label>
                 <Input
                   value={form.documento || ""}
-                  onChange={(e) => setForm((prev) => ({ ...prev, documento: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, documento: maskCpfCnpj(e.target.value) }))
+                  }
                 />
               </div>
               <div className="space-y-1">
@@ -208,7 +211,9 @@ export default function StockSuppliersPage() {
                 <Label>Telefone</Label>
                 <Input
                   value={form.telefone || ""}
-                  onChange={(e) => setForm((prev) => ({ ...prev, telefone: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, telefone: maskPhoneBr(e.target.value) }))
+                  }
                 />
               </div>
             </div>

@@ -8,6 +8,15 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { LicenseFormValues } from "@/components/billing/types";
+import {
+  maskCardCvv,
+  maskCardMonth,
+  maskCardNumber,
+  maskCardYear,
+  maskCep,
+  maskCpfCnpj,
+  maskPhoneBr,
+} from "@/lib/input-masks";
 
 type CreditCardFormProps = {
   form: UseFormReturn<LicenseFormValues>;
@@ -40,7 +49,12 @@ export function CreditCardForm({ form }: CreditCardFormProps) {
             <FormItem>
               <FormLabel>Numero do cartao</FormLabel>
               <FormControl>
-                <Input placeholder="0000 0000 0000 0000" autoComplete="cc-number" {...field} />
+                <Input
+                  placeholder="0000 0000 0000 0000"
+                  autoComplete="cc-number"
+                  {...field}
+                  onChange={(event) => field.onChange(maskCardNumber(event.target.value))}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -56,7 +70,12 @@ export function CreditCardForm({ form }: CreditCardFormProps) {
             <FormItem>
               <FormLabel>Mes</FormLabel>
               <FormControl>
-                <Input placeholder="12" autoComplete="cc-exp-month" {...field} />
+                <Input
+                  placeholder="12"
+                  autoComplete="cc-exp-month"
+                  {...field}
+                  onChange={(event) => field.onChange(maskCardMonth(event.target.value))}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -70,7 +89,12 @@ export function CreditCardForm({ form }: CreditCardFormProps) {
             <FormItem>
               <FormLabel>Ano</FormLabel>
               <FormControl>
-                <Input placeholder="2030" autoComplete="cc-exp-year" {...field} />
+                <Input
+                  placeholder="2030"
+                  autoComplete="cc-exp-year"
+                  {...field}
+                  onChange={(event) => field.onChange(maskCardYear(event.target.value))}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -84,7 +108,12 @@ export function CreditCardForm({ form }: CreditCardFormProps) {
             <FormItem>
               <FormLabel>CVV</FormLabel>
               <FormControl>
-                <Input placeholder="123" autoComplete="cc-csc" {...field} />
+                <Input
+                  placeholder="123"
+                  autoComplete="cc-csc"
+                  {...field}
+                  onChange={(event) => field.onChange(maskCardCvv(event.target.value))}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -129,7 +158,11 @@ export function CreditCardForm({ form }: CreditCardFormProps) {
             <FormItem>
               <FormLabel>CPF/CNPJ do titular</FormLabel>
               <FormControl>
-                <Input placeholder="Somente numeros" {...field} />
+                <Input
+                  placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                  {...field}
+                  onChange={(event) => field.onChange(maskCpfCnpj(event.target.value))}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -143,7 +176,12 @@ export function CreditCardForm({ form }: CreditCardFormProps) {
             <FormItem>
               <FormLabel>Telefone</FormLabel>
               <FormControl>
-                <Input placeholder="(11) 99999-9999" autoComplete="tel" {...field} />
+                <Input
+                  placeholder="(11) 99999-9999"
+                  autoComplete="tel"
+                  {...field}
+                  onChange={(event) => field.onChange(maskPhoneBr(event.target.value))}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -157,7 +195,12 @@ export function CreditCardForm({ form }: CreditCardFormProps) {
             <FormItem>
               <FormLabel>CEP</FormLabel>
               <FormControl>
-                <Input placeholder="00000000" autoComplete="postal-code" {...field} />
+                <Input
+                  placeholder="00000-000"
+                  autoComplete="postal-code"
+                  {...field}
+                  onChange={(event) => field.onChange(maskCep(event.target.value))}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -76,6 +76,11 @@ const canReprocessAuthorize = (status: InvoiceStatus) =>
 const canCancelInvoice = (status: InvoiceStatus) => status === 'ISSUED';
 const canPrintInvoice = (status: InvoiceStatus) => status === 'ISSUED';
 const canAuthorizeDraft = (status: InvoiceStatus) => status === 'DRAFT';
+const getFiscalNumberDisplay = (invoice: Invoice) => {
+  const number = (invoice.number || '').trim();
+  if (!number || invoice.status === 'DRAFT') return '—';
+  return number;
+};
 
 export function InvoiceList({
   invoices,
@@ -108,8 +113,9 @@ export function InvoiceList({
   };
 
   const filteredInvoices = invoices.filter(invoice => {
+    const fiscalNumber = getFiscalNumberDisplay(invoice);
     const matchesSearch = 
-      invoice.number.includes(searchTerm) ||
+      fiscalNumber.includes(searchTerm) ||
       invoice.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.customer.document.includes(searchTerm);
     
@@ -177,7 +183,14 @@ export function InvoiceList({
               <TableBody>
                 {filteredInvoices.map((invoice) => (
                   <TableRow key={invoice.id}>
-                    <TableCell className="font-medium">{invoice.number}</TableCell>
+                    <TableCell className="font-medium">
+                      {getFiscalNumberDisplay(invoice)}
+                      {invoice.status === 'DRAFT' && (
+                        <p className="text-xs text-muted-foreground font-normal">
+                          Definido na emissao/autorizacao
+                        </p>
+                      )}
+                    </TableCell>
                     <TableCell>{getTypeLabel(invoice.type)}</TableCell>
                     <TableCell>
                       <div>

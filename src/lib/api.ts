@@ -3168,6 +3168,25 @@ export type TaxConfig = {
   icmsRate: number;
   pisRate: number;
   cofinsRate: number;
+  issuerRazaoSocial?: string;
+  issuerNomeFantasia?: string;
+  issuerCnpj?: string;
+  issuerIe?: string;
+  issuerIm?: string;
+  issuerPhone?: string;
+  issuerEmail?: string;
+  issuerStreet?: string;
+  issuerNumber?: string;
+  issuerComplement?: string;
+  issuerNeighborhood?: string;
+  issuerCity?: string;
+  issuerState?: string;
+  issuerZipCode?: string;
+  issuerUfCode?: string;
+  nfceCscHomologation?: string;
+  nfceCscIdTokenHomologation?: string;
+  nfceCscProduction?: string;
+  nfceCscIdTokenProduction?: string;
 };
 
 export type DanfeJobResponse = {
@@ -3175,6 +3194,9 @@ export type DanfeJobResponse = {
   invoiceId: string;
   status: "QUEUED" | "PROCESSING" | "DONE" | "ERROR";
   downloadUrl?: string;
+  downloadAvailable?: boolean;
+  downloadConsumed?: boolean;
+  downloadExpiresAt?: string;
   errorCode?: string;
   errorMessage?: string;
   requestedAt?: string;
@@ -3378,6 +3400,8 @@ export const fiscalApi = {
     }),
   getInvoicePdfJobStatus: (id: string, jobId: string) =>
     request<DanfeJobResponse>(`/fiscal/invoices/${id}/pdf/jobs/${jobId}`),
+  downloadInvoicePdfJob: (id: string, jobId: string) =>
+    requestBlob(`/fiscal/invoices/${id}/pdf/jobs/${jobId}/download`),
   getInvoicePdf: (id: string) => requestBlob(`/fiscal/invoices/${id}/pdf`),
   getCurrentApuracao: () => request<ApuracaoMensal>("/fiscal/apuracoes/current"),
   getApuracaoByPeriodo: (ano: number, mes: number) =>

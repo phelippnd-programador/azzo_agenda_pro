@@ -203,14 +203,22 @@ export default function InvoiceEmission() {
         const status = await fiscalApi.getInvoicePdfJobStatus(invoice.id, job.jobId);
 
         if (status.status === 'DONE') {
-          if (status.downloadUrl) {
-            window.open(status.downloadUrl, '_blank', 'noopener,noreferrer');
-          } else {
-            const blob = await fiscalApi.getInvoicePdf(invoice.id);
-            const url = URL.createObjectURL(blob);
-            window.open(url, '_blank');
-            setTimeout(() => URL.revokeObjectURL(url), 10000);
+          if (status.downloadConsumed) {
+            toast.warning('DANFE ja foi baixado anteriormente e removido por seguranca.', {
+              id: toastId,
+            });
+            return;
           }
+          if (status.downloadAvailable === false) {
+            toast.warning('DANFE expirado (24h) e removido do storage.', {
+              id: toastId,
+            });
+            return;
+          }
+          const blob = await fiscalApi.downloadInvoicePdfJob(invoice.id, job.jobId);
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
+          setTimeout(() => URL.revokeObjectURL(url), 10000);
           toast.success('DANFE gerado com sucesso.', {
             id: toastId,
           });
