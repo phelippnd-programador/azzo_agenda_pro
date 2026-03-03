@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +13,9 @@ import {
 } from '@/components/ui/select';
 import { Plus, Trash2, AlertCircle } from 'lucide-react';
 import { InvoiceFormData, InvoiceItem, InvoiceCustomer } from '@/types/invoice';
-import { CFOP_CODES, CST_CODES } from '@/types/fiscal';
+import { CFOP_CODES, CSOSN_CODES, CST_CODES, TaxRegime } from '@/types/fiscal';
+import { fiscalApi } from '@/lib/api';
+import { maskCpf, maskCnpj, maskPhoneBr } from '@/lib/input-masks';
 import { toast } from 'sonner';
 
 interface InvoiceFormProps {
@@ -22,6 +24,7 @@ interface InvoiceFormProps {
 }
 
 export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
+  const [regime, setRegime] = useState<TaxRegime>(TaxRegime.SIMPLES_NACIONAL);
   const [type, setType] = useState<'NFE' | 'NFCE'>(initialData?.type || 'NFCE');
   const [operationNature, setOperationNature] = useState(
     initialData?.operationNature || 'Prestacao de servicos'
@@ -52,6 +55,34 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
     ]
   );
 
+  const isSimplesNacional = regime === TaxRegime.SIMPLES_NACIONAL;
+  const fiscalCodeLabel = isSimplesNacional ? 'CSOSN *' : 'CST *';
+  const fiscalCodeOptions = useMemo(
+    () => (isSimplesNacional ? CSOSN_CODES : CST_CODES),
+    [isSimplesNacional]
+  );
+
+  useEffect(() => {
+    fiscalApi
+      .getTaxConfig()
+      .then((config) => {
+        const nextRegime = config?.regime || TaxRegime.SIMPLES_NACIONAL;
+        setRegime(nextRegime);
+        setItems((prev) =>
+          prev.map((item) => ({
+            ...item,
+            cst:
+              nextRegime === TaxRegime.SIMPLES_NACIONAL
+                ? (item.cst && item.cst in CSOSN_CODES ? item.cst : '102')
+                : (item.cst && item.cst in CST_CODES ? item.cst : '00'),
+          }))
+        );
+      })
+      .catch(() => {
+        setRegime(TaxRegime.SIMPLES_NACIONAL);
+      });
+  }, []);
+
   const addItem = () => {
     const newItem: InvoiceItem = {
       id: String(Date.now()),
@@ -60,7 +91,7 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
       unitPrice: 0,
       totalPrice: 0,
       cfop: '5.933',
-      cst: '00',
+      cst: isSimplesNacional ? '102' : '00',
     };
     setItems([...items, newItem]);
   };
@@ -86,6 +117,13 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
     }));
   };
 
+  const parseUnitPriceInput = (rawValue: string) => {
+    const normalized = rawValue.replace(",", ".").replace(/^0+(?=\d)/, "");
+    return parseFloat(normalized) || 0;
+  };
+
+  const normalizeCfop = (value?: string) => (value || "").replace(/\D/g, "");
+
   const calculateTotal = () => {
     return items.reduce((sum, item) => sum + item.totalPrice, 0);
   };
@@ -109,13 +147,25 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
         return false;
       }
 
-      if (!item.cfop) {
-        toast.error('CFOP e obrigatorio para todos os itens');
+      const normalizedCfop = normalizeCfop(item.cfop);
+      if (!normalizedCfop || normalizedCfop.length !== 4) {
+        toast.error('CFOP invalido. Informe 4 digitos numericos');
         return false;
       }
 
-      if (!item.cst) {
-        toast.error('CST e obrigatorio para todos os itens');
+      const code = (item.cst || '').trim();
+      if (!code) {
+        toast.error(`${isSimplesNacional ? 'CSOSN' : 'CST'} e obrigatorio para todos os itens`);
+        return false;
+      }
+
+      if (isSimplesNacional && !(code in CSOSN_CODES)) {
+        toast.error('CSOSN invalido para Simples Nacional');
+        return false;
+      }
+
+      if (!isSimplesNacional && !(code in CST_CODES)) {
+        toast.error('CST invalido para o regime tributario informado');
         return false;
       }
     }
@@ -126,10 +176,16 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
   const handleSubmit = (isDraft: boolean) => {
     if (!validateForm()) return;
 
+    const normalizedItems = items.map((item) => ({
+      ...item,
+      cfop: normalizeCfop(item.cfop),
+      cst: (item.cst || "").trim(),
+    }));
+
     const formData: InvoiceFormData = {
       type,
       customer,
-      items,
+      items: normalizedItems,
       operationNature,
       notes,
       appointmentId: initialData?.appointmentId,
@@ -185,7 +241,11 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
               <Select
                 value={customer.type}
                 onValueChange={(value: 'CPF' | 'CNPJ') =>
-                  setCustomer({ ...customer, type: value })
+                  setCustomer((prev) => ({
+                    ...prev,
+                    type: value,
+                    document: value === 'CPF' ? maskCpf(prev.document) : maskCnpj(prev.document),
+                  }))
                 }
               >
                 <SelectTrigger>
@@ -202,7 +262,12 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
               <Input
                 placeholder={customer.type === 'CPF' ? '000.000.000-00' : '00.000.000/0000-00'}
                 value={customer.document}
-                onChange={(e) => setCustomer({ ...customer, document: e.target.value })}
+                onChange={(e) =>
+                  setCustomer({
+                    ...customer,
+                    document: customer.type === 'CPF' ? maskCpf(e.target.value) : maskCnpj(e.target.value),
+                  })
+                }
               />
             </div>
             <div className="space-y-2">
@@ -229,7 +294,7 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
               <Input
                 placeholder="(00) 00000-0000"
                 value={customer.phone || ''}
-                onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
+                onChange={(e) => setCustomer({ ...customer, phone: maskPhoneBr(e.target.value) })}
               />
             </div>
           </div>
@@ -279,6 +344,7 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
                     min="1"
                     value={item.quantity}
                     onChange={(e) => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 1)}
+                    onFocus={(e) => e.target.select()}
                   />
                 </div>
                 <div className="space-y-2">
@@ -287,8 +353,10 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
                     type="number"
                     min="0"
                     step="0.01"
-                    value={item.unitPrice}
-                    onChange={(e) => updateItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
+                    value={item.unitPrice === 0 ? '' : item.unitPrice}
+                    placeholder="0,00"
+                    onChange={(e) => updateItem(item.id, 'unitPrice', parseUnitPriceInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
                   />
                 </div>
               </div>
@@ -324,7 +392,7 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
                 </div>
                 <div className="space-y-2">
                   <Label className="flex items-center gap-1">
-                    CST *
+                    {fiscalCodeLabel}
                     <span className="text-xs text-muted-foreground">(obrigatorio)</span>
                   </Label>
                   <Select
@@ -332,10 +400,12 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
                     onValueChange={(value) => updateItem(item.id, 'cst', value)}
                   >
                     <SelectTrigger className={!item.cst ? 'border-red-300' : ''}>
-                      <SelectValue placeholder="Selecione o CST" />
+                      <SelectValue
+                        placeholder={`Selecione o ${isSimplesNacional ? 'CSOSN' : 'CST'}`}
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(CST_CODES).map(([code, description]) => (
+                      {Object.entries(fiscalCodeOptions).map(([code, description]) => (
                         <SelectItem key={code} value={code}>
                           {code} - {description}
                         </SelectItem>
@@ -345,7 +415,7 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
                   {!item.cst && (
                     <p className="text-xs text-red-500 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" />
-                      CST e obrigatorio
+                      {isSimplesNacional ? 'CSOSN' : 'CST'} e obrigatorio
                     </p>
                   )}
                 </div>

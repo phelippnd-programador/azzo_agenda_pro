@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError, publicLegalApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
+import { maskCpfCnpj, maskPhoneBr } from "@/lib/input-masks";
 import type { LegalDocumentResponse, TermsDocumentType } from "@/types/terms";
 import { toast } from "sonner";
 
@@ -326,7 +327,7 @@ export default function Register() {
                     id="phone"
                     placeholder="(11) 99999-0000"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => setPhone(maskPhoneBr(e.target.value))}
                     disabled={isLoading}
                     className="h-10 sm:h-11"
                   />
@@ -336,9 +337,9 @@ export default function Register() {
                   <Label htmlFor="cpfCnpj" className="text-sm">CPF/CNPJ</Label>
                   <Input
                     id="cpfCnpj"
-                    placeholder="Somente numeros"
+                    placeholder="000.000.000-00 ou 00.000.000/0000-00"
                     value={cpfCnpj}
-                    onChange={(e) => setCpfCnpj(e.target.value)}
+                    onChange={(e) => setCpfCnpj(maskCpfCnpj(e.target.value))}
                     disabled={isLoading}
                     className="h-10 sm:h-11"
                   />

@@ -207,7 +207,7 @@ const ALL_LOCAL_DEMO_ROUTES = [
   "/financeiro/licenca",
   "/emitir-nota",
   "/nota-fiscal",
-  "/config-impostos",
+  "/configuracoes/fiscal/impostos",
   "/apuracao-mensal",
   "/configuracoes",
   "/configuracoes/integracoes/whatsapp",
@@ -2098,7 +2098,18 @@ const shouldAttachAuthToken = (endpoint: string) =>
 
 const getErrorPayload = async (response: Response) => {
   const contentType = response.headers.get("content-type") || "";
-  let errorMessage = "Erro na requisicao";
+  let errorMessage =
+    response.status === 401
+      ? "Sessao expirada ou token invalido. Faca login novamente."
+      : response.status === 403
+      ? "Voce nao tem permissao para executar esta acao."
+      : response.status === 404
+      ? "Recurso nao encontrado."
+      : response.status === 409
+      ? "Conflito de regra de negocio."
+      : response.status === 429
+      ? "Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente."
+      : "Erro na requisicao";
   let errorDetails: unknown = null;
   let errorCode: string | undefined;
 
@@ -3157,6 +3168,154 @@ export type TaxConfig = {
   icmsRate: number;
   pisRate: number;
   cofinsRate: number;
+  issuerRazaoSocial?: string;
+  issuerNomeFantasia?: string;
+  issuerCnpj?: string;
+  issuerIe?: string;
+  issuerIm?: string;
+  issuerPhone?: string;
+  issuerEmail?: string;
+  issuerStreet?: string;
+  issuerNumber?: string;
+  issuerComplement?: string;
+  issuerNeighborhood?: string;
+  issuerCity?: string;
+  issuerState?: string;
+  issuerZipCode?: string;
+  issuerUfCode?: string;
+  nfceCscHomologation?: string;
+  nfceCscIdTokenHomologation?: string;
+  nfceCscProduction?: string;
+  nfceCscIdTokenProduction?: string;
+};
+
+export type DanfeJobResponse = {
+  jobId: string;
+  invoiceId: string;
+  status: "QUEUED" | "PROCESSING" | "DONE" | "ERROR";
+  downloadUrl?: string;
+  downloadAvailable?: boolean;
+  downloadConsumed?: boolean;
+  downloadExpiresAt?: string;
+  errorCode?: string;
+  errorMessage?: string;
+  requestedAt?: string;
+  finishedAt?: string;
+};
+
+export type FiscalCertificateResponse = {
+  id: string;
+  thumbprint: string;
+  subjectName: string;
+  validTo: string;
+  status: "ACTIVE" | "INACTIVE" | "DELETED" | string;
+  createdAt: string;
+};
+
+const generateIdempotencyKey = (prefix: string) => {
+  const randomPart =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  return `${prefix}-${randomPart}`;
+};
+
+const withIdempotencyHeader = (prefix: string) => ({
+  "X-Idempotency-Key": generateIdempotencyKey(prefix),
+});
+
+type FiscalInvoiceApi = Partial<Invoice> & {
+  numeroNf?: string;
+  serieNf?: string;
+  totalAmount?: number;
+  createdAt?: string;
+  status?: string;
+  type?: string;
+  items?: Array<{
+    id?: string;
+    description?: string;
+    quantity?: number;
+    unitPrice?: number;
+    totalPrice?: number;
+    cfop?: string;
+    cst?: string;
+  }>;
+};
+
+const mapInvoiceStatusToUi = (status?: string): Invoice["status"] => {
+  const normalized = (status || "").toUpperCase();
+  if (normalized === "AUTHORIZED" || normalized === "ISSUED") return "ISSUED";
+  if (normalized === "GENERATED") return "GENERATED";
+  if (normalized === "SIGNED") return "SIGNED";
+  if (normalized === "SUBMITTED") return "SUBMITTED";
+  if (normalized === "CONTINGENCY_PENDING") return "CONTINGENCY_PENDING";
+  if (normalized === "REJECTED") return "REJECTED";
+  if (normalized === "CANCEL_PENDING") return "CANCEL_PENDING";
+  if (normalized === "CANCELLED") return "CANCELLED";
+  if (normalized === "INUTILIZED") return "INUTILIZED";
+  if (normalized === "ERROR_FINAL") return "ERROR_FINAL";
+  return "DRAFT";
+};
+
+const mapInvoiceTypeToUi = (type?: string): Invoice["type"] => {
+  const normalized = (type || "").toUpperCase();
+  if (normalized === "NFCE" || normalized === "65") return "NFCE";
+  return "NFE";
+};
+
+const mapInvoiceStatusToApiFilter = (
+  status?: "DRAFT" | "ISSUED" | "CANCELLED"
+) => {
+  if (!status) return undefined;
+  if (status === "ISSUED") return "AUTHORIZED";
+  return status;
+};
+
+const mapFiscalInvoiceToUi = (invoice: FiscalInvoiceApi): Invoice => {
+  const items = Array.isArray(invoice.items)
+    ? invoice.items.map((item, index) => ({
+        id: item.id || String(index + 1),
+        description: item.description || "Item fiscal",
+        quantity: Number(item.quantity || 1),
+        unitPrice: Number(item.unitPrice || 0),
+        totalPrice: Number(item.totalPrice || 0),
+        cfop: item.cfop || "",
+        cst: item.cst || "",
+      }))
+    : [];
+
+  const totalValue =
+    typeof invoice.totalValue === "number"
+      ? invoice.totalValue
+      : typeof invoice.totalAmount === "number"
+      ? invoice.totalAmount
+      : items.reduce((sum, item) => sum + item.totalPrice, 0);
+
+  return {
+    id: invoice.id || "",
+    number: invoice.number || invoice.numeroNf || "-",
+    series: invoice.series || invoice.serieNf || "1",
+    type: mapInvoiceTypeToUi(invoice.type),
+    status: mapInvoiceStatusToUi(invoice.status),
+    customer: invoice.customer || {
+      type: "CPF",
+      document: "",
+      name: "Cliente",
+    },
+    items,
+    operationNature: invoice.operationNature || "Prestacao de servicos",
+    issueDate: invoice.issueDate || invoice.createdAt || new Date().toISOString(),
+    totalValue,
+    taxBreakdown: invoice.taxBreakdown || {
+      icms: 0,
+      pis: 0,
+      cofins: 0,
+    },
+    notes: invoice.notes,
+    appointmentId: invoice.appointmentId,
+    accessKey: invoice.accessKey,
+    authorizationProtocol: invoice.authorizationProtocol,
+  };
 };
 
 export const fiscalApi = {
@@ -3174,31 +3333,75 @@ export const fiscalApi = {
     pageSize?: number;
   }) => {
     const query = new URLSearchParams();
-    if (params?.status) query.set("status", params.status);
+    const mappedStatus = mapInvoiceStatusToApiFilter(params?.status);
+    if (mappedStatus) query.set("status", mappedStatus);
     if (params?.from) query.set("from", params.from);
     if (params?.to) query.set("to", params.to);
     if (params?.page) query.set("page", String(params.page));
     if (params?.pageSize) query.set("pageSize", String(params.pageSize));
     const suffix = query.toString() ? `?${query}` : "";
-    return request<{ items: Invoice[]; total: number; page: number; pageSize: number }>(
+    return request<{ items: FiscalInvoiceApi[]; total: number; page: number; pageSize: number }>(
       `/fiscal/invoices${suffix}`
-    );
+    ).then((response) => ({
+      ...response,
+      items: (response.items || []).map(mapFiscalInvoiceToUi),
+    }));
   },
-  getInvoice: (id: string) => request<Invoice>(`/fiscal/invoices/${id}`),
+  getInvoice: (id: string) =>
+    request<FiscalInvoiceApi>(`/fiscal/invoices/${id}`).then(mapFiscalInvoiceToUi),
   createInvoice: (data: InvoiceFormData & { status?: "DRAFT" | "ISSUED" }) =>
-    request<Invoice>("/fiscal/invoices", {
+    request<FiscalInvoiceApi>("/fiscal/invoices", {
       method: "POST",
+      headers: withIdempotencyHeader("fiscal-create-invoice"),
       body: JSON.stringify(data),
-    }),
-  cancelInvoice: (id: string, reason?: string) =>
-    request<Invoice>(`/fiscal/invoices/${id}/cancel`, {
+    }).then(mapFiscalInvoiceToUi),
+  updateInvoice: (id: string, data: InvoiceFormData & { status?: "DRAFT" | "ISSUED" }) =>
+    request<FiscalInvoiceApi>(`/fiscal/invoices/${id}`, {
       method: "PATCH",
+      headers: withIdempotencyHeader(`fiscal-update-${id}`),
+      body: JSON.stringify(data),
+    }).then(mapFiscalInvoiceToUi),
+  cancelInvoice: (id: string, reason?: string) =>
+    request<FiscalInvoiceApi>(`/fiscal/invoices/${id}/cancel`, {
+      method: "PATCH",
+      headers: withIdempotencyHeader(`fiscal-cancel-${id}`),
       body: JSON.stringify(reason ? { reason } : {}),
+    }).then(mapFiscalInvoiceToUi),
+  authorizeInvoice: (id: string, certificatePassword?: string) =>
+    request<FiscalInvoiceApi>(`/fiscal/invoices/${id}/authorize`, {
+      method: "POST",
+      headers: withIdempotencyHeader(`fiscal-authorize-${id}`),
+      body: JSON.stringify({ certificatePassword }),
+    }).then(mapFiscalInvoiceToUi),
+  reprocessAuthorizeInvoice: (id: string, certificatePassword?: string) =>
+    request<FiscalInvoiceApi>(`/fiscal/invoices/${id}/reprocess-authorize`, {
+      method: "POST",
+      headers: withIdempotencyHeader(`fiscal-reprocess-authorize-${id}`),
+      body: JSON.stringify({ certificatePassword }),
+    }).then(mapFiscalInvoiceToUi),
+  listCertificates: () =>
+    request<FiscalCertificateResponse[]>("/fiscal/certificates"),
+  uploadCertificate: (pfxBase64: string, password: string) =>
+    request<FiscalCertificateResponse>("/fiscal/certificates", {
+      method: "POST",
+      body: JSON.stringify({ pfxBase64, password }),
     }),
-  authorizeInvoice: (id: string) =>
-    request<Invoice>(`/fiscal/invoices/${id}/authorize`, {
+  activateCertificate: (id: string) =>
+    request<FiscalCertificateResponse>(`/fiscal/certificates/${id}/activate`, {
       method: "POST",
     }),
+  deleteCertificate: (id: string) =>
+    request<void>(`/fiscal/certificates/${id}/delete`, {
+      method: "PATCH",
+    }),
+  requestInvoicePdfJob: (id: string) =>
+    request<DanfeJobResponse>(`/fiscal/invoices/${id}/pdf/jobs`, {
+      method: "POST",
+    }),
+  getInvoicePdfJobStatus: (id: string, jobId: string) =>
+    request<DanfeJobResponse>(`/fiscal/invoices/${id}/pdf/jobs/${jobId}`),
+  downloadInvoicePdfJob: (id: string, jobId: string) =>
+    requestBlob(`/fiscal/invoices/${id}/pdf/jobs/${jobId}/download`),
   getInvoicePdf: (id: string) => requestBlob(`/fiscal/invoices/${id}/pdf`),
   getCurrentApuracao: () => request<ApuracaoMensal>("/fiscal/apuracoes/current"),
   getApuracaoByPeriodo: (ano: number, mes: number) =>

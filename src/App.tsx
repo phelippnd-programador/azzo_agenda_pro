@@ -44,6 +44,7 @@ import Settings from "./pages/Settings";
 import LicensePage from "./pages/LicensePage";
 import SalonProfile from "./pages/SalonProfile";
 import TaxConfig from "./pages/TaxConfig";
+import FiscalCertificatesSettings from "./pages/FiscalCertificatesSettings";
 import InvoicePreview from "./pages/InvoicePreview";
 import InvoiceEmission from "./pages/InvoiceEmission";
 import ApuracaoMensal from "./pages/ApuracaoMensal";
@@ -68,9 +69,15 @@ const getFirstAllowedRoute = (allowedRoutes: string[] | null) => {
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
   const { canAccess, isLoading: isPermissionsLoading } = useMenuPermissions();
+  const isFiscalOwnerOnlyPath =
+    location.pathname.startsWith("/emitir-nota")
+    || location.pathname.startsWith("/nota-fiscal")
+    || location.pathname.startsWith("/apuracao-mensal")
+    || location.pathname.startsWith("/configuracoes/fiscal")
+    || location.pathname.startsWith("/config-impostos");
 
   if (isLoading || isPermissionsLoading) {
     return <FullScreenLoader />;
@@ -78,6 +85,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (isFiscalOwnerOnlyPath && user?.role !== "OWNER") {
+    return <Navigate to="/unauthorized" replace />;
   }
 
   if (!canAccess(location.pathname)) {
@@ -258,7 +269,7 @@ function AppRoutes() {
           <Route path="pedidos-compra" element={<StockPurchaseOrdersPage />} />
           <Route path="pedidos-compra/:id" element={<StockPurchaseOrdersPage />} />
           <Route path="transferencias" element={<StockTransfersPage />} />
-          <Route path="configuracoes" element={<StockSettingsPage />} />
+          <Route path="configuracoes" element={<Navigate to="/configuracoes/estoque" replace />} />
         </Route>
         <Route
           path="/financeiro"
@@ -309,6 +320,14 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/configuracoes/estoque"
+          element={
+            <ProtectedRoute>
+              <StockSettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/perfil-salao"
           element={
             <ProtectedRoute>
@@ -317,12 +336,24 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/config-impostos"
+          path="/configuracoes/fiscal/impostos"
           element={
             <ProtectedRoute>
               <TaxConfig />
             </ProtectedRoute>
           }
+        />
+        <Route
+          path="/configuracoes/fiscal/certificados"
+          element={
+            <ProtectedRoute>
+              <FiscalCertificatesSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/config-impostos"
+          element={<Navigate to="/configuracoes/fiscal/impostos" replace />}
         />
         <Route
           path="/nota-fiscal"

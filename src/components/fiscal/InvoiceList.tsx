@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Eye, Printer, XCircle, Search } from 'lucide-react';
+import { Eye, Printer, XCircle, Search, RotateCcw, RefreshCw, Send, FilePenLine } from 'lucide-react';
 import { Invoice, InvoiceStatus } from '@/types/invoice';
 
 interface InvoiceListProps {
@@ -26,31 +26,72 @@ interface InvoiceListProps {
   onView: (invoice: Invoice) => void;
   onPrint: (invoice: Invoice) => void;
   onCancel: (invoice: Invoice) => void;
+  onReprocessAuthorize: (invoice: Invoice) => void;
+  onAuthorizeDraft: (invoice: Invoice) => void;
+  onEditDraft: (invoice: Invoice) => void;
+  onRefresh?: () => void;
 }
 
 const getStatusColor = (status: InvoiceStatus) => {
   const colors = {
     ISSUED: 'bg-green-100 text-green-700 border-green-200',
     DRAFT: 'bg-amber-100 text-amber-700 border-amber-200',
+    GENERATED: 'bg-blue-100 text-blue-700 border-blue-200',
+    SIGNED: 'bg-blue-100 text-blue-700 border-blue-200',
+    SUBMITTED: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+    CONTINGENCY_PENDING: 'bg-orange-100 text-orange-700 border-orange-200',
+    REJECTED: 'bg-red-100 text-red-700 border-red-200',
+    CANCEL_PENDING: 'bg-zinc-100 text-zinc-700 border-zinc-200',
     CANCELLED: 'bg-red-100 text-red-700 border-red-200',
+    INUTILIZED: 'bg-zinc-100 text-zinc-700 border-zinc-200',
+    ERROR_FINAL: 'bg-rose-100 text-rose-700 border-rose-200',
   };
-  return colors[status];
+  return colors[status] || 'bg-zinc-100 text-zinc-700 border-zinc-200';
 };
 
 const getStatusLabel = (status: InvoiceStatus) => {
   const labels = {
     ISSUED: 'Emitida',
     DRAFT: 'Rascunho',
+    GENERATED: 'Gerada',
+    SIGNED: 'Assinada',
+    SUBMITTED: 'Enviada',
+    CONTINGENCY_PENDING: 'Contingencia',
+    REJECTED: 'Rejeitada',
+    CANCEL_PENDING: 'Canc. pendente',
     CANCELLED: 'Cancelada',
+    INUTILIZED: 'Inutilizada',
+    ERROR_FINAL: 'Erro final',
   };
-  return labels[status];
+  return labels[status] || status;
 };
 
 const getTypeLabel = (type: 'NFE' | 'NFCE') => {
   return type === 'NFE' ? 'NF-e (55)' : 'NFC-e (65)';
 };
 
-export function InvoiceList({ invoices, onView, onPrint, onCancel }: InvoiceListProps) {
+const canReprocessAuthorize = (status: InvoiceStatus) =>
+  status === 'ERROR_FINAL' || status === 'CONTINGENCY_PENDING';
+
+const canCancelInvoice = (status: InvoiceStatus) => status === 'ISSUED';
+const canPrintInvoice = (status: InvoiceStatus) => status === 'ISSUED';
+const canAuthorizeDraft = (status: InvoiceStatus) => status === 'DRAFT';
+const getFiscalNumberDisplay = (invoice: Invoice) => {
+  const number = (invoice.number || '').trim();
+  if (!number || invoice.status === 'DRAFT') return '—';
+  return number;
+};
+
+export function InvoiceList({
+  invoices,
+  onView,
+  onPrint,
+  onCancel,
+  onReprocessAuthorize,
+  onAuthorizeDraft,
+  onEditDraft,
+  onRefresh,
+}: InvoiceListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -72,8 +113,9 @@ export function InvoiceList({ invoices, onView, onPrint, onCancel }: InvoiceList
   };
 
   const filteredInvoices = invoices.filter(invoice => {
+    const fiscalNumber = getFiscalNumberDisplay(invoice);
     const matchesSearch = 
-      invoice.number.includes(searchTerm) ||
+      fiscalNumber.includes(searchTerm) ||
       invoice.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.customer.document.includes(searchTerm);
     
@@ -88,6 +130,12 @@ export function InvoiceList({ invoices, onView, onPrint, onCancel }: InvoiceList
         <CardTitle className="flex items-center justify-between">
           <span>Notas Fiscais Emitidas</span>
           <div className="flex gap-2">
+            {onRefresh && (
+              <Button variant="outline" size="sm" onClick={onRefresh} className="gap-2">
+                <RefreshCw className="w-4 h-4" />
+                Atualizar
+              </Button>
+            )}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -105,6 +153,8 @@ export function InvoiceList({ invoices, onView, onPrint, onCancel }: InvoiceList
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="ISSUED">Emitidas</SelectItem>
                 <SelectItem value="DRAFT">Rascunhos</SelectItem>
+                <SelectItem value="ERROR_FINAL">Erro final</SelectItem>
+                <SelectItem value="CONTINGENCY_PENDING">Contingencia</SelectItem>
                 <SelectItem value="CANCELLED">Canceladas</SelectItem>
               </SelectContent>
             </Select>
@@ -133,7 +183,14 @@ export function InvoiceList({ invoices, onView, onPrint, onCancel }: InvoiceList
               <TableBody>
                 {filteredInvoices.map((invoice) => (
                   <TableRow key={invoice.id}>
-                    <TableCell className="font-medium">{invoice.number}</TableCell>
+                    <TableCell className="font-medium">
+                      {getFiscalNumberDisplay(invoice)}
+                      {invoice.status === 'DRAFT' && (
+                        <p className="text-xs text-muted-foreground font-normal">
+                          Definido na emissao/autorizacao
+                        </p>
+                      )}
+                    </TableCell>
                     <TableCell>{getTypeLabel(invoice.type)}</TableCell>
                     <TableCell>
                       <div>
@@ -157,24 +214,55 @@ export function InvoiceList({ invoices, onView, onPrint, onCancel }: InvoiceList
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
-                        {invoice.status === 'ISSUED' && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onPrint(invoice)}
-                            >
-                              <Printer className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onCancel(invoice)}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <XCircle className="w-4 h-4" />
-                            </Button>
-                          </>
+                        {canPrintInvoice(invoice.status) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onPrint(invoice)}
+                            title="Gerar DANFE"
+                          >
+                            <Printer className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {canAuthorizeDraft(invoice.status) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onAuthorizeDraft(invoice)}
+                            title="Emitir rascunho"
+                          >
+                            <Send className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {canAuthorizeDraft(invoice.status) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onEditDraft(invoice)}
+                            title="Editar rascunho"
+                          >
+                            <FilePenLine className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {canCancelInvoice(invoice.status) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onCancel(invoice)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {canReprocessAuthorize(invoice.status) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onReprocessAuthorize(invoice)}
+                            title="Reprocessar autorizacao"
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </Button>
                         )}
                       </div>
                     </TableCell>

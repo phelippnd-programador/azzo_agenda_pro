@@ -47,6 +47,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useClients } from '@/hooks/useClients';
+import { maskPhoneBr } from '@/lib/input-masks';
 import { toast } from 'sonner';
 
 const formatCurrency = (value: number) => {
@@ -232,7 +233,7 @@ export default function Clients() {
                       <Input
                         placeholder="(11) 99999-0000"
                         value={formPhone}
-                        onChange={(e) => setFormPhone(e.target.value)}
+                        onChange={(e) => setFormPhone(maskPhoneBr(e.target.value))}
                       />
                     </div>
                     <div className="space-y-2">

@@ -1,5 +1,16 @@
 export type InvoiceType = 'NFE' | 'NFCE';
-export type InvoiceStatus = 'DRAFT' | 'ISSUED' | 'CANCELLED';
+export type InvoiceStatus =
+  | 'DRAFT'
+  | 'GENERATED'
+  | 'SIGNED'
+  | 'SUBMITTED'
+  | 'CONTINGENCY_PENDING'
+  | 'ISSUED'
+  | 'REJECTED'
+  | 'CANCEL_PENDING'
+  | 'CANCELLED'
+  | 'INUTILIZED'
+  | 'ERROR_FINAL';
 
 export interface InvoiceItem {
   id: string;

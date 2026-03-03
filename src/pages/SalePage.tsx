@@ -26,6 +26,7 @@ import { useCheckoutProducts } from "@/hooks/useCheckoutProducts";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
+import { maskCpfCnpj, maskPhoneBr } from "@/lib/input-masks";
 import { toast } from "sonner";
 
 const getPasswordStrengthStatus = (value: string) => {
@@ -522,7 +523,7 @@ export default function SalePage() {
                 <Input
                   id="sale-account-phone"
                   value={accountPhone}
-                  onChange={(event) => setAccountPhone(event.target.value)}
+                  onChange={(event) => setAccountPhone(maskPhoneBr(event.target.value))}
                   placeholder="(11) 99999-0000"
                   disabled={isCreatingAccount}
                 />
@@ -532,8 +533,8 @@ export default function SalePage() {
                 <Input
                   id="sale-account-cpf-cnpj"
                   value={accountCpfCnpj}
-                  onChange={(event) => setAccountCpfCnpj(event.target.value)}
-                  placeholder="Somente numeros"
+                  onChange={(event) => setAccountCpfCnpj(maskCpfCnpj(event.target.value))}
+                  placeholder="000.000.000-00 ou 00.000.000/0000-00"
                   disabled={isCreatingAccount}
                 />
               </div>

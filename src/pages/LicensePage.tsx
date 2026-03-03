@@ -45,6 +45,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError } from "@/lib/api";
 import { useCheckoutProducts } from "@/hooks/useCheckoutProducts";
+import { maskCpfCnpj, onlyDigits } from "@/lib/input-masks";
 
 type ActionMode = "IDLE" | "PAY" | "CHANGE";
 
@@ -96,7 +97,7 @@ const formSchema = baseSchema.superRefine((values, ctx) => {
 });
 
 function toDigits(value: string) {
-  return value.replace(/\D/g, "");
+  return onlyDigits(value);
 }
 
 function formatCurrency(amountCents: number) {
@@ -729,7 +730,13 @@ export default function LicensePage() {
                         <FormItem>
                           <FormLabel>CPF/CNPJ do pagador</FormLabel>
                           <FormControl>
-                            <Input placeholder="Somente numeros" {...field} />
+                            <Input
+                              placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                              {...field}
+                              onChange={(event) =>
+                                field.onChange(maskCpfCnpj(event.target.value))
+                              }
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

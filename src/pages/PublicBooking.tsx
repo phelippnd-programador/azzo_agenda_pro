@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { servicesApi, professionalsApi, appointmentsApi, publicBookingApi, Service, Professional } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
+import { maskPhoneBr } from '@/lib/input-masks';
 import { toast } from 'sonner';
 
 const formatCurrency = (value: number) => {
@@ -626,7 +627,7 @@ export default function PublicBooking() {
                       id="phone"
                       placeholder="(11) 99999-0000"
                       value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      onChange={(e) => setCustomerPhone(maskPhoneBr(e.target.value))}
                       className="pl-9"
                     />
                   </div>
