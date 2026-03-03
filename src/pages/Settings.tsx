@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { PlugZap, Building2, ShieldCheck, Receipt } from "lucide-react";
+import { PlugZap, Building2, ShieldCheck, Receipt, Boxes } from "lucide-react";
+import QRCode from "qrcode";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ export default function Settings() {
   const [mfaEnableCode, setMfaEnableCode] = useState("");
   const [mfaDisableCode, setMfaDisableCode] = useState("");
   const [mfaDisablePassword, setMfaDisablePassword] = useState("");
+  const [mfaQrCodeDataUrl, setMfaQrCodeDataUrl] = useState("");
   const [cookieStatusText, setCookieStatusText] = useState("Nao definido");
 
   useEffect(() => {
@@ -206,6 +208,26 @@ export default function Settings() {
     setActiveTab(tab);
   }, [searchParams]);
 
+  useEffect(() => {
+    if (!mfaUri) {
+      setMfaQrCodeDataUrl("");
+      return;
+    }
+
+    let isMounted = true;
+    void QRCode.toDataURL(mfaUri, { margin: 1, width: 180 })
+      .then((dataUrl) => {
+        if (isMounted) setMfaQrCodeDataUrl(dataUrl);
+      })
+      .catch(() => {
+        if (isMounted) setMfaQrCodeDataUrl("");
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [mfaUri]);
+
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     const next = new URLSearchParams(searchParams);
@@ -365,6 +387,18 @@ export default function Settings() {
                           <Label>URI do autenticador (otpauth)</Label>
                           <Input value={mfaUri} readOnly />
                         </div>
+                        {mfaQrCodeDataUrl ? (
+                          <div className="space-y-2">
+                            <Label>QR Code para app autenticador</Label>
+                            <div className="inline-flex rounded-md border bg-white p-2">
+                              <img
+                                src={mfaQrCodeDataUrl}
+                                alt="QR Code MFA"
+                                className="h-[180px] w-[180px]"
+                              />
+                            </div>
+                          </div>
+                        ) : null}
                         <div className="space-y-1">
                           <Label>Codigo atual do app</Label>
                           <Input
@@ -422,6 +456,20 @@ export default function Settings() {
                 </div>
                 <Button asChild>
                   <Link to="/configuracoes/integracoes/whatsapp">Abrir configuracao</Link>
+                </Button>
+              </div>
+              <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <p className="font-medium flex items-center gap-2">
+                    <Boxes className="h-4 w-4 text-primary" />
+                    Estoque
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Parametros de alerta e politicas operacionais de estoque.
+                  </p>
+                </div>
+                <Button asChild variant="outline">
+                  <Link to="/configuracoes/estoque">Abrir configuracao</Link>
                 </Button>
               </div>
             </CardContent>

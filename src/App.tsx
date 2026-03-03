@@ -259,7 +259,7 @@ function AppRoutes() {
           <Route path="pedidos-compra" element={<StockPurchaseOrdersPage />} />
           <Route path="pedidos-compra/:id" element={<StockPurchaseOrdersPage />} />
           <Route path="transferencias" element={<StockTransfersPage />} />
-          <Route path="configuracoes" element={<StockSettingsPage />} />
+          <Route path="configuracoes" element={<Navigate to="/configuracoes/estoque" replace />} />
         </Route>
         <Route
           path="/financeiro"
@@ -306,6 +306,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/configuracoes/estoque"
+          element={
+            <ProtectedRoute>
+              <StockSettingsPage />
             </ProtectedRoute>
           }
         />
