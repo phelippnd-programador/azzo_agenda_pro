@@ -207,7 +207,10 @@ const ALL_LOCAL_DEMO_ROUTES = [
   "/financeiro/licenca",
   "/emitir-nota",
   "/nota-fiscal",
+  "/fiscal/nfse",
+  "/fiscal/nfse/nova",
   "/configuracoes/fiscal/impostos",
+  "/configuracoes/fiscal/nfse",
   "/apuracao-mensal",
   "/configuracoes",
   "/configuracoes/integracoes/whatsapp",
@@ -3419,6 +3422,193 @@ export const fiscalApi = {
       totalDocumentos: number;
       meses: ApuracaoResumo[];
     }>(`/fiscal/apuracoes/resumo-anual?ano=${ano}`),
+};
+
+export type NfseConfig = {
+  ambiente: "HOMOLOGACAO" | "PRODUCAO";
+  municipioCodigoIbge: string;
+  provedor: string;
+  serieRps: string;
+  aliquotaIssPadrao: number;
+  itemListaServicoPadrao: string;
+  codigoTributacaoMunicipio?: string;
+  emissionMode: "MANUAL" | "ASK_ON_CLOSE" | "AUTO_ON_CLOSE";
+  emitForCpfMode: "ALWAYS" | "ASK" | "NEVER_AUTO";
+  autoIssueOnAppointmentClose: boolean;
+};
+
+export type NfseInvoiceCustomer = {
+  type: "CPF" | "CNPJ" | "EXTERIOR";
+  document?: string;
+  countryCode?: string;
+  documentType?: string;
+  name: string;
+  email?: string;
+  phone?: string;
+};
+
+export type NfseInvoiceItem = {
+  lineNumber: number;
+  descricaoServico: string;
+  quantidade: number;
+  valorUnitario: number;
+  valorTotal: number;
+  itemListaServico: string;
+  codigoTributacaoMunicipio?: string;
+  aliquotaIss: number;
+  valorIss: number;
+};
+
+export type NfseInvoice = {
+  id: string;
+  appointmentId?: string;
+  ambiente: "HOMOLOGACAO" | "PRODUCAO";
+  municipioCodigoIbge: string;
+  provedor: string;
+  fiscalStatus: string;
+  operationalStatus?: string;
+  numeroRps: number;
+  serieRps: string;
+  numeroNfse?: string;
+  codigoVerificacao?: string;
+  protocolo?: string;
+  dataCompetencia: string;
+  dataEmissao?: string;
+  naturezaOperacao: string;
+  itemListaServico: string;
+  codigoTributacaoMunicipio?: string;
+  valorServicos: number;
+  valorDeducoes: number;
+  valorIss: number;
+  aliquotaIss: number;
+  issRetido: boolean;
+  notes?: string;
+  customer: NfseInvoiceCustomer;
+  items: NfseInvoiceItem[];
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type NfseInvoiceListResponse = {
+  items: NfseInvoice[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+export type NfsePdfJobResponse = {
+  jobId: string;
+  invoiceId: string;
+  status: "QUEUED" | "PROCESSING" | "DONE" | "ERROR";
+  errorCode?: string;
+  errorMessage?: string;
+  requestedAt?: string;
+  finishedAt?: string;
+  downloadAvailable?: boolean;
+  downloadConsumed?: boolean;
+  downloadExpiresAt?: string;
+};
+
+export type NfseCertificateUnlockStatus = {
+  active: boolean;
+  unlockTokenId?: string;
+  issuedAt?: string;
+  expiresAt?: string;
+  status: string;
+};
+
+export type NfseProviderCapabilities = {
+  municipioCodigoIbge: string;
+  provedor: string;
+  layoutVersion: string;
+  cancelSupported: boolean;
+  cancelWindowHours?: number;
+  cancelMode: "SYNC" | "ASYNC";
+  acceptedCancelReasonCodes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export const nfseApi = {
+  getConfig: (ambiente: "HOMOLOGACAO" | "PRODUCAO" = "HOMOLOGACAO") =>
+    request<NfseConfig>(`/fiscal/nfse/config?ambiente=${ambiente}`),
+  saveConfig: (data: NfseConfig) =>
+    request<NfseConfig>("/fiscal/nfse/config", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  listInvoices: (params?: {
+    status?: string;
+    page?: number;
+    pageSize?: number;
+  }) => {
+    const query = new URLSearchParams();
+    if (params?.status) query.set("status", params.status);
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.pageSize) query.set("pageSize", String(params.pageSize));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<NfseInvoiceListResponse>(`/fiscal/nfse/invoices${suffix}`);
+  },
+  getInvoice: (id: string) => request<NfseInvoice>(`/fiscal/nfse/invoices/${id}`),
+  createInvoice: (payload: Omit<NfseInvoice, "id" | "fiscalStatus">) =>
+    request<NfseInvoice>("/fiscal/nfse/invoices", {
+      method: "POST",
+      headers: withIdempotencyHeader("nfse-create-invoice"),
+      body: JSON.stringify(payload),
+    }),
+  updateInvoice: (id: string, payload: Omit<NfseInvoice, "id" | "fiscalStatus">) =>
+    request<NfseInvoice>(`/fiscal/nfse/invoices/${id}`, {
+      method: "PUT",
+      headers: withIdempotencyHeader(`nfse-update-${id}`),
+      body: JSON.stringify(payload),
+    }),
+  authorizeInvoice: (
+    id: string,
+    payload: { certificatePassword?: string; unlockTokenId?: string }
+  ) =>
+    request<NfseInvoice>(`/fiscal/nfse/invoices/${id}/authorize`, {
+      method: "POST",
+      headers: withIdempotencyHeader(`nfse-authorize-${id}`),
+      body: JSON.stringify(payload),
+    }),
+  cancelInvoice: (id: string, reason: string) =>
+    request<NfseInvoice>(`/fiscal/nfse/invoices/${id}/cancel`, {
+      method: "POST",
+      headers: withIdempotencyHeader(`nfse-cancel-${id}`),
+      body: JSON.stringify({ reason }),
+    }),
+  requestInvoicePdfJob: (id: string) =>
+    request<NfsePdfJobResponse>(`/fiscal/nfse/invoices/${id}/pdf/jobs`, {
+      method: "POST",
+      headers: withIdempotencyHeader(`nfse-pdf-job-${id}`),
+    }),
+  getInvoicePdfJobStatus: (id: string, jobId: string) =>
+    request<NfsePdfJobResponse>(`/fiscal/nfse/invoices/${id}/pdf/jobs/${jobId}`),
+  downloadInvoicePdfJob: (id: string, jobId: string) =>
+    requestBlob(`/fiscal/nfse/invoices/${id}/pdf/jobs/${jobId}/download`),
+  createCertificateUnlock: (certificatePassword: string) =>
+    request<NfseCertificateUnlockStatus>("/fiscal/nfse/certificate-unlock", {
+      method: "POST",
+      body: JSON.stringify({ certificatePassword }),
+    }),
+  getCertificateUnlockStatus: () =>
+    request<NfseCertificateUnlockStatus>("/fiscal/nfse/certificate-unlock"),
+  revokeCertificateUnlock: () =>
+    request<void>("/fiscal/nfse/certificate-unlock", {
+      method: "DELETE",
+    }),
+  listProviderCapabilities: (params?: { municipioCodigoIbge?: string; provedor?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.municipioCodigoIbge) query.set("municipioCodigoIbge", params.municipioCodigoIbge);
+    if (params?.provedor) query.set("provedor", params.provedor);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<NfseProviderCapabilities[]>(`/fiscal/nfse/provider-capabilities${suffix}`);
+  },
+  saveProviderCapabilities: (payload: NfseProviderCapabilities) =>
+    request<NfseProviderCapabilities>("/fiscal/nfse/provider-capabilities", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
 };
 
 export const publicBookingApi = {

@@ -56,7 +56,8 @@ import {
   Receipt,
 } from 'lucide-react';
 import { useAppointments, Appointment } from '@/hooks/useAppointments';
-import { appointmentsApi } from '@/lib/api';
+import { appointmentsApi, nfseApi, type NfseInvoice } from '@/lib/api';
+import { resolveUiError } from '@/lib/error-utils';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { useClients } from '@/hooks/useClients';
 import { useServices } from '@/hooks/useServices';
@@ -388,8 +389,80 @@ export default function Agenda() {
       if (selectedAppointment?.id === appointmentId) {
         setSelectedAppointment(prev => prev ? { ...prev, status: newStatus } : null);
       }
+
+      if (newStatus === 'COMPLETED') {
+        const appointment =
+          appointments.find((apt) => apt.id === appointmentId) ??
+          (selectedAppointment?.id === appointmentId ? selectedAppointment : null);
+        if (appointment) {
+          await handleNfseOnAppointmentCompleted(appointment);
+        }
+      }
     } catch (error) {
       // Error is handled in the hook
+    }
+  };
+
+  const handleNfseOnAppointmentCompleted = async (appointment: Appointment) => {
+    try {
+      const config = await nfseApi.getConfig('HOMOLOGACAO');
+      if (config.emissionMode === 'MANUAL') return;
+
+      const client = appointment.client ?? clients.find((item) => item.id === appointment.clientId);
+      const service = appointment.service ?? services.find((item) => item.id === appointment.serviceId);
+      const customerDocument = (client as { document?: string } | undefined)?.document || '';
+      const customerType = customerDocument.length > 11 ? 'CNPJ' : 'CPF';
+
+      const prefill: Partial<NfseInvoice> = {
+        appointmentId: appointment.id,
+        ambiente: config.ambiente,
+        municipioCodigoIbge: config.municipioCodigoIbge,
+        provedor: config.provedor,
+        serieRps: config.serieRps,
+        numeroRps: Date.now(),
+        dataCompetencia: toDateKey(appointment.date),
+        naturezaOperacao: 'Prestacao de servico',
+        itemListaServico: config.itemListaServicoPadrao,
+        valorServicos: Number(appointment.totalPrice || 0),
+        valorDeducoes: 0,
+        valorIss: Number(appointment.totalPrice || 0) * (Number(config.aliquotaIssPadrao || 0) / 100),
+        aliquotaIss: Number(config.aliquotaIssPadrao || 0),
+        issRetido: false,
+        customer: {
+          type: customerType,
+          document: customerDocument,
+          name: client?.name || 'Consumidor final',
+          email: client?.email || '',
+          phone: client?.phone || '',
+        },
+        items: [
+          {
+            lineNumber: 1,
+            descricaoServico: service?.name || 'Servico',
+            quantidade: 1,
+            valorUnitario: Number(appointment.totalPrice || 0),
+            valorTotal: Number(appointment.totalPrice || 0),
+            itemListaServico: config.itemListaServicoPadrao,
+            aliquotaIss: Number(config.aliquotaIssPadrao || 0),
+            valorIss: Number(appointment.totalPrice || 0) * (Number(config.aliquotaIssPadrao || 0) / 100),
+          },
+        ],
+      };
+      sessionStorage.setItem('nfseDraftPrefill', JSON.stringify(prefill));
+
+      if (config.emissionMode === 'ASK_ON_CLOSE') {
+        const shouldOpen = window.confirm(
+          'Atendimento concluido. Deseja abrir a emissao da NFS-e agora?'
+        );
+        if (!shouldOpen) return;
+      }
+
+      toast.info('Fluxo NFS-e preparado a partir do agendamento concluido.');
+      navigate(`/fiscal/nfse/nova?appointmentId=${encodeURIComponent(appointment.id)}`);
+    } catch (error) {
+      const uiError = resolveUiError(error, 'Nao foi possivel preparar a emissao automatica de NFS-e.');
+      const prefix = uiError.code ? `[${uiError.code}] ` : '';
+      toast.warning(`${prefix}${uiError.message}`);
     }
   };
 
