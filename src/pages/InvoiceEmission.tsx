@@ -31,6 +31,7 @@ import { FileText, List } from 'lucide-react';
 
 export default function InvoiceEmission() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [editingDraft, setEditingDraft] = useState<Invoice | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [invoiceToCancel, setInvoiceToCancel] = useState<Invoice | null>(null);
@@ -40,7 +41,9 @@ export default function InvoiceEmission() {
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [pendingInvoiceData, setPendingInvoiceData] = useState<InvoiceFormData | null>(null);
   const [invoiceToReprocess, setInvoiceToReprocess] = useState<Invoice | null>(null);
-  const [authMode, setAuthMode] = useState<'CREATE_AND_AUTHORIZE' | 'REPROCESS_AUTHORIZE'>('CREATE_AND_AUTHORIZE');
+  const [authMode, setAuthMode] = useState<
+    'CREATE_AND_AUTHORIZE' | 'AUTHORIZE_EXISTING' | 'REPROCESS_AUTHORIZE'
+  >('CREATE_AND_AUTHORIZE');
   const [certificatePassword, setCertificatePassword] = useState('');
   const [certificatePasswordTouched, setCertificatePasswordTouched] = useState(false);
   const [isAuthorizing, setIsAuthorizing] = useState(false);
@@ -50,6 +53,12 @@ export default function InvoiceEmission() {
   useEffect(() => {
     loadInvoices();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'list') {
+      void loadInvoices();
+    }
+  }, [activeTab]);
 
   const loadInvoices = async () => {
     try {
@@ -65,6 +74,34 @@ export default function InvoiceEmission() {
   };
 
   const handleSubmit = async (formData: InvoiceFormData, isDraft: boolean) => {
+    if (editingDraft) {
+      if (isDraft) {
+        try {
+          const updated = await fiscalApi.updateInvoice(editingDraft.id, {
+            ...formData,
+            status: 'DRAFT',
+          });
+          await loadInvoices();
+          toast.success('Rascunho atualizado com sucesso!');
+          setSelectedInvoice(updated);
+          setActiveTab('list');
+          setEditingDraft(null);
+        } catch (error) {
+          toast.error(resolveUiError(error, 'Erro ao atualizar rascunho').message);
+          console.error(error);
+        }
+        return;
+      }
+
+      setPendingInvoiceData(formData);
+      setInvoiceToReprocess(editingDraft);
+      setAuthMode('AUTHORIZE_EXISTING');
+      setCertificatePassword('');
+      setCertificatePasswordTouched(false);
+      setAuthDialogOpen(true);
+      return;
+    }
+
     if (isDraft) {
       try {
         const invoice = await fiscalApi.createInvoice({ ...formData, status: 'DRAFT' });
@@ -106,13 +143,26 @@ export default function InvoiceEmission() {
         invoice = await fiscalApi.authorizeInvoice(createdInvoice.id, certificatePassword.trim());
       } else {
         if (!invoiceToReprocess) {
-          toast.error('Nota fiscal nao encontrada para reprocessamento.');
+          toast.error('Nota fiscal nao encontrada para autorizacao.');
           return;
         }
-        invoice = await fiscalApi.reprocessAuthorizeInvoice(
-          invoiceToReprocess.id,
-          certificatePassword.trim()
-        );
+        if (pendingInvoiceData) {
+          await fiscalApi.updateInvoice(invoiceToReprocess.id, {
+            ...pendingInvoiceData,
+            status: 'DRAFT',
+          });
+        }
+        if (authMode === 'REPROCESS_AUTHORIZE') {
+          invoice = await fiscalApi.reprocessAuthorizeInvoice(
+            invoiceToReprocess.id,
+            certificatePassword.trim()
+          );
+        } else {
+          invoice = await fiscalApi.authorizeInvoice(
+            invoiceToReprocess.id,
+            certificatePassword.trim()
+          );
+        }
       }
       await loadInvoices();
 
@@ -125,6 +175,7 @@ export default function InvoiceEmission() {
       setAuthDialogOpen(false);
       setPendingInvoiceData(null);
       setInvoiceToReprocess(null);
+      setEditingDraft(null);
       setCertificatePassword('');
       setCertificatePasswordTouched(false);
     } catch (error) {
@@ -249,7 +300,36 @@ export default function InvoiceEmission() {
           </TabsList>
 
           <TabsContent value="new" className="mt-6">
-            <InvoiceForm onSubmit={handleSubmit} />
+            {editingDraft && (
+              <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm flex items-center justify-between gap-3">
+                <span>
+                  Editando rascunho <strong>{editingDraft.number}</strong>.
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingDraft(null)}
+                >
+                  Cancelar edicao
+                </Button>
+              </div>
+            )}
+            <InvoiceForm
+              key={editingDraft?.id || 'new-invoice'}
+              initialData={
+                editingDraft
+                  ? {
+                      type: editingDraft.type,
+                      customer: editingDraft.customer,
+                      items: editingDraft.items,
+                      operationNature: editingDraft.operationNature,
+                      notes: editingDraft.notes || '',
+                      appointmentId: editingDraft.appointmentId,
+                    }
+                  : undefined
+              }
+              onSubmit={handleSubmit}
+            />
           </TabsContent>
 
           <TabsContent value="list" className="mt-6">
@@ -259,6 +339,21 @@ export default function InvoiceEmission() {
               onPrint={handlePrint}
               onCancel={handleCancelRequest}
               onReprocessAuthorize={handleReprocessAuthorizeRequest}
+              onAuthorizeDraft={(invoice) => {
+                setPendingInvoiceData(null);
+                setInvoiceToReprocess(invoice);
+                setAuthMode('AUTHORIZE_EXISTING');
+                setCertificatePassword('');
+                setCertificatePasswordTouched(false);
+                setAuthDialogOpen(true);
+              }}
+              onEditDraft={(invoice) => {
+                setEditingDraft(invoice);
+                setActiveTab('new');
+              }}
+              onRefresh={() => {
+                void loadInvoices();
+              }}
             />
           </TabsContent>
         </Tabs>
@@ -334,6 +429,8 @@ export default function InvoiceEmission() {
               <DialogDescription>
                 {authMode === 'REPROCESS_AUTHORIZE'
                   ? 'Informe a senha do certificado digital para reprocessar a autorizacao da nota.'
+                  : authMode === 'AUTHORIZE_EXISTING'
+                  ? 'Informe a senha do certificado digital para autorizar o rascunho selecionado.'
                   : 'Informe a senha do certificado digital para concluir a autorizacao da nota.'}
               </DialogDescription>
             </DialogHeader>
@@ -359,6 +456,7 @@ export default function InvoiceEmission() {
                   setAuthDialogOpen(false);
                   setPendingInvoiceData(null);
                   setInvoiceToReprocess(null);
+                  setEditingDraft(null);
                   setCertificatePassword('');
                   setCertificatePasswordTouched(false);
                 }}
@@ -374,6 +472,8 @@ export default function InvoiceEmission() {
                   ? 'Processando...'
                   : authMode === 'REPROCESS_AUTHORIZE'
                   ? 'Reprocessar Autorizacao'
+                  : authMode === 'AUTHORIZE_EXISTING'
+                  ? 'Emitir Rascunho'
                   : 'Autorizar Nota'}
               </Button>
             </div>

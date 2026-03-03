@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Eye, Printer, XCircle, Search, RotateCcw } from 'lucide-react';
+import { Eye, Printer, XCircle, Search, RotateCcw, RefreshCw, Send, FilePenLine } from 'lucide-react';
 import { Invoice, InvoiceStatus } from '@/types/invoice';
 
 interface InvoiceListProps {
@@ -27,6 +27,9 @@ interface InvoiceListProps {
   onPrint: (invoice: Invoice) => void;
   onCancel: (invoice: Invoice) => void;
   onReprocessAuthorize: (invoice: Invoice) => void;
+  onAuthorizeDraft: (invoice: Invoice) => void;
+  onEditDraft: (invoice: Invoice) => void;
+  onRefresh?: () => void;
 }
 
 const getStatusColor = (status: InvoiceStatus) => {
@@ -72,8 +75,18 @@ const canReprocessAuthorize = (status: InvoiceStatus) =>
 
 const canCancelInvoice = (status: InvoiceStatus) => status === 'ISSUED';
 const canPrintInvoice = (status: InvoiceStatus) => status === 'ISSUED';
+const canAuthorizeDraft = (status: InvoiceStatus) => status === 'DRAFT';
 
-export function InvoiceList({ invoices, onView, onPrint, onCancel, onReprocessAuthorize }: InvoiceListProps) {
+export function InvoiceList({
+  invoices,
+  onView,
+  onPrint,
+  onCancel,
+  onReprocessAuthorize,
+  onAuthorizeDraft,
+  onEditDraft,
+  onRefresh,
+}: InvoiceListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -111,6 +124,12 @@ export function InvoiceList({ invoices, onView, onPrint, onCancel, onReprocessAu
         <CardTitle className="flex items-center justify-between">
           <span>Notas Fiscais Emitidas</span>
           <div className="flex gap-2">
+            {onRefresh && (
+              <Button variant="outline" size="sm" onClick={onRefresh} className="gap-2">
+                <RefreshCw className="w-4 h-4" />
+                Atualizar
+              </Button>
+            )}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -183,27 +202,44 @@ export function InvoiceList({ invoices, onView, onPrint, onCancel, onReprocessAu
                           <Eye className="w-4 h-4" />
                         </Button>
                         {canPrintInvoice(invoice.status) && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onPrint(invoice)}
-                            >
-                              <Printer className="w-4 h-4" />
-                            </Button>
-                          </>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onPrint(invoice)}
+                            title="Gerar DANFE"
+                          >
+                            <Printer className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {canAuthorizeDraft(invoice.status) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onAuthorizeDraft(invoice)}
+                            title="Emitir rascunho"
+                          >
+                            <Send className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {canAuthorizeDraft(invoice.status) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onEditDraft(invoice)}
+                            title="Editar rascunho"
+                          >
+                            <FilePenLine className="w-4 h-4" />
+                          </Button>
                         )}
                         {canCancelInvoice(invoice.status) && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onCancel(invoice)}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <XCircle className="w-4 h-4" />
-                            </Button>
-                          </>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onCancel(invoice)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </Button>
                         )}
                         {canReprocessAuthorize(invoice.status) && (
                           <Button

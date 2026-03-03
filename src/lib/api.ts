@@ -2098,7 +2098,18 @@ const shouldAttachAuthToken = (endpoint: string) =>
 
 const getErrorPayload = async (response: Response) => {
   const contentType = response.headers.get("content-type") || "";
-  let errorMessage = "Erro na requisicao";
+  let errorMessage =
+    response.status === 401
+      ? "Sessao expirada ou token invalido. Faca login novamente."
+      : response.status === 403
+      ? "Voce nao tem permissao para executar esta acao."
+      : response.status === 404
+      ? "Recurso nao encontrado."
+      : response.status === 409
+      ? "Conflito de regra de negocio."
+      : response.status === 429
+      ? "Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente."
+      : "Erro na requisicao";
   let errorDetails: unknown = null;
   let errorCode: string | undefined;
 
@@ -3320,6 +3331,12 @@ export const fiscalApi = {
     request<FiscalInvoiceApi>("/fiscal/invoices", {
       method: "POST",
       headers: withIdempotencyHeader("fiscal-create-invoice"),
+      body: JSON.stringify(data),
+    }).then(mapFiscalInvoiceToUi),
+  updateInvoice: (id: string, data: InvoiceFormData & { status?: "DRAFT" | "ISSUED" }) =>
+    request<FiscalInvoiceApi>(`/fiscal/invoices/${id}`, {
+      method: "PATCH",
+      headers: withIdempotencyHeader(`fiscal-update-${id}`),
       body: JSON.stringify(data),
     }).then(mapFiscalInvoiceToUi),
   cancelInvoice: (id: string, reason?: string) =>
