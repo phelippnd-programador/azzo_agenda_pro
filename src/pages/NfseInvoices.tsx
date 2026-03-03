@@ -4,14 +4,28 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { nfseApi, type NfseInvoice } from "@/lib/api";
+import { nfseApi, type NfseAccountingExportFormat, type NfseInvoice } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import { toast } from "sonner";
 
 export default function NfseInvoices() {
+  const now = new Date();
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+  const toDateInput = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   const [items, setItems] = useState<NfseInvoice[]>([]);
   const [search, setSearch] = useState("");
+  const [exportFrom, setExportFrom] = useState(toDateInput(firstDay));
+  const [exportTo, setExportTo] = useState(toDateInput(now));
+  const [exportStatus, setExportStatus] = useState("AUTHORIZED,CANCELLED");
+  const [exportFormat, setExportFormat] = useState<NfseAccountingExportFormat>("CSV");
   const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const showError = (error: unknown, fallbackMessage: string) => {
     const uiError = resolveUiError(error, fallbackMessage);
     toast.error(uiError.code ? `[${uiError.code}] ${uiError.message}` : uiError.message);
@@ -33,6 +47,37 @@ export default function NfseInvoices() {
     void load();
   }, []);
 
+  const extensionByFormat: Record<NfseAccountingExportFormat, string> = {
+    CSV: "csv",
+    XLSX: "xlsx",
+    ZIP_XML: "zip",
+  };
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      const blob = await nfseApi.downloadAccountingExport({
+        from: exportFrom,
+        to: exportTo,
+        status: exportStatus,
+        format: exportFormat,
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `nfse-contabil-${exportFrom}-${exportTo}.${extensionByFormat[exportFormat]}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Exportacao contabil gerada com sucesso.");
+    } catch (error) {
+      showError(error, "Erro ao exportar dados contabeis NFS-e");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const filtered = items.filter((invoice) => {
     const key = `${invoice.numeroNfse || ""} ${invoice.numeroRps} ${invoice.customer?.name || ""} ${invoice.fiscalStatus}`.toLowerCase();
     return key.includes(search.toLowerCase());
@@ -53,6 +98,30 @@ export default function NfseInvoices() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="rounded-md border p-3">
+            <p className="mb-2 text-sm font-medium">Exportacao contabil</p>
+            <div className="grid gap-2 md:grid-cols-5">
+              <Input type="date" value={exportFrom} onChange={(e) => setExportFrom(e.target.value)} />
+              <Input type="date" value={exportTo} onChange={(e) => setExportTo(e.target.value)} />
+              <Input
+                placeholder="Status (ex: AUTHORIZED,CANCELLED)"
+                value={exportStatus}
+                onChange={(e) => setExportStatus(e.target.value)}
+              />
+              <select
+                className="h-10 rounded-md border bg-background px-3 text-sm"
+                value={exportFormat}
+                onChange={(e) => setExportFormat(e.target.value as NfseAccountingExportFormat)}
+              >
+                <option value="CSV">CSV</option>
+                <option value="XLSX">XLSX</option>
+                <option value="ZIP_XML">ZIP XML</option>
+              </select>
+              <Button onClick={() => void handleExport()} disabled={isExporting || !exportFrom || !exportTo}>
+                {isExporting ? "Exportando..." : "Exportar"}
+              </Button>
+            </div>
+          </div>
           <Input
             placeholder="Buscar por numero, RPS, status ou tomador"
             value={search}

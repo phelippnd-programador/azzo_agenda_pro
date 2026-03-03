@@ -10,12 +10,14 @@ const navigateMock = vi.fn();
 
 const {
   listInvoicesMock,
+  downloadAccountingExportMock,
   createInvoiceMock,
   getInvoiceMock,
   getCertificateUnlockStatusMock,
   authorizeInvoiceMock,
 } = vi.hoisted(() => ({
   listInvoicesMock: vi.fn(),
+  downloadAccountingExportMock: vi.fn(),
   createInvoiceMock: vi.fn(),
   getInvoiceMock: vi.fn(),
   getCertificateUnlockStatusMock: vi.fn(),
@@ -38,6 +40,7 @@ vi.mock("@/lib/api", async () => {
       getConfig: vi.fn(),
       saveConfig: vi.fn(),
       listInvoices: listInvoicesMock,
+      downloadAccountingExport: downloadAccountingExportMock,
       getInvoice: getInvoiceMock,
       createInvoice: createInvoiceMock,
       updateInvoice: vi.fn(),
@@ -69,8 +72,20 @@ vi.mock("@/components/layout/MainLayout", () => ({
 }));
 
 describe("NFS-e main flow pages", () => {
+  beforeAll(() => {
+    Object.defineProperty(window.URL, "createObjectURL", {
+      writable: true,
+      value: vi.fn(() => "blob:mock"),
+    });
+    Object.defineProperty(window.URL, "revokeObjectURL", {
+      writable: true,
+      value: vi.fn(),
+    });
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
+    downloadAccountingExportMock.mockResolvedValue(new Blob(["ok"], { type: "text/csv" }));
   });
 
   it("loads NFS-e list and filters by search text", async () => {
@@ -109,6 +124,16 @@ describe("NFS-e main flow pages", () => {
     await user.type(screen.getByPlaceholderText(/Buscar por numero/i), "Cliente B");
     expect(screen.queryByText("Cliente A")).not.toBeInTheDocument();
     expect(screen.getByText("Cliente B")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Exportar" }));
+    await waitFor(() => {
+      expect(downloadAccountingExportMock).toHaveBeenCalledWith({
+        from: expect.any(String),
+        to: expect.any(String),
+        status: "AUTHORIZED,CANCELLED",
+        format: "CSV",
+      });
+    });
   });
 
   it("creates draft from form using selected NBS helper code", async () => {

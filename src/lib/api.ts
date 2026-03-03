@@ -2280,6 +2280,27 @@ const requestBlob = async (
   retryOnAuthError = true
 ): Promise<Blob> => {
   if (isLocalDemoModeEnabled()) {
+    if (endpoint.startsWith("/fiscal/nfse/invoices/accounting-export")) {
+      const [, queryString = ""] = endpoint.split("?");
+      const query = new URLSearchParams(queryString);
+      const format = (query.get("format") || "CSV").toUpperCase();
+      const csv = "invoice_id,tenant_id,fiscal_status,valor_servicos\nlocal-demo,tenant-demo,AUTHORIZED,100.00\n";
+      if (format === "XLSX") {
+        return Promise.resolve(
+          new Blob([csv], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          })
+        );
+      }
+      if (format === "ZIP_XML") {
+        return Promise.resolve(
+          new Blob(["PK\x03\x04demo-zip"], {
+            type: "application/zip",
+          })
+        );
+      }
+      return Promise.resolve(new Blob([csv], { type: "text/csv" }));
+    }
     if (endpoint.startsWith("/estoque/importacoes/modelo")) {
       const [, queryString = ""] = endpoint.split("?");
       const query = new URLSearchParams(queryString);
@@ -3529,6 +3550,8 @@ export type NfseProviderCapabilities = {
   updatedAt?: string;
 };
 
+export type NfseAccountingExportFormat = "CSV" | "XLSX" | "ZIP_XML";
+
 export const nfseApi = {
   getConfig: (ambiente: "HOMOLOGACAO" | "PRODUCAO" = "HOMOLOGACAO") =>
     request<NfseConfig>(`/fiscal/nfse/config?ambiente=${ambiente}`),
@@ -3609,6 +3632,19 @@ export const nfseApi = {
       method: "PUT",
       body: JSON.stringify(payload),
     }),
+  downloadAccountingExport: (params: {
+    from: string;
+    to: string;
+    status?: string;
+    format?: NfseAccountingExportFormat;
+  }) => {
+    const query = new URLSearchParams();
+    query.set("from", params.from);
+    query.set("to", params.to);
+    if (params.status && params.status.trim().length > 0) query.set("status", params.status.trim());
+    if (params.format) query.set("format", params.format);
+    return requestBlob(`/fiscal/nfse/invoices/accounting-export?${query.toString()}`);
+  },
 };
 
 export const publicBookingApi = {
