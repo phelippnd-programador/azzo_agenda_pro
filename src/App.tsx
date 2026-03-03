@@ -45,6 +45,11 @@ import LicensePage from "./pages/LicensePage";
 import SalonProfile from "./pages/SalonProfile";
 import TaxConfig from "./pages/TaxConfig";
 import FiscalCertificatesSettings from "./pages/FiscalCertificatesSettings";
+import NfseSettings from "./pages/NfseSettings";
+import NfseInvoices from "./pages/NfseInvoices";
+import NfseInvoiceForm from "./pages/NfseInvoiceForm";
+import NfseInvoiceDetails from "./pages/NfseInvoiceDetails";
+import NfseInvoicePdf from "./pages/NfseInvoicePdf";
 import InvoicePreview from "./pages/InvoicePreview";
 import InvoiceEmission from "./pages/InvoiceEmission";
 import ApuracaoMensal from "./pages/ApuracaoMensal";
@@ -77,6 +82,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     || location.pathname.startsWith("/nota-fiscal")
     || location.pathname.startsWith("/apuracao-mensal")
     || location.pathname.startsWith("/configuracoes/fiscal")
+    || location.pathname.startsWith("/fiscal/nfse")
     || location.pathname.startsWith("/config-impostos");
 
   if (isLoading || isPermissionsLoading) {
@@ -348,6 +354,54 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <FiscalCertificatesSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/configuracoes/fiscal/nfse"
+          element={
+            <ProtectedRoute>
+              <NfseSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/fiscal/nfse"
+          element={
+            <ProtectedRoute>
+              <NfseInvoices />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/fiscal/nfse/nova"
+          element={
+            <ProtectedRoute>
+              <NfseInvoiceForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/fiscal/nfse/:id"
+          element={
+            <ProtectedRoute>
+              <NfseInvoiceDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/fiscal/nfse/:id/editar"
+          element={
+            <ProtectedRoute>
+              <NfseInvoiceForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/fiscal/nfse/:id/pdf"
+          element={
+            <ProtectedRoute>
+              <NfseInvoicePdf />
             </ProtectedRoute>
           }
         />

@@ -513,6 +513,34 @@ export default function Settings() {
                   <Link to="/configuracoes/fiscal/certificados">Abrir certificados</Link>
                 </Button>
               </div>
+              <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <p className="font-medium flex items-center gap-2">
+                    <Receipt className="h-4 w-4 text-primary" />
+                    Configuracao NFS-e
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Configure emissao de servicos (municipio, provedor, RPS e capacidades).
+                  </p>
+                </div>
+                <Button asChild variant="outline">
+                  <Link to="/configuracoes/fiscal/nfse">Abrir NFS-e</Link>
+                </Button>
+              </div>
+              <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <p className="font-medium flex items-center gap-2">
+                    <Receipt className="h-4 w-4 text-primary" />
+                    Modulo NFS-e
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Gerencie rascunhos, autorizacoes, cancelamentos e PDF da NFS-e.
+                  </p>
+                </div>
+                <Button asChild variant="outline">
+                  <Link to="/fiscal/nfse">Abrir modulo</Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
