@@ -69,9 +69,15 @@ const getFirstAllowedRoute = (allowedRoutes: string[] | null) => {
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
   const { canAccess, isLoading: isPermissionsLoading } = useMenuPermissions();
+  const isFiscalOwnerOnlyPath =
+    location.pathname.startsWith("/emitir-nota")
+    || location.pathname.startsWith("/nota-fiscal")
+    || location.pathname.startsWith("/apuracao-mensal")
+    || location.pathname.startsWith("/configuracoes/fiscal")
+    || location.pathname.startsWith("/config-impostos");
 
   if (isLoading || isPermissionsLoading) {
     return <FullScreenLoader />;
@@ -79,6 +85,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (isFiscalOwnerOnlyPath && user?.role !== "OWNER") {
+    return <Navigate to="/unauthorized" replace />;
   }
 
   if (!canAccess(location.pathname)) {
