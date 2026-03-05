@@ -82,6 +82,15 @@ import type {
   StockItem,
   StockMovement,
 } from "@/types/stock";
+import type {
+  ChatAppointmentMarker,
+  ChatConversation,
+  ChatConversationListResponse,
+  ChatMessage,
+  ChatMessageListResponse,
+  SendChatMessageRequest,
+  SendChatMessageResponse,
+} from "@/types/chat";
 import {
   mockAppointments,
   mockClients,
@@ -202,6 +211,7 @@ const ALL_LOCAL_DEMO_ROUTES = [
   "/especialidades",
   "/profissionais",
   "/clientes",
+  "/chat",
   "/financeiro",
   "/financeiro/profissionais",
   "/financeiro/licenca",
@@ -223,6 +233,7 @@ const ALL_LOCAL_DEMO_ROUTES = [
 const PROFESSIONAL_LOCAL_DEMO_ROUTES = [
   "/dashboard",
   "/agenda",
+  "/chat",
   "/financeiro/profissionais",
   "/estoque",
   "/configuracoes",
@@ -303,6 +314,8 @@ type DemoState = {
   stockSettings: StockSettings;
   stockImportJobs: StockImportJob[];
   stockImportErrors: Record<string, StockImportErrorLine[]>;
+  chatConversations: ChatConversation[];
+  chatMessages: ChatMessage[];
 };
 
 let demoState: DemoState | null = null;
@@ -465,6 +478,55 @@ const createDemoState = (): DemoState => {
   };
   const stockImportJobs: StockImportJob[] = [];
   const stockImportErrors: Record<string, StockImportErrorLine[]> = {};
+  const chatConversations: ChatConversation[] = clients.slice(0, 4).map((client, index) => {
+    const lastMessageAt = new Date(Date.now() - index * 20 * 60 * 1000).toISOString();
+    const markers: ChatAppointmentMarker[] = [
+      "EM_ANDAMENTO",
+      "PAUSADO",
+      "CONCLUIDO",
+      "CANCELADO",
+    ];
+    return {
+      id: `demo-chat-conversation-${client.id}`,
+      clientId: client.id,
+      clientName: client.name,
+      clientPhoneMasked: `******${String(client.phone).replace(/\D/g, "").slice(-4)}`,
+      channel: "WHATSAPP",
+      appointmentMarker: markers[index % markers.length],
+      lastMessageAt,
+      lastMessagePreview: index % 2 === 0 ? "Quero agendar para hoje." : "Pode confirmar meu horario?",
+      unreadCount: index % 2,
+      updatedAt: lastMessageAt,
+    };
+  });
+  const chatMessages: ChatMessage[] = chatConversations.flatMap((conversation, index) => {
+    const baseTime = Date.now() - (index + 1) * 25 * 60 * 1000;
+    return [
+      {
+        id: `demo-chat-message-in-${conversation.id}`,
+        conversationId: conversation.id,
+        clientId: conversation.clientId,
+        direction: "INBOUND",
+        content: "Ola! Gostaria de agendar um horario.",
+        status: "READ",
+        providerMessageId: `demo-provider-in-${conversation.id}`,
+        createdAt: new Date(baseTime).toISOString(),
+        readAt: new Date(baseTime + 30_000).toISOString(),
+      },
+      {
+        id: `demo-chat-message-out-${conversation.id}`,
+        conversationId: conversation.id,
+        clientId: conversation.clientId,
+        direction: "OUTBOUND",
+        content: "Claro! Qual servico voce deseja?",
+        status: "DELIVERED",
+        providerMessageId: `demo-provider-out-${conversation.id}`,
+        createdAt: new Date(baseTime + 60_000).toISOString(),
+        sentAt: new Date(baseTime + 70_000).toISOString(),
+        deliveredAt: new Date(baseTime + 90_000).toISOString(),
+      },
+    ];
+  });
 
   const invoiceBase: Invoice = {
     id: "demo-invoice-1",
@@ -653,6 +715,8 @@ const createDemoState = (): DemoState => {
     stockSettings,
     stockImportJobs,
     stockImportErrors,
+    chatConversations,
+    chatMessages,
   };
 };
 
@@ -827,6 +891,133 @@ const localDemoRequest = <T>(endpoint: string, options: RequestInit = {}): T => 
   }
 
   if (path === "/dashboard/metrics") return mockDashboardMetrics as T;
+  if (path === "/chat/conversations" && method === "GET") {
+    const page = Math.max(Number(query.get("page") || 1), 1);
+    const pageSize = Math.min(Math.max(Number(query.get("pageSize") || 20), 1), 100);
+    const start = (page - 1) * pageSize;
+    const items = [...state.chatConversations]
+      .sort((left, right) => (right.lastMessageAt || "").localeCompare(left.lastMessageAt || ""))
+      .slice(start, start + pageSize);
+    const response: ChatConversationListResponse = {
+      items,
+      total: state.chatConversations.length,
+      page,
+      pageSize,
+    };
+    return response as T;
+  }
+  if (path === "/chat/conversations/today" && method === "GET") {
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const todayConversations = state.chatConversations.filter((conversation) =>
+      conversation.lastMessageAt?.startsWith(todayIso)
+    );
+    const page = Math.max(Number(query.get("page") || 1), 1);
+    const pageSize = Math.min(Math.max(Number(query.get("pageSize") || 20), 1), 100);
+    const start = (page - 1) * pageSize;
+    const response: ChatConversationListResponse = {
+      items: todayConversations
+        .sort((left, right) => (right.lastMessageAt || "").localeCompare(left.lastMessageAt || ""))
+        .slice(start, start + pageSize),
+      total: todayConversations.length,
+      page,
+      pageSize,
+    };
+    return response as T;
+  }
+  if (path.startsWith("/chat/conversations/") && path.endsWith("/messages") && method === "GET") {
+    const conversationId = path.split("/")[3];
+    const page = Math.max(Number(query.get("page") || 1), 1);
+    const pageSize = Math.min(Math.max(Number(query.get("pageSize") || 20), 1), 100);
+    const messages = state.chatMessages
+      .filter((message) => message.conversationId === conversationId)
+      .sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+    const start = (page - 1) * pageSize;
+    const response: ChatMessageListResponse = {
+      items: messages.slice(start, start + pageSize),
+      total: messages.length,
+      page,
+      pageSize,
+    };
+    return response as T;
+  }
+  if (path === "/chat/messages" && method === "POST") {
+    const payload = JSON.parse(String(options.body || "{}")) as SendChatMessageRequest;
+    if (!payload.clientId || !payload.content?.trim()) {
+      throw new ApiError("Payload invalido para envio de mensagem.", 400);
+    }
+    let conversation = state.chatConversations.find((item) => item.clientId === payload.clientId);
+    if (!conversation) {
+      const client = state.clients.find((item) => item.id === payload.clientId);
+      const nowIso = new Date().toISOString();
+      conversation = {
+        id: `demo-chat-conversation-${payload.clientId}`,
+        clientId: payload.clientId,
+        clientName: client?.name ?? "Cliente",
+        clientPhoneMasked: client?.phone
+          ? `******${String(client.phone).replace(/\D/g, "").slice(-4)}`
+          : null,
+        channel: "WHATSAPP",
+        appointmentMarker: "NAO_INICIADO",
+        lastMessageAt: nowIso,
+        lastMessagePreview: payload.content.trim(),
+        unreadCount: 0,
+        updatedAt: nowIso,
+      };
+      state.chatConversations = [conversation, ...state.chatConversations];
+    }
+    const nowIso = new Date().toISOString();
+    const created: ChatMessage = {
+      id: `demo-chat-message-${Date.now()}`,
+      conversationId: conversation.id,
+      clientId: payload.clientId,
+      direction: "OUTBOUND",
+      content: payload.content.trim(),
+      status: "SENT",
+      providerMessageId: `demo-provider-${Date.now()}`,
+      createdAt: nowIso,
+      sentAt: nowIso,
+    };
+    state.chatMessages.push(created);
+    state.chatConversations = state.chatConversations.map((item) =>
+      item.id === conversation.id
+        ? {
+            ...item,
+            lastMessageAt: nowIso,
+            updatedAt: nowIso,
+            lastMessagePreview: payload.content.trim(),
+          }
+        : item
+    );
+    const response: SendChatMessageResponse = {
+      messageId: created.id,
+      conversationId: conversation.id,
+      status: created.status,
+    };
+    return response as T;
+  }
+  if (
+    path.startsWith("/chat/conversations/") &&
+    path.endsWith("/appointment-marker") &&
+    method === "PATCH"
+  ) {
+    const conversationId = path.split("/")[3];
+    const payload = JSON.parse(String(options.body || "{}")) as {
+      appointmentMarker?: ChatAppointmentMarker;
+    };
+    const marker = payload.appointmentMarker;
+    if (!marker) throw new ApiError("Marcador obrigatorio.", 400);
+    const nowIso = new Date().toISOString();
+    state.chatConversations = state.chatConversations.map((item) =>
+      item.id === conversationId
+        ? { ...item, appointmentMarker: marker, updatedAt: nowIso }
+        : item
+    );
+    return {
+      conversationId,
+      appointmentMarker: marker,
+      updatedAt: nowIso,
+    } as T;
+  }
   if (path.startsWith("/public/legal") && method === "GET") {
     const termsOfUse: LegalDocumentResponse = {
       documentType: "TERMS_OF_USE",
@@ -2528,6 +2719,39 @@ export const dashboardApi = {
       total: number;
       average: number;
     }>(`/dashboard/revenue/weekly?start=${start}&end=${end}`),
+};
+
+/* ================= CHAT ================= */
+
+export const chatApi = {
+  listConversations: (params?: { page?: number; pageSize?: number; todayOnly?: boolean }) => {
+    const query = new URLSearchParams();
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.pageSize) query.set("pageSize", String(params.pageSize));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    const base = params?.todayOnly ? "/chat/conversations/today" : "/chat/conversations";
+    return request<ChatConversationListResponse>(`${base}${suffix}`);
+  },
+  listMessages: (conversationId: string, params?: { page?: number; pageSize?: number }) => {
+    const query = new URLSearchParams();
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.pageSize) query.set("pageSize", String(params.pageSize));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<ChatMessageListResponse>(`/chat/conversations/${conversationId}/messages${suffix}`);
+  },
+  sendMessage: (payload: SendChatMessageRequest) =>
+    request<SendChatMessageResponse>("/chat/messages", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updateAppointmentMarker: (conversationId: string, appointmentMarker: ChatAppointmentMarker) =>
+    request<{ conversationId: string; appointmentMarker: ChatAppointmentMarker; updatedAt: string }>(
+      `/chat/conversations/${conversationId}/appointment-marker`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ appointmentMarker }),
+      }
+    ),
 };
 
 const appendMultiValues = (query: URLSearchParams, key: string, values?: string[]) => {

@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageErrorState, PageEmptyState } from '@/components/ui/page-states';
-import { Calendar, DollarSign, Users, TrendingUp, Clock, CheckCircle } from 'lucide-react';
+import { Calendar, DollarSign, Users, TrendingUp, Clock, CheckCircle, Route, UserCheck, CalendarClock, ClipboardCheck } from 'lucide-react';
 import { useDashboardWithOptions } from '@/hooks/useDashboard';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useProfessionals } from '@/hooks/useProfessionals';
@@ -99,6 +99,11 @@ export default function Dashboard() {
       (appointment) => appointment.status === 'PENDING' || appointment.status === 'CONFIRMED'
     ).length,
     completedToday: todayAppointments.filter((appointment) => appointment.status === 'COMPLETED').length,
+    notConcludedToday: 0,
+    stoppedAtServiceSelection: 0,
+    stoppedAtProfessionalSelection: 0,
+    stoppedAtTimeSelection: 0,
+    stoppedAtFinalReview: 0,
   };
 
   const resolvedMetrics = isProfessionalUser ? professionalScopedMetrics : metrics;
@@ -199,6 +204,60 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base sm:text-lg">
+              Nao Concluidos Hoje no Agendamento
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-xl bg-white/70 border border-orange-200 px-4 py-3">
+              <p className="text-xs sm:text-sm text-orange-700">Total nao concluido no dia</p>
+              <p className="text-2xl sm:text-3xl font-bold text-orange-900">
+                {resolvedMetrics.notConcludedToday ?? 0}
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="rounded-xl bg-white/70 border border-orange-100 px-3 py-2">
+                <div className="flex items-center gap-2 text-orange-700">
+                  <Route className="w-4 h-4" />
+                  <span className="text-xs">Servico</span>
+                </div>
+                <p className="text-xl font-semibold text-orange-900">
+                  {resolvedMetrics.stoppedAtServiceSelection ?? 0}
+                </p>
+              </div>
+              <div className="rounded-xl bg-white/70 border border-orange-100 px-3 py-2">
+                <div className="flex items-center gap-2 text-orange-700">
+                  <UserCheck className="w-4 h-4" />
+                  <span className="text-xs">Profissional</span>
+                </div>
+                <p className="text-xl font-semibold text-orange-900">
+                  {resolvedMetrics.stoppedAtProfessionalSelection ?? 0}
+                </p>
+              </div>
+              <div className="rounded-xl bg-white/70 border border-orange-100 px-3 py-2">
+                <div className="flex items-center gap-2 text-orange-700">
+                  <CalendarClock className="w-4 h-4" />
+                  <span className="text-xs">Horario</span>
+                </div>
+                <p className="text-xl font-semibold text-orange-900">
+                  {resolvedMetrics.stoppedAtTimeSelection ?? 0}
+                </p>
+              </div>
+              <div className="rounded-xl bg-white/70 border border-orange-100 px-3 py-2">
+                <div className="flex items-center gap-2 text-orange-700">
+                  <ClipboardCheck className="w-4 h-4" />
+                  <span className="text-xs">Revisao final</span>
+                </div>
+                <p className="text-xl font-semibold text-orange-900">
+                  {resolvedMetrics.stoppedAtFinalReview ?? 0}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="lg:col-span-2">
