@@ -10,6 +10,11 @@ interface DashboardMetrics {
   totalClients: number;
   pendingAppointments: number;
   completedToday: number;
+  notConcludedToday: number;
+  stoppedAtServiceSelection: number;
+  stoppedAtProfessionalSelection: number;
+  stoppedAtTimeSelection: number;
+  stoppedAtFinalReview: number;
 }
 
 export function useDashboard() {
@@ -20,6 +25,11 @@ export function useDashboard() {
     totalClients: 0,
     pendingAppointments: 0,
     completedToday: 0,
+    notConcludedToday: 0,
+    stoppedAtServiceSelection: 0,
+    stoppedAtProfessionalSelection: 0,
+    stoppedAtTimeSelection: 0,
+    stoppedAtFinalReview: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +78,11 @@ export function useDashboardWithOptions(options: UseDashboardOptions = {}) {
     totalClients: 0,
     pendingAppointments: 0,
     completedToday: 0,
+    notConcludedToday: 0,
+    stoppedAtServiceSelection: 0,
+    stoppedAtProfessionalSelection: 0,
+    stoppedAtTimeSelection: 0,
+    stoppedAtFinalReview: 0,
   });
   const [isLoading, setIsLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);

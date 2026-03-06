@@ -446,6 +446,11 @@ export const mockDashboardMetrics: DashboardMetrics = {
   totalClients: 156,
   pendingAppointments: 2,
   completedToday: 3,
+  notConcludedToday: 11,
+  stoppedAtServiceSelection: 4,
+  stoppedAtProfessionalSelection: 3,
+  stoppedAtTimeSelection: 2,
+  stoppedAtFinalReview: 2,
 };
 
 export const getStatusColor = (status: string) => {

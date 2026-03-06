@@ -20,6 +20,7 @@ import Services from "./pages/Services";
 import Specialties from "./pages/Specialties";
 import Professionals from "./pages/Professionals";
 import Clients from "./pages/Clients";
+import ChatPage from "./pages/Chat";
 import Stock from "./pages/Stock";
 import StockOverview from "./pages/stock/StockOverview";
 import StockItemsPage from "./pages/stock/StockItemsPage";
@@ -249,6 +250,22 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Clients />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat/:conversationId"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
             </ProtectedRoute>
           }
         />

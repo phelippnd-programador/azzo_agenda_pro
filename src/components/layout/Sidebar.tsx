@@ -30,6 +30,7 @@ import {
   FileSearch,
   Boxes,
   ChevronDown,
+  MessageCircleMore,
 } from "lucide-react";
 
 const MENU_REGISTRY = {
@@ -40,6 +41,7 @@ const MENU_REGISTRY = {
   "/especialidades": { icon: Tag, label: "Especialidades", path: "/especialidades" },
   "/profissionais": { icon: Users, label: "Profissionais", path: "/profissionais" },
   "/clientes": { icon: UserCircle, label: "Clientes", path: "/clientes" },
+  "/chat": { icon: MessageCircleMore, label: "Chat", path: "/chat" },
   "/estoque": { icon: Boxes, label: "Estoque", path: "/estoque" },
   "/financeiro": { icon: DollarSign, label: "Resumo Financeiro", path: "/financeiro" },
   "/financeiro/profissionais": {
@@ -69,6 +71,7 @@ const MAIN_MENU_ORDER = [
   "/especialidades",
   "/profissionais",
   "/clientes",
+  "/chat",
   "/estoque",
   "/financeiro",
   "/financeiro/profissionais",
@@ -81,8 +84,9 @@ const MAIN_MENU_ORDER = [
 ] as const;
 
 interface SidebarProps {
-  isOpen: boolean;
-  onToggle: () => void;
+  isMobileOpen: boolean;
+  onToggleMobile: () => void;
+  isDesktopOpen: boolean;
 }
 
 type MenuItem = (typeof MENU_REGISTRY)[keyof typeof MENU_REGISTRY];
@@ -90,7 +94,7 @@ type VisibleMenuEntry =
   | { type: "item"; item: MenuItem }
   | { type: "group"; key: string; label: string; icon: MenuItem["icon"]; items: MenuItem[] };
 
-export function Sidebar({ isOpen, onToggle }: SidebarProps) {
+export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -158,17 +162,18 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
   return (
     <>
-      {isOpen && (
+      {isMobileOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={onToggle}
+          onClick={onToggleMobile}
         />
       )}
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 h-full w-64 sm:w-72 bg-card border-r border-border transition-transform duration-300 lg:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed left-0 top-0 z-50 h-full w-64 sm:w-72 bg-card border-r border-border transition-transform duration-300",
+          isMobileOpen ? "translate-x-0" : "-translate-x-full",
+          isDesktopOpen ? "lg:translate-x-0" : "lg:-translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
@@ -188,7 +193,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
               variant="ghost"
               size="icon"
               className="lg:hidden flex-shrink-0"
-              onClick={onToggle}
+              onClick={onToggleMobile}
             >
               <X className="w-5 h-5" />
             </Button>
@@ -208,7 +213,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                       key={entry.item.path}
                       to={entry.item.path}
                       onClick={() => {
-                        if (window.innerWidth < 1024) onToggle();
+                        if (window.innerWidth < 1024) onToggleMobile();
                       }}
                     >
                       <Button
@@ -266,7 +271,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                               key={item.path}
                               to={item.path}
                               onClick={() => {
-                                if (window.innerWidth < 1024) onToggle();
+                                if (window.innerWidth < 1024) onToggleMobile();
                               }}
                             >
                               <Button
@@ -314,7 +319,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
               <Link
                 to="/perfil-salao"
                 onClick={() => {
-                  if (window.innerWidth < 1024) onToggle();
+                  if (window.innerWidth < 1024) onToggleMobile();
                 }}
               >
                 <Button
@@ -334,7 +339,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
               <Link
                 to="/configuracoes"
                 onClick={() => {
-                  if (window.innerWidth < 1024) onToggle();
+                  if (window.innerWidth < 1024) onToggleMobile();
                 }}
               >
                 <Button
@@ -366,7 +371,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
         variant="outline"
         size="icon"
         className="fixed top-3 left-3 z-30 lg:hidden h-9 w-9"
-        onClick={onToggle}
+        onClick={onToggleMobile}
       >
         <Menu className="w-4 h-4" />
       </Button>

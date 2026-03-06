@@ -116,6 +116,11 @@ export interface DashboardMetrics {
   totalClients: number;
   pendingAppointments: number;
   completedToday: number;
+  notConcludedToday: number;
+  stoppedAtServiceSelection: number;
+  stoppedAtProfessionalSelection: number;
+  stoppedAtTimeSelection: number;
+  stoppedAtFinalReview: number;
 }
 
 export type AppointmentStatus = Appointment['status'];

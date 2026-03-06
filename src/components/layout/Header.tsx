@@ -1,4 +1,4 @@
-import { Bell, CreditCard, LogOut, Search, Settings, User } from "lucide-react";
+import { Bell, CreditCard, LogOut, PanelLeft, Search, Settings, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,9 +18,16 @@ import { useNotifications } from "@/hooks/useNotifications";
 interface HeaderProps {
   title: string;
   subtitle?: string;
+  onToggleDesktopSidebar?: () => void;
+  isDesktopSidebarOpen?: boolean;
 }
 
-export function Header({ title, subtitle }: HeaderProps) {
+export function Header({
+  title,
+  subtitle,
+  onToggleDesktopSidebar,
+  isDesktopSidebarOpen = true,
+}: HeaderProps) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { summaryItems, unreadCount, refreshSummary } = useNotifications();
@@ -41,9 +48,22 @@ export function Header({ title, subtitle }: HeaderProps) {
   return (
     <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-sm border-b border-border">
       <div className="flex items-center justify-between h-14 sm:h-16 px-3 sm:px-4 lg:px-8">
-        <div className="ml-10 sm:ml-12 lg:ml-0 min-w-0 flex-1">
-          <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-foreground truncate">{title}</h1>
-          {subtitle ? <p className="text-xs sm:text-sm text-muted-foreground truncate hidden sm:block">{subtitle}</p> : null}
+        <div className="ml-10 sm:ml-12 lg:ml-0 min-w-0 flex-1 flex items-center gap-2">
+          {onToggleDesktopSidebar ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden lg:flex h-8 w-8 shrink-0"
+              onClick={onToggleDesktopSidebar}
+              aria-label={isDesktopSidebarOpen ? "Recolher menu lateral" : "Expandir menu lateral"}
+            >
+              <PanelLeft className="w-4 h-4" />
+            </Button>
+          ) : null}
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-foreground truncate">{title}</h1>
+            {subtitle ? <p className="text-xs sm:text-sm text-muted-foreground truncate hidden sm:block">{subtitle}</p> : null}
+          </div>
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 flex-shrink-0">
