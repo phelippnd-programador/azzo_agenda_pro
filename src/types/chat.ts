@@ -13,6 +13,7 @@ export interface ChatConversation {
   id: string;
   clientId: string;
   clientName?: string | null;
+  clientProfileImageUrl?: string | null;
   clientPhoneMasked?: string | null;
   channel: "WHATSAPP";
   appointmentMarker: ChatAppointmentMarker;
@@ -63,4 +64,3 @@ export interface SendChatMessageResponse {
   conversationId: string;
   status: ChatMessageStatus;
 }
-

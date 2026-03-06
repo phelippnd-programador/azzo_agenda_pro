@@ -1,6 +1,8 @@
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { ChatAppointmentMarker, ChatConversation } from "@/types/chat";
+import { Clock } from "lucide-react";
 
 const MARKER_LABELS: Record<ChatAppointmentMarker, string> = {
   NAO_INICIADO: "Nao iniciado",
@@ -15,9 +17,7 @@ const formatDateTime = (value?: string | null) => {
   if (!value) return "-";
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return "-";
-  return parsed.toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
+  return parsed.toLocaleTimeString("pt-BR", {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -29,47 +29,59 @@ type Props = {
   onClick: () => void;
 };
 
+const getInitials = (name?: string | null) => {
+  const normalized = (name || "Cliente").trim();
+  if (!normalized) return "CL";
+  const parts = normalized.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
+};
+
 export function ChatConversationCard({ conversation, selected, onClick }: Props) {
+  const marker = MARKER_LABELS[conversation.appointmentMarker];
+  const preview = conversation.lastMessagePreview || "Sem ultima mensagem.";
+
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "w-full text-left p-2.5 rounded-lg border transition space-y-2",
+        "w-full text-left p-2 rounded-lg transition-colors border",
         selected
-          ? "border-primary bg-primary/5"
-          : "border-border hover:bg-muted/30"
+          ? "border-primary/30 bg-primary/5"
+          : "border-transparent bg-muted/40 hover:bg-muted/70"
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="font-medium text-sm leading-tight truncate">
-            {conversation.clientName || "Cliente"}
-          </p>
-          <p className="text-[11px] text-muted-foreground truncate">
-            {conversation.clientPhoneMasked || "Sem telefone"}
+      <div className="flex items-center gap-2">
+        <Avatar className="w-8 h-8 flex-shrink-0">
+            <AvatarImage src={conversation.clientProfileImageUrl || undefined} />
+            <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
+              {getInitials(conversation.clientName)}
+            </AvatarFallback>
+          </Avatar>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <p className="font-medium text-foreground text-sm truncate max-w-[125px] sm:max-w-[170px]">
+              {conversation.clientName || "Cliente"}
+            </p>
+            <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
+              {marker}
+            </Badge>
+            {conversation.unreadCount > 0 ? (
+              <Badge className="text-[10px] h-4 px-1.5 bg-primary text-primary-foreground shrink-0">
+                {conversation.unreadCount} nova{conversation.unreadCount > 1 ? "s" : ""}
+              </Badge>
+            ) : null}
+            <span className="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground shrink-0">
+              <Clock className="w-3 h-3" />
+              {formatDateTime(conversation.lastMessageAt)}
+            </span>
+          </div>
+          <p className="text-[12px] text-muted-foreground truncate mt-0.5">
+            {preview}
           </p>
         </div>
-        {conversation.unreadCount > 0 ? (
-          <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
-            {conversation.unreadCount}
-          </Badge>
-        ) : null}
       </div>
-
-      <div className="flex items-center justify-between gap-2">
-        <Badge variant="outline" className="text-[10px]">
-          Parou em: {MARKER_LABELS[conversation.appointmentMarker]}
-        </Badge>
-        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-          {formatDateTime(conversation.lastMessageAt)}
-        </span>
-      </div>
-
-      <p className="text-[11px] text-muted-foreground line-clamp-2">
-        {conversation.lastMessagePreview || "Sem ultima mensagem."}
-      </p>
     </button>
   );
 }
-
