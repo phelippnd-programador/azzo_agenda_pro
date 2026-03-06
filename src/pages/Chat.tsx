@@ -6,29 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { PageEmptyState, PageErrorState } from "@/components/ui/page-states";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageCircleMore, SendHorizontal } from "lucide-react";
 import { useChat } from "@/hooks/useChat";
-import type { ChatAppointmentMarker, ChatMessage } from "@/types/chat";
+import type { ChatMessage } from "@/types/chat";
+import { ChatConversationCard } from "@/components/chat/ChatConversationCard";
 
-const MARKER_LABELS: Record<ChatAppointmentMarker, string> = {
-  NAO_INICIADO: "Nao iniciado",
-  EM_ANDAMENTO: "Em andamento",
-  PAUSADO: "Pausado",
-  CONCLUIDO: "Concluido",
-  NAO_COMPARECEU: "Nao compareceu",
-  CANCELADO: "Cancelado",
+const messageStatusVariant = (message: ChatMessage) => {
+  if (message.status === "FAILED") return "destructive" as const;
+  if (message.status === "READ") return "default" as const;
+  return "secondary" as const;
 };
-
-const MARKER_ORDER: ChatAppointmentMarker[] = [
-  "NAO_INICIADO",
-  "EM_ANDAMENTO",
-  "PAUSADO",
-  "CONCLUIDO",
-  "NAO_COMPARECEU",
-  "CANCELADO",
-];
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return "-";
@@ -42,12 +30,6 @@ const formatDateTime = (value?: string | null) => {
   });
 };
 
-const messageStatusVariant = (message: ChatMessage) => {
-  if (message.status === "FAILED") return "destructive" as const;
-  if (message.status === "READ") return "default" as const;
-  return "secondary" as const;
-};
-
 export default function ChatPage() {
   const navigate = useNavigate();
   const { conversationId } = useParams<{ conversationId?: string }>();
@@ -59,11 +41,9 @@ export default function ChatPage() {
     isLoadingConversations,
     isLoadingMessages,
     isSending,
-    isUpdatingMarker,
     loadConversations,
     loadMessages,
     sendMessage,
-    updateMarker,
   } = useChat({ todayOnly: true, pageSize: 100 });
 
   const selectedConversation = useMemo(
@@ -115,17 +95,6 @@ export default function ChatPage() {
     }
   };
 
-  const handleMarkerChange = async (value: string) => {
-    if (!selectedConversation) return;
-    const nextMarker = value as ChatAppointmentMarker;
-    try {
-      await updateMarker(selectedConversation.id, nextMarker);
-      await loadConversations();
-    } catch {
-      setError("Nao foi possivel atualizar o marcador da conversa.");
-    }
-  };
-
   if (error) {
     return (
       <MainLayout title="Chat" subtitle="Conversas do dia">
@@ -148,20 +117,20 @@ export default function ChatPage() {
 
   return (
     <MainLayout title="Chat" subtitle="Mensagens do dia por cliente">
-      <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
         <Card className="h-[calc(100vh-13rem)]">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <MessageCircleMore className="w-4 h-4" />
               Conversas de Hoje
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 overflow-y-auto h-[calc(100%-5rem)] pr-1">
+          <CardContent className="space-y-2 overflow-y-auto h-[calc(100%-4.25rem)] pr-1">
             {isLoadingConversations ? (
               <>
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-20 w-full rounded-lg" />
+                <Skeleton className="h-20 w-full rounded-lg" />
+                <Skeleton className="h-20 w-full rounded-lg" />
               </>
             ) : conversations.length === 0 ? (
               <PageEmptyState
@@ -172,36 +141,12 @@ export default function ChatPage() {
               conversations.map((conversation) => {
                 const isSelected = conversation.id === selectedConversation?.id;
                 return (
-                  <button
+                  <ChatConversationCard
                     key={conversation.id}
-                    type="button"
+                    conversation={conversation}
+                    selected={isSelected}
                     onClick={() => navigate(`/chat/${conversation.id}`)}
-                    className={`w-full text-left p-3 rounded-xl border transition ${
-                      isSelected
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:bg-muted/40"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          {conversation.clientName || "Cliente"}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {conversation.clientPhoneMasked || "Sem telefone"}
-                        </p>
-                      </div>
-                      {conversation.unreadCount > 0 ? (
-                        <Badge variant="secondary">{conversation.unreadCount}</Badge>
-                      ) : null}
-                    </div>
-                    <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
-                      {conversation.lastMessagePreview || "Sem ultima mensagem."}
-                    </p>
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      {formatDateTime(conversation.lastMessageAt)}
-                    </p>
-                  </button>
+                  />
                 );
               })
             )}
@@ -228,22 +173,6 @@ export default function ChatPage() {
                       {selectedConversation.clientPhoneMasked || "Sem telefone"}
                     </p>
                   </div>
-                  <Select
-                    value={selectedConversation.appointmentMarker}
-                    onValueChange={handleMarkerChange}
-                    disabled={isUpdatingMarker}
-                  >
-                    <SelectTrigger className="w-44">
-                      <SelectValue placeholder="Marcador" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MARKER_ORDER.map((marker) => (
-                        <SelectItem key={marker} value={marker}>
-                          {MARKER_LABELS[marker]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
               </CardHeader>
               <CardContent className="h-[calc(100%-9rem)] flex flex-col">
@@ -306,4 +235,3 @@ export default function ChatPage() {
     </MainLayout>
   );
 }
-
