@@ -33,12 +33,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const pathname = typeof window !== "undefined" ? window.location.pathname : "";
     const isPublicBookingRoute = pathname === "/agendar" || pathname.startsWith("/agendar/");
 
-    const storedUser = authApi.getCurrentUser();
-
-    if (storedUser) {
-      setUser(storedUser);
-    }
-
     if (isPublicBookingRoute) {
       setIsLoading(false);
       return;
@@ -47,9 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     authApi
       .me()
       .then((currentUser) => setUser(currentUser))
-      .catch(() => {
-        if (!storedUser) setUser(null);
-      })
+      .catch(() => setUser(null))
       .finally(() => setIsLoading(false));
   }, []);
 

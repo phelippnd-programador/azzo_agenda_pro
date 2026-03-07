@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { authApi, notificationsApi } from "@/lib/api";
+import { ApiError, notificationsApi } from "@/lib/api";
 import type { AppNotification, NotificationsFilters } from "@/types/notification";
 
 const POLLING_MS = 20 * 60 * 1000;
@@ -56,6 +56,9 @@ function withDerivedState(items: AppNotification[]) {
 }
 
 function normalizeErrorMessage(error: unknown) {
+  if (error instanceof ApiError && error.status === 401) {
+    return null;
+  }
   if (error instanceof Error) return error.message;
   return "Erro ao carregar notificacoes";
 }
@@ -83,21 +86,6 @@ export const useNotificationsStore = create<NotificationsStoreState>((set, get) 
   },
 
   refreshSummary: async () => {
-    if (!authApi.hasSession()) {
-      set({
-        items: [],
-        summaryItems: [],
-        unreadCount: 0,
-        lastFetchAt: null,
-        error: null,
-        loading: false,
-        hasMore: false,
-        nextCursorCreatedAt: null,
-        nextCursorId: null,
-      });
-      return;
-    }
-
     try {
       set({ loading: true, error: null });
       const response = await notificationsApi.getAll({ limit: SUMMARY_LIMIT });
@@ -109,6 +97,20 @@ export const useNotificationsStore = create<NotificationsStoreState>((set, get) 
         loading: false,
       });
     } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        set({
+          items: [],
+          summaryItems: [],
+          unreadCount: 0,
+          lastFetchAt: null,
+          error: null,
+          loading: false,
+          hasMore: false,
+          nextCursorCreatedAt: null,
+          nextCursorId: null,
+        });
+        return;
+      }
       set({
         loading: false,
         error: normalizeErrorMessage(error),
@@ -117,21 +119,6 @@ export const useNotificationsStore = create<NotificationsStoreState>((set, get) 
   },
 
   fetchAll: async (filters = {}) => {
-    if (!authApi.hasSession()) {
-      set({
-        items: [],
-        summaryItems: [],
-        unreadCount: 0,
-        lastFetchAt: null,
-        error: null,
-        loading: false,
-        hasMore: false,
-        nextCursorCreatedAt: null,
-        nextCursorId: null,
-      });
-      return;
-    }
-
     const mergedFilters: NotificationsFilters = {
       ...get().currentFilters,
       ...filters,
@@ -163,6 +150,20 @@ export const useNotificationsStore = create<NotificationsStoreState>((set, get) 
         loading: false,
       });
     } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        set({
+          items: [],
+          summaryItems: [],
+          unreadCount: 0,
+          lastFetchAt: null,
+          error: null,
+          loading: false,
+          hasMore: false,
+          nextCursorCreatedAt: null,
+          nextCursorId: null,
+        });
+        return;
+      }
       set({
         loading: false,
         error: normalizeErrorMessage(error),
@@ -172,7 +173,6 @@ export const useNotificationsStore = create<NotificationsStoreState>((set, get) 
 
   fetchNextPage: async () => {
     const state = get();
-    if (!authApi.hasSession()) return;
     if (state.loading || !state.hasMore) return;
 
     if (!state.nextCursorCreatedAt || !state.nextCursorId) {

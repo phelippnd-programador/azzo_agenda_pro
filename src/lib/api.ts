@@ -2399,6 +2399,7 @@ const setPlanExpiredBlocked = (blocked: boolean) => {
 };
 
 const saveSession = (user?: User | null) => {
+  // Cache apenas para UX (ex.: dados imediatos de perfil); nao define autenticacao.
   if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
 };
 
@@ -2588,15 +2589,6 @@ const requestBlob = async (
   return response.blob();
 };
 
-const readStoredUser = (): User | null => {
-  try {
-    const raw = localStorage.getItem(USER_KEY);
-    return raw ? (JSON.parse(raw) as User) : null;
-  } catch {
-    return null;
-  }
-};
-
 export const initializeDemoData = () => {
   if (!isLocalDemoModeEnabled()) return;
   getDemoState();
@@ -2646,7 +2638,7 @@ export const authApi = {
 
     return {
       ...data,
-      user: data.user || readStoredUser(),
+      user: data.user,
     };
   },
 
@@ -2671,13 +2663,8 @@ export const authApi = {
 
     return {
       ...response,
-      user: response.user || readStoredUser(),
+      user: response.user,
     };
-  },
-
-  getCurrentUser() {
-    if (isLocalDemoModeEnabled()) return getLocalDemoUser();
-    return readStoredUser();
   },
 
   async me() {
@@ -2708,11 +2695,6 @@ export const authApi = {
       // Mesmo com erro no backend, limpar sessao local.
     }
     clearSession();
-  },
-
-  hasSession() {
-    if (isLocalDemoModeEnabled()) return true;
-    return !!readStoredUser();
   },
 };
 
