@@ -36,6 +36,11 @@ const normalizeDateToIso = (value: unknown) => {
   return '';
 };
 
+const calculateGrowthPercent = (current: number, previous: number): number | null => {
+  if (previous <= 0) return null;
+  return ((current - previous) * 100) / previous;
+};
+
 export default function Dashboard() {
   const { user } = useAuth();
   const isProfessionalUser = user?.role === 'PROFESSIONAL';
@@ -63,9 +68,27 @@ export default function Dashboard() {
   }, [isProfessionalUser, refetchMetrics]);
 
   const today = new Date().toISOString().split('T')[0];
+  const yesterdayDate = new Date();
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const yesterday = yesterdayDate.toISOString().split('T')[0];
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
+  const currentDay = currentDate.getDate();
+  const previousMonthStartDate = new Date(currentYear, currentMonth - 1, 1);
+  const previousMonthEndDate = new Date(currentYear, currentMonth, 0);
+  const previousMonthComparableEndDate = new Date(
+    currentYear,
+    currentMonth - 1,
+    Math.min(currentDay, previousMonthEndDate.getDate())
+  );
+
   const todayAppointments = scopedAppointments
     .filter((appointment) => normalizeDateToIso(appointment.date) === today)
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  const yesterdayAppointments = scopedAppointments.filter(
+    (appointment) => normalizeDateToIso(appointment.date) === yesterday
+  );
 
   const enrichedAppointments = todayAppointments.map((apt) => {
     const client = clients.find((c) => c.id === apt.clientId);
@@ -95,6 +118,42 @@ export default function Dashboard() {
       })
       .reduce((sum, appointment) => sum + (appointment.totalPrice || 0), 0),
     totalClients: new Set(scopedAppointments.map((appointment) => appointment.clientId)).size,
+    todayAppointmentsGrowthPercent: calculateGrowthPercent(
+      todayAppointments.length,
+      yesterdayAppointments.length
+    ),
+    todayRevenueGrowthPercent: calculateGrowthPercent(
+      todayAppointments.reduce((sum, appointment) => sum + (appointment.totalPrice || 0), 0),
+      yesterdayAppointments.reduce((sum, appointment) => sum + (appointment.totalPrice || 0), 0)
+    ),
+    totalClientsGrowthPercent: calculateGrowthPercent(
+      new Set(scopedAppointments.map((appointment) => appointment.clientId)).size,
+      new Set(
+        scopedAppointments
+          .filter((appointment) => {
+            const iso = normalizeDateToIso(appointment.date);
+            return !!iso && iso < today;
+          })
+          .map((appointment) => appointment.clientId)
+      ).size
+    ),
+    monthlyRevenueGrowthPercent: calculateGrowthPercent(
+      scopedAppointments
+        .filter((appointment) => {
+          const date = normalizeDateToIso(appointment.date);
+          if (!date) return false;
+          return date.startsWith(today.slice(0, 7));
+        })
+        .reduce((sum, appointment) => sum + (appointment.totalPrice || 0), 0),
+      scopedAppointments
+        .filter((appointment) => {
+          const iso = normalizeDateToIso(appointment.date);
+          if (!iso) return false;
+          const date = new Date(`${iso}T00:00:00`);
+          return date >= previousMonthStartDate && date <= previousMonthComparableEndDate;
+        })
+        .reduce((sum, appointment) => sum + (appointment.totalPrice || 0), 0)
+    ),
     pendingAppointments: todayAppointments.filter(
       (appointment) => appointment.status === 'PENDING' || appointment.status === 'CONFIRMED'
     ).length,
@@ -154,28 +213,44 @@ export default function Dashboard() {
             title="Agendamentos Hoje"
             value={resolvedMetrics.todayAppointments}
             icon={Calendar}
-            trend={{ value: 12, isPositive: true }}
+            trend={{
+              value: resolvedMetrics.todayAppointmentsGrowthPercent ?? null,
+              isPositive: (resolvedMetrics.todayAppointmentsGrowthPercent ?? 0) >= 0,
+              unavailableLabel: 'Sem dados anteriores',
+            }}
             iconClassName="bg-primary"
           />
           <MetricCard
             title="Faturamento Hoje"
             value={formatCurrency(resolvedMetrics.todayRevenue)}
             icon={DollarSign}
-            trend={{ value: 8, isPositive: true }}
+            trend={{
+              value: resolvedMetrics.todayRevenueGrowthPercent ?? null,
+              isPositive: (resolvedMetrics.todayRevenueGrowthPercent ?? 0) >= 0,
+              unavailableLabel: 'Sem dados anteriores',
+            }}
             iconClassName="bg-green-600"
           />
           <MetricCard
             title="Clientes Ativos"
             value={resolvedMetrics.totalClients}
             icon={Users}
-            trend={{ value: 5, isPositive: true }}
+            trend={{
+              value: resolvedMetrics.totalClientsGrowthPercent ?? null,
+              isPositive: (resolvedMetrics.totalClientsGrowthPercent ?? 0) >= 0,
+              unavailableLabel: 'Sem dados anteriores',
+            }}
             iconClassName="bg-primary"
           />
           <MetricCard
             title="Faturamento Mensal"
             value={formatCurrency(resolvedMetrics.monthlyRevenue)}
             icon={TrendingUp}
-            trend={{ value: 15, isPositive: true }}
+            trend={{
+              value: resolvedMetrics.monthlyRevenueGrowthPercent ?? null,
+              isPositive: (resolvedMetrics.monthlyRevenueGrowthPercent ?? 0) >= 0,
+              unavailableLabel: 'Sem dados anteriores',
+            }}
             iconClassName="bg-blue-600"
           />
         </div>

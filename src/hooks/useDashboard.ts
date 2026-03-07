@@ -8,6 +8,10 @@ interface DashboardMetrics {
   todayRevenue: number;
   monthlyRevenue: number;
   totalClients: number;
+  todayAppointmentsGrowthPercent?: number | null;
+  todayRevenueGrowthPercent?: number | null;
+  totalClientsGrowthPercent?: number | null;
+  monthlyRevenueGrowthPercent?: number | null;
   pendingAppointments: number;
   completedToday: number;
   notConcludedToday: number;
@@ -23,6 +27,10 @@ export function useDashboard() {
     todayRevenue: 0,
     monthlyRevenue: 0,
     totalClients: 0,
+    todayAppointmentsGrowthPercent: null,
+    todayRevenueGrowthPercent: null,
+    totalClientsGrowthPercent: null,
+    monthlyRevenueGrowthPercent: null,
     pendingAppointments: 0,
     completedToday: 0,
     notConcludedToday: 0,
@@ -76,6 +84,10 @@ export function useDashboardWithOptions(options: UseDashboardOptions = {}) {
     todayRevenue: 0,
     monthlyRevenue: 0,
     totalClients: 0,
+    todayAppointmentsGrowthPercent: null,
+    todayRevenueGrowthPercent: null,
+    totalClientsGrowthPercent: null,
+    monthlyRevenueGrowthPercent: null,
     pendingAppointments: 0,
     completedToday: 0,
     notConcludedToday: 0,

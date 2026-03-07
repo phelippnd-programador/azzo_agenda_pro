@@ -7,8 +7,9 @@ interface MetricCardProps {
   value: string | number;
   icon: LucideIcon;
   trend?: {
-    value: number;
+    value: number | null;
     isPositive: boolean;
+    unavailableLabel?: string;
   };
   className?: string;
   iconClassName?: string;
@@ -30,16 +31,22 @@ export function MetricCard({
             <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{title}</p>
             <p className="text-lg sm:text-2xl font-bold text-foreground truncate">{value}</p>
             {trend && (
-              <p
-                className={cn(
-                  'text-xs sm:text-sm font-medium',
-                  trend.isPositive ? 'text-green-600' : 'text-red-600'
-                )}
-              >
-                {trend.isPositive ? '+' : '-'}
-                {Math.abs(trend.value)}%
-                <span className="text-muted-foreground ml-1 hidden sm:inline">vs. mes anterior</span>
-              </p>
+              trend.value == null ? (
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">
+                  {trend.unavailableLabel || 'Sem dados anteriores'}
+                </p>
+              ) : (
+                <p
+                  className={cn(
+                    'text-xs sm:text-sm font-medium',
+                    trend.isPositive ? 'text-green-600' : 'text-red-600'
+                  )}
+                >
+                  {trend.isPositive ? '+' : '-'}
+                  {Math.abs(trend.value).toFixed(1)}%
+                  <span className="text-muted-foreground ml-1 hidden sm:inline">vs. periodo anterior</span>
+                </p>
+              )
             )}
           </div>
           <div

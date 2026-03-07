@@ -114,6 +114,10 @@ export interface DashboardMetrics {
   todayRevenue: number;
   monthlyRevenue: number;
   totalClients: number;
+  todayAppointmentsGrowthPercent?: number | null;
+  todayRevenueGrowthPercent?: number | null;
+  totalClientsGrowthPercent?: number | null;
+  monthlyRevenueGrowthPercent?: number | null;
   pendingAppointments: number;
   completedToday: number;
   notConcludedToday: number;
