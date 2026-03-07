@@ -19,7 +19,9 @@ import Agenda from "./pages/Agenda";
 import Services from "./pages/Services";
 import Specialties from "./pages/Specialties";
 import Professionals from "./pages/Professionals";
+import ProfessionalProfile from "./pages/ProfessionalProfile";
 import Clients from "./pages/Clients";
+import ClientProfile from "./pages/ClientProfile";
 import ChatPage from "./pages/Chat";
 import Stock from "./pages/Stock";
 import StockOverview from "./pages/stock/StockOverview";
@@ -246,10 +248,26 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/profissionais/:id"
+          element={
+            <ProtectedRoute>
+              <ProfessionalProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/clientes"
           element={
             <ProtectedRoute>
               <Clients />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/clientes/:id"
+          element={
+            <ProtectedRoute>
+              <ClientProfile />
             </ProtectedRoute>
           }
         />

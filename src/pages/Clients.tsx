@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,8 +38,6 @@ import {
   Search,
   Plus,
   MoreVertical,
-  Phone,
-  Mail,
   Calendar,
   DollarSign,
   Grid3X3,
@@ -49,6 +48,7 @@ import {
 import { useClients } from '@/hooks/useClients';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { maskPhoneBr } from '@/lib/input-masks';
+import { ClientCard } from '@/components/clients/ClientCard';
 import { toast } from 'sonner';
 
 const formatCurrency = (value: number) => {
@@ -59,6 +59,7 @@ const formatCurrency = (value: number) => {
 };
 
 export default function Clients() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [isNewClientOpen, setIsNewClientOpen] = useState(false);
@@ -135,6 +136,10 @@ export default function Clients() {
 
   const openDeleteDialog = (id: string) => {
     setClientToDelete(id);
+  };
+
+  const openProfilePage = (id: string) => {
+    navigate(`/clientes/${id}`);
   };
 
   const handleDelete = async () => {
@@ -355,82 +360,13 @@ export default function Clients() {
         ) : viewMode === 'grid' ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {filteredClients.map((client) => (
-              <Card key={client.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4 sm:p-5">
-                  <div className="flex items-start justify-between gap-2 mb-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <Avatar className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
-                        <AvatarFallback className="bg-primary/15 text-primary text-sm">
-                          {client.name.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">
-                          {client.name}
-                        </h3>
-                        <p className="text-xs text-muted-foreground">
-                          {client.totalVisits} visitas
-                        </p>
-                      </div>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEditDialog(client)}>
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>Ver Histórico</DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => openDeleteDialog(client.id)}
-                        >
-                          Excluir
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Phone className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                      <span className="text-xs sm:text-sm">{maskPhoneBr(client.phone, false)}</span>
-                    </div>
-                    {client.email && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Mail className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                        <span className="text-xs sm:text-sm truncate">{client.email}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border">
-                    <div>
-                      <div className="flex items-center gap-1 text-muted-foreground mb-1">
-                        <Calendar className="w-3 h-3" />
-                        <span className="text-[10px] sm:text-xs">Última visita</span>
-                      </div>
-                      <p className="text-xs sm:text-sm font-medium">
-                        {client.lastVisit
-                          ? new Date(client.lastVisit).toLocaleDateString('pt-BR')
-                          : 'Nunca'}
-                      </p>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1 text-muted-foreground mb-1">
-                        <DollarSign className="w-3 h-3" />
-                        <span className="text-[10px] sm:text-xs">Total gasto</span>
-                      </div>
-                      <p className="text-xs sm:text-sm font-medium text-primary">
-                        {formatCurrency(client.totalSpent)}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <ClientCard
+                key={client.id}
+                client={client}
+                onOpenProfile={openProfilePage}
+                onEdit={openEditDialog}
+                onDelete={openDeleteDialog}
+              />
             ))}
           </div>
         ) : (
@@ -547,3 +483,4 @@ export default function Clients() {
     </MainLayout>
   );
 }
+

@@ -1,12 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageErrorState } from "@/components/ui/page-states";
@@ -20,15 +20,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   ConfirmationDialog,
 } from "@/components/common/ConfirmationDialog";
-import { Search, Plus, MoreVertical, Phone, Mail, Percent, Users, Loader2 } from "lucide-react";
+import { Search, Plus, Users, Loader2 } from "lucide-react";
 import { useProfessionals } from "@/hooks/useProfessionals";
 import { useSpecialties } from "@/hooks/useSpecialties";
 import { DeleteConfirmationDialog } from "@/components/common/DeleteConfirmationDialog";
@@ -36,6 +30,7 @@ import { maskPhoneBr } from "@/lib/input-masks";
 import type { WorkingHours } from "@/types";
 import { toast } from "sonner";
 import { ProfessionalLimitMeter } from "@/components/professionals/ProfessionalLimitMeter";
+import { ProfessionalCard } from "@/components/professionals/ProfessionalCard";
 
 const defaultWorkingHours: WorkingHours[] = [
   { dayOfWeek: 1, startTime: "09:00", endTime: "18:00", isWorking: true },
@@ -58,6 +53,7 @@ const weekdayLabels: Record<number, string> = {
 };
 
 export default function Professionals() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [isNewProfessionalOpen, setIsNewProfessionalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -222,6 +218,10 @@ export default function Professionals() {
 
   const openDeleteDialog = (id: string) => {
     setProfessionalToDelete(id);
+  };
+
+  const openProfilePage = (id: string) => {
+    navigate(`/profissionais/${id}`);
   };
 
   const handleDelete = async () => {
@@ -513,106 +513,21 @@ export default function Professionals() {
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {filteredProfessionals.map((professional) => (
-              <Card
+              <ProfessionalCard
                 key={professional.id}
-                className={`hover:shadow-md transition-shadow ${
-                  !professional.isActive && "opacity-60"
-                }`}
-              >
-                <CardContent className="p-4 sm:p-5">
-                  <div className="flex items-start justify-between gap-2 mb-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <Avatar className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0">
-                        <AvatarImage src={professional.avatar} />
-                        <AvatarFallback className="bg-primary/15 text-primary text-sm sm:text-base">
-                          {professional.name.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">
-                          {professional.name}
-                        </h3>
-                        <Badge
-                          variant={professional.isActive ? "default" : "secondary"}
-                          className={`text-[10px] sm:text-xs ${
-                            professional.isActive ? "bg-green-100 text-green-700" : ""
-                          }`}
-                        >
-                          {professional.isActive ? "Ativo" : "Inativo"}
-                        </Badge>
-                      </div>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEditDialog(professional)}>
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            handleToggleActive(professional.id, !professional.isActive)
-                          }
-                        >
-                          {professional.isActive ? "Desativar" : "Ativar"}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => openDeleteDialog(professional.id)}
-                        >
-                          Remover
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            setProfessionalToReset({
-                              id: professional.id,
-                              name: professional.name,
-                              email: professional.email,
-                            })
-                          }
-                        >
-                          Resetar senha
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Mail className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                      <span className="text-xs sm:text-sm truncate">{professional.email}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Phone className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                      <span className="text-xs sm:text-sm">{professional.phone}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {professional.specialties.slice(0, 3).map((specialty, index) => (
-                      <Badge key={index} variant="outline" className="text-[10px] sm:text-xs">
-                        {specialty}
-                      </Badge>
-                    ))}
-                    {professional.specialties.length > 3 && (
-                      <Badge variant="outline" className="text-[10px] sm:text-xs">
-                        +{professional.specialties.length - 3}
-                      </Badge>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between pt-3 border-t border-border">
-                    <span className="text-xs sm:text-sm text-muted-foreground">Comissao</span>
-                    <div className="flex items-center gap-1 text-primary font-semibold">
-                      <Percent className="w-3 h-3 sm:w-4 sm:h-4" />
-                      <span className="text-sm sm:text-base">{professional.commissionRate}%</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                professional={professional}
+                onOpenProfile={openProfilePage}
+                onEdit={openEditDialog}
+                onToggleActive={handleToggleActive}
+                onDelete={openDeleteDialog}
+                onResetPassword={(item) =>
+                  setProfessionalToReset({
+                    id: item.id,
+                    name: item.name,
+                    email: item.email,
+                  })
+                }
+              />
             ))}
           </div>
         )}

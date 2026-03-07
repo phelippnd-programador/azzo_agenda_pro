@@ -1754,6 +1754,9 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
         message: "Senha resetada em modo demo local.",
       } as T;
     }
+    if (method === "GET") {
+      return (state.professionals.find((professional) => professional.id === id) || null) as T;
+    }
     if (method === "PUT") {
       const payload = JSON.parse(String(options.body || "{}")) as Partial<Professional>;
       state.professionals = state.professionals.map((professional) =>
@@ -1807,6 +1810,9 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
   }
   if (path.startsWith("/clients/")) {
     const id = path.replace("/clients/", "");
+    if (method === "GET") {
+      return (state.clients.find((client) => client.id === id) || null) as T;
+    }
     if (method === "PUT") {
       const payload = JSON.parse(String(options.body || "{}")) as Partial<Client>;
       state.clients = state.clients.map((client) => (client.id === id ? { ...client, ...payload } : client));
@@ -2862,6 +2868,7 @@ export const professionalsApi = {
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return request<ListResponse<Professional>>(`/professionals${suffix}`);
   },
+  getById: (id: string) => request<Professional>(`/professionals/${id}`),
   getLimits: () => request<ProfessionalLimits>("/professionals/limits"),
   create: (data: Partial<Professional>) =>
     request<Professional>("/professionals", {
@@ -2909,6 +2916,7 @@ export const clientsApi = {
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return request<ListResponse<Client>>(`/clients${suffix}`);
   },
+  getById: (id: string) => request<Client>(`/clients/${id}`),
   create: (data: Partial<Client>) =>
     request<Client>("/clients", {
       method: "POST",
