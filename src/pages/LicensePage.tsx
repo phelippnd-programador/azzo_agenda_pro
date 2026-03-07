@@ -147,8 +147,7 @@ function isPaymentConfirmed(result: CreateBillingSubscriptionResponse) {
 function hasPaidFeaturesAccess(result: CreateBillingSubscriptionResponse) {
   const licenseStatus = getLicenseStatus(result);
   if (licenseStatus !== "ACTIVE") return false;
-  if (String(result.billingType || "").toUpperCase() === "TRIAL") return true;
-  return isPaymentConfirmed(result);
+  return true;
 }
 
 function isSupportedBillingType(
