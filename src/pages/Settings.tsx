@@ -275,7 +275,11 @@ export default function Settings() {
                   onChange={(e) => setReminderHours(e.target.value)}
                 />
               </div>
-              <Button onClick={handleSaveNotifications} disabled={isSaving}>
+              <Button
+                onClick={handleSaveNotifications}
+                isLoading={isSaving}
+                loadingText="Salvando..."
+              >
                 Salvar
               </Button>
             </CardContent>
@@ -317,7 +321,11 @@ export default function Settings() {
                   />
                 </div>
               </div>
-              <Button onClick={handleSaveAccount} disabled={isSaving}>
+              <Button
+                onClick={handleSaveAccount}
+                isLoading={isSaving}
+                loadingText="Salvando..."
+              >
                 Salvar
               </Button>
             </CardContent>

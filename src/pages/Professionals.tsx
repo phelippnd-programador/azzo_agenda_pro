@@ -26,15 +26,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  ConfirmationDialog,
+} from "@/components/common/ConfirmationDialog";
 import { Search, Plus, MoreVertical, Phone, Mail, Percent, Users, Loader2 } from "lucide-react";
 import { useProfessionals } from "@/hooks/useProfessionals";
 import { useSpecialties } from "@/hooks/useSpecialties";
@@ -651,34 +644,26 @@ export default function Professionals() {
         ) : null}
       </div>
 
-      <AlertDialog
+      <ConfirmationDialog
         open={!!professionalToReset}
+        title="Resetar senha do profissional?"
+        description={
+          professionalToReset ? (
+            <>
+              Uma senha temporaria sera gerada para <strong>{professionalToReset.name}</strong>{" "}
+              ({professionalToReset.email}).
+            </>
+          ) : (
+            "Uma senha temporaria sera gerada e enviada."
+          )
+        }
+        cancelLabel="Cancelar"
+        confirmLabel="Sim, resetar senha"
         onOpenChange={(open) => {
           if (!open) setProfessionalToReset(null);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Resetar senha do profissional?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {professionalToReset ? (
-                <>
-                  Uma senha temporaria sera gerada para <strong>{professionalToReset.name}</strong>{" "}
-                  ({professionalToReset.email}).
-                </>
-              ) : (
-                "Uma senha temporaria sera gerada e enviada."
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleResetPasswordConfirm}>
-              Sim, resetar senha
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={handleResetPasswordConfirm}
+      />
 
       <DeleteConfirmationDialog
         open={!!professionalToDelete}

@@ -64,7 +64,7 @@ import { useServices } from '@/hooks/useServices';
 import { useAvailableSlots } from '@/hooks/useAvailableSlots';
 import { useAuth } from '@/contexts/AuthContext';
 import { AvailableSlotsList } from '@/components/appointments/AvailableSlotsList';
-import { AppointmentDeleteConfirmDialog } from '@/components/appointments/AppointmentDeleteConfirmDialog';
+import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -348,6 +348,7 @@ export default function Agenda() {
   }, [currentDate]);
 
   const handleCreateAppointment = async () => {
+    if (isSubmitting) return;
     if (!newClientId || !newProfessionalId || !newServiceId || !newDate || !newStartTime || !newEndTime) {
       toast.error('Preencha todos os campos');
       return;
@@ -476,6 +477,7 @@ export default function Agenda() {
   };
 
   const handleConfirmDeleteAppointment = async () => {
+    if (isDeletingAppointment) return;
     if (!appointmentToDeleteId) return;
     setIsDeletingAppointment(true);
     try {
@@ -777,15 +779,10 @@ export default function Agenda() {
                   <Button
                     onClick={handleCreateAppointment}
                     disabled={isSubmitting || !newStartTime || !newEndTime}
+                    isLoading={isSubmitting}
+                    loadingText="Criando..."
                   >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Criando...
-                      </>
-                    ) : (
-                      'Criar Agendamento'
-                    )}
+                    Criar Agendamento
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -1298,15 +1295,20 @@ export default function Agenda() {
           </SheetContent>
         </Sheet>
 
-        <AppointmentDeleteConfirmDialog
+        <DeleteConfirmationDialog
           open={isDeleteDialogOpen}
-          isDeleting={isDeletingAppointment}
+          isLoading={isDeletingAppointment}
+          title="Excluir agendamento?"
+          description="Você tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita."
+          cancelLabel="Cancel"
+          confirmLabel="Confirm Delete"
+          loadingLabel="Excluindo..."
           onOpenChange={(open) => {
             if (isDeletingAppointment) return;
             setIsDeleteDialogOpen(open);
             if (!open) setAppointmentToDeleteId(null);
           }}
-          onConfirmDelete={handleConfirmDeleteAppointment}
+          onConfirm={handleConfirmDeleteAppointment}
         />
       </div>
     </MainLayout>

@@ -7,13 +7,15 @@ import type { NotificationStatus, NotificationsFilters as FiltersType } from "@/
 type NotificationsFiltersProps = {
   filters: FiltersType;
   onChange: (filters: FiltersType) => void;
-  onApply: () => void;
+  onApply: () => void | Promise<void>;
+  isApplying?: boolean;
 };
 
 export function NotificationsFilters({
   filters,
   onChange,
   onApply,
+  isApplying = false,
 }: NotificationsFiltersProps) {
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
@@ -108,7 +110,12 @@ export function NotificationsFilters({
       </div>
 
       <div className="flex items-end">
-        <Button className="w-full" onClick={onApply}>
+        <Button
+          className="w-full"
+          onClick={onApply}
+          isLoading={isApplying}
+          loadingText="Aplicando..."
+        >
           Aplicar filtros
         </Button>
       </div>

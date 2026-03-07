@@ -46,6 +46,7 @@ export default function Notifications() {
   } = useNotifications();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isApplyingFilters, setIsApplyingFilters] = useState(false);
   const [notificationToDelete, setNotificationToDelete] = useState<string | null>(null);
   const [isDeletingNotification, setIsDeletingNotification] = useState(false);
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
@@ -72,7 +73,13 @@ export default function Notifications() {
   }, []);
 
   const applyFilters = async () => {
-    await fetchAll(filters);
+    if (isApplyingFilters) return;
+    setIsApplyingFilters(true);
+    try {
+      await fetchAll(filters);
+    } finally {
+      setIsApplyingFilters(false);
+    }
   };
 
   const loadMore = async () => {
@@ -170,7 +177,12 @@ export default function Notifications() {
             <CardTitle>Filtros</CardTitle>
           </CardHeader>
           <CardContent>
-            <NotificationsFilters filters={filters} onChange={setFilters} onApply={applyFilters} />
+            <NotificationsFilters
+              filters={filters}
+              onChange={setFilters}
+              onApply={applyFilters}
+              isApplying={isApplyingFilters}
+            />
           </CardContent>
         </Card>
 

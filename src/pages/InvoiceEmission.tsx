@@ -12,15 +12,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+  ConfirmationDialog,
+} from '@/components/common/ConfirmationDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Invoice, InvoiceFormData } from '@/types/invoice';
@@ -376,8 +369,14 @@ export default function InvoiceEmission() {
           </DialogContent>
         </Dialog>
 
-        <AlertDialog
+        <ConfirmationDialog
           open={!!invoiceToCancel}
+          title="Cancelar Nota Fiscal?"
+          description={`Tem certeza que deseja cancelar a nota fiscal ${invoiceToCancel?.number}? Esta acao nao pode ser desfeita.`}
+          cancelLabel="Nao, manter nota"
+          confirmLabel="Sim, cancelar nota"
+          confirmDisabled={!cancelReason.trim()}
+          confirmClassName="bg-red-600 hover:bg-red-700"
           onOpenChange={(open) => {
             if (!open) {
               setInvoiceToCancel(null);
@@ -385,37 +384,20 @@ export default function InvoiceEmission() {
               setCancelReasonTouched(false);
             }
           }}
+          onConfirm={handleCancelConfirm}
         >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Cancelar Nota Fiscal?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tem certeza que deseja cancelar a nota fiscal {invoiceToCancel?.number}? Esta acao nao pode ser desfeita.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="space-y-2">
-              <Input
-                placeholder="Motivo do cancelamento"
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-                onBlur={() => setCancelReasonTouched(true)}
-              />
-              {cancelReasonTouched && !cancelReason.trim() && (
-                <p className="text-xs text-red-600">Motivo do cancelamento e obrigatorio.</p>
-              )}
-            </div>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Nao, manter nota</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleCancelConfirm}
-                className="bg-red-600 hover:bg-red-700"
-                disabled={!cancelReason.trim()}
-              >
-                Sim, cancelar nota
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          <div className="space-y-2">
+            <Input
+              placeholder="Motivo do cancelamento"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              onBlur={() => setCancelReasonTouched(true)}
+            />
+            {cancelReasonTouched && !cancelReason.trim() && (
+              <p className="text-xs text-red-600">Motivo do cancelamento e obrigatorio.</p>
+            )}
+          </div>
+        </ConfirmationDialog>
 
         <Dialog
           open={authDialogOpen}

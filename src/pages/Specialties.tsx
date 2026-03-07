@@ -5,16 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { DeleteConfirmationDialog } from "@/components/common/DeleteConfirmationDialog";
 import { useSpecialties } from "@/hooks/useSpecialties";
 import { toast } from "sonner";
 
@@ -26,6 +17,7 @@ export default function Specialties() {
     id: string;
     name: string;
   } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const {
     specialties,
@@ -59,12 +51,16 @@ export default function Specialties() {
   };
 
   const handleDelete = async () => {
+    if (isDeleting) return;
     if (!specialtyToDelete) return;
+    setIsDeleting(true);
     try {
       await deleteSpecialty(specialtyToDelete.id);
       setSpecialtyToDelete(null);
     } catch {
       // Erro tratado no hook
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -151,31 +147,24 @@ export default function Specialties() {
         ) : null}
       </div>
 
-      <AlertDialog
+      <DeleteConfirmationDialog
         open={!!specialtyToDelete}
+        isLoading={isDeleting}
+        title="Remover especialidade?"
+        description={
+          specialtyToDelete
+            ? `A especialidade "${specialtyToDelete.name}" sera removida permanentemente.`
+            : "Esta acao nao pode ser desfeita."
+        }
+        cancelLabel="Cancelar"
+        confirmLabel="Remover"
+        loadingLabel="Removendo..."
         onOpenChange={(open) => {
+          if (isDeleting) return;
           if (!open) setSpecialtyToDelete(null);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remover especialidade?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {specialtyToDelete ? (
-                <>A especialidade "{specialtyToDelete.name}" sera removida permanentemente.</>
-              ) : (
-                "Esta acao nao pode ser desfeita."
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-              Remover
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={handleDelete}
+      />
     </MainLayout>
   );
 }
