@@ -68,8 +68,8 @@ export function ChatConversationCard({ conversation, selected, onClick }: Props)
               {marker}
             </Badge>
             {conversation.unreadCount > 0 ? (
-              <Badge className="text-[10px] h-4 px-1.5 bg-primary text-primary-foreground shrink-0">
-                {conversation.unreadCount} nova{conversation.unreadCount > 1 ? "s" : ""}
+              <Badge className="text-[10px] h-4 min-w-4 px-1 bg-green-600 text-white shrink-0 flex items-center justify-center">
+                {conversation.unreadCount}
               </Badge>
             ) : null}
             <span className="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground shrink-0">

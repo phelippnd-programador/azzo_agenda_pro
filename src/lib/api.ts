@@ -196,7 +196,7 @@ const LOCAL_DEMO_ROLE_KEY = "local_demo_role";
 
 let refreshPromise: Promise<boolean> | null = null;
 let lastPlanExpiredToastAt = 0;
-let lastPlanExpiredRedirectAt = 0;
+const PLAN_EXPIRED_BLOCK_KEY = "azzo_plan_expired_blocked";
 
 const ALL_LOCAL_DEMO_ROUTES = [
   "/dashboard",
@@ -2376,15 +2376,20 @@ const notifyPlanExpired = (message: string) => {
   toast.error(message);
 };
 
-const redirectToLicensePage = () => {
+const setPlanExpiredBlocked = (blocked: boolean) => {
   if (typeof window === "undefined") return;
-  if (window.location.pathname === "/financeiro/licenca") return;
-
-  const now = Date.now();
-  if (now - lastPlanExpiredRedirectAt < 1500) return;
-  lastPlanExpiredRedirectAt = now;
-
-  window.location.replace("/financeiro/licenca");
+  try {
+    if (blocked) {
+      sessionStorage.setItem(PLAN_EXPIRED_BLOCK_KEY, "1");
+    } else {
+      sessionStorage.removeItem(PLAN_EXPIRED_BLOCK_KEY);
+    }
+    window.dispatchEvent(
+      new CustomEvent("azzo:plan-expired-changed", { detail: { blocked } })
+    );
+  } catch {
+    // ignore storage/event errors
+  }
 };
 
 const saveSession = (user?: User | null) => {
@@ -2393,6 +2398,7 @@ const saveSession = (user?: User | null) => {
 
 const clearSession = () => {
   localStorage.removeItem(USER_KEY);
+  setPlanExpiredBlocked(false);
 };
 
 const refreshAccessToken = async (): Promise<boolean> => {
@@ -2463,12 +2469,15 @@ const request = async <T>(
 
     if (
       response.status === 402 &&
-      errorDetails &&
-      typeof errorDetails === "object" &&
-      (errorDetails as { error?: string }).error === "PLAN_EXPIRED"
+      (
+        (errorDetails &&
+          typeof errorDetails === "object" &&
+          (errorDetails as { error?: string }).error === "PLAN_EXPIRED") ||
+        errorCode === "PLAN_EXPIRED"
+      )
     ) {
+      setPlanExpiredBlocked(true);
       notifyPlanExpired(errorMessage);
-      redirectToLicensePage();
     }
 
     throw new ApiError(errorMessage, response.status, errorDetails, errorCode);
@@ -2563,8 +2572,8 @@ const requestBlob = async (
     const { errorMessage, errorCode, errorDetails } = await getErrorPayload(response);
 
     if (response.status === 402 && errorCode === "PLAN_EXPIRED") {
+      setPlanExpiredBlocked(true);
       notifyPlanExpired(errorMessage);
-      redirectToLicensePage();
     }
 
     throw new ApiError(errorMessage, response.status, errorDetails, errorCode);

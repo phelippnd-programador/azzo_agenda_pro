@@ -397,7 +397,7 @@ export default function Clients() {
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Phone className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                      <span className="text-xs sm:text-sm">{client.phone}</span>
+                      <span className="text-xs sm:text-sm">{maskPhoneBr(client.phone, false)}</span>
                     </div>
                     {client.email && (
                       <div className="flex items-center gap-2 text-muted-foreground">
@@ -461,11 +461,11 @@ export default function Clients() {
                             <p className="font-medium text-sm truncate max-w-[120px] sm:max-w-none">
                               {client.name}
                             </p>
-                            <p className="text-xs text-muted-foreground sm:hidden">{client.phone}</p>
+                            <p className="text-xs text-muted-foreground sm:hidden">{maskPhoneBr(client.phone, false)}</p>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell text-sm">{client.phone}</TableCell>
+                      <TableCell className="hidden sm:table-cell text-sm">{maskPhoneBr(client.phone, false)}</TableCell>
                       <TableCell className="hidden md:table-cell text-sm truncate max-w-[150px]">
                         {client.email || '-'}
                       </TableCell>

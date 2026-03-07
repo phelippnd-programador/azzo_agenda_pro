@@ -55,7 +55,7 @@ const ROUTE_ALIASES: Record<string, string> = {
   "/settings/integrations/whatsapp": "/configuracoes/integracoes/whatsapp",
 };
 
-const ALWAYS_ALLOWED_ROUTES = ["/unauthorized"];
+const ALWAYS_ALLOWED_ROUTES = ["/unauthorized", "/financeiro/licenca"];
 function normalizeRoute(route: string): string {
   const trimmed = route.trim();
   return ROUTE_ALIASES[trimmed] ?? trimmed;

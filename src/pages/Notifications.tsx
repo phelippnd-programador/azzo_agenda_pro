@@ -19,12 +19,19 @@ import { DeleteConfirmationDialog } from "@/components/common/DeleteConfirmation
 import type { NotificationsFilters as NotificationFilters } from "@/types/notification";
 import type { AppNotification } from "@/types/notification";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { maskPhoneBr } from "@/lib/input-masks";
 
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(date));
+}
+
+function maskDestination(value?: string | null) {
+  if (!value) return "-";
+  if (!/^[+\d\s()-]+$/.test(value)) return value;
+  return maskPhoneBr(value, false);
 }
 
 export default function Notifications() {
@@ -251,7 +258,7 @@ export default function Notifications() {
                           <td className="py-2">
                             <Badge className={getStatusBadgeClass(item.status)}>{item.status}</Badge>
                           </td>
-                          <td className="py-2">{item.destination || "-"}</td>
+                          <td className="py-2">{maskDestination(item.destination)}</td>
                           <td className="py-2 text-right">
                             <TooltipProvider>
                               <Tooltip>

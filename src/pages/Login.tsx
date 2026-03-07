@@ -28,7 +28,21 @@ export default function Login() {
 
   const getPostLoginRoute = async (): Promise<string> => {
     try {
-      await getCurrentBillingSubscription();
+      const subscription = await getCurrentBillingSubscription();
+      const subscriptionStatus = String(subscription.status || '').toUpperCase();
+      const licenseStatus = String(subscription.licenseStatus || '').toUpperCase();
+      const paymentStatus = String(
+        subscription.currentPaymentStatus || subscription.paymentStatus || ''
+      ).toUpperCase();
+
+      if (
+        licenseStatus === 'EXPIRED' ||
+        subscriptionStatus === 'EXPIRED' ||
+        subscriptionStatus === 'OVERDUE' ||
+        paymentStatus === 'OVERDUE'
+      ) {
+        return '/financeiro/licenca';
+      }
       return '/dashboard';
     } catch (error) {
       if (error instanceof ApiError && error.status === 404) {

@@ -22,14 +22,25 @@ export const maskCpfCnpj = (value: string) => {
   return digits.length <= 11 ? maskCpf(digits) : maskCnpj(digits);
 };
 
-export const maskPhoneBr = (value: string) => {
-  const digits = onlyDigits(value).slice(0, 11);
-  if (digits.length <= 10) {
-    return digits
+export const maskPhoneBr = (value: string, visible = true) => {
+  const digits = onlyDigits(value);
+
+  if (!visible) {
+    if (!digits) return value;
+    if (digits.length <= 8) return digits;
+    const prefix = digits.slice(0, 5);
+    const suffix = digits.slice(-3);
+    return `${prefix}****${suffix}`;
+  }
+
+  const localDigits = digits.slice(0, 11);
+  if (localDigits.length <= 10) {
+    return localDigits
       .replace(/^(\d{2})(\d)/, "($1) $2")
       .replace(/(\d{4})(\d)/, "$1-$2");
   }
-  return digits
+
+  return localDigits
     .replace(/^(\d{2})(\d)/, "($1) $2")
     .replace(/(\d{5})(\d)/, "$1-$2");
 };
