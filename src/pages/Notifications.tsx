@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { NotificationsFilters } from "@/components/notifications/NotificationsFilters";
 import { useNotifications } from "@/hooks/useNotifications";
+import { DeleteConfirmationDialog } from "@/components/common/DeleteConfirmationDialog";
 import type { NotificationsFilters as NotificationFilters } from "@/types/notification";
 import type { AppNotification } from "@/types/notification";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -45,6 +46,10 @@ export default function Notifications() {
   } = useNotifications();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [notificationToDelete, setNotificationToDelete] = useState<string | null>(null);
+  const [isDeletingNotification, setIsDeletingNotification] = useState(false);
+  const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
+  const [isClearingAll, setIsClearingAll] = useState(false);
 
   const [filters, setFilters] = useState<NotificationFilters>({
     failedOnly: false,
@@ -83,18 +88,35 @@ export default function Notifications() {
   };
 
   const handleClearAll = async () => {
-    const cleared = await clearAllNotifications();
-    if (cleared) {
-      setSelectedId(null);
+    setIsClearingAll(true);
+    try {
+      const cleared = await clearAllNotifications();
+      if (cleared) {
+        setSelectedId(null);
+      }
+      setIsClearAllDialogOpen(false);
+    } finally {
+      setIsClearingAll(false);
     }
   };
 
-  const handleRemoveNotification = async (notificationId: string | null) => {
+  const openRemoveDialog = (notificationId: string | null) => {
     if (!notificationId) return;
-    const removed = await removeNotification(notificationId);
-    if (removed) {
-      setSelectedId(null);
-      setIsDetailOpen(false);
+    setNotificationToDelete(notificationId);
+  };
+
+  const handleRemoveNotification = async () => {
+    if (!notificationToDelete) return;
+    setIsDeletingNotification(true);
+    try {
+      const removed = await removeNotification(notificationToDelete);
+      if (removed) {
+        setSelectedId(null);
+        setIsDetailOpen(false);
+      }
+      setNotificationToDelete(null);
+    } finally {
+      setIsDeletingNotification(false);
     }
   };
 
@@ -171,7 +193,7 @@ export default function Notifications() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => void handleClearAll()}
+                onClick={() => setIsClearAllDialogOpen(true)}
                 disabled={!notifications.length || loading}
               >
                 <Trash2 className="w-4 h-4 mr-2" />
@@ -281,7 +303,7 @@ export default function Notifications() {
               <Button
                 variant="outline"
                 className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
-                onClick={() => void handleRemoveNotification(selected.id)}
+                onClick={() => openRemoveDialog(selected.id)}
                 disabled={loading}
               >
                 <Trash2 className="w-4 h-4 mr-2" />
@@ -291,6 +313,30 @@ export default function Notifications() {
           )}
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmationDialog
+        open={!!notificationToDelete}
+        isLoading={isDeletingNotification}
+        title="Remover notificacao?"
+        description="Tem certeza que deseja remover esta notificacao? Esta acao nao pode ser desfeita."
+        onOpenChange={(open) => {
+          if (isDeletingNotification) return;
+          if (!open) setNotificationToDelete(null);
+        }}
+        onConfirm={handleRemoveNotification}
+      />
+
+      <DeleteConfirmationDialog
+        open={isClearAllDialogOpen}
+        isLoading={isClearingAll}
+        title="Limpar todas as notificacoes?"
+        description="Tem certeza que deseja limpar todas as notificacoes? Esta acao nao pode ser desfeita."
+        onOpenChange={(open) => {
+          if (isClearingAll) return;
+          setIsClearAllDialogOpen(open);
+        }}
+        onConfirm={handleClearAll}
+      />
     </MainLayout>
   );
 }

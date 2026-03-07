@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/select';
 import { Search, Plus, Clock, DollarSign, MoreVertical, Scissors, Loader2 } from 'lucide-react';
 import { useServices } from '@/hooks/useServices';
+import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { toast } from 'sonner';
 
@@ -52,6 +53,8 @@ export default function Services() {
   const [isNewServiceOpen, setIsNewServiceOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingService, setEditingService] = useState<string | null>(null);
+  const [serviceToDelete, setServiceToDelete] = useState<string | null>(null);
+  const [isDeletingService, setIsDeletingService] = useState(false);
 
   // Form state
   const [formName, setFormName] = useState('');
@@ -137,11 +140,20 @@ export default function Services() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const openDeleteDialog = (id: string) => {
+    setServiceToDelete(id);
+  };
+
+  const handleDelete = async () => {
+    if (!serviceToDelete) return;
+    setIsDeletingService(true);
     try {
-      await deleteService(id);
+      await deleteService(serviceToDelete);
+      setServiceToDelete(null);
     } catch (error) {
       // Error is handled in the hook
+    } finally {
+      setIsDeletingService(false);
     }
   };
 
@@ -419,7 +431,7 @@ export default function Services() {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-red-600"
-                          onClick={() => handleDelete(service.id)}
+                          onClick={() => openDeleteDialog(service.id)}
                         >
                           Excluir
                         </DropdownMenuItem>
@@ -472,6 +484,18 @@ export default function Services() {
             </div>
           </div>
         ) : null}
+
+        <DeleteConfirmationDialog
+          open={!!serviceToDelete}
+          isLoading={isDeletingService}
+          title="Excluir servico?"
+          description="Tem certeza que deseja excluir este servico? Esta acao nao pode ser desfeita."
+          onOpenChange={(open) => {
+            if (isDeletingService) return;
+            if (!open) setServiceToDelete(null);
+          }}
+          onConfirm={handleDelete}
+        />
       </div>
     </MainLayout>
   );

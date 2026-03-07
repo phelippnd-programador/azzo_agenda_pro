@@ -64,6 +64,7 @@ import { useServices } from '@/hooks/useServices';
 import { useAvailableSlots } from '@/hooks/useAvailableSlots';
 import { useAuth } from '@/contexts/AuthContext';
 import { AvailableSlotsList } from '@/components/appointments/AvailableSlotsList';
+import { AppointmentDeleteConfirmDialog } from '@/components/appointments/AppointmentDeleteConfirmDialog';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -149,6 +150,9 @@ export default function Agenda() {
   const [appointmentToReassign, setAppointmentToReassign] = useState<Appointment | null>(null);
   const [reassignProfessionalId, setReassignProfessionalId] = useState('');
   const [isReassigning, setIsReassigning] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [appointmentToDeleteId, setAppointmentToDeleteId] = useState<string | null>(null);
+  const [isDeletingAppointment, setIsDeletingAppointment] = useState(false);
 
   // Form state
   const [newClientId, setNewClientId] = useState('');
@@ -466,13 +470,26 @@ export default function Agenda() {
     }
   };
 
-  const handleDeleteAppointment = async (appointmentId: string) => {
+  const openDeleteAppointmentDialog = (appointmentId: string) => {
+    setAppointmentToDeleteId(appointmentId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDeleteAppointment = async () => {
+    if (!appointmentToDeleteId) return;
+    setIsDeletingAppointment(true);
     try {
-      await deleteAppointment(appointmentId);
-      setIsViewDetailsOpen(false);
-      setSelectedAppointment(null);
+      await deleteAppointment(appointmentToDeleteId);
+      if (selectedAppointment?.id === appointmentToDeleteId) {
+        setIsViewDetailsOpen(false);
+        setSelectedAppointment(null);
+      }
+      setIsDeleteDialogOpen(false);
+      setAppointmentToDeleteId(null);
     } catch (error) {
       // Error is handled in the hook
+    } finally {
+      setIsDeletingAppointment(false);
     }
   };
 
@@ -941,7 +958,7 @@ export default function Agenda() {
                                         </DropdownMenuItem>
                                         <DropdownMenuItem 
                                           className="text-red-600"
-                                          onClick={() => handleDeleteAppointment(apt.id)}
+                                          onClick={() => openDeleteAppointmentDialog(apt.id)}
                                         >
                                           Excluir
                                         </DropdownMenuItem>
@@ -1271,7 +1288,7 @@ export default function Agenda() {
                   <Button 
                     variant="destructive"
                     className="w-full"
-                    onClick={() => handleDeleteAppointment(selectedAppointment.id)}
+                    onClick={() => openDeleteAppointmentDialog(selectedAppointment.id)}
                   >
                     Excluir Agendamento
                   </Button>
@@ -1280,6 +1297,17 @@ export default function Agenda() {
             )}
           </SheetContent>
         </Sheet>
+
+        <AppointmentDeleteConfirmDialog
+          open={isDeleteDialogOpen}
+          isDeleting={isDeletingAppointment}
+          onOpenChange={(open) => {
+            if (isDeletingAppointment) return;
+            setIsDeleteDialogOpen(open);
+            if (!open) setAppointmentToDeleteId(null);
+          }}
+          onConfirmDelete={handleConfirmDeleteAppointment}
+        />
       </div>
     </MainLayout>
   );

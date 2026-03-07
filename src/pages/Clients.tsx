@@ -47,6 +47,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useClients } from '@/hooks/useClients';
+import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { maskPhoneBr } from '@/lib/input-masks';
 import { toast } from 'sonner';
 
@@ -63,6 +64,8 @@ export default function Clients() {
   const [isNewClientOpen, setIsNewClientOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingClient, setEditingClient] = useState<string | null>(null);
+  const [clientToDelete, setClientToDelete] = useState<string | null>(null);
+  const [isDeletingClient, setIsDeletingClient] = useState(false);
 
   // Form state
   const [formName, setFormName] = useState('');
@@ -130,11 +133,20 @@ export default function Clients() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const openDeleteDialog = (id: string) => {
+    setClientToDelete(id);
+  };
+
+  const handleDelete = async () => {
+    if (!clientToDelete) return;
+    setIsDeletingClient(true);
     try {
-      await deleteClient(id);
+      await deleteClient(clientToDelete);
+      setClientToDelete(null);
     } catch (error) {
       // Error is handled in the hook
+    } finally {
+      setIsDeletingClient(false);
     }
   };
 
@@ -374,7 +386,7 @@ export default function Clients() {
                         <DropdownMenuItem>Ver Histórico</DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-red-600"
-                          onClick={() => handleDelete(client.id)}
+                          onClick={() => openDeleteDialog(client.id)}
                         >
                           Excluir
                         </DropdownMenuItem>
@@ -479,7 +491,7 @@ export default function Clients() {
                             <DropdownMenuItem>Ver Histórico</DropdownMenuItem>
                             <DropdownMenuItem
                               className="text-red-600"
-                              onClick={() => handleDelete(client.id)}
+                              onClick={() => openDeleteDialog(client.id)}
                             >
                               Excluir
                             </DropdownMenuItem>
@@ -519,6 +531,18 @@ export default function Clients() {
             </div>
           </div>
         ) : null}
+
+        <DeleteConfirmationDialog
+          open={!!clientToDelete}
+          isLoading={isDeletingClient}
+          title="Excluir cliente?"
+          description="Tem certeza que deseja excluir este cliente? Esta acao nao pode ser desfeita."
+          onOpenChange={(open) => {
+            if (isDeletingClient) return;
+            if (!open) setClientToDelete(null);
+          }}
+          onConfirm={handleDelete}
+        />
       </div>
     </MainLayout>
   );

@@ -44,6 +44,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { useTransactions } from '@/hooks/useTransactions';
+import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { toast } from 'sonner';
 
 const formatCurrency = (value: number) => {
@@ -98,6 +99,8 @@ export default function Financial() {
   const [transactionType, setTransactionType] = useState<'INCOME' | 'EXPENSE'>('INCOME');
   const [dateFilter, setDateFilter] = useState('today');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
+  const [isDeletingTransaction, setIsDeletingTransaction] = useState(false);
 
   // Form state
   const [formDescription, setFormDescription] = useState('');
@@ -155,11 +158,20 @@ export default function Financial() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const openDeleteDialog = (id: string) => {
+    setTransactionToDelete(id);
+  };
+
+  const handleDelete = async () => {
+    if (!transactionToDelete) return;
+    setIsDeletingTransaction(true);
     try {
-      await deleteTransaction(id);
+      await deleteTransaction(transactionToDelete);
+      setTransactionToDelete(null);
     } catch (error) {
       // Error is handled in the hook
+    } finally {
+      setIsDeletingTransaction(false);
     }
   };
 
@@ -437,7 +449,7 @@ export default function Financial() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
                             className="text-red-600"
-                            onClick={() => handleDelete(transaction.id)}
+                            onClick={() => openDeleteDialog(transaction.id)}
                           >
                             Excluir
                           </DropdownMenuItem>
@@ -450,6 +462,18 @@ export default function Financial() {
             )}
           </CardContent>
         </Card>
+
+        <DeleteConfirmationDialog
+          open={!!transactionToDelete}
+          isLoading={isDeletingTransaction}
+          title="Excluir transacao?"
+          description="Tem certeza que deseja excluir esta transacao? Esta acao nao pode ser desfeita."
+          onOpenChange={(open) => {
+            if (isDeletingTransaction) return;
+            if (!open) setTransactionToDelete(null);
+          }}
+          onConfirm={handleDelete}
+        />
       </div>
     </MainLayout>
   );

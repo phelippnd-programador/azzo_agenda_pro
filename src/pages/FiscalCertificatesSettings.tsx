@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { fiscalApi, type FiscalCertificateResponse } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
+import { DeleteConfirmationDialog } from "@/components/common/DeleteConfirmationDialog";
 import { toast } from "sonner";
 
 export default function FiscalCertificatesSettings() {
@@ -16,6 +17,8 @@ export default function FiscalCertificatesSettings() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [password, setPassword] = useState("");
+  const [certificateToDelete, setCertificateToDelete] = useState<string | null>(null);
+  const [isDeletingCertificate, setIsDeletingCertificate] = useState(false);
 
   const activeCertificate = useMemo(
     () => certificates.find((item) => item.status === "ACTIVE") || null,
@@ -92,16 +95,22 @@ export default function FiscalCertificatesSettings() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const openDeleteDialog = (id: string) => {
+    setCertificateToDelete(id);
+  };
+
+  const handleDelete = async () => {
+    if (!certificateToDelete) return;
     try {
-      setIsSubmitting(true);
-      await fiscalApi.deleteCertificate(id);
+      setIsDeletingCertificate(true);
+      await fiscalApi.deleteCertificate(certificateToDelete);
       toast.success("Certificado removido com sucesso.");
       await loadCertificates();
+      setCertificateToDelete(null);
     } catch (error) {
       toast.error(resolveUiError(error, "Erro ao remover certificado").message);
     } finally {
-      setIsSubmitting(false);
+      setIsDeletingCertificate(false);
     }
   };
 
@@ -180,7 +189,7 @@ export default function FiscalCertificatesSettings() {
                     ) : null}
                     <Button
                       variant="destructive"
-                      onClick={() => handleDelete(item.id)}
+                      onClick={() => openDeleteDialog(item.id)}
                       disabled={isSubmitting}
                     >
                       Remover
@@ -197,6 +206,18 @@ export default function FiscalCertificatesSettings() {
             <Link to="/configuracoes?tab=fiscal">Voltar para Configuracoes</Link>
           </Button>
         </div>
+
+        <DeleteConfirmationDialog
+          open={!!certificateToDelete}
+          isLoading={isDeletingCertificate}
+          title="Remover certificado?"
+          description="Tem certeza que deseja remover este certificado? Esta acao nao pode ser desfeita."
+          onOpenChange={(open) => {
+            if (isDeletingCertificate) return;
+            if (!open) setCertificateToDelete(null);
+          }}
+          onConfirm={handleDelete}
+        />
       </div>
     </MainLayout>
   );

@@ -38,6 +38,7 @@ import {
 import { Search, Plus, MoreVertical, Phone, Mail, Percent, Users, Loader2 } from "lucide-react";
 import { useProfessionals } from "@/hooks/useProfessionals";
 import { useSpecialties } from "@/hooks/useSpecialties";
+import { DeleteConfirmationDialog } from "@/components/common/DeleteConfirmationDialog";
 import { maskPhoneBr } from "@/lib/input-masks";
 import type { WorkingHours } from "@/types";
 import { toast } from "sonner";
@@ -73,6 +74,8 @@ export default function Professionals() {
     name: string;
     email: string;
   } | null>(null);
+  const [professionalToDelete, setProfessionalToDelete] = useState<string | null>(null);
+  const [isDeletingProfessional, setIsDeletingProfessional] = useState(false);
 
   const [formName, setFormName] = useState("");
   const [formEmail, setFormEmail] = useState("");
@@ -224,8 +227,19 @@ export default function Professionals() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    await deleteProfessional(id);
+  const openDeleteDialog = (id: string) => {
+    setProfessionalToDelete(id);
+  };
+
+  const handleDelete = async () => {
+    if (!professionalToDelete) return;
+    setIsDeletingProfessional(true);
+    try {
+      await deleteProfessional(professionalToDelete);
+      setProfessionalToDelete(null);
+    } finally {
+      setIsDeletingProfessional(false);
+    }
   };
 
   const handleToggleActive = async (id: string, isActive: boolean) => {
@@ -554,7 +568,7 @@ export default function Professionals() {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-red-600"
-                          onClick={() => handleDelete(professional.id)}
+                          onClick={() => openDeleteDialog(professional.id)}
                         >
                           Remover
                         </DropdownMenuItem>
@@ -665,6 +679,18 @@ export default function Professionals() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DeleteConfirmationDialog
+        open={!!professionalToDelete}
+        isLoading={isDeletingProfessional}
+        title="Remover profissional?"
+        description="Tem certeza que deseja remover este profissional? Esta acao nao pode ser desfeita."
+        onOpenChange={(open) => {
+          if (isDeletingProfessional) return;
+          if (!open) setProfessionalToDelete(null);
+        }}
+        onConfirm={handleDelete}
+      />
     </MainLayout>
   );
 }
