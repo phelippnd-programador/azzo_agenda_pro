@@ -3240,6 +3240,7 @@ export type SalonBusinessHours = {
 export type SalonProfile = {
   salonName: string;
   salonSlug: string;
+  publicBookingUrl?: string | null;
   salonDescription?: string | null;
   salonPhone?: string | null;
   salonWhatsapp?: string | null;

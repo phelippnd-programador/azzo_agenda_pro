@@ -26,10 +26,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { salonApi, utilsApi, type SalonProfile as SalonProfileData } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
-
-const PUBLIC_BOOKING_BASE_URL =
-  (import.meta.env.VITE_PUBLIC_BOOKING_BASE_URL as string | undefined)?.replace(/\/$/, '') ||
-  window.location.origin;
+import { buildPublicBookingUrl } from '@/lib/public-booking-url';
 
 interface BusinessHours {
   day: string;
@@ -63,6 +60,7 @@ export default function SalonProfile() {
 
   const [salonName, setSalonName] = useState('');
   const [salonSlug, setSalonSlug] = useState('');
+  const [publicBookingUrl, setPublicBookingUrl] = useState('');
   const [salonDescription, setSalonDescription] = useState('');
   const [salonPhone, setSalonPhone] = useState('');
   const [salonWhatsapp, setSalonWhatsapp] = useState('');
@@ -114,6 +112,7 @@ export default function SalonProfile() {
         const resolvedSlug = data.salonSlug || "meu-salao";
         setSalonSlug(resolvedSlug);
         persistSalonSlug(resolvedSlug);
+        setPublicBookingUrl(data.publicBookingUrl || '');
         setSalonDescription(data.salonDescription || '');
         setSalonPhone(data.salonPhone || '');
         setSalonWhatsapp(data.salonWhatsapp || '');
@@ -213,8 +212,9 @@ export default function SalonProfile() {
         businessHours,
       };
 
-      await salonApi.updateProfile(profileData);
+      const updatedProfile = await salonApi.updateProfile(profileData);
       persistSalonSlug(salonSlug);
+      setPublicBookingUrl(updatedProfile.publicBookingUrl || '');
       toast.success('Perfil do salao atualizado com sucesso');
     } catch (error) {
       toast.error(resolveUiError(error, 'Erro ao salvar perfil').message);
@@ -230,12 +230,12 @@ export default function SalonProfile() {
   };
 
   const copyBookingLink = () => {
-    const link = `${PUBLIC_BOOKING_BASE_URL}/agendar/${salonSlug}`;
+    const link = buildPublicBookingUrl(salonSlug, publicBookingUrl || undefined);
     navigator.clipboard.writeText(link);
     toast.success('Link copiado para a area de transferencia');
   };
 
-  const bookingLink = `/agendar/${salonSlug}`;
+  const bookingAbsoluteUrl = buildPublicBookingUrl(salonSlug, publicBookingUrl || undefined);
 
   return (
     <MainLayout title="Perfil do Salao" subtitle="Gerencie as informacoes do seu estabelecimento">
@@ -285,8 +285,7 @@ export default function SalonProfile() {
                   Compartilhe este link com seus clientes para agendamento online
                 </p>
                 <code className="text-xs sm:text-sm bg-background/70 px-2 py-1 rounded mt-2 inline-block text-primary">
-                  {PUBLIC_BOOKING_BASE_URL}
-                  {bookingLink}
+                  {bookingAbsoluteUrl}
                 </code>
               </div>
               <div className="flex gap-2">
@@ -295,7 +294,7 @@ export default function SalonProfile() {
                   Copiar
                 </Button>
                 <Button size="sm" asChild className="gap-2">
-                  <a href={bookingLink} target="_blank" rel="noopener noreferrer">
+                  <a href={bookingAbsoluteUrl} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="w-4 h-4" />
                     Abrir
                   </a>
