@@ -190,16 +190,11 @@ export type StandardApiErrorPayload = {
 const API_URL =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ||
   "http://localhost:8080/api/v1";
-const TOKEN_KEY = "token";
-const REFRESH_TOKEN_KEY = "refresh_token";
 const USER_KEY = "auth_user";
 const LOCAL_DEMO_MODE_KEY = "local_demo_mode";
 const LOCAL_DEMO_ROLE_KEY = "local_demo_role";
 
-const getToken = () => localStorage.getItem(TOKEN_KEY);
-const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
-
-let refreshPromise: Promise<string | null> | null = null;
+let refreshPromise: Promise<boolean> | null = null;
 let lastPlanExpiredToastAt = 0;
 let lastPlanExpiredRedirectAt = 0;
 
@@ -2337,11 +2332,6 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
   return {} as T;
 };
 
-const shouldAttachAuthToken = (endpoint: string) =>
-  !endpoint.startsWith("/auth/login") &&
-  !endpoint.startsWith("/auth/register") &&
-  !endpoint.startsWith("/auth/refresh");
-
 const getErrorPayload = async (response: Response) => {
   const contentType = response.headers.get("content-type") || "";
   let errorMessage =
@@ -2397,54 +2387,30 @@ const redirectToLicensePage = () => {
   window.location.replace("/financeiro/licenca");
 };
 
-const saveSession = (
-  token?: string,
-  user?: User | null,
-  refreshToken?: string
-) => {
-  if (token) localStorage.setItem(TOKEN_KEY, token);
-  if (refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+const saveSession = (user?: User | null) => {
   if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
 };
 
 const clearSession = () => {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
 };
 
-const refreshAccessToken = async (): Promise<string | null> => {
-  const storedRefreshToken = getRefreshToken();
-  if (!storedRefreshToken) return null;
-
+const refreshAccessToken = async (): Promise<boolean> => {
   if (!refreshPromise) {
     refreshPromise = (async () => {
       const response = await fetch(`${API_URL}/auth/refresh`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refresh_token: storedRefreshToken }),
+        credentials: "include",
       });
 
       if (!response.ok) {
         throw new Error("Falha ao renovar token");
       }
-
-      const data = (await response.json()) as AuthResponse;
-      const nextAccessToken = data.access_token || data.token || null;
-      const nextRefreshToken = data.refresh_token || data.refreshToken;
-
-      if (!nextAccessToken) {
-        throw new Error("Resposta de refresh sem access token");
-      }
-
-      saveSession(nextAccessToken, undefined, nextRefreshToken);
-      return nextAccessToken;
+      return true;
     })()
       .catch(() => {
         clearSession();
-        return null;
+        return false;
       })
       .finally(() => {
         refreshPromise = null;
@@ -2463,8 +2429,6 @@ const request = async <T>(
     return Promise.resolve(localDemoRequest<T>(endpoint, options));
   }
 
-  const token = getToken();
-
   const headers = new Headers(options.headers || {});
   const hasBody = typeof options.body !== "undefined" && options.body !== null;
   const isFormData =
@@ -2475,13 +2439,10 @@ const request = async <T>(
     headers.delete("Content-Type");
   }
 
-  if (token && shouldAttachAuthToken(endpoint)) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -2492,8 +2453,8 @@ const request = async <T>(
       endpoint !== "/auth/login" &&
       endpoint !== "/auth/register"
     ) {
-      const refreshedToken = await refreshAccessToken();
-      if (refreshedToken) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
         return request<T>(endpoint, options, false);
       }
     }
@@ -2577,16 +2538,12 @@ const requestBlob = async (
     return Promise.resolve(emptyPdfBlob);
   }
 
-  const token = getToken();
   const headers = new Headers(options.headers || {});
-
-  if (token && shouldAttachAuthToken(endpoint)) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
 
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -2597,8 +2554,8 @@ const requestBlob = async (
       endpoint !== "/auth/login" &&
       endpoint !== "/auth/register"
     ) {
-      const refreshedToken = await refreshAccessToken();
-      if (refreshedToken) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
         return requestBlob(endpoint, options, false);
       }
     }
@@ -2633,10 +2590,6 @@ export const initializeDemoData = () => {
 /* ================= AUTH ================= */
 
 type AuthResponse = {
-  access_token?: string;
-  token?: string;
-  refresh_token?: string;
-  refreshToken?: string;
   user?: User;
 };
 
@@ -2663,10 +2616,8 @@ export const authApi = {
       }
       getDemoState();
       const localDemoUser = getLocalDemoUser();
-      saveSession("demo-local-token", localDemoUser, "demo-local-refresh");
+      saveSession(localDemoUser);
       return {
-        access_token: "demo-local-token",
-        refresh_token: "demo-local-refresh",
         user: localDemoUser,
       };
     }
@@ -2676,8 +2627,7 @@ export const authApi = {
       body: JSON.stringify({ email, password, mfaCode }),
     });
 
-    const token = data.access_token || data.token;
-    saveSession(token, data.user || null, data.refresh_token || data.refreshToken);
+    saveSession(data.user || null);
 
     return {
       ...data,
@@ -2702,8 +2652,7 @@ export const authApi = {
       body: JSON.stringify(data),
     });
 
-    const token = response.access_token || response.token;
-    saveSession(token, response.user || null, response.refresh_token || response.refreshToken);
+    saveSession(response.user || null);
 
     return {
       ...response,
@@ -2719,11 +2668,11 @@ export const authApi = {
   async me() {
     if (isLocalDemoModeEnabled()) {
       const localDemoUser = getLocalDemoUser();
-      saveSession("demo-local-token", localDemoUser, "demo-local-refresh");
+      saveSession(localDemoUser);
       return localDemoUser;
     }
     const user = await request<User>("/auth/me");
-    saveSession(undefined, user);
+    saveSession(user);
     return user;
   },
 
@@ -2732,18 +2681,23 @@ export const authApi = {
     setStoredLocalDemoRole(role);
     getDemoState();
     const localDemoUser = getLocalDemoUser();
-    saveSession("demo-local-token", localDemoUser, "demo-local-refresh");
+    saveSession(localDemoUser);
     return localDemoUser;
   },
 
   async logout() {
     setLocalDemoMode(false);
+    try {
+      await request<void>("/auth/logout", { method: "DELETE" }, false);
+    } catch {
+      // Mesmo com erro no backend, limpar sessao local.
+    }
     clearSession();
   },
 
   hasSession() {
     if (isLocalDemoModeEnabled()) return true;
-    return !!getToken() || !!getRefreshToken();
+    return !!readStoredUser();
   },
 };
 

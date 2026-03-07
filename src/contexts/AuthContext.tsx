@@ -33,7 +33,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const pathname = typeof window !== "undefined" ? window.location.pathname : "";
     const isPublicBookingRoute = pathname === "/agendar" || pathname.startsWith("/agendar/");
 
-    const hasSession = authApi.hasSession();
     const storedUser = authApi.getCurrentUser();
 
     if (storedUser) {
@@ -45,20 +44,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (!hasSession) {
-      setIsLoading(false);
-      return;
-    }
-
     authApi
       .me()
       .then((currentUser) => setUser(currentUser))
       .catch(() => {
-        // Mantém sessão hidratada com o usuário salvo localmente
-        // quando houver falha transitória no /auth/me.
-        if (!storedUser) {
-          setUser(null);
-        }
+        if (!storedUser) setUser(null);
       })
       .finally(() => setIsLoading(false));
   }, []);
