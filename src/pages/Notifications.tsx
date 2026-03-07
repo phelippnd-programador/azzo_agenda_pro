@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Bell, CheckCheck, RefreshCw, Trash2 } from "lucide-react";
+import { Bell, CheckCheck, Eye, RefreshCw, Trash2 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +17,7 @@ import { NotificationsFilters } from "@/components/notifications/NotificationsFi
 import { useNotifications } from "@/hooks/useNotifications";
 import type { NotificationsFilters as NotificationFilters } from "@/types/notification";
 import type { AppNotification } from "@/types/notification";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -39,6 +40,7 @@ export default function Notifications() {
     fetchNextPage,
     removeNotification,
     clearAllNotifications,
+    markNotificationAsRead,
     markAllAsRead,
   } = useNotifications();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -53,8 +55,10 @@ export default function Notifications() {
     const selectedFromUrl = searchParams.get("id");
     if (selectedFromUrl) {
       setSelectedId(selectedFromUrl);
+      setIsDetailOpen(true);
+      void markNotificationAsRead(selectedFromUrl);
     }
-  }, [searchParams]);
+  }, [searchParams, markNotificationAsRead]);
 
   // Ao entrar na pagina de notificacao, busca no backend.
   useEffect(() => {
@@ -74,8 +78,8 @@ export default function Notifications() {
     await fetchAll(currentFilters);
   };
 
-  const handleMarkAllAsRead = () => {
-    markAllAsRead();
+  const handleMarkAllAsRead = async () => {
+    await markAllAsRead();
   };
 
   const handleClearAll = async () => {
@@ -105,9 +109,12 @@ export default function Notifications() {
     return "bg-primary/10 text-primary border-primary/30";
   };
 
-  const openDetails = (id: string) => {
+  const isUnread = (item: AppNotification) => !(item.viewed ?? Boolean(item.viewedAt));
+
+  const openDetails = async (id: string) => {
     setSelectedId(id);
     setIsDetailOpen(true);
+    await markNotificationAsRead(id);
   };
 
   return (
@@ -121,7 +128,7 @@ export default function Notifications() {
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-primary" />
               <span className="text-sm">
-                {unreadCount} pendente/falha{unreadCount === 1 ? "" : "s"}
+                {unreadCount} nao visualizada{unreadCount === 1 ? "" : "s"}
               </span>
               {lastFetchAt ? (
                 <span className="text-xs text-muted-foreground">
@@ -158,7 +165,7 @@ export default function Notifications() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={handleMarkAllAsRead} disabled={!notifications.length}>
+              <Button variant="outline" onClick={() => void handleMarkAllAsRead()} disabled={!notifications.length}>
                 <CheckCheck className="w-4 h-4 mr-2" />
                 Marcar todas como lidas
               </Button>
@@ -192,18 +199,41 @@ export default function Notifications() {
                     </thead>
                     <tbody>
                       {notifications.map((item) => (
-                        <tr key={item.id} className="border-b hover:bg-muted/40">
+                        <tr
+                          key={item.id}
+                          className={`border-b hover:bg-muted/40 ${isUnread(item) ? "bg-primary/5" : ""}`}
+                        >
                           <td className="py-2">{formatDate(item.sentAt || item.createdAt)}</td>
                           <td className="py-2">{item.channel || "-"}</td>
-                          <td className="py-2 max-w-[360px] truncate">{item.message}</td>
+                          <td className="py-2 max-w-[360px]">
+                            <div className="flex items-center gap-2">
+                              {isUnread(item) ? <span className="h-2 w-2 rounded-full bg-primary inline-block" /> : null}
+                              <span className="truncate">{item.message}</span>
+                              {isUnread(item) ? (
+                                <Badge className="bg-primary/10 text-primary border-primary/30">Nova</Badge>
+                              ) : null}
+                            </div>
+                          </td>
                           <td className="py-2">
                             <Badge className={getStatusBadgeClass(item.status)}>{item.status}</Badge>
                           </td>
                           <td className="py-2">{item.destination || "-"}</td>
                           <td className="py-2 text-right">
-                            <Button size="sm" variant="outline" onClick={() => openDetails(item.id)}>
-                              Ver detalhe
-                            </Button>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    aria-label="Ver detalhe da notificacao"
+                                    onClick={() => void openDetails(item.id)}
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Ver detalhe</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </td>
                         </tr>
                       ))}
@@ -236,6 +266,7 @@ export default function Notifications() {
               </div>
               <p><span className="font-medium">Criada em:</span> {formatDate(selected.createdAt)}</p>
               <p><span className="font-medium">Enviada em:</span> {selected.sentAt ? formatDate(selected.sentAt) : "-"}</p>
+              <p><span className="font-medium">Visualizada em:</span> {selected.viewedAt ? formatDate(selected.viewedAt) : "-"}</p>
               <p><span className="font-medium">Destino:</span> {selected.destination || "-"}</p>
               <p><span className="font-medium">Mensagem:</span> {selected.message}</p>
               <p><span className="font-medium">ID:</span> <span className="font-mono text-xs">{selected.id}</span></p>

@@ -68,7 +68,13 @@ export function NotificationBell() {
             className="flex flex-col items-start gap-1 py-2 sm:py-3"
             onClick={() => navigate(`/notificacoes?id=${item.id}`)}
           >
-            <span className="font-medium text-sm">{resolveNotificationTitle(item)}</span>
+            <span className="font-medium text-sm flex items-center gap-2">
+              {!(item.viewed ?? Boolean(item.viewedAt)) ? <span className="h-2 w-2 rounded-full bg-primary inline-block" /> : null}
+              {resolveNotificationTitle(item)}
+              {!(item.viewed ?? Boolean(item.viewedAt)) ? (
+                <Badge className="bg-primary/10 text-primary border-primary/30">Nova</Badge>
+              ) : null}
+            </span>
             <span className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{item.message}</span>
             <span className="text-[11px] text-muted-foreground">{formatTimestamp(item.sentAt || item.createdAt)}</span>
           </DropdownMenuItem>

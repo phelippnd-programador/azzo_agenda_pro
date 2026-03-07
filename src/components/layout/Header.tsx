@@ -101,7 +101,13 @@ export function Header({
                     navigate(`/notificacoes?id=${item.id}`);
                   }}
                 >
-                  <span className="font-medium text-sm">{item.channel || "Notificacao"}</span>
+                  <span className="font-medium text-sm flex items-center gap-2">
+                    {!(item.viewed ?? Boolean(item.viewedAt)) ? <span className="h-2 w-2 rounded-full bg-primary inline-block" /> : null}
+                    {item.channel || "Notificacao"}
+                    {!(item.viewed ?? Boolean(item.viewedAt)) ? (
+                      <Badge className="bg-primary/10 text-primary border-primary/30">Nova</Badge>
+                    ) : null}
+                  </span>
                   <span className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{item.message}</span>
                 </DropdownMenuItem>
               ))}

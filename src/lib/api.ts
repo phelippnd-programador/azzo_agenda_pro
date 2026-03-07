@@ -1971,8 +1971,38 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
   }
 
   if (path === "/notifications") {
+    const statusFilter = (query.get("status") || "").toUpperCase();
+    const channelFilter = (query.get("channel") || "").toLowerCase();
+    const failedOnly = query.get("failedOnly") === "true";
+    const unreadOnly = query.get("unreadOnly") === "true";
+    const limit = Math.min(Math.max(Number(query.get("limit") || "100"), 1), 500);
+
+    let items = [...state.notifications];
+    if (statusFilter) {
+      items = items.filter((notification) => String(notification.status || "").toUpperCase() === statusFilter);
+    }
+    if (channelFilter) {
+      items = items.filter((notification) =>
+        String(notification.channel || "").toLowerCase() === channelFilter
+      );
+    }
+    if (failedOnly) {
+      items = items.filter((notification) => notification.status === "FAILED");
+    }
+    if (unreadOnly) {
+      items = items.filter((notification) => !notification.viewedAt && notification.viewed !== true);
+    }
+
+    items = items
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt || b.sentAt || 0).getTime() -
+          new Date(a.createdAt || a.sentAt || 0).getTime()
+      )
+      .slice(0, limit);
+
     return {
-      items: state.notifications,
+      items,
       hasMore: false,
       nextCursorCreatedAt: null,
       nextCursorId: null,
@@ -1986,6 +2016,28 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
     const id = path.replace("/notifications/", "");
     state.notifications = state.notifications.filter((notification) => notification.id !== id);
     return {} as T;
+  }
+  if (path === "/notifications/viewed/all" && method === "PATCH") {
+    let updated = 0;
+    const nowIso = new Date().toISOString();
+    state.notifications = state.notifications.map((notification) => {
+      if (notification.viewedAt || notification.viewed === true) return notification;
+      updated += 1;
+      return { ...notification, viewed: true, viewedAt: nowIso };
+    });
+    return { updated } as T;
+  }
+  if (path.startsWith("/notifications/") && path.endsWith("/viewed") && method === "PATCH") {
+    const id = path.replace("/notifications/", "").replace("/viewed", "");
+    let updated = false;
+    const nowIso = new Date().toISOString();
+    state.notifications = state.notifications.map((notification) => {
+      if (notification.id !== id) return notification;
+      updated = true;
+      if (notification.viewedAt || notification.viewed === true) return notification;
+      return { ...notification, viewed: true, viewedAt: nowIso };
+    });
+    return { updated } as T;
   }
 
   if (path === "/salon/profile") {
@@ -3174,6 +3226,9 @@ export const notificationsApi = {
     if (typeof filters.failedOnly === "boolean") {
       query.set("failedOnly", String(filters.failedOnly));
     }
+    if (typeof filters.unreadOnly === "boolean") {
+      query.set("unreadOnly", String(filters.unreadOnly));
+    }
     const requestedLimit = filters.limit ?? 100;
     const normalizedLimit = Math.min(Math.max(requestedLimit, 1), 500);
     query.set("limit", String(normalizedLimit));
@@ -3210,6 +3265,14 @@ export const notificationsApi = {
   deleteAll: () =>
     request<void>("/notifications/all", {
       method: "DELETE",
+    }),
+  markAsViewed: (id: string) =>
+    request<{ updated: boolean }>(`/notifications/${id}/viewed`, {
+      method: "PATCH",
+    }),
+  markAllAsViewed: () =>
+    request<{ updated: number }>("/notifications/viewed/all", {
+      method: "PATCH",
     }),
 };
 

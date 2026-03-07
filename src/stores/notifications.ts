@@ -24,7 +24,8 @@ type NotificationsStoreState = {
   fetchNextPage: () => Promise<void>;
   removeNotification: (id: string) => Promise<boolean>;
   clearAllNotifications: () => Promise<boolean>;
-  markAllAsRead: () => void;
+  markNotificationAsRead: (id: string) => Promise<boolean>;
+  markAllAsRead: () => Promise<boolean>;
   startPolling: () => void;
   stopPolling: () => void;
 };
@@ -38,7 +39,10 @@ function sortByNewest(items: AppNotification[]) {
 }
 
 function deriveUnreadCount(items: AppNotification[]) {
-  // Sem read/unread na API: unread = PENDING + FAILED.
+  const supportsViewed = items.some((item) => typeof item.viewed === "boolean" || !!item.viewedAt);
+  if (supportsViewed) {
+    return items.filter((item) => !(item.viewed ?? Boolean(item.viewedAt))).length;
+  }
   return items.filter((item) => item.status === "PENDING" || item.status === "FAILED").length;
 }
 
@@ -74,6 +78,7 @@ export const useNotificationsStore = create<NotificationsStoreState>((set, get) 
   nextCursorId: null,
   currentFilters: {
     failedOnly: false,
+    unreadOnly: false,
     limit: 100,
   },
 
@@ -252,19 +257,46 @@ export const useNotificationsStore = create<NotificationsStoreState>((set, get) 
     }
   },
 
-  markAllAsRead: () => {
-    // Como a API atual nao possui endpoint read/unread,
-    // consideramos "lida" localmente mudando status PENDING/FAILED para SENT.
-    const marked = get().items.map((item) =>
-      item.status === "PENDING" || item.status === "FAILED"
-        ? { ...item, status: "SENT" as const }
-        : item
-    );
+  markNotificationAsRead: async (id: string) => {
+    try {
+      await notificationsApi.markAsViewed(id);
+      const nowIso = new Date().toISOString();
+      const marked = get().items.map((item) =>
+        item.id === id ? { ...item, viewed: true, viewedAt: item.viewedAt ?? nowIso } : item
+      );
+      set({
+        ...withDerivedState(marked),
+        error: null,
+      });
+      return true;
+    } catch (error) {
+      set({
+        error: normalizeErrorMessage(error),
+      });
+      return false;
+    }
+  },
 
-    set({
-      ...withDerivedState(marked),
-      error: null,
-    });
+  markAllAsRead: async () => {
+    try {
+      await notificationsApi.markAllAsViewed();
+      const nowIso = new Date().toISOString();
+      const marked = get().items.map((item) => ({
+        ...item,
+        viewed: true,
+        viewedAt: item.viewedAt ?? nowIso,
+      }));
+      set({
+        ...withDerivedState(marked),
+        error: null,
+      });
+      return true;
+    } catch (error) {
+      set({
+        error: normalizeErrorMessage(error),
+      });
+      return false;
+    }
   },
 
   startPolling: () => {

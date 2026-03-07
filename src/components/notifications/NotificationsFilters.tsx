@@ -16,7 +16,7 @@ export function NotificationsFilters({
   onApply,
 }: NotificationsFiltersProps) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
       <div className="space-y-1">
         <Label htmlFor="notifications-status">Status</Label>
         <select
@@ -83,6 +83,24 @@ export function NotificationsFilters({
               onChange({
                 ...filters,
                 failedOnly: checked,
+              })
+            }
+          />
+        </div>
+      </div>
+
+      <div className="flex items-end">
+        <div className="flex items-center justify-between rounded-md border border-input h-10 px-3 w-full">
+          <Label htmlFor="notifications-unread-only" className="text-sm">
+            Nao visualizadas
+          </Label>
+          <Switch
+            id="notifications-unread-only"
+            checked={Boolean(filters.unreadOnly)}
+            onCheckedChange={(checked) =>
+              onChange({
+                ...filters,
+                unreadOnly: checked,
               })
             }
           />

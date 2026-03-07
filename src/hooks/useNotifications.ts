@@ -17,6 +17,7 @@ export function useNotifications() {
   const fetchNextPage = useNotificationsStore((state) => state.fetchNextPage);
   const removeNotification = useNotificationsStore((state) => state.removeNotification);
   const clearAllNotifications = useNotificationsStore((state) => state.clearAllNotifications);
+  const markNotificationAsRead = useNotificationsStore((state) => state.markNotificationAsRead);
   const markAllAsRead = useNotificationsStore((state) => state.markAllAsRead);
   const startPolling = useNotificationsStore((state) => state.startPolling);
   const stopPolling = useNotificationsStore((state) => state.stopPolling);
@@ -37,6 +38,7 @@ export function useNotifications() {
     fetchNextPage,
     removeNotification,
     clearAllNotifications,
+    markNotificationAsRead,
     markAllAsRead,
     startPolling,
     stopPolling,

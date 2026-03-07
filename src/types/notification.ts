@@ -11,6 +11,8 @@ export interface AppNotification {
   status: NotificationStatus;
   errorMessage: string | null;
   sentAt: string | null;
+  viewedAt?: string | null;
+  viewed?: boolean;
   createdAt: string;
 }
 
@@ -18,6 +20,7 @@ export interface NotificationsFilters {
   status?: NotificationStatus;
   channel?: string;
   failedOnly?: boolean;
+  unreadOnly?: boolean;
   limit?: number;
 }
 
