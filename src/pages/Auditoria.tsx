@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Download, RefreshCw, Search } from "lucide-react";
+import { Download, Eye, RefreshCw, Search } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { auditoriaApi } from "@/lib/api";
 import { useAuditEventDetail } from "@/hooks/useAuditEventDetail";
 import { useAuditEvents } from "@/hooks/useAuditEvents";
@@ -57,6 +58,110 @@ const maskIpAddress = (ipAddress: string | null) => {
 };
 
 const toComparableString = (value: unknown) => JSON.stringify(value ?? null);
+
+type AuditUiMeta = {
+  label: string;
+  description: string;
+};
+
+const ACTION_META: Record<string, AuditUiMeta> = {
+  RBAC_PERMISSION_UPDATE: {
+    label: "Permissao de acesso atualizada",
+    description: "Uma permissao de acesso do sistema foi alterada.",
+  },
+  AUTH_LOGIN: { label: "Login", description: "Autenticacao de usuario no sistema." },
+  AUTH_REFRESH: { label: "Renovacao de sessao", description: "Renovacao do token de acesso." },
+  AUTH_LOGIN_MFA_REQUIRED: { label: "MFA obrigatorio", description: "Login bloqueado aguardando codigo MFA." },
+  AUTH_LOGIN_MFA_DENIED: { label: "MFA recusado", description: "Codigo MFA invalido no login." },
+  AUTH_MFA_ENABLE: { label: "MFA ativado", description: "Ativacao de autenticacao multifator." },
+  AUTH_MFA_DISABLE: { label: "MFA desativado", description: "Desativacao de autenticacao multifator." },
+  PROFESSIONAL_CREATE: { label: "Criacao de profissional", description: "Cadastro de novo profissional." },
+  PROFESSIONAL_UPDATE: { label: "Atualizacao de profissional", description: "Edicao de dados do profissional." },
+  PROFESSIONAL_DELETE: { label: "Remocao de profissional", description: "Exclusao de profissional." },
+  PROFESSIONAL_PASSWORD_RESET: { label: "Reset de senha", description: "Geracao de senha temporaria para profissional." },
+  CLIENT_CREATE: { label: "Criacao de cliente", description: "Cadastro de novo cliente." },
+  CLIENT_UPDATE: { label: "Atualizacao de cliente", description: "Edicao de dados do cliente." },
+  CLIENT_DELETE: { label: "Remocao de cliente", description: "Exclusao de cliente." },
+  FINANCE_TRANSACTION_CREATE: {
+    label: "Lancamento financeiro criado",
+    description: "Um novo lancamento financeiro foi registrado.",
+  },
+  FINANCE_TRANSACTION_UPDATE: {
+    label: "Lancamento financeiro atualizado",
+    description: "Um lancamento financeiro foi alterado.",
+  },
+  FINANCE_TRANSACTION_DELETE: {
+    label: "Lancamento financeiro removido",
+    description: "Um lancamento financeiro foi removido.",
+  },
+  FISCAL_INVOICE_AUTHORIZE: {
+    label: "Nota fiscal autorizada",
+    description: "A nota fiscal foi enviada e autorizada pelo provedor fiscal.",
+  },
+  APPOINTMENT_CREATE: {
+    label: "Agendamento criado",
+    description: "Um novo agendamento foi criado.",
+  },
+  APPOINTMENT_UPDATE: {
+    label: "Agendamento atualizado",
+    description: "Um agendamento foi alterado.",
+  },
+  APPOINTMENT_CANCEL: {
+    label: "Agendamento cancelado",
+    description: "Um agendamento foi cancelado.",
+  },
+  APPOINTMENT_DELETE: {
+    label: "Agendamento removido",
+    description: "Um agendamento foi removido.",
+  },
+  LGPD_REQUEST_CREATE: { label: "Solicitacao LGPD criada", description: "Nova solicitacao de titular registrada." },
+  LGPD_REQUEST_STATUS_UPDATE: { label: "Status LGPD atualizado", description: "Atualizacao de status de solicitacao LGPD." },
+};
+
+const MODULE_META: Record<string, string> = {
+  RBAC: "Permissoes de acesso",
+};
+
+const ENTITY_META: Record<string, AuditUiMeta> = {
+  ENTITY: { label: "Permissao/Menu", description: "Alteracao de permissao, menu ou configuracao de acesso." },
+  USER_AUTH: { label: "Autenticacao", description: "Eventos de autenticacao de usuario." },
+  PROFESSIONAL: { label: "Profissional", description: "Dados e operacoes de profissionais." },
+  CLIENT: { label: "Cliente", description: "Dados e operacoes de clientes." },
+  LGPD_REQUEST: { label: "Solicitacao LGPD", description: "Atendimento de requisicoes LGPD." },
+  AUDIT_READ: { label: "Consulta de auditoria", description: "Acesso aos eventos e filtros da auditoria." },
+  FINANCE_TRANSACTION: { label: "Lancamento financeiro", description: "Dados e operacoes de lancamentos financeiros." },
+  APPOINTMENT: { label: "Agendamento", description: "Dados e operacoes de agendamentos." },
+};
+
+const humanizeToken = (value: string) =>
+  value
+    .toLowerCase()
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
+const actionMeta = (action: string): AuditUiMeta =>
+  ACTION_META[action] || {
+    label: humanizeToken(action),
+    description: "Evento registrado pelo sistema para controle e rastreabilidade.",
+  };
+
+const entityMeta = (entityType: string | null): AuditUiMeta => {
+  if (!entityType) {
+    return { label: "-", description: "Evento sem entidade vinculada." };
+  }
+  return ENTITY_META[entityType] || {
+    label: humanizeToken(entityType),
+    description: "Tipo de registro impactado por este evento.",
+  };
+};
+
+const moduleLabel = (module: string) => MODULE_META[module] || humanizeToken(module);
+const statusLabel = (status: string) =>
+  ({
+    SUCCESS: "Sucesso",
+    ERROR: "Erro",
+    DENIED: "Negado",
+  }[status] || humanizeToken(status));
 
 const buildDiffEntries = (detail: AuditEventDetailDto | null) => {
   if (!detail) return [];
@@ -106,6 +211,8 @@ export default function Auditoria() {
   const [toInput, setToInput] = useState(toDateTimeLocal(filters.to));
   const [moduleInput, setModuleInput] = useState("");
   const [statusInput, setStatusInput] = useState("");
+  const [actionInput, setActionInput] = useState("");
+  const [entityTypeInput, setEntityTypeInput] = useState("");
   const [requestIdInput, setRequestIdInput] = useState("");
   const [searchInput, setSearchInput] = useState("");
 
@@ -148,14 +255,17 @@ export default function Auditoria() {
       {
         title: "Modulos mais frequentes",
         items: aggregations.byModule.slice(0, 3),
+        formatLabel: (key: string) => moduleLabel(key),
       },
       {
         title: "Status dos eventos",
         items: aggregations.byStatus.slice(0, 3),
+        formatLabel: (key: string) => statusLabel(key),
       },
       {
         title: "Acoes mais executadas",
         items: aggregations.byAction.slice(0, 3),
+        formatLabel: (key: string) => actionMeta(key).label,
       },
     ],
     [aggregations]
@@ -181,6 +291,8 @@ export default function Auditoria() {
       to: toDate.toISOString(),
       modules: moduleInput ? [moduleInput] : undefined,
       statuses: statusInput ? [statusInput as AuditStatus] : undefined,
+      actions: actionInput ? [actionInput] : undefined,
+      entityTypes: entityTypeInput ? [entityTypeInput] : undefined,
       requestId: requestIdInput || undefined,
       text: searchInput || undefined,
       cursor: undefined,
@@ -209,7 +321,7 @@ export default function Auditoria() {
             <CardTitle>Filtros de consulta</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Periodo inicial</p>
                 <Input type="datetime-local" value={fromInput} onChange={(e) => setFromInput(e.target.value)} />
@@ -228,7 +340,7 @@ export default function Auditoria() {
                   <option value="">Todos</option>
                   {filterOptions?.modules.map((module) => (
                     <option key={module} value={module}>
-                      {module}
+                      {moduleLabel(module)}
                     </option>
                   ))}
                 </select>
@@ -244,6 +356,36 @@ export default function Auditoria() {
                   {filterOptions?.statuses.map((status) => (
                     <option key={status} value={status}>
                       {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Acao</p>
+                <select
+                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  value={actionInput}
+                  onChange={(e) => setActionInput(e.target.value)}
+                >
+                  <option value="">Todas</option>
+                  {filterOptions?.actions.map((action) => (
+                    <option key={action} value={action}>
+                      {actionMeta(action).label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Registro afetado</p>
+                <select
+                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  value={entityTypeInput}
+                  onChange={(e) => setEntityTypeInput(e.target.value)}
+                >
+                  <option value="">Todas</option>
+                  {filterOptions?.entityTypes.map((entityType) => (
+                    <option key={entityType} value={entityType}>
+                      {entityMeta(entityType).label}
                     </option>
                   ))}
                 </select>
@@ -304,7 +446,7 @@ export default function Auditoria() {
                 ) : (
                   card.items.map((item) => (
                     <div key={item.key} className="flex items-center justify-between text-sm">
-                      <span>{item.key}</span>
+                      <span>{card.formatLabel(item.key)}</span>
                       <span className="font-medium">{item.count}</span>
                     </div>
                   ))
@@ -331,7 +473,7 @@ export default function Auditoria() {
             ) : !items.length ? (
               <p className="text-sm text-muted-foreground">Nenhum evento encontrado no periodo informado.</p>
             ) : (
-              <>
+              <TooltipProvider delayDuration={150}>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -339,7 +481,7 @@ export default function Auditoria() {
                         <th className="py-2">Data</th>
                         <th className="py-2">Modulo</th>
                         <th className="py-2">Acao</th>
-                        <th className="py-2">Entidade</th>
+                        <th className="py-2">Registro afetado</th>
                         <th className="py-2">Status</th>
                         <th className="py-2">Ator</th>
                         <th className="py-2">Request ID</th>
@@ -350,17 +492,41 @@ export default function Auditoria() {
                       {items.map((item) => (
                         <tr key={item.id} className="border-b hover:bg-muted/40">
                           <td className="py-2">{formatDateTime(item.createdAt)}</td>
-                          <td className="py-2">{item.module}</td>
-                          <td className="py-2">{item.action}</td>
-                          <td className="py-2">{item.entityType || "-"}</td>
+                          <td className="py-2">{moduleLabel(item.module)}</td>
+                          <td className="py-2">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="cursor-help underline decoration-dotted underline-offset-2">
+                                  {actionMeta(item.action).label}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>{actionMeta(item.action).description}</TooltipContent>
+                            </Tooltip>
+                          </td>
+                          <td className="py-2">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="cursor-help underline decoration-dotted underline-offset-2">
+                                  {entityMeta(item.entityType).label}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>{entityMeta(item.entityType).description}</TooltipContent>
+                            </Tooltip>
+                          </td>
                           <td className="py-2">
                             <Badge className={statusBadgeClass[item.status]}>{item.status}</Badge>
                           </td>
                           <td className="py-2">{item.actorName || "-"}</td>
                           <td className="py-2 font-mono text-xs">{item.requestId}</td>
                           <td className="py-2 text-right">
-                            <Button variant="outline" size="sm" onClick={() => openEventDetail(item.id)}>
-                              Ver detalhe
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => openEventDetail(item.id)}
+                              aria-label="Ver detalhe do evento"
+                              title="Ver detalhe"
+                            >
+                              <Eye className="h-4 w-4" />
                             </Button>
                           </td>
                         </tr>
@@ -381,7 +547,7 @@ export default function Auditoria() {
                     </Button>
                   ) : null}
                 </div>
-              </>
+              </TooltipProvider>
             )}
           </CardContent>
         </Card>
@@ -431,6 +597,10 @@ export default function Auditoria() {
           ) : (
             <div className="space-y-4 text-sm">
               <div className="grid gap-2 md:grid-cols-2">
+                <p><span className="font-medium">Data/hora do evento:</span> {formatDateTime(eventDetail.createdAt)}</p>
+                <p><span className="font-medium">Modulo:</span> {moduleLabel(eventDetail.module)}</p>
+                <p><span className="font-medium">Acao:</span> {actionMeta(eventDetail.action).label}</p>
+                <p><span className="font-medium">Registro afetado:</span> {entityMeta(eventDetail.entityType).label}</p>
                 <p><span className="font-medium">Request ID:</span> <span className="font-mono">{eventDetail.requestId}</span></p>
                 <p><span className="font-medium">Canal:</span> {eventDetail.sourceChannel}</p>
                 <p><span className="font-medium">IP:</span> {maskIpAddress(eventDetail.ipAddress)}</p>
