@@ -514,9 +514,9 @@ export default function Auditoria() {
                             </Tooltip>
                           </td>
                           <td className="py-2">
-                            <Badge className={statusBadgeClass[item.status]}>{item.status}</Badge>
+                            <Badge className={statusBadgeClass[item.status]}>{statusLabel(item.status)}</Badge>
                           </td>
-                          <td className="py-2">{item.actorName || "-"}</td>
+                          <td className="py-2">{item.actorName || item.actorUserId || "-"}</td>
                           <td className="py-2 font-mono text-xs">{item.requestId}</td>
                           <td className="py-2 text-right">
                             <Button
