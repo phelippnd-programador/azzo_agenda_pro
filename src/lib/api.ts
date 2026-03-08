@@ -1773,11 +1773,12 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
   if (path === "/specialties") {
     if (method === "GET") return state.specialties as T;
     if (method === "POST") {
-      const payload = JSON.parse(String(options.body || "{}")) as { name?: string };
+      const payload = JSON.parse(String(options.body || "{}")) as { name?: string; description?: string | null };
       const created: Specialty = {
         id: `demo-specialty-${Date.now()}`,
         tenantId: "demo-local-tenant",
         name: payload.name || "Especialidade demo",
+        description: payload.description || null,
         createdAt: new Date().toISOString(),
       };
       state.specialties = [created, ...state.specialties];
@@ -1788,6 +1789,20 @@ Voce pode solicitar revisao, correcao e exclusao quando aplicavel.`,
     const id = path.replace("/specialties/", "");
     state.specialties = state.specialties.filter((specialty) => specialty.id !== id);
     return {} as T;
+  }
+  if (path.startsWith("/specialties/") && method === "PUT") {
+    const id = path.replace("/specialties/", "");
+    const payload = JSON.parse(String(options.body || "{}")) as { name?: string; description?: string | null };
+    state.specialties = state.specialties.map((specialty) =>
+      specialty.id === id
+        ? {
+            ...specialty,
+            name: payload.name ?? specialty.name,
+            description: payload.description ?? null,
+          }
+        : specialty
+    );
+    return (state.specialties.find((specialty) => specialty.id === id) || null) as T;
   }
 
   if (path === "/clients") {
@@ -2879,9 +2894,14 @@ export const professionalsApi = {
 
 export const specialtiesApi = {
   getAll: () => request<Specialty[]>("/specialties"),
-  create: (data: { name: string }) =>
+  create: (data: { name: string; description?: string | null }) =>
     request<Specialty>("/specialties", {
       method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: { name: string; description?: string | null }) =>
+    request<Specialty>(`/specialties/${id}`, {
+      method: "PUT",
       body: JSON.stringify(data),
     }),
   delete: (id: string) =>

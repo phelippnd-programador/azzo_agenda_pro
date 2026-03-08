@@ -33,14 +33,15 @@ export function useSpecialties() {
     fetchSpecialties();
   }, [fetchSpecialties]);
 
-  const createSpecialty = async (name: string) => {
-    const payload = name.trim();
-    if (!payload) {
+  const createSpecialty = async (input: { name: string; description?: string }) => {
+    const name = input.name.trim();
+    const description = input.description?.trim() || undefined;
+    if (!name) {
       throw new Error("Nome da especialidade obrigatorio");
     }
 
     try {
-      const created = await specialtiesApi.create({ name: payload });
+      const created = await specialtiesApi.create({ name, description });
       setSpecialties((prev) => [...prev, created]);
       toast.success("Especialidade criada com sucesso!");
       return created;
@@ -65,12 +66,38 @@ export function useSpecialties() {
     }
   };
 
+  const updateSpecialty = async (
+    id: string,
+    input: { name: string; description?: string }
+  ) => {
+    const name = input.name.trim();
+    const description = input.description?.trim() || undefined;
+    if (!name) {
+      throw new Error("Nome da especialidade obrigatorio");
+    }
+
+    try {
+      const updated = await specialtiesApi.update(id, { name, description });
+      setSpecialties((prev) =>
+        prev.map((item) => (item.id === id ? updated : item))
+      );
+      toast.success("Especialidade atualizada com sucesso!");
+      return updated;
+    } catch (err) {
+      if (!isPlanExpiredApiError(err)) {
+        toast.error(resolveUiError(err, "Erro ao atualizar especialidade").message);
+      }
+      throw err;
+    }
+  };
+
   return {
     specialties,
     isLoading,
     error,
     refetch: fetchSpecialties,
     createSpecialty,
+    updateSpecialty,
     deleteSpecialty,
   };
 }

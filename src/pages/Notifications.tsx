@@ -266,6 +266,7 @@ export default function Notifications() {
                                   <Button
                                     size="icon"
                                     variant="outline"
+                                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                     aria-label="Ver detalhe da notificacao"
                                     onClick={() => void openDetails(item.id)}
                                   >

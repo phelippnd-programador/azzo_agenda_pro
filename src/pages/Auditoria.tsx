@@ -522,6 +522,7 @@ export default function Auditoria() {
                             <Button
                               variant="outline"
                               size="icon"
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                               onClick={() => openEventDetail(item.id)}
                               aria-label="Ver detalhe do evento"
                               title="Ver detalhe"

@@ -49,9 +49,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
   ...props
 }, ref) => {
   const Comp = asChild ? Slot : "button";
+  const normalizedVariant = size === "icon" ? "ghost" : variant;
   return (
     <Comp
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonVariants({ variant: normalizedVariant, size, className }))}
       ref={ref}
       disabled={disabled || isLoading}
       {...props}

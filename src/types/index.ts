@@ -41,6 +41,7 @@ export interface Specialty {
   id: string;
   tenantId: string;
   name: string;
+  description?: string | null;
   createdAt: string | Date;
 }
 
