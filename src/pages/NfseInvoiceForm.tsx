@@ -30,6 +30,8 @@ export default function NfseInvoiceForm() {
   const [searchParams] = useSearchParams();
   const mode: Mode = id ? "edit" : "create";
   const [isSaving, setIsSaving] = useState(false);
+  const [isLookingUpCnpj, setIsLookingUpCnpj] = useState(false);
+  const [tomadorAddressPreview, setTomadorAddressPreview] = useState<string | null>(null);
   const [nbsSearch, setNbsSearch] = useState("");
   const showError = (error: unknown, fallbackMessage: string) => {
     const uiError = resolveUiError(error, fallbackMessage);
@@ -38,7 +40,7 @@ export default function NfseInvoiceForm() {
   const [invoice, setInvoice] = useState<Partial<NfseInvoice>>({
     ambiente: "HOMOLOGACAO",
     municipioCodigoIbge: "3304557",
-    provedor: "MOCK_NACIONAL",
+    provedor: "ABRASF",
     numeroRps: Date.now(),
     serieRps: "A1",
     dataCompetencia: new Date().toISOString().slice(0, 10),
@@ -132,6 +134,51 @@ export default function NfseInvoiceForm() {
       showError(error, "Erro ao salvar rascunho NFS-e");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const lookupTomadorByCnpj = async () => {
+    const rawDocument = invoice.customer?.document || "";
+    const cnpj = rawDocument.replace(/\D/g, "");
+    if (cnpj.length !== 14) {
+      toast.error("Informe um CNPJ valido (14 digitos) para consultar.");
+      return;
+    }
+    try {
+      setIsLookingUpCnpj(true);
+      const data = await nfseApi.lookupTomadorByCnpj(cnpj);
+      setInvoice((prev) => ({
+        ...prev,
+        customer: {
+          ...(prev.customer as NfseInvoice["customer"]),
+          type: "CNPJ",
+          document: data.document || cnpj,
+          name: data.name || prev.customer?.name || "",
+          email: data.email || prev.customer?.email,
+          phone: data.phone || prev.customer?.phone,
+        },
+      }));
+      const address = data.address;
+      const addressText = address
+        ? [
+            address.street,
+            address.number,
+            address.complement,
+            address.neighborhood,
+            address.city,
+            address.state,
+            address.zipCode,
+          ]
+            .filter(Boolean)
+            .join(", ")
+        : null;
+      setTomadorAddressPreview(addressText || null);
+      toast.success("Dados do tomador preenchidos. Confira antes de emitir.");
+    } catch (error) {
+      setTomadorAddressPreview(null);
+      showError(error, "Nao foi possivel consultar CNPJ do tomador");
+    } finally {
+      setIsLookingUpCnpj(false);
     }
   };
 
@@ -244,8 +291,24 @@ export default function NfseInvoiceForm() {
                   }))
                 }
               />
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={lookupTomadorByCnpj}
+                  disabled={isLookingUpCnpj}
+                >
+                  {isLookingUpCnpj ? "Consultando..." : "Buscar CNPJ"}
+                </Button>
+              </div>
             </div>
           </div>
+          {tomadorAddressPreview && (
+            <div className="rounded-md border bg-muted/30 p-3 text-sm">
+              <p className="font-medium">Endereco sugerido do tomador</p>
+              <p className="text-muted-foreground">{tomadorAddressPreview}</p>
+            </div>
+          )}
 
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">

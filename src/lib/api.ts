@@ -3811,6 +3811,28 @@ export type NfseProviderCapabilities = {
   updatedAt?: string;
 };
 
+export type NfseTomadorLookupAddress = {
+  street?: string;
+  number?: string;
+  complement?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+};
+
+export type NfseTomadorLookupResponse = {
+  document: string;
+  name: string;
+  tradeName?: string;
+  email?: string;
+  phone?: string;
+  source?: string;
+  status?: string;
+  active?: boolean;
+  address?: NfseTomadorLookupAddress;
+};
+
 export type NfseAccountingExportFormat = "CSV" | "XLSX" | "ZIP_XML";
 
 export const nfseApi = {
@@ -3893,6 +3915,8 @@ export const nfseApi = {
       method: "PUT",
       body: JSON.stringify(payload),
     }),
+  lookupTomadorByCnpj: (cnpj: string) =>
+    request<NfseTomadorLookupResponse>(`/fiscal/nfse/tomador/cnpj/${encodeURIComponent(cnpj)}`),
   downloadAccountingExport: (params: {
     from: string;
     to: string;
