@@ -4,6 +4,13 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { NotificationStatus, NotificationsFilters as FiltersType } from "@/types/notification";
 
+const CHANNEL_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: "APPOINTMENT_CREATED", label: "Agendamento criado" },
+  { value: "WHATSAPP_REMINDER", label: "Lembrete WhatsApp" },
+  { value: "WHATSAPP_CONFIG_ALERT", label: "Alerta configuracao WhatsApp" },
+  { value: "WHATSAPP_DELIVERY_ERROR", label: "Falha de entrega WhatsApp" },
+];
+
 type NotificationsFiltersProps = {
   filters: FiltersType;
   onChange: (filters: FiltersType) => void;
@@ -41,9 +48,9 @@ export function NotificationsFilters({
 
       <div className="space-y-1">
         <Label htmlFor="notifications-channel">Canal</Label>
-        <Input
+        <select
           id="notifications-channel"
-          placeholder="WHATSAPP_CONFIG_ALERT"
+          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
           value={filters.channel || ""}
           onChange={(event) =>
             onChange({
@@ -51,7 +58,14 @@ export function NotificationsFilters({
               channel: event.target.value || undefined,
             })
           }
-        />
+        >
+          <option value="">Todos</option>
+          {CHANNEL_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="space-y-1">
@@ -111,6 +125,7 @@ export function NotificationsFilters({
 
       <div className="flex items-end">
         <Button
+          type="button"
           className="w-full"
           onClick={onApply}
           isLoading={isApplying}
