@@ -51,11 +51,16 @@ const MENU_REGISTRY = {
   },
   "/financeiro/licenca": {
     icon: CreditCard,
-    label: "Assinatura e Licenca",
+    label: "Plano",
     path: "/financeiro/licenca",
   },
   "/auditoria": { icon: ShieldCheck, label: "Auditoria", path: "/auditoria" },
   "/auditoria/lgpd": { icon: FileSearch, label: "LGPD Titulares", path: "/auditoria/lgpd" },
+  "/configuracoes/admin-sistema": {
+    icon: ShieldCheck,
+    label: "Admin Sistema",
+    path: "/configuracoes/admin-sistema",
+  },
   "/emitir-nota": { icon: FileText, label: "Emitir Nota Fiscal", path: "/emitir-nota" },
   "/nota-fiscal": { icon: Eye, label: "Pre-visualizacao de NF", path: "/nota-fiscal" },
   "/apuracao-mensal": { icon: Calculator, label: "Apuracao Mensal", path: "/apuracao-mensal" },
@@ -78,6 +83,7 @@ const MAIN_MENU_ORDER = [
   "/financeiro/licenca",
   "/auditoria",
   "/auditoria/lgpd",
+  "/configuracoes/admin-sistema",
   "/emitir-nota",
   "/nota-fiscal",
   "/apuracao-mensal",
@@ -106,7 +112,6 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
     const financialGroupPaths = [
       "/financeiro",
       "/financeiro/profissionais",
-      "/financeiro/licenca",
     ] as const;
     const financialItems = financialGroupPaths
       .filter((route) => allowedSet.has(route))

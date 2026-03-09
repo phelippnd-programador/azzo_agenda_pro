@@ -53,6 +53,7 @@ import NfseInvoices from "./pages/NfseInvoices";
 import NfseInvoiceForm from "./pages/NfseInvoiceForm";
 import NfseInvoiceDetails from "./pages/NfseInvoiceDetails";
 import NfseInvoicePdf from "./pages/NfseInvoicePdf";
+import SystemAdminPage from "./pages/SystemAdmin";
 import InvoicePreview from "./pages/InvoicePreview";
 import InvoiceEmission from "./pages/InvoiceEmission";
 import ApuracaoMensal from "./pages/ApuracaoMensal";
@@ -79,7 +80,7 @@ const getFirstAllowedRoute = (allowedRoutes: string[] | null) => {
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
-  const { canAccess, isLoading: isPermissionsLoading } = useMenuPermissions();
+  const { canAccess, isLoading: isPermissionsLoading, isEnforced } = useMenuPermissions();
   const isFiscalOwnerOnlyPath =
     location.pathname.startsWith("/emitir-nota")
     || location.pathname.startsWith("/nota-fiscal")
@@ -87,8 +88,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     || location.pathname.startsWith("/configuracoes/fiscal")
     || location.pathname.startsWith("/fiscal/nfse")
     || location.pathname.startsWith("/config-impostos");
+  const isSystemAdminPath = location.pathname.startsWith("/configuracoes/admin-sistema");
 
-  if (isLoading || isPermissionsLoading) {
+  if (isLoading || isPermissionsLoading || (isAuthenticated && !isEnforced)) {
     return <FullScreenLoader />;
   }
 
@@ -97,6 +99,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (isFiscalOwnerOnlyPath && user?.role !== "OWNER") {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  if (isSystemAdminPath && user?.role !== "ADMIN") {
     return <Navigate to="/unauthorized" replace />;
   }
 
@@ -110,9 +116,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 // Public Route Component (redirects to dashboard if authenticated)
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
-  const { allowedRoutes, isLoading: isPermissionsLoading } = useMenuPermissions();
+  const { allowedRoutes, isLoading: isPermissionsLoading, isEnforced } = useMenuPermissions();
 
-  if (isLoading || (isAuthenticated && isPermissionsLoading)) {
+  if (isLoading || (isAuthenticated && (isPermissionsLoading || !isEnforced))) {
     return <FullScreenLoader />;
   }
 
@@ -125,9 +131,9 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 function RootRoute() {
   const { isAuthenticated, isLoading } = useAuth();
-  const { allowedRoutes, isLoading: isPermissionsLoading } = useMenuPermissions();
+  const { allowedRoutes, isLoading: isPermissionsLoading, isEnforced } = useMenuPermissions();
 
-  if (isLoading || (isAuthenticated && isPermissionsLoading)) {
+  if (isLoading || (isAuthenticated && (isPermissionsLoading || !isEnforced))) {
     return <FullScreenLoader />;
   }
 
@@ -473,6 +479,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <WhatsAppIntegration />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/configuracoes/admin-sistema"
+          element={
+            <ProtectedRoute>
+              <SystemAdminPage />
             </ProtectedRoute>
           }
         />

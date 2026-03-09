@@ -18,6 +18,18 @@ import type {
 } from "@/types/whatsapp";
 import type { CurrentMenuPermissionsResponse } from "@/types/menu-permissions";
 import type {
+  AdminBillingActionResponse,
+  CommercialOverview,
+  GlobalAuditDetail,
+  BulkMenuOverrideRequest,
+  GlobalAuditListResponse,
+  MenuConfigScope,
+  RevokeSessionsResponse,
+  SessionListResponse,
+  MenuRoleRoutesResponse,
+  SystemAdminRole,
+} from "@/types/system-admin";
+import type {
   AppNotification,
   NotificationsCursor,
   NotificationsFilters,
@@ -197,6 +209,8 @@ const LOCAL_DEMO_ROLE_KEY = "local_demo_role";
 let refreshPromise: Promise<boolean> | null = null;
 let lastPlanExpiredToastAt = 0;
 const PLAN_EXPIRED_BLOCK_KEY = "azzo_plan_expired_blocked";
+const SESSION_EXPIRED_REASON_KEY = "azzo_session_expired_reason";
+let isForcingLogout = false;
 
 const ALL_LOCAL_DEMO_ROUTES = [
   "/dashboard",
@@ -2423,6 +2437,24 @@ const clearSession = () => {
   setPlanExpiredBlocked(false);
 };
 
+const forceLogoutToLogin = (reason: string) => {
+  clearSession();
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(SESSION_EXPIRED_REASON_KEY, reason);
+  } catch {
+    // ignore storage errors
+  }
+  if (isForcingLogout) return;
+  isForcingLogout = true;
+  const target = "/login?reason=session-expired";
+  if (window.location.pathname !== "/login") {
+    window.location.assign(target);
+    return;
+  }
+  window.dispatchEvent(new CustomEvent("azzo:session-expired", { detail: { reason } }));
+};
+
 const refreshAccessToken = async (): Promise<boolean> => {
   if (!refreshPromise) {
     refreshPromise = (async () => {
@@ -2437,7 +2469,7 @@ const refreshAccessToken = async (): Promise<boolean> => {
       return true;
     })()
       .catch(() => {
-        clearSession();
+        forceLogoutToLogin("Sessao expirada. Faca login novamente.");
         return false;
       })
       .finally(() => {
@@ -3263,6 +3295,7 @@ export type SalonProfile = {
   salonDescription?: string | null;
   salonPhone?: string | null;
   salonWhatsapp?: string | null;
+  salonCpfCnpj?: string | null;
   salonEmail?: string | null;
   salonWebsite?: string | null;
   salonInstagram?: string | null;
@@ -3389,6 +3422,75 @@ export const tenantApi = {
 export const configApi = {
   getCurrentMenus: () =>
     request<CurrentMenuPermissionsResponse>("/config/menus/current"),
+  getRoleRoutes: (role: SystemAdminRole, scope: MenuConfigScope, tenantId?: string) =>
+    request<MenuRoleRoutesResponse>(
+      `/config/menus/roles/routes?role=${encodeURIComponent(role)}&scope=${encodeURIComponent(scope)}${
+        scope === "TENANT" && tenantId ? `&tenantId=${encodeURIComponent(tenantId)}` : ""
+      }`
+    ),
+  applyMenuOverridesBulk: (data: BulkMenuOverrideRequest) =>
+    request<{ status: string; updated: number; role: string; timestamp: string }>(
+      "/config/menus/overrides/bulk",
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      }
+    ),
+};
+
+export const systemAdminApi = {
+  getCommercialOverview: () =>
+    request<CommercialOverview>("/admin/system/commercial/overview"),
+  getGlobalAudits: (params?: {
+    from?: string;
+    to?: string;
+    tenantId?: string;
+    module?: string;
+    action?: string;
+    status?: string;
+    sourceChannel?: string;
+    entityType?: string;
+    actorUserId?: string;
+    requestId?: string;
+    text?: string;
+    limit?: number;
+  }) => {
+    const query = new URLSearchParams();
+    if (params?.from) query.set("from", params.from);
+    if (params?.to) query.set("to", params.to);
+    if (params?.tenantId) query.set("tenantId", params.tenantId);
+    if (params?.module) query.set("module", params.module);
+    if (params?.action) query.set("action", params.action);
+    if (params?.status) query.set("status", params.status);
+    if (params?.sourceChannel) query.set("sourceChannel", params.sourceChannel);
+    if (params?.entityType) query.set("entityType", params.entityType);
+    if (params?.actorUserId) query.set("actorUserId", params.actorUserId);
+    if (params?.requestId) query.set("requestId", params.requestId);
+    if (params?.text) query.set("text", params.text);
+    if (params?.limit) query.set("limit", String(params.limit));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<GlobalAuditListResponse>(`/admin/system/audits${suffix}`);
+  },
+  getGlobalAuditDetail: (id: string) =>
+    request<GlobalAuditDetail>(`/admin/system/audits/${id}`),
+  revokeSessions: (payload: { tenantId?: string; userId?: string }) =>
+    request<RevokeSessionsResponse>("/admin/system/sessions/revoke", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  listSessions: (params?: { tenantId?: string; includeRevoked?: boolean; limit?: number }) => {
+    const query = new URLSearchParams();
+    if (params?.tenantId) query.set("tenantId", params.tenantId);
+    if (params?.includeRevoked !== undefined) query.set("includeRevoked", String(params.includeRevoked));
+    if (params?.limit) query.set("limit", String(params.limit));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<SessionListResponse>(`/admin/system/sessions${suffix}`);
+  },
+  revokeSessionToken: (payload: { refreshTokenId: string; tenantId?: string }) =>
+    request<RevokeSessionsResponse>("/admin/system/sessions/revoke-token", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 };
 
 export const publicLegalApi = {
@@ -3446,6 +3548,32 @@ export const billingApi = {
   getCurrentSubscription: () =>
   request<CreateBillingSubscriptionResponse>("/billing/subscriptions/current"),
   getPayments: () => request<BillingPaymentsResponse>("/billing/payments"),
+  adminListActiveTenants: () =>
+    request<{ items: Array<{ tenantId: string; name: string; slug?: string; email?: string; phone?: string; planStatus?: string }> }>(
+      "/billing/admin/tenants/active"
+    ),
+  adminGetTenantPayments: (tenantId: string) =>
+    request<BillingPaymentsResponse>(`/billing/admin/tenants/${tenantId}/payments`),
+  adminExpireLicense: (tenantId: string, minutesAgo = 5) =>
+    request<AdminBillingActionResponse>("/billing/admin/license/expire", {
+      method: "POST",
+      body: JSON.stringify({ tenantId, minutesAgo }),
+    }),
+  adminReleaseLicense: (payload?: {
+    tenantId?: string;
+    productId?: string;
+    validityDays?: number;
+    paymentId?: string;
+  }) =>
+    request<AdminBillingActionResponse>("/billing/admin/license/release", {
+      method: "POST",
+      body: JSON.stringify(payload ?? {}),
+    }),
+  adminMarkPaymentReceived: (tenantId: string, paymentId: string, validityDays?: number) =>
+    request<AdminBillingActionResponse>("/billing/admin/payments/mark-received", {
+      method: "POST",
+      body: JSON.stringify({ tenantId, paymentId, validityDays }),
+    }),
 };
 
 export type TaxConfig = {

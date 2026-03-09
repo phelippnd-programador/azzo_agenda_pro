@@ -1,0 +1,124 @@
+export type SystemAdminRole = "ADMIN" | "OWNER" | "PROFESSIONAL";
+export type MenuConfigScope = "GLOBAL" | "TENANT";
+
+export interface MenuRoleRouteItem {
+  route: string;
+  enabled: boolean;
+  overridden: boolean;
+  reason?: string | null;
+}
+
+export interface MenuRoleRoutesResponse {
+  tenantId?: string;
+  scope?: MenuConfigScope;
+  role: string;
+  items: MenuRoleRouteItem[];
+}
+
+export interface BulkMenuOverrideRequest {
+  tenantId?: string;
+  scope?: MenuConfigScope;
+  role: SystemAdminRole;
+  items: Array<{
+    route: string;
+    enabled: boolean;
+  }>;
+  reason?: string;
+}
+
+export interface AdminBillingActionResponse {
+  status: string;
+  tenantId?: string;
+  licenseStatus?: string;
+  message?: string;
+  paymentId?: string;
+  productId?: string;
+  validUntil?: string;
+}
+
+export interface AdminTenantItem {
+  tenantId: string;
+  name: string;
+  slug?: string;
+  email?: string;
+  phone?: string;
+  planStatus?: string;
+}
+
+export interface CommercialOverview {
+  totalTenants: number;
+  totalSignups30d: number;
+  payingTenants: number;
+  activeTenants: number;
+  expiredTenants: number;
+  suspendedTenants: number;
+  conversionRatePercent: number;
+  revenueReceived30dCents: number;
+  pendingAmountCents: number;
+  tenantsByPlanStatus: Array<{
+    planStatus: string;
+    count: number;
+  }>;
+}
+
+export interface GlobalAuditItem {
+  id: string;
+  tenantId?: string;
+  tenantName?: string;
+  actorUserId?: string;
+  actorRole?: string;
+  module?: string;
+  action?: string;
+  entityType?: string;
+  entityId?: string;
+  status?: string;
+  errorCode?: string;
+  requestId?: string;
+  sourceChannel?: string;
+  ipAddress?: string;
+  createdAt?: string;
+}
+
+export interface GlobalAuditListResponse {
+  items: GlobalAuditItem[];
+  limit: number;
+}
+
+export interface GlobalAuditDetail extends GlobalAuditItem {
+  errorMessage?: string;
+  userAgent?: string;
+  beforeJson?: string;
+  afterJson?: string;
+  metadataJson?: string;
+  hasChanges?: boolean;
+  changedFieldsJson?: string;
+  eventHash?: string;
+  prevEventHash?: string;
+}
+
+export interface RevokeSessionsResponse {
+  status: string;
+  message?: string;
+  tenantId?: string;
+  userId?: string;
+  revokedCount: number;
+}
+
+export interface SessionItem {
+  refreshTokenId: string;
+  tenantId?: string;
+  tenantName?: string;
+  userId?: string;
+  userName?: string;
+  userEmail?: string;
+  userRole?: string;
+  createdAt?: string;
+  expiresAt?: string;
+  revokedAt?: string;
+  active: boolean;
+}
+
+export interface SessionListResponse {
+  items: SessionItem[];
+  limit: number;
+}

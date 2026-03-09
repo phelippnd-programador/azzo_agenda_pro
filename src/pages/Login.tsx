@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Scissors, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { getCurrentBillingSubscription } from '@/services/billingService';
-import { ApiError } from '@/lib/api';
+import { ApiError, authApi } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
 
 const isDemoLoginEnabled =
@@ -26,8 +26,44 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    const showSessionExpiredToast = (message?: string) => {
+      toast.error(message || "Sessao expirada. Faca login novamente.");
+    };
+
+    const consumeReason = () => {
+      if (typeof window === "undefined") return;
+      const params = new URLSearchParams(window.location.search);
+      const queryReason = params.get("reason");
+      const storedReason = sessionStorage.getItem("azzo_session_expired_reason");
+      if (queryReason === "session-expired" || storedReason) {
+        showSessionExpiredToast(storedReason || undefined);
+      }
+      sessionStorage.removeItem("azzo_session_expired_reason");
+      if (queryReason === "session-expired") {
+        params.delete("reason");
+        const qs = params.toString();
+        const nextUrl = `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash || ""}`;
+        window.history.replaceState({}, "", nextUrl);
+      }
+    };
+
+    const onSessionExpired = (event: Event) => {
+      const customEvent = event as CustomEvent<{ reason?: string }>;
+      showSessionExpiredToast(customEvent.detail?.reason);
+    };
+
+    consumeReason();
+    window.addEventListener("azzo:session-expired", onSessionExpired as EventListener);
+    return () => window.removeEventListener("azzo:session-expired", onSessionExpired as EventListener);
+  }, []);
+
   const getPostLoginRoute = async (): Promise<string> => {
     try {
+      const currentUser = await authApi.me();
+      if (currentUser?.role === "ADMIN") {
+        return "/configuracoes/admin-sistema";
+      }
       const subscription = await getCurrentBillingSubscription();
       const subscriptionStatus = String(subscription.status || '').toUpperCase();
       const licenseStatus = String(subscription.licenseStatus || '').toUpperCase();

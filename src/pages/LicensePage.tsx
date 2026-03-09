@@ -43,7 +43,7 @@ import {
   getCurrentBillingSubscription,
 } from "@/services/billingService";
 import { useAuth } from "@/contexts/AuthContext";
-import { ApiError } from "@/lib/api";
+import { ApiError, salonApi } from "@/lib/api";
 import { useCheckoutProducts } from "@/hooks/useCheckoutProducts";
 import { maskCpfCnpj, onlyDigits } from "@/lib/input-masks";
 
@@ -287,6 +287,29 @@ export default function LicensePage() {
       holderPhone: user?.phone || "",
     },
   });
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadPayerDocument = async () => {
+      try {
+        const profile = await salonApi.getProfile();
+        const profileDocument = onlyDigits(profile.salonCpfCnpj || "");
+        if (!profileDocument || cancelled) return;
+
+        const currentPayerDocument = onlyDigits(form.getValues("cpfCnpj"));
+        if (!currentPayerDocument) {
+          form.setValue("cpfCnpj", maskCpfCnpj(profileDocument), { shouldValidate: true });
+        }
+      } catch {
+        // Sem bloqueio da tela de licenca caso o perfil nao esteja disponivel.
+      }
+    };
+
+    loadPayerDocument();
+    return () => {
+      cancelled = true;
+    };
+  }, [form]);
 
   useEffect(() => {
     if (!plans.length) return;

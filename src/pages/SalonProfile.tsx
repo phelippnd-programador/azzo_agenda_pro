@@ -27,6 +27,7 @@ import { toast } from 'sonner';
 import { salonApi, utilsApi, type SalonProfile as SalonProfileData } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
 import { buildPublicBookingUrl } from '@/lib/public-booking-url';
+import { maskCpfCnpj, onlyDigits } from '@/lib/input-masks';
 
 interface BusinessHours {
   day: string;
@@ -64,6 +65,7 @@ export default function SalonProfile() {
   const [salonDescription, setSalonDescription] = useState('');
   const [salonPhone, setSalonPhone] = useState('');
   const [salonWhatsapp, setSalonWhatsapp] = useState('');
+  const [salonCpfCnpj, setSalonCpfCnpj] = useState('');
   const [salonEmail, setSalonEmail] = useState('');
   const [salonWebsite, setSalonWebsite] = useState('');
   const [salonInstagram, setSalonInstagram] = useState('');
@@ -116,6 +118,7 @@ export default function SalonProfile() {
         setSalonDescription(data.salonDescription || '');
         setSalonPhone(data.salonPhone || '');
         setSalonWhatsapp(data.salonWhatsapp || '');
+        setSalonCpfCnpj(maskCpfCnpj(data.salonCpfCnpj || ''));
         setSalonEmail(data.salonEmail || '');
         setSalonWebsite(data.salonWebsite || '');
         setSalonInstagram(data.salonInstagram || '');
@@ -198,6 +201,7 @@ export default function SalonProfile() {
         salonDescription,
         salonPhone,
         salonWhatsapp,
+        salonCpfCnpj: onlyDigits(salonCpfCnpj),
         salonEmail,
         salonWebsite,
         salonInstagram,
@@ -394,6 +398,17 @@ export default function SalonProfile() {
                   placeholder="https://meusalao.com"
                   value={salonWebsite}
                   onChange={(e) => setSalonWebsite(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>CPF/CNPJ</Label>
+                <Input
+                  placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                  value={salonCpfCnpj}
+                  onChange={(e) => setSalonCpfCnpj(maskCpfCnpj(e.target.value))}
                 />
               </div>
             </div>
