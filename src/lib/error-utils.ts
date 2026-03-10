@@ -23,6 +23,14 @@ type ConstraintViolationPayload = {
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
+const mapKnownApiCodeToMessage = (code?: string): string | null => {
+  const normalized = (code || "").toUpperCase();
+  if (normalized === "PLAN_EXPIRED") {
+    return "Plano vencido. Regularize o pagamento para continuar.";
+  }
+  return null;
+};
+
 const extractViolationMessage = (details: unknown): string | null => {
   if (!isObject(details)) return null;
   const payload = details as ConstraintViolationPayload;
@@ -49,8 +57,12 @@ export function resolveUiError(error: unknown, fallbackMessage: string): UiError
       error.details && typeof error.details === "object"
         ? (error.details as StandardApiErrorPayload)
         : undefined;
+    const knownCodeMessage = mapKnownApiCodeToMessage(
+      details?.code || details?.error || error.code
+    );
     const constraintMessage = extractViolationMessage(error.details);
     const resolvedMessage =
+      knownCodeMessage ||
       details?.message ||
       details?.error ||
       constraintMessage ||

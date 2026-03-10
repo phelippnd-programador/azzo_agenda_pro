@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { PlugZap, Building2, ShieldCheck, Receipt, Boxes } from "lucide-react";
 import QRCode from "qrcode";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMenuPermissions } from "@/contexts/MenuPermissionsContext";
 import { toast } from "sonner";
 import { settingsApi, usersApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
@@ -24,6 +25,7 @@ export default function Settings() {
   const initialTab = searchParams.get("tab") || "notifications";
   const [activeTab, setActiveTab] = useState(initialTab);
   const { user } = useAuth();
+  const { allowedRoutes, canAccess } = useMenuPermissions();
   const [isSaving, setIsSaving] = useState(false);
 
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -235,6 +237,48 @@ export default function Settings() {
     setSearchParams(next, { replace: true });
   };
 
+  const hasExactRoute = (route: string) => (allowedRoutes ?? []).includes(route);
+
+  const canAccessWhatsAppIntegration = hasExactRoute("/configuracoes/integracoes/whatsapp");
+  const canAccessStockSettings = hasExactRoute("/configuracoes/estoque");
+  const canAccessTaxSettings = hasExactRoute("/configuracoes/fiscal/impostos");
+  const canAccessCertificates = hasExactRoute("/configuracoes/fiscal/certificados");
+  const canAccessNfseSettings = hasExactRoute("/configuracoes/fiscal/nfse");
+  const canAccessNfseModule = hasExactRoute("/fiscal/nfse");
+  const canAccessSalonProfile = canAccess("/perfil-salao");
+
+  const visibleTabs = useMemo(() => {
+    const tabs = ["notifications", "account"];
+    if (canAccessWhatsAppIntegration || canAccessStockSettings) tabs.push("integrations");
+    if (
+      canAccessTaxSettings ||
+      canAccessCertificates ||
+      canAccessNfseSettings ||
+      canAccessNfseModule
+    ) {
+      tabs.push("fiscal");
+    }
+    if (canAccessSalonProfile) tabs.push("salon");
+    return tabs;
+  }, [
+    canAccessWhatsAppIntegration,
+    canAccessStockSettings,
+    canAccessTaxSettings,
+    canAccessCertificates,
+    canAccessNfseSettings,
+    canAccessNfseModule,
+    canAccessSalonProfile,
+  ]);
+
+  useEffect(() => {
+    if (visibleTabs.includes(activeTab)) return;
+    const fallbackTab = visibleTabs[0] || "notifications";
+    setActiveTab(fallbackTab);
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", fallbackTab);
+    setSearchParams(next, { replace: true });
+  }, [activeTab, searchParams, setSearchParams, visibleTabs]);
+
   return (
     <MainLayout
       title="Configuracoes"
@@ -242,11 +286,21 @@ export default function Settings() {
     >
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-2 h-auto">
-          <TabsTrigger value="notifications">Notificacoes</TabsTrigger>
-          <TabsTrigger value="account">Conta</TabsTrigger>
-          <TabsTrigger value="integrations">Integracoes</TabsTrigger>
-          <TabsTrigger value="fiscal">Fiscal</TabsTrigger>
-          <TabsTrigger value="salon">Perfil do Salao</TabsTrigger>
+          {visibleTabs.includes("notifications") ? (
+            <TabsTrigger value="notifications">Notificacoes</TabsTrigger>
+          ) : null}
+          {visibleTabs.includes("account") ? (
+            <TabsTrigger value="account">Conta</TabsTrigger>
+          ) : null}
+          {visibleTabs.includes("integrations") ? (
+            <TabsTrigger value="integrations">Integracoes</TabsTrigger>
+          ) : null}
+          {visibleTabs.includes("fiscal") ? (
+            <TabsTrigger value="fiscal">Fiscal</TabsTrigger>
+          ) : null}
+          {visibleTabs.includes("salon") ? (
+            <TabsTrigger value="salon">Perfil do Salao</TabsTrigger>
+          ) : null}
         </TabsList>
 
         <TabsContent value="notifications">
@@ -452,34 +506,38 @@ export default function Settings() {
               <CardDescription>Configure integracoes externas da sua operacao.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                  <p className="font-medium flex items-center gap-2">
-                    <PlugZap className="h-4 w-4 text-primary" />
-                    WhatsApp Cloud API
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Defina credenciais por tenant e valide conexao.
-                  </p>
+              {canAccessWhatsAppIntegration ? (
+                <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <p className="font-medium flex items-center gap-2">
+                      <PlugZap className="h-4 w-4 text-primary" />
+                      WhatsApp Cloud API
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Defina credenciais por tenant e valide conexao.
+                    </p>
+                  </div>
+                  <Button asChild>
+                    <Link to="/configuracoes/integracoes/whatsapp">Abrir configuracao</Link>
+                  </Button>
                 </div>
-                <Button asChild>
-                  <Link to="/configuracoes/integracoes/whatsapp">Abrir configuracao</Link>
-                </Button>
-              </div>
-              <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                  <p className="font-medium flex items-center gap-2">
-                    <Boxes className="h-4 w-4 text-primary" />
-                    Estoque
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Parametros de alerta e politicas operacionais de estoque.
-                  </p>
+              ) : null}
+              {canAccessStockSettings ? (
+                <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <p className="font-medium flex items-center gap-2">
+                      <Boxes className="h-4 w-4 text-primary" />
+                      Estoque
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Parametros de alerta e politicas operacionais de estoque.
+                    </p>
+                  </div>
+                  <Button asChild variant="outline">
+                    <Link to="/configuracoes/estoque">Abrir configuracao</Link>
+                  </Button>
                 </div>
-                <Button asChild variant="outline">
-                  <Link to="/configuracoes/estoque">Abrir configuracao</Link>
-                </Button>
-              </div>
+              ) : null}
             </CardContent>
           </Card>
         </TabsContent>
@@ -493,62 +551,70 @@ export default function Settings() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                  <p className="font-medium flex items-center gap-2">
-                    <Receipt className="h-4 w-4 text-primary" />
-                    Configuracao de Impostos
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Defina regime, aliquotas e parametros fiscais.
-                  </p>
+              {canAccessTaxSettings ? (
+                <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <p className="font-medium flex items-center gap-2">
+                      <Receipt className="h-4 w-4 text-primary" />
+                      Configuracao de Impostos
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Defina regime, aliquotas e parametros fiscais.
+                    </p>
+                  </div>
+                  <Button asChild>
+                    <Link to="/configuracoes/fiscal/impostos">Abrir configuracao</Link>
+                  </Button>
                 </div>
-                <Button asChild>
-                  <Link to="/configuracoes/fiscal/impostos">Abrir configuracao</Link>
-                </Button>
-              </div>
-              <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                  <p className="font-medium flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-primary" />
-                    Certificados Fiscais
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Gerencie upload, ativacao e remocao de certificado A1 do tenant.
-                  </p>
+              ) : null}
+              {canAccessCertificates ? (
+                <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <p className="font-medium flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4 text-primary" />
+                      Certificados Fiscais
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Gerencie upload, ativacao e remocao de certificado A1 do tenant.
+                    </p>
+                  </div>
+                  <Button asChild variant="outline">
+                    <Link to="/configuracoes/fiscal/certificados">Abrir certificados</Link>
+                  </Button>
                 </div>
-                <Button asChild variant="outline">
-                  <Link to="/configuracoes/fiscal/certificados">Abrir certificados</Link>
-                </Button>
-              </div>
-              <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                  <p className="font-medium flex items-center gap-2">
-                    <Receipt className="h-4 w-4 text-primary" />
-                    Configuracao NFS-e
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Configure emissao de servicos (municipio, provedor, RPS e capacidades).
-                  </p>
+              ) : null}
+              {canAccessNfseSettings ? (
+                <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <p className="font-medium flex items-center gap-2">
+                      <Receipt className="h-4 w-4 text-primary" />
+                      Configuracao NFS-e
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Configure emissao de servicos (municipio, provedor, RPS e capacidades).
+                    </p>
+                  </div>
+                  <Button asChild variant="outline">
+                    <Link to="/configuracoes/fiscal/nfse">Abrir NFS-e</Link>
+                  </Button>
                 </div>
-                <Button asChild variant="outline">
-                  <Link to="/configuracoes/fiscal/nfse">Abrir NFS-e</Link>
-                </Button>
-              </div>
-              <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                  <p className="font-medium flex items-center gap-2">
-                    <Receipt className="h-4 w-4 text-primary" />
-                    Modulo NFS-e
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Gerencie rascunhos, autorizacoes, cancelamentos e PDF da NFS-e.
-                  </p>
+              ) : null}
+              {canAccessNfseModule ? (
+                <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <p className="font-medium flex items-center gap-2">
+                      <Receipt className="h-4 w-4 text-primary" />
+                      Modulo NFS-e
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Gerencie rascunhos, autorizacoes, cancelamentos e PDF da NFS-e.
+                    </p>
+                  </div>
+                  <Button asChild variant="outline">
+                    <Link to="/fiscal/nfse">Abrir modulo</Link>
+                  </Button>
                 </div>
-                <Button asChild variant="outline">
-                  <Link to="/fiscal/nfse">Abrir modulo</Link>
-                </Button>
-              </div>
+              ) : null}
             </CardContent>
           </Card>
         </TabsContent>
@@ -562,12 +628,14 @@ export default function Settings() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button asChild className="gap-2">
-                <Link to="/perfil-salao">
-                  <Building2 className="h-4 w-4" />
-                  Abrir Perfil do Salao
-                </Link>
-              </Button>
+              {canAccessSalonProfile ? (
+                <Button asChild className="gap-2">
+                  <Link to="/perfil-salao">
+                    <Building2 className="h-4 w-4" />
+                    Abrir Perfil do Salao
+                  </Link>
+                </Button>
+              ) : null}
             </CardContent>
           </Card>
         </TabsContent>

@@ -45,7 +45,9 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError, salonApi } from "@/lib/api";
 import { useCheckoutProducts } from "@/hooks/useCheckoutProducts";
+import { useLicenseAccess } from "@/hooks/useLicenseAccess";
 import { maskCpfCnpj, onlyDigits } from "@/lib/input-masks";
+import { setLicenseAccessStatus } from "@/lib/license-access";
 
 type ActionMode = "IDLE" | "PAY" | "CHANGE";
 
@@ -217,8 +219,14 @@ function isSubscriptionActive(result: CreateBillingSubscriptionResponse) {
   return hasPaidFeaturesAccess(result);
 }
 
+function syncPlanExpiredBlock(result: CreateBillingSubscriptionResponse | null) {
+  const blocked = result ? getLicenseStatus(result) === "EXPIRED" || isOverdue(result) : false;
+  setLicenseAccessStatus(blocked ? "BLOCKED" : "ACTIVE");
+}
+
 export default function LicensePage() {
   const { user } = useAuth();
+  const { refreshStatus: refreshLicenseStatus } = useLicenseAccess();
   const [searchParams] = useSearchParams();
   const {
     products,
@@ -343,6 +351,7 @@ export default function LicensePage() {
       setFetchError(null);
       const current = await getCurrentBillingSubscription();
       setResult(current);
+      syncPlanExpiredBlock(current);
       const currentProductCode =
         current.productId && plans.some((plan) => plan.code === current.productId)
           ? current.productId
@@ -357,8 +366,10 @@ export default function LicensePage() {
         form.setValue("billingType", current.billingType);
       }
     } catch (error) {
-      if (error instanceof ApiError && error.status === 404) {
+      if (error instanceof ApiError && (error.status === 404 || error.status === 402)) {
         setResult(null);
+        syncPlanExpiredBlock(null);
+        setFetchError(null);
         return;
       }
       setFetchError(getBillingErrorMessage(error));
@@ -441,6 +452,7 @@ export default function LicensePage() {
   const refreshStatus = async () => {
     try {
       setIsRefreshing(true);
+      await refreshLicenseStatus();
       await Promise.all([loadCurrentSubscription(), loadPaymentHistory()]);
       toast.success("Status da assinatura atualizado.");
     } finally {
@@ -640,7 +652,7 @@ export default function LicensePage() {
                 ) : (
                   <>
                     <RefreshCw className="mr-2 h-4 w-4" />
-                    Atualizar dados
+                    Atualizar status
                   </>
                 )}
               </Button>

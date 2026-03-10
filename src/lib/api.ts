@@ -111,6 +111,11 @@ import {
   mockServices,
   mockTransactions,
 } from "@/lib/mockData";
+import {
+  isLicenseAccessBlocked,
+  setLicenseAccessStatus,
+  type LicenseAccessStatus,
+} from "@/lib/license-access";
 import { toast } from "sonner";
 
 export type {
@@ -208,7 +213,6 @@ const LOCAL_DEMO_ROLE_KEY = "local_demo_role";
 
 let refreshPromise: Promise<boolean> | null = null;
 let lastPlanExpiredToastAt = 0;
-const PLAN_EXPIRED_BLOCK_KEY = "azzo_plan_expired_blocked";
 const SESSION_EXPIRED_REASON_KEY = "azzo_session_expired_reason";
 let isForcingLogout = false;
 
@@ -2412,29 +2416,47 @@ const notifyPlanExpired = (message: string) => {
 };
 
 const setPlanExpiredBlocked = (blocked: boolean) => {
-  if (typeof window === "undefined") return;
-  try {
-    if (blocked) {
-      sessionStorage.setItem(PLAN_EXPIRED_BLOCK_KEY, "1");
-    } else {
-      sessionStorage.removeItem(PLAN_EXPIRED_BLOCK_KEY);
-    }
-    window.dispatchEvent(
-      new CustomEvent("azzo:plan-expired-changed", { detail: { blocked } })
-    );
-  } catch {
-    // ignore storage/event errors
-  }
+  setLicenseAccessStatus(blocked ? "BLOCKED" : "ACTIVE");
 };
+
+const ALLOWED_ENDPOINT_PREFIXES_WHEN_PLAN_BLOCKED = [
+  "/billing/subscriptions/current",
+  "/billing/subscriptions",
+  "/billing/payments",
+  "/checkout/products",
+  "/auth/me",
+  "/auth/logout",
+  "/config/menus/current",
+];
+
+const isAllowedWhenPlanBlocked = (endpoint: string) =>
+  ALLOWED_ENDPOINT_PREFIXES_WHEN_PLAN_BLOCKED.some((prefix) => endpoint.startsWith(prefix));
 
 const saveSession = (user?: User | null) => {
   // Cache apenas para UX (ex.: dados imediatos de perfil); nao define autenticacao.
-  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+  if (user) {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    if (String(user.role || "").toUpperCase() === "ADMIN") {
+      setLicenseAccessStatus("ACTIVE");
+    }
+  }
 };
 
 const clearSession = () => {
   localStorage.removeItem(USER_KEY);
-  setPlanExpiredBlocked(false);
+  setLicenseAccessStatus("UNKNOWN");
+};
+
+const isCurrentUserAdmin = () => {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = localStorage.getItem(USER_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw) as { role?: string };
+    return String(parsed?.role || "").toUpperCase() === "ADMIN";
+  } catch {
+    return false;
+  }
 };
 
 const forceLogoutToLogin = (reason: string) => {
@@ -2480,6 +2502,55 @@ const refreshAccessToken = async (): Promise<boolean> => {
   return refreshPromise;
 };
 
+export const refreshLicenseAccessStatus = async (): Promise<LicenseAccessStatus> => {
+  if (typeof window === "undefined") return "UNKNOWN";
+  if (isLocalDemoModeEnabled()) {
+    setLicenseAccessStatus("ACTIVE");
+    return "ACTIVE";
+  }
+  if (isCurrentUserAdmin()) {
+    setLicenseAccessStatus("ACTIVE");
+    return "ACTIVE";
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/billing/subscriptions/current`, {
+      credentials: "include",
+    });
+
+    if (response.status === 402) {
+      setLicenseAccessStatus("BLOCKED");
+      return "BLOCKED";
+    }
+    if (!response.ok) {
+      setLicenseAccessStatus("UNKNOWN");
+      return "UNKNOWN";
+    }
+
+    const payload = (await response.json()) as {
+      status?: string | null;
+      licenseStatus?: string | null;
+      paymentStatus?: string | null;
+      currentPaymentStatus?: string | null;
+    };
+
+    const status = String(payload.status || "").toUpperCase();
+    const licenseStatus = String(payload.licenseStatus || "").toUpperCase();
+    const paymentStatus = String(payload.currentPaymentStatus || payload.paymentStatus || "").toUpperCase();
+    const blocked =
+      licenseStatus === "EXPIRED" ||
+      status === "EXPIRED" ||
+      status === "OVERDUE" ||
+      paymentStatus === "OVERDUE";
+
+    setLicenseAccessStatus(blocked ? "BLOCKED" : "ACTIVE");
+    return blocked ? "BLOCKED" : "ACTIVE";
+  } catch {
+    setLicenseAccessStatus("UNKNOWN");
+    return "UNKNOWN";
+  }
+};
+
 const request = async <T>(
   endpoint: string,
   options: RequestInit = {},
@@ -2487,6 +2558,15 @@ const request = async <T>(
 ): Promise<T> => {
   if (isLocalDemoModeEnabled()) {
     return Promise.resolve(localDemoRequest<T>(endpoint, options));
+  }
+
+  if (!isCurrentUserAdmin() && isLicenseAccessBlocked() && !isAllowedWhenPlanBlocked(endpoint)) {
+    throw new ApiError(
+      "Plano vencido. Regularize o pagamento para continuar.",
+      402,
+      { error: "PLAN_EXPIRED" },
+      "PLAN_EXPIRED"
+    );
   }
 
   const headers = new Headers(options.headers || {});
@@ -2599,6 +2679,15 @@ const requestBlob = async (
       type: "application/pdf",
     });
     return Promise.resolve(emptyPdfBlob);
+  }
+
+  if (!isCurrentUserAdmin() && isLicenseAccessBlocked() && !isAllowedWhenPlanBlocked(endpoint)) {
+    throw new ApiError(
+      "Plano vencido. Regularize o pagamento para continuar.",
+      402,
+      { error: "PLAN_EXPIRED" },
+      "PLAN_EXPIRED"
+    );
   }
 
   const headers = new Headers(options.headers || {});
