@@ -23,12 +23,19 @@ import type {
   GlobalAuditDetail,
   BulkMenuOverrideRequest,
   GlobalAuditListResponse,
+  GlobalSuggestionListResponse,
   MenuConfigScope,
   RevokeSessionsResponse,
   SessionListResponse,
+  SuggestionUpdateRequest,
   MenuRoleRoutesResponse,
   SystemAdminRole,
 } from "@/types/system-admin";
+import type {
+  SuggestionCreateRequest,
+  SuggestionItem,
+  SuggestionListResponse,
+} from "@/types/suggestion";
 import type {
   AppNotification,
   NotificationsCursor,
@@ -224,6 +231,7 @@ const ALL_LOCAL_DEMO_ROUTES = [
   "/especialidades",
   "/profissionais",
   "/clientes",
+  "/sugestoes",
   "/chat",
   "/financeiro",
   "/financeiro/profissionais",
@@ -246,6 +254,7 @@ const ALL_LOCAL_DEMO_ROUTES = [
 const PROFESSIONAL_LOCAL_DEMO_ROUTES = [
   "/dashboard",
   "/agenda",
+  "/sugestoes",
   "/chat",
   "/financeiro/profissionais",
   "/estoque",
@@ -1030,6 +1039,121 @@ const localDemoRequest = <T>(endpoint: string, options: RequestInit = {}): T => 
       appointmentMarker: marker,
       updatedAt: nowIso,
     } as T;
+  }
+  if (path === "/suggestions" && method === "GET") {
+    const response: SuggestionListResponse = {
+      limit: Math.max(Number(query.get("limit") || 50), 1),
+      items: [
+        {
+          id: "demo-suggestion-1",
+          tenantId: "demo-local-tenant",
+          userId: "demo-local-user",
+          userName: "Demo Local",
+          userRole: "OWNER",
+          category: "MELHORIA",
+          title: "Melhorar filtro da agenda",
+          message: "Seria interessante filtrar por status e profissional na mesma barra.",
+          status: "OPEN",
+          sourcePage: "/agenda",
+          createdAt: new Date(Date.now() - 3_600_000).toISOString(),
+          updatedAt: new Date(Date.now() - 3_600_000).toISOString(),
+        },
+      ],
+    };
+    return response as T;
+  }
+  if (path === "/suggestions" && method === "POST") {
+    const payload = JSON.parse(String(options.body || "{}")) as SuggestionCreateRequest;
+    const nowIso = new Date().toISOString();
+    const response: SuggestionItem = {
+      id: `demo-suggestion-${Date.now()}`,
+      tenantId: "demo-local-tenant",
+      userId: "demo-local-user",
+      userName: getLocalDemoUser().name,
+      userRole: getLocalDemoUser().role,
+      category: payload.category || "MELHORIA",
+      title: payload.title || "Sugestao",
+      message: payload.message || "",
+      status: "OPEN",
+      sourcePage: payload.sourcePage || undefined,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    };
+    return response as T;
+  }
+  if (path === "/admin/system/suggestions" && method === "GET") {
+    const response: GlobalSuggestionListResponse = {
+      limit: Math.max(Number(query.get("limit") || 50), 1),
+      items: [
+        {
+          id: "demo-suggestion-1",
+          tenantId: "demo-local-tenant",
+          tenantName: "Azzo Demo Local",
+          userId: "demo-local-user",
+          userName: "Demo Local",
+          userRole: "OWNER",
+          category: "MELHORIA",
+          title: "Melhorar filtro da agenda",
+          message: "Seria interessante filtrar por status e profissional na mesma barra.",
+          status: "OPEN",
+          sourcePage: "/agenda",
+          createdAt: new Date(Date.now() - 3_600_000).toISOString(),
+          updatedAt: new Date(Date.now() - 3_600_000).toISOString(),
+        },
+      ],
+    };
+    return response as T;
+  }
+  if (path.startsWith("/admin/system/suggestions/") && method === "GET") {
+    const suggestionId = path.split("/").pop() || "demo-suggestion-1";
+    const nowIso = new Date().toISOString();
+    const response = {
+      id: suggestionId,
+      tenantId: "demo-local-tenant",
+      tenantName: "Azzo Demo Local",
+      userId: "demo-local-user",
+      userName: "Demo Local",
+      userRole: "OWNER",
+      category: "BUG",
+      title: "Erro ao carregar dashboard com plano vencido",
+      message: "Ao abrir o dashboard aparece erro duplicado de requisicao.",
+      status: "OPEN",
+      adminResponse: null,
+      respondedByUserId: null,
+      respondedByUserName: null,
+      respondedAt: null,
+      closedAt: null,
+      sourcePage: "/dashboard",
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    };
+    return response as T;
+  }
+  if (path.startsWith("/admin/system/suggestions/") && method === "PATCH") {
+    const suggestionId = path.split("/").pop() || "demo-suggestion-1";
+    const payload = JSON.parse(String(options.body || "{}")) as SuggestionUpdateRequest;
+    const nowIso = new Date().toISOString();
+    const response = {
+      id: suggestionId,
+      tenantId: "demo-local-tenant",
+      tenantName: "Azzo Demo Local",
+      userId: "demo-local-user",
+      userName: "Demo Local",
+      userRole: "OWNER",
+      category: "BUG",
+      title: "Erro ao carregar dashboard com plano vencido",
+      message: "Ao abrir o dashboard aparece erro duplicado de requisicao.",
+      status: payload.status || "OPEN",
+      adminResponse: payload.adminResponse || "",
+      respondedByUserId: "demo-admin-user",
+      respondedByUserName: "Admin Demo",
+      respondedAt: nowIso,
+      closedAt: payload.status === "CLOSED" ? nowIso : null,
+      sourcePage: "/dashboard",
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    };
+    return response as T;
   }
   if (path.startsWith("/public/legal") && method === "GET") {
     const termsOfUse: LegalDocumentResponse = {
@@ -2432,6 +2556,15 @@ const ALLOWED_ENDPOINT_PREFIXES_WHEN_PLAN_BLOCKED = [
 const isAllowedWhenPlanBlocked = (endpoint: string) =>
   ALLOWED_ENDPOINT_PREFIXES_WHEN_PLAN_BLOCKED.some((prefix) => endpoint.startsWith(prefix));
 
+const PUBLIC_ENDPOINT_PREFIXES = [
+  "/checkout/products",
+  "/checkout/intents",
+  "/public/",
+];
+
+const isPublicEndpoint = (endpoint: string) =>
+  PUBLIC_ENDPOINT_PREFIXES.some((prefix) => endpoint.startsWith(prefix));
+
 const saveSession = (user?: User | null) => {
   // Cache apenas para UX (ex.: dados imediatos de perfil); nao define autenticacao.
   if (user) {
@@ -2458,6 +2591,31 @@ const isCurrentUserAdmin = () => {
     return false;
   }
 };
+
+const hasSessionUserHint = () => {
+  if (typeof window === "undefined") return false;
+  try {
+    return Boolean(localStorage.getItem(USER_KEY));
+  } catch {
+    return false;
+  }
+};
+
+const isPublicAppRoute = () => {
+  if (typeof window === "undefined") return false;
+  const pathname = window.location.pathname || "";
+  return (
+    pathname === "/compras" ||
+    pathname.startsWith("/compras/") ||
+    pathname === "/success" ||
+    pathname === "/error" ||
+    pathname === "/agendar" ||
+    pathname.startsWith("/agendar/")
+  );
+};
+
+const shouldAttemptAuthRefresh = (endpoint: string) =>
+  !isPublicEndpoint(endpoint) && hasSessionUserHint();
 
 const forceLogoutToLogin = (reason: string) => {
   clearSession();
@@ -2491,7 +2649,9 @@ const refreshAccessToken = async (): Promise<boolean> => {
       return true;
     })()
       .catch(() => {
-        forceLogoutToLogin("Sessao expirada. Faca login novamente.");
+        if (!isPublicAppRoute()) {
+          forceLogoutToLogin("Sessao expirada. Faca login novamente.");
+        }
         return false;
       })
       .finally(() => {
@@ -2592,7 +2752,8 @@ const request = async <T>(
       endpoint !== "/auth/refresh" &&
       endpoint !== "/auth/login" &&
       endpoint !== "/auth/register" &&
-      endpoint !== "/auth/me"
+      endpoint !== "/auth/me" &&
+      shouldAttemptAuthRefresh(endpoint)
     ) {
       const refreshed = await refreshAccessToken();
       if (refreshed) {
@@ -2706,7 +2867,8 @@ const requestBlob = async (
       endpoint !== "/auth/refresh" &&
       endpoint !== "/auth/login" &&
       endpoint !== "/auth/register" &&
-      endpoint !== "/auth/me"
+      endpoint !== "/auth/me" &&
+      shouldAttemptAuthRefresh(endpoint)
     ) {
       const refreshed = await refreshAccessToken();
       if (refreshed) {
@@ -3497,6 +3659,20 @@ export const usersApi = {
     }),
 };
 
+export const suggestionsApi = {
+  list: (limit?: number) => {
+    const query = new URLSearchParams();
+    if (limit) query.set("limit", String(limit));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<SuggestionListResponse>(`/suggestions${suffix}`);
+  },
+  create: (payload: SuggestionCreateRequest) =>
+    request<SuggestionItem>("/suggestions", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+};
+
 export const tenantApi = {
   getWhatsAppConfig: () => request<WhatsAppConfigResponse>("/tenant/whatsapp"),
   saveWhatsAppConfig: (data: WhatsAppConfigRequest) =>
@@ -3580,6 +3756,29 @@ export const systemAdminApi = {
   revokeSessionToken: (payload: { refreshTokenId: string; tenantId?: string }) =>
     request<RevokeSessionsResponse>("/admin/system/sessions/revoke-token", {
       method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getGlobalSuggestions: (params?: {
+    tenantId?: string;
+    status?: string;
+    category?: string;
+    text?: string;
+    limit?: number;
+  }) => {
+    const query = new URLSearchParams();
+    if (params?.tenantId) query.set("tenantId", params.tenantId);
+    if (params?.status) query.set("status", params.status);
+    if (params?.category) query.set("category", params.category);
+    if (params?.text) query.set("text", params.text);
+    if (params?.limit) query.set("limit", String(params.limit));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<GlobalSuggestionListResponse>(`/admin/system/suggestions${suffix}`);
+  },
+  getGlobalSuggestionDetail: (id: string) =>
+    request<GlobalSuggestionListResponse["items"][number]>(`/admin/system/suggestions/${id}`),
+  updateGlobalSuggestion: (id: string, payload: SuggestionUpdateRequest) =>
+    request<GlobalSuggestionListResponse["items"][number]>(`/admin/system/suggestions/${id}`, {
+      method: "PATCH",
       body: JSON.stringify(payload),
     }),
 };
