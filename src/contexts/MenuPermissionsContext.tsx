@@ -32,6 +32,8 @@ const ROUTE_ALIASES: Record<string, string> = {
   "/specialties": "/especialidades",
   "/professionals": "/profissionais",
   "/clients": "/clientes",
+  "/suggestions": "/sugestoes",
+  "/sugestoes": "/sugestoes",
   "/chat": "/chat",
   "/stock": "/estoque",
   "/inventory": "/estoque",

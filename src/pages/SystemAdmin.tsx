@@ -3,6 +3,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,7 @@ import type {
   CommercialOverview,
   GlobalAuditDetail,
   GlobalAuditItem,
+  GlobalSuggestionItem,
   MenuConfigScope,
   MenuRoleRouteItem,
   SessionItem,
@@ -29,6 +31,7 @@ const ROLES: SystemAdminRole[] = ["ADMIN", "OWNER", "PROFESSIONAL"];
 const AUDIT_MODULE_OPTIONS = ["", "AUTH", "RBAC", "FINANCE", "FISCAL", "SYSTEM"];
 const AUDIT_STATUS_OPTIONS = ["", "SUCCESS", "ERROR", "DENIED"];
 const AUDIT_CHANNEL_OPTIONS = ["", "API", "WEBHOOK", "SCHEDULER", "SYSTEM"];
+const SUGGESTION_CATEGORY_OPTIONS = ["", "BUG", "MELHORIA", "FUNCIONALIDADE", "USABILIDADE", "OUTRO"];
 
 export default function SystemAdminPage() {
   const { user } = useAuth();
@@ -67,6 +70,20 @@ export default function SystemAdminPage() {
     limit: 50,
   });
   const [isLoadingGlobalAudits, setIsLoadingGlobalAudits] = useState(false);
+  const [globalSuggestions, setGlobalSuggestions] = useState<GlobalSuggestionItem[]>([]);
+  const [isSuggestionDetailOpen, setIsSuggestionDetailOpen] = useState(false);
+  const [isLoadingSuggestionDetail, setIsLoadingSuggestionDetail] = useState(false);
+  const [isSavingSuggestionDetail, setIsSavingSuggestionDetail] = useState(false);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<GlobalSuggestionItem | null>(null);
+  const [suggestionAdminResponse, setSuggestionAdminResponse] = useState("");
+  const [suggestionFilters, setSuggestionFilters] = useState({
+    tenantId: "",
+    status: "",
+    category: "",
+    text: "",
+    limit: 50,
+  });
+  const [isLoadingGlobalSuggestions, setIsLoadingGlobalSuggestions] = useState(false);
   const [sessionUserId, setSessionUserId] = useState("");
   const [sessionItems, setSessionItems] = useState<SessionItem[]>([]);
   const [includeRevokedSessions, setIncludeRevokedSessions] = useState(false);
@@ -180,6 +197,26 @@ export default function SystemAdminPage() {
     }
   };
 
+  const loadGlobalSuggestions = async (filters?: Partial<typeof suggestionFilters>) => {
+    const payload = { ...suggestionFilters, ...(filters || {}) };
+    setIsLoadingGlobalSuggestions(true);
+    try {
+      const response = await systemAdminApi.getGlobalSuggestions({
+        tenantId: payload.tenantId || undefined,
+        status: payload.status || undefined,
+        category: payload.category || undefined,
+        text: payload.text?.trim() || undefined,
+        limit: payload.limit,
+      });
+      setGlobalSuggestions(response.items || []);
+    } catch {
+      toast.error("Nao foi possivel carregar sugestoes.");
+      setGlobalSuggestions([]);
+    } finally {
+      setIsLoadingGlobalSuggestions(false);
+    }
+  };
+
   const loadSessions = async (tenantId?: string) => {
     setIsLoadingSessions(true);
     try {
@@ -208,6 +245,45 @@ export default function SystemAdminPage() {
       setAuditDetail(null);
     } finally {
       setIsLoadingAuditDetail(false);
+    }
+  };
+
+  const openSuggestionDetail = async (id: string) => {
+    setIsSuggestionDetailOpen(true);
+    setIsLoadingSuggestionDetail(true);
+    try {
+      const detail = await systemAdminApi.getGlobalSuggestionDetail(id);
+      setSelectedSuggestion(detail);
+      setSuggestionAdminResponse(detail.adminResponse || "");
+    } catch {
+      toast.error("Nao foi possivel carregar detalhe da sugestao.");
+      setSelectedSuggestion(null);
+      setSuggestionAdminResponse("");
+    } finally {
+      setIsLoadingSuggestionDetail(false);
+    }
+  };
+
+  const saveSuggestionResponse = async (closeSuggestion: boolean) => {
+    if (!selectedSuggestion?.id) return;
+    if (!suggestionAdminResponse.trim()) {
+      toast.error("Informe a resposta administrativa.");
+      return;
+    }
+    setIsSavingSuggestionDetail(true);
+    try {
+      const updated = await systemAdminApi.updateGlobalSuggestion(selectedSuggestion.id, {
+        adminResponse: suggestionAdminResponse.trim(),
+        status: closeSuggestion ? "CLOSED" : selectedSuggestion.status || "OPEN",
+      });
+      setSelectedSuggestion(updated);
+      setSuggestionAdminResponse(updated.adminResponse || "");
+      toast.success(closeSuggestion ? "Sugestao respondida e fechada." : "Resposta salva com sucesso.");
+      await loadGlobalSuggestions({});
+    } catch {
+      toast.error("Falha ao salvar resposta da sugestao.");
+    } finally {
+      setIsSavingSuggestionDetail(false);
     }
   };
 
@@ -256,6 +332,7 @@ export default function SystemAdminPage() {
     loadActiveTenants();
     loadCommercialOverview();
     loadGlobalAudits({});
+    loadGlobalSuggestions({});
   }, []);
 
   useEffect(() => {
@@ -699,6 +776,136 @@ export default function SystemAdminPage() {
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>Sugestoes dos usuarios</CardTitle>
+            <CardDescription>
+              Feedbacks enviados pelos usuarios para evolucao do produto.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid gap-2 md:grid-cols-5">
+              <Select
+                value={suggestionFilters.tenantId || "ALL"}
+                onValueChange={(value) =>
+                  setSuggestionFilters((prev) => ({ ...prev, tenantId: value === "ALL" ? "" : value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Tenant (todos)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Tenant: Todos</SelectItem>
+                  {activeTenants.map((tenant) => (
+                    <SelectItem key={tenant.tenantId} value={tenant.tenantId}>
+                      {tenant.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder="Status (ex.: OPEN)"
+                value={suggestionFilters.status}
+                onChange={(event) => setSuggestionFilters((prev) => ({ ...prev, status: event.target.value }))}
+              />
+              <Select
+                value={suggestionFilters.category || "ALL"}
+                onValueChange={(value) =>
+                  setSuggestionFilters((prev) => ({ ...prev, category: value === "ALL" ? "" : value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Categoria (todas)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Categoria: Todas</SelectItem>
+                  {SUGGESTION_CATEGORY_OPTIONS.filter((item) => item).map((item) => (
+                    <SelectItem key={item} value={item}>
+                      {item}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder="Buscar texto"
+                value={suggestionFilters.text}
+                onChange={(event) => setSuggestionFilters((prev) => ({ ...prev, text: event.target.value }))}
+              />
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => loadGlobalSuggestions({})} disabled={isLoadingGlobalSuggestions}>
+                  Aplicar
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    const reset = { tenantId: "", status: "", category: "", text: "", limit: 50 };
+                    setSuggestionFilters(reset);
+                    loadGlobalSuggestions(reset);
+                  }}
+                  disabled={isLoadingGlobalSuggestions}
+                >
+                  Limpar
+                </Button>
+              </div>
+            </div>
+
+            <div className="rounded-md border">
+              <div className="max-h-[320px] overflow-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="px-3 py-2 text-left">Data</th>
+                      <th className="px-3 py-2 text-left">Tenant</th>
+                      <th className="px-3 py-2 text-left">Usuario</th>
+                      <th className="px-3 py-2 text-left">Categoria</th>
+                      <th className="px-3 py-2 text-left">Titulo</th>
+                      <th className="px-3 py-2 text-left">Mensagem</th>
+                      <th className="px-3 py-2 text-left">Origem</th>
+                      <th className="px-3 py-2 text-left">Status</th>
+                      <th className="px-3 py-2 text-left">Detalhe</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {globalSuggestions.map((item) => (
+                      <tr key={item.id} className="border-t">
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {item.createdAt ? new Date(item.createdAt).toLocaleString("pt-BR") : "-"}
+                        </td>
+                        <td className="px-3 py-2">{item.tenantName || item.tenantId || "-"}</td>
+                        <td className="px-3 py-2">
+                          {item.userName || "-"} {item.userRole ? `(${item.userRole})` : ""}
+                        </td>
+                        <td className="px-3 py-2">{item.category || "-"}</td>
+                        <td className="px-3 py-2">{item.title}</td>
+                        <td className="px-3 py-2">{item.message}</td>
+                        <td className="px-3 py-2">{item.sourcePage || "-"}</td>
+                        <td className="px-3 py-2">{item.status || "-"}</td>
+                        <td className="px-3 py-2">
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            onClick={() => openSuggestionDetail(item.id)}
+                            title="Detalhar sugestao"
+                          >
+                            <Eye className="h-4 w-4 text-blue-600" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                    {!isLoadingGlobalSuggestions && globalSuggestions.length === 0 ? (
+                      <tr>
+                        <td className="px-3 py-4 text-muted-foreground" colSpan={9}>
+                          Nenhuma sugestao encontrada.
+                        </td>
+                      </tr>
+                    ) : null}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Dialog open={isAuditDetailOpen} onOpenChange={setIsAuditDetailOpen}>
           <DialogContent className="max-w-3xl max-h-[85vh] overflow-auto">
             <DialogHeader>
@@ -738,6 +945,73 @@ export default function SystemAdminPage() {
                 <div>
                   <p className="font-medium mb-1">Metadata</p>
                   <pre className="rounded border p-2 text-xs whitespace-pre-wrap">{auditDetail.metadataJson || "{}"}</pre>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isSuggestionDetailOpen} onOpenChange={setIsSuggestionDetailOpen}>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-auto">
+            <DialogHeader>
+              <DialogTitle>Detalhe da Sugestao</DialogTitle>
+            </DialogHeader>
+            {isLoadingSuggestionDetail ? (
+              <p className="text-sm text-muted-foreground">Carregando detalhe...</p>
+            ) : !selectedSuggestion ? (
+              <p className="text-sm text-muted-foreground">Nenhuma sugestao selecionada.</p>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid gap-2 md:grid-cols-2 text-sm">
+                  <p><strong>Tenant:</strong> {selectedSuggestion.tenantName || selectedSuggestion.tenantId || "-"}</p>
+                  <p><strong>Usuario:</strong> {selectedSuggestion.userName || "-"} {selectedSuggestion.userRole ? `(${selectedSuggestion.userRole})` : ""}</p>
+                  <p><strong>Categoria:</strong> {selectedSuggestion.category || "-"}</p>
+                  <p><strong>Status:</strong> {selectedSuggestion.status || "-"}</p>
+                  <p><strong>Criado em:</strong> {selectedSuggestion.createdAt ? new Date(selectedSuggestion.createdAt).toLocaleString("pt-BR") : "-"}</p>
+                  <p><strong>Origem:</strong> {selectedSuggestion.sourcePage || "-"}</p>
+                </div>
+
+                <div className="rounded-md border p-3 space-y-2">
+                  <p className="text-sm font-semibold">{selectedSuggestion.title}</p>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedSuggestion.message}</p>
+                </div>
+
+                {selectedSuggestion.respondedAt ? (
+                  <div className="rounded-md border p-3 text-sm space-y-1">
+                    <p><strong>Ultima resposta:</strong></p>
+                    <p className="whitespace-pre-wrap text-muted-foreground">{selectedSuggestion.adminResponse || "-"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedSuggestion.respondedByUserName || selectedSuggestion.respondedByUserId || "ADMIN"} em{" "}
+                      {new Date(selectedSuggestion.respondedAt).toLocaleString("pt-BR")}
+                    </p>
+                  </div>
+                ) : null}
+
+                <div className="space-y-2">
+                  <Label>Resposta administrativa</Label>
+                  <Textarea
+                    value={suggestionAdminResponse}
+                    onChange={(event) => setSuggestionAdminResponse(event.target.value)}
+                    placeholder="Escreva a resposta para o usuario..."
+                    rows={5}
+                    maxLength={5000}
+                  />
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => saveSuggestionResponse(false)}
+                    disabled={isSavingSuggestionDetail}
+                  >
+                    {isSavingSuggestionDetail ? "Salvando..." : "Responder"}
+                  </Button>
+                  <Button
+                    onClick={() => saveSuggestionResponse(true)}
+                    disabled={isSavingSuggestionDetail}
+                  >
+                    {isSavingSuggestionDetail ? "Salvando..." : "Responder e fechar"}
+                  </Button>
                 </div>
               </div>
             )}

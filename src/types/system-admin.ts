@@ -122,3 +122,34 @@ export interface SessionListResponse {
   items: SessionItem[];
   limit: number;
 }
+
+export interface GlobalSuggestionItem {
+  id: string;
+  tenantId?: string;
+  tenantName?: string;
+  userId?: string;
+  userName?: string;
+  userRole?: string;
+  category?: string;
+  title: string;
+  message: string;
+  status?: string;
+  adminResponse?: string;
+  respondedByUserId?: string;
+  respondedByUserName?: string;
+  respondedAt?: string;
+  closedAt?: string;
+  sourcePage?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SuggestionUpdateRequest {
+  adminResponse?: string;
+  status?: string;
+}
+
+export interface GlobalSuggestionListResponse {
+  items: GlobalSuggestionItem[];
+  limit: number;
+}

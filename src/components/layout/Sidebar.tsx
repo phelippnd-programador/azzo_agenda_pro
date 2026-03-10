@@ -31,6 +31,7 @@ import {
   Boxes,
   ChevronDown,
   MessageCircleMore,
+  Lightbulb,
 } from "lucide-react";
 
 const MENU_REGISTRY = {
@@ -41,6 +42,7 @@ const MENU_REGISTRY = {
   "/especialidades": { icon: Tag, label: "Especialidades", path: "/especialidades" },
   "/profissionais": { icon: Users, label: "Profissionais", path: "/profissionais" },
   "/clientes": { icon: UserCircle, label: "Clientes", path: "/clientes" },
+  "/sugestoes": { icon: Lightbulb, label: "Sugestoes", path: "/sugestoes" },
   "/chat": { icon: MessageCircleMore, label: "Chat", path: "/chat" },
   "/estoque": { icon: Boxes, label: "Estoque", path: "/estoque" },
   "/financeiro": { icon: DollarSign, label: "Resumo Financeiro", path: "/financeiro" },
@@ -76,6 +78,7 @@ const MAIN_MENU_ORDER = [
   "/especialidades",
   "/profissionais",
   "/clientes",
+  "/sugestoes",
   "/chat",
   "/estoque",
   "/financeiro",

@@ -22,6 +22,7 @@ import Professionals from "./pages/Professionals";
 import ProfessionalProfile from "./pages/ProfessionalProfile";
 import Clients from "./pages/Clients";
 import ClientProfile from "./pages/ClientProfile";
+import SuggestionsPage from "./pages/Suggestions";
 import ChatPage from "./pages/Chat";
 import Stock from "./pages/Stock";
 import StockOverview from "./pages/stock/StockOverview";
@@ -274,6 +275,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <ClientProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sugestoes"
+          element={
+            <ProtectedRoute>
+              <SuggestionsPage />
             </ProtectedRoute>
           }
         />
