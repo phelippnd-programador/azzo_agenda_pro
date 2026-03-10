@@ -2591,7 +2591,8 @@ const request = async <T>(
       retryOnAuthError &&
       endpoint !== "/auth/refresh" &&
       endpoint !== "/auth/login" &&
-      endpoint !== "/auth/register"
+      endpoint !== "/auth/register" &&
+      endpoint !== "/auth/me"
     ) {
       const refreshed = await refreshAccessToken();
       if (refreshed) {
@@ -2704,7 +2705,8 @@ const requestBlob = async (
       retryOnAuthError &&
       endpoint !== "/auth/refresh" &&
       endpoint !== "/auth/login" &&
-      endpoint !== "/auth/register"
+      endpoint !== "/auth/register" &&
+      endpoint !== "/auth/me"
     ) {
       const refreshed = await refreshAccessToken();
       if (refreshed) {
