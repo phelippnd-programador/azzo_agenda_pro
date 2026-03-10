@@ -85,7 +85,7 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
         isDesktopOpen={desktopSidebarOpen}
       />
 
-      <div className={desktopSidebarOpen ? "lg:pl-64 xl:pl-72" : "lg:pl-0"}>
+      <div className={desktopSidebarOpen ? "lg:pl-60" : "lg:pl-0"}>
         <Header
           title={title}
           subtitle={subtitle}
@@ -93,7 +93,8 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
           isDesktopSidebarOpen={desktopSidebarOpen}
         />
 
-        <main className="p-3 sm:p-4 lg:p-6 xl:p-8 overflow-x-hidden">
+        <main className="p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+          <div className="mx-auto max-w-screen-2xl">
           {!isLicenseRoute && isCheckingLicenseStatus ? (
             <FullScreenLoader />
           ) : !isLicenseRoute && isPlanExpired ? (
@@ -108,6 +109,7 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
           ) : (
             children
           )}
+          </div>
         </main>
       </div>
     </div>

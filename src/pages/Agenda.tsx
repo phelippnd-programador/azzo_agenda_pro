@@ -103,12 +103,24 @@ const toDateKey = (value: string | Date) => {
 
 const getStatusColor = (status: string) => {
   const colors: Record<string, string> = {
+    PENDING: 'bg-amber-50 text-amber-900 border border-amber-200 border-l-4 border-l-amber-500',
+    CONFIRMED: 'bg-sky-50 text-sky-900 border border-sky-200 border-l-4 border-l-sky-500',
+    IN_PROGRESS: 'bg-primary/10 text-primary border border-primary/20 border-l-4 border-l-primary',
+    COMPLETED: 'bg-green-50 text-green-900 border border-green-200 border-l-4 border-l-green-500',
+    CANCELLED: 'bg-red-50 text-red-900 border border-red-200 border-l-4 border-l-red-500',
+    NO_SHOW: 'bg-slate-100 text-slate-600 border border-slate-200 border-l-4 border-l-slate-400',
+  };
+  return colors[status] || colors.PENDING;
+};
+
+const getStatusBadgeColor = (status: string) => {
+  const colors: Record<string, string> = {
     PENDING: 'bg-amber-100 text-amber-700 border-amber-200',
-    CONFIRMED: 'bg-blue-100 text-blue-700 border-blue-200',
-    IN_PROGRESS: 'bg-primary/15 text-primary border-primary/30',
+    CONFIRMED: 'bg-sky-100 text-sky-700 border-sky-200',
+    IN_PROGRESS: 'bg-primary/10 text-primary border-primary/20',
     COMPLETED: 'bg-green-100 text-green-700 border-green-200',
     CANCELLED: 'bg-red-100 text-red-700 border-red-200',
-    NO_SHOW: 'bg-muted text-muted-foreground border-border',
+    NO_SHOW: 'bg-slate-100 text-slate-600 border-slate-200',
   };
   return colors[status] || colors.PENDING;
 };
@@ -811,27 +823,37 @@ export default function Agenda() {
                 <span>Dom</span>
               </div>
 
-              <div className="grid grid-cols-7 gap-2">
-                {monthCalendarDays.map((day, index) =>
-                  day ? (
-                    <Button
+              <div className="grid grid-cols-7 gap-1 sm:gap-2">
+                {monthCalendarDays.map((day, index) => {
+                  if (!day) return <div key={`empty-${index}`} className="min-h-[72px] sm:min-h-24" />;
+                  const apptCount = monthAppointmentsByDay.get(day.key) || 0;
+                  const isToday = day.key === toDateKey(new Date());
+                  return (
+                    <button
                       key={day.key}
                       type="button"
-                      variant="outline"
-                      className="h-auto min-h-24 justify-start p-2 text-left"
+                      className={`h-auto min-h-[72px] sm:min-h-24 w-full p-2 text-left rounded-lg border transition-all duration-150 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
+                        isToday
+                          ? 'border-primary bg-primary/5'
+                          : apptCount > 0
+                            ? 'border-border bg-card hover:bg-accent/40 hover:border-primary/30'
+                            : 'border-dashed border-border/50 bg-transparent hover:bg-muted/30 hover:border-border'
+                      }`}
                       onClick={() => openDayView(day.date)}
                     >
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold">{day.day}</p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {monthAppointmentsByDay.get(day.key) || 0} agendamento(s)
-                        </p>
+                      <div className="flex flex-col gap-1.5">
+                        <span className={`text-sm font-semibold leading-none ${isToday ? 'text-primary' : ''}`}>
+                          {day.day}
+                        </span>
+                        {apptCount > 0 ? (
+                          <span className="inline-flex items-center self-start text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary leading-none">
+                            {apptCount}
+                          </span>
+                        ) : null}
                       </div>
-                    </Button>
-                  ) : (
-                    <div key={`empty-${index}`} className="min-h-24 rounded-md border border-dashed border-muted" />
-                  )
-                )}
+                    </button>
+                  );
+                })}
               </div>
 
               <p className="text-xs text-muted-foreground">
@@ -843,8 +865,9 @@ export default function Agenda() {
           <Card>
             <CardContent className="p-0">
               {filteredAppointments.length === 0 ? (
-                <div className="px-3 py-2 text-xs text-muted-foreground border-b bg-muted/20">
-                  Nenhum agendamento neste dia. A grade de horarios permanece visivel para facilitar novos encaixes.
+                <div className="px-4 py-3 text-xs text-muted-foreground border-b border-border/50 bg-muted/20 flex items-center gap-2">
+                  <CalendarIcon className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground/60" />
+                  <span>Nenhum agendamento neste dia.</span>
                 </div>
               ) : null}
               <div className="overflow-x-auto">
@@ -883,30 +906,33 @@ export default function Agenda() {
                             return (
                               <div
                                 key={apt.id}
-                                className={`p-2 sm:p-3 rounded-lg border ${getStatusColor(apt.status)} mb-1 cursor-pointer hover:shadow-md transition-shadow`}
+                                className={`p-2 sm:p-3 rounded-lg ${getStatusColor(apt.status)} mb-1.5 cursor-pointer hover:shadow-md hover:-translate-y-px transition-all duration-150`}
                                 onClick={() => openAppointmentDetails(apt)}
                               >
                                 <div className="flex items-start justify-between gap-2">
-                                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                                    <Avatar className="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0">
+                                  <div className="flex items-start gap-2 min-w-0 flex-1">
+                                    <Avatar className="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0 mt-0.5">
                                       <AvatarImage src={professional?.avatar} />
-                                      <AvatarFallback className="text-xs">
-                                        {client?.name?.slice(0, 2).toUpperCase()}
+                                      <AvatarFallback className="text-xs font-medium">
+                                        {client?.name?.slice(0, 2).toUpperCase() ?? '??'}
                                       </AvatarFallback>
                                     </Avatar>
-                                    <div className="min-w-0">
-                                      <p className="font-medium text-xs sm:text-sm truncate">
+                                    <div className="min-w-0 flex-1">
+                                      <p className="font-semibold text-xs sm:text-sm leading-tight truncate">
                                         {client?.name || 'Cliente'}
                                       </p>
-                                      <p className="text-[10px] sm:text-xs opacity-80 truncate">
-                                        {service?.name} • {professional?.name}
+                                      <p className="text-[10px] sm:text-xs leading-tight truncate mt-0.5 opacity-80">
+                                        {service?.name}
+                                      </p>
+                                      <p className="text-[10px] opacity-60 truncate leading-tight hidden sm:block">
+                                        {professional?.name}
                                       </p>
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-1 flex-shrink-0">
-                                    <Badge variant="outline" className="text-[10px] sm:text-xs hidden sm:inline-flex">
+                                    <span className="text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-black/5 whitespace-nowrap hidden sm:block">
                                       {getStatusLabel(apt.status)}
-                                    </Badge>
+                                    </span>
                                     <Button 
                                       variant="ghost" 
                                       size="icon" 
@@ -1069,7 +1095,7 @@ export default function Agenda() {
                 {/* Status */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Status</span>
-                  <Badge className={getStatusColor(selectedAppointment.status)}>
+                  <Badge className={getStatusBadgeColor(selectedAppointment.status)}>
                     {getStatusLabel(selectedAppointment.status)}
                   </Badge>
                 </div>

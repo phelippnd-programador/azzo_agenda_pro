@@ -46,14 +46,14 @@ export function Header({
   };
 
   return (
-    <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-sm border-b border-border">
-      <div className="flex items-center justify-between h-14 sm:h-16 px-3 sm:px-4 lg:px-8">
+    <header className="sticky top-0 z-20 bg-card/95 backdrop-blur-sm border-b border-border">
+      <div className="flex items-center justify-between h-14 px-3 sm:px-4 lg:px-6">
         <div className="ml-10 sm:ml-12 lg:ml-0 min-w-0 flex-1 flex items-center gap-2">
           {onToggleDesktopSidebar ? (
             <Button
               variant="ghost"
               size="icon"
-              className="hidden lg:flex h-8 w-8 shrink-0"
+              className="hidden lg:flex h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
               onClick={onToggleDesktopSidebar}
               aria-label={isDesktopSidebarOpen ? "Recolher menu lateral" : "Expandir menu lateral"}
             >
@@ -61,15 +61,18 @@ export function Header({
             </Button>
           ) : null}
           <div className="min-w-0">
-            <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-foreground truncate">{title}</h1>
-            {subtitle ? <p className="text-xs sm:text-sm text-muted-foreground truncate hidden sm:block">{subtitle}</p> : null}
+            <h1 className="text-sm font-medium text-foreground truncate">{title}</h1>
+            {subtitle ? <p className="text-xs text-muted-foreground truncate hidden sm:block">{subtitle}</p> : null}
           </div>
         </div>
 
-        <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 flex-shrink-0">
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
           <div className="hidden lg:flex relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Buscar..." className="w-48 xl:w-64 pl-9 bg-muted/40 border-border" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60" />
+            <Input
+              placeholder="Buscar..."
+              className="w-44 xl:w-56 pl-8 h-8 text-sm bg-muted/60 border-transparent focus-visible:border-input focus-visible:ring-0 focus-visible:bg-card"
+            />
           </div>
 
           <DropdownMenu
@@ -80,19 +83,19 @@ export function Header({
             }}
           >
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-9 sm:w-9">
-                <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Button variant="ghost" size="icon" className="relative h-8 w-8 text-muted-foreground hover:text-foreground">
+                <Bell className="w-4 h-4" />
                 {unreadCount > 0 ? (
-                  <Badge className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 p-0 flex items-center justify-center bg-destructive text-[10px] sm:text-xs">
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
                     {unreadCount > 9 ? "9+" : unreadCount}
-                  </Badge>
+                  </span>
                 ) : null}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72 sm:w-80">
-              <DropdownMenuLabel>Notificacoes</DropdownMenuLabel>
+              <DropdownMenuLabel>Notificações</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {!summaryItems.length ? <DropdownMenuItem className="text-sm text-muted-foreground">Nenhuma notificacao</DropdownMenuItem> : null}
+              {!summaryItems.length ? <DropdownMenuItem className="text-sm text-muted-foreground">Nenhuma notificação</DropdownMenuItem> : null}
               {summaryItems.slice(0, 5).map((item) => (
                 <DropdownMenuItem
                   key={item.id}
@@ -102,13 +105,13 @@ export function Header({
                   }}
                 >
                   <span className="font-medium text-sm flex items-center gap-2">
-                    {!(item.viewed ?? Boolean(item.viewedAt)) ? <span className="h-2 w-2 rounded-full bg-primary inline-block" /> : null}
-                    {item.channel || "Notificacao"}
+                    {!(item.viewed ?? Boolean(item.viewedAt)) ? <span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" /> : null}
+                    {item.channel || "Notificação"}
                     {!(item.viewed ?? Boolean(item.viewedAt)) ? (
-                      <Badge className="bg-primary/10 text-primary border-primary/30">Nova</Badge>
+                      <Badge variant="outline" className="text-primary border-primary/30 bg-primary/5 text-[10px] py-0 px-1.5">Nova</Badge>
                     ) : null}
                   </span>
-                  <span className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{item.message}</span>
+                  <span className="text-xs text-muted-foreground line-clamp-2">{item.message}</span>
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
@@ -118,31 +121,36 @@ export function Header({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="gap-1 sm:gap-2 px-1 sm:px-2 h-8 sm:h-9">
-                <Avatar className="w-6 h-6 sm:w-8 sm:h-8">
+              <Button variant="ghost" className="gap-2 px-1.5 h-8 text-muted-foreground hover:text-foreground">
+                <Avatar className="w-6 h-6">
                   <AvatarImage src={user?.avatar || undefined} />
-                  <AvatarFallback>{initials}</AvatarFallback>
+                  <AvatarFallback className="text-xs bg-primary/10 text-primary">{initials}</AvatarFallback>
                 </Avatar>
-                <span className="hidden md:inline text-xs sm:text-sm font-medium truncate max-w-[80px] lg:max-w-none">{displayName}</span>
+                <span className="hidden md:inline text-xs font-medium truncate max-w-[80px] lg:max-w-[120px]">{displayName}</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 sm:w-56">
-              <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium">{displayName}</span>
+                  <span className="text-xs text-muted-foreground">{user?.email}</span>
+                </div>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => navigate("/perfil-salao")}>
-                <User className="w-4 h-4 mr-2" />
-                Perfil do Salao
+                <User className="w-4 h-4 mr-2 opacity-60" />
+                Perfil do Salão
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/configuracoes")}>
-                <Settings className="w-4 h-4 mr-2" />
-                Configuracoes
+                <Settings className="w-4 h-4 mr-2 opacity-60" />
+                Configurações
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/financeiro/licenca")}>
-                <CreditCard className="w-4 h-4 mr-2" />
+                <CreditCard className="w-4 h-4 mr-2 opacity-60" />
                 Plano e Faturamento
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
+              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={handleLogout}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair
               </DropdownMenuItem>
