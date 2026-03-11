@@ -141,12 +141,20 @@ function getCurrentPaymentDueDate(result: CreateBillingSubscriptionResponse) {
   return result.currentPaymentDueDate || result.nextDueDate || null;
 }
 
+function isTrialSubscription(result: CreateBillingSubscriptionResponse) {
+  const billingType = String(result.billingType || "").toUpperCase();
+  const status = String(result.status || "").toUpperCase();
+  const cycle = String(result.cycle || "").toUpperCase();
+  return billingType === "TRIAL" || status.includes("TRIAL") || cycle === "TRIAL";
+}
+
 function isPaymentConfirmed(result: CreateBillingSubscriptionResponse) {
   const paymentStatus = getCurrentPaymentStatus(result);
   return paymentStatus === "RECEIVED" || paymentStatus === "CONFIRMED";
 }
 
 function hasPaidFeaturesAccess(result: CreateBillingSubscriptionResponse) {
+  if (isTrialSubscription(result)) return false;
   const licenseStatus = getLicenseStatus(result);
   if (licenseStatus !== "ACTIVE") return false;
   return true;
@@ -179,10 +187,37 @@ function isOverdue(result: CreateBillingSubscriptionResponse) {
   return dueDate.getTime() < normalizedToday;
 }
 
+function getRemainingDaysUntilDue(result: CreateBillingSubscriptionResponse) {
+  const dueDateValue = getCurrentPaymentDueDate(result);
+  if (!dueDateValue) return null;
+  const dueDate = new Date(dueDateValue);
+  if (Number.isNaN(dueDate.getTime())) return null;
+  const now = new Date();
+  const diffMs = dueDate.getTime() - now.getTime();
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+}
+
+function getScheduledPlanStartDate(result: CreateBillingSubscriptionResponse | null) {
+  if (!result) return null;
+  const dueDateValue = getCurrentPaymentDueDate(result);
+  if (!dueDateValue) return null;
+  const dueDate = new Date(dueDateValue);
+  if (Number.isNaN(dueDate.getTime())) return null;
+  return dueDate;
+}
+
 function resolveLicenseState(result: CreateBillingSubscriptionResponse) {
   const normalizedLicenseStatus = getLicenseStatus(result);
   const normalizedPayment = getCurrentPaymentStatus(result);
   const isActive = hasPaidFeaturesAccess(result);
+
+  if (isTrialSubscription(result)) {
+    return {
+      variant: "pending" as const,
+      title: "Periodo trial ativo",
+      description: "Seu trial esta ativo. Voce ja pode escolher e contratar um plano pago.",
+    };
+  }
 
   if (normalizedLicenseStatus === "EXPIRED") {
     return {
@@ -403,8 +438,22 @@ export default function LicensePage() {
     [plans, result?.planCode, result?.productId]
   );
   const hasOverdue = useMemo(() => (result ? isOverdue(result) : false), [result]);
+  const remainingDaysUntilDue = useMemo(
+    () => (result ? getRemainingDaysUntilDue(result) : null),
+    [result]
+  );
+  const canChangePlanByWindow = useMemo(() => {
+    if (!result) return true;
+    if (isTrialSubscription(result)) return true;
+    if (remainingDaysUntilDue == null) return false;
+    return remainingDaysUntilDue <= 10;
+  }, [remainingDaysUntilDue, result]);
   const licenseState = useMemo(
     () => (result ? resolveLicenseState(result) : null),
+    [result]
+  );
+  const scheduledPlanStartDate = useMemo(
+    () => getScheduledPlanStartDate(result),
     [result]
   );
   const orderedHistory = useMemo(
@@ -419,6 +468,7 @@ export default function LicensePage() {
 
   const canPayNow = useMemo(() => {
     if (!result) return false;
+    if (isTrialSubscription(result)) return true;
     const subStatus = getLicenseStatus(result);
     const payStatus = getCurrentPaymentStatus(result);
     return (
@@ -433,6 +483,10 @@ export default function LicensePage() {
 
   const openPayNow = () => {
     if (!result) return;
+    if (isTrialSubscription(result)) {
+      setActionMode("CHANGE");
+      return;
+    }
     const currentProductCode = result.productId || result.planCode;
     if (currentProductCode) form.setValue("planCode", currentProductCode);
     if (isSupportedBillingType(result.billingType)) {
@@ -442,8 +496,8 @@ export default function LicensePage() {
   };
 
   const openChangePlan = () => {
-    if (hasPaidAccess) {
-      toast.info("Plano ativo nao pode ser alterado no momento.");
+    if (!canChangePlanByWindow) {
+      toast.info("Troca de plano liberada apenas no trial ou nos ultimos 10 dias antes do vencimento.");
       return;
     }
     setActionMode("CHANGE");
@@ -597,6 +651,14 @@ export default function LicensePage() {
                 {result ? formatDate(getCurrentPaymentDueDate(result)) : "Nao informado"}
               </p>
               <p>
+                <strong>Dias restantes:</strong>{" "}
+                {result
+                  ? remainingDaysUntilDue == null
+                    ? "Nao informado"
+                    : `${remainingDaysUntilDue} dia(s)`
+                  : "Nao informado"}
+              </p>
+              <p>
                 <strong>Metodo atual:</strong> {result?.billingType || "Nao informado"}
               </p>
               <p>
@@ -613,6 +675,8 @@ export default function LicensePage() {
             >
               {!result
                 ? "Sem assinatura"
+                : isTrialSubscription(result)
+                  ? "Periodo trial ativo"
                 : result && getCurrentPaymentStatus(result) === "PENDING"
                   ? "Pagamento pendente"
                   : isLicenseExpired
@@ -634,7 +698,7 @@ export default function LicensePage() {
                 type="button"
                 variant="outline"
                 onClick={openChangePlan}
-                disabled={hasPaidAccess}
+                disabled={!canChangePlanByWindow}
               >
                 Alterar plano
               </Button>
@@ -713,11 +777,23 @@ export default function LicensePage() {
             <CardContent className="space-y-6">
               {actionMode === "CHANGE" ? (
                 plans.length ? (
-                  <PlanSelector
-                    plans={plans}
-                    selectedPlanCode={selectedPlanCode}
-                    onSelect={(code) => form.setValue("planCode", code, { shouldValidate: true })}
-                  />
+                  <div className="space-y-3">
+                    <PlanSelector
+                      plans={plans}
+                      selectedPlanCode={selectedPlanCode}
+                      onSelect={(code) => form.setValue("planCode", code, { shouldValidate: true })}
+                    />
+                    {scheduledPlanStartDate ? (
+                      <Alert className="border-blue-200 bg-blue-50">
+                        <AlertTitle>Inicio programado do novo plano</AlertTitle>
+                        <AlertDescription>
+                          O novo plano iniciara em{" "}
+                          <strong>{formatDate(scheduledPlanStartDate.toISOString())}</strong>,
+                          quando o plano atual encerrar.
+                        </AlertDescription>
+                      </Alert>
+                    ) : null}
+                  </div>
                 ) : (
                   <Alert>
                     <AlertTitle>Nenhum plano disponivel</AlertTitle>

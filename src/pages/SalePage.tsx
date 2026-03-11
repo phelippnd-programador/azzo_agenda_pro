@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Accordion,
   AccordionContent,
@@ -31,9 +32,9 @@ import {
 import { SalesSection } from "@/components/sales/SalesSection";
 import { useCheckoutProducts } from "@/hooks/useCheckoutProducts";
 import { useAuth } from "@/contexts/AuthContext";
-import { ApiError } from "@/lib/api";
+import { ApiError, publicLegalApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
-import { maskPhoneBr } from "@/lib/input-masks";
+import { maskCpfCnpj, maskPhoneBr } from "@/lib/input-masks";
 import { toast } from "sonner";
 
 const getPasswordStrengthStatus = (value: string) => {
@@ -63,6 +64,10 @@ export default function SalePage() {
   const [accountConfirmPassword, setAccountConfirmPassword] = useState("");
   const [accountSalonName, setAccountSalonName] = useState("");
   const [accountPhone, setAccountPhone] = useState("");
+  const [accountCpfCnpj, setAccountCpfCnpj] = useState("");
+  const [acceptedLegalTerms, setAcceptedLegalTerms] = useState(false);
+  const [termsOfUseVersion, setTermsOfUseVersion] = useState("");
+  const [privacyPolicyVersion, setPrivacyPolicyVersion] = useState("");
   const { products } = useCheckoutProducts();
   const defaultProductId = products[0]?.id ?? "";
   const effectiveProductId = defaultProductId;
@@ -85,21 +90,44 @@ export default function SalePage() {
       "Organize agenda, equipe e financeiro do seu salão em um só sistema. Mais de 200 salões já usam. Comece grátis hoje.";
   }, []);
 
-  const handleCreateAccountAndContinue = async () => {
-    if (!effectiveProductId) {
-      toast.error("Nenhum produto disponível para continuar no momento.");
-      return;
-    }
+  useEffect(() => {
+    const loadLegalVersions = async () => {
+      try {
+        const legal = await publicLegalApi.getAll();
+        setTermsOfUseVersion(legal.termsOfUse?.version || "");
+        setPrivacyPolicyVersion(legal.privacyPolicy?.version || "");
+      } catch {
+        setTermsOfUseVersion("");
+        setPrivacyPolicyVersion("");
+      }
+    };
+    void loadLegalVersions();
+  }, []);
 
+  const handleCreateAccountAndContinue = async () => {
+    const cpfCnpjDigits = accountCpfCnpj.replace(/\D/g, "");
     if (
       !accountName.trim() ||
       !accountEmail.trim() ||
       !accountPassword.trim() ||
       !accountConfirmPassword.trim() ||
       !accountSalonName.trim() ||
-      !accountPhone.trim()
+      !accountPhone.trim() ||
+      !cpfCnpjDigits
     ) {
       toast.error("Preencha todos os campos para criar sua conta.");
+      return;
+    }
+    if (![11, 14].includes(cpfCnpjDigits.length)) {
+      toast.error("Informe um CPF ou CNPJ valido.");
+      return;
+    }
+    if (!acceptedLegalTerms) {
+      toast.error("Voce precisa aceitar os Termos de Uso e a Politica de Privacidade.");
+      return;
+    }
+    if (!termsOfUseVersion || !privacyPolicyVersion) {
+      toast.error("Nao foi possivel carregar as versoes dos termos legais.");
       return;
     }
 
@@ -120,14 +148,16 @@ export default function SalePage() {
         password: accountPassword.trim(),
         salonName: accountSalonName.trim(),
         phone: accountPhone.trim(),
-        cpfCnpj: "",
+        cpfCnpj: cpfCnpjDigits,
+        acceptedTermsOfUse: true,
+        acceptedPrivacyPolicy: true,
+        termsOfUseVersion,
+        privacyPolicyVersion,
       });
 
       toast.success("Conta criada! Continue com o pagamento do plano.");
-      navigate(
-        `/financeiro/licenca?plan=${encodeURIComponent(effectiveProductId)}&mode=CHANGE`,
-        { replace: true }
-      );
+      const planQuery = effectiveProductId ? `?plan=${encodeURIComponent(effectiveProductId)}&mode=CHANGE` : "";
+      navigate(`/financeiro/licenca${planQuery}`, { replace: true });
     } catch (error) {
       if (error instanceof ApiError && error.status === 429) {
         toast.error("Muitas tentativas. Aguarde um momento e tente novamente.");
@@ -862,6 +892,16 @@ export default function SalePage() {
                     disabled={isCreatingAccount}
                   />
                 </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="sale-account-cpf-cnpj">CPF/CNPJ</Label>
+                  <Input
+                    id="sale-account-cpf-cnpj"
+                    value={accountCpfCnpj}
+                    onChange={(e) => setAccountCpfCnpj(maskCpfCnpj(e.target.value))}
+                    placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                    disabled={isCreatingAccount}
+                  />
+                </div>
               </div>
 
               <Button
@@ -879,6 +919,28 @@ export default function SalePage() {
                   </>
                 )}
               </Button>
+
+              <div className="flex items-start gap-2 rounded-md border border-input p-3">
+                <Checkbox
+                  id="sale-accept-legal-terms"
+                  checked={acceptedLegalTerms}
+                  onCheckedChange={(checked) => setAcceptedLegalTerms(Boolean(checked))}
+                />
+                <Label
+                  htmlFor="sale-accept-legal-terms"
+                  className="text-xs leading-relaxed text-muted-foreground"
+                >
+                  Li e aceito os{" "}
+                  <Link to="/termos-de-uso" target="_blank" className="text-primary hover:underline">
+                    Termos de Uso
+                  </Link>{" "}
+                  e a{" "}
+                  <Link to="/politica-privacidade" target="_blank" className="text-primary hover:underline">
+                    Politica de Privacidade
+                  </Link>
+                  .
+                </Label>
+              </div>
 
               <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 pt-1 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1.5">
@@ -985,3 +1047,4 @@ export default function SalePage() {
     </div>
   );
 }
+

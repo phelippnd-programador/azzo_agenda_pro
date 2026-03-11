@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { getCurrentBillingSubscription } from '@/services/billingService';
 import { ApiError, authApi } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
+import { setLicenseAccessStatus } from '@/lib/license-access';
 
 const isDemoLoginEnabled =
   String(import.meta.env.VITE_ENABLE_DEMO_LOGIN ?? 'false').toLowerCase() === 'true';
@@ -62,6 +63,7 @@ export default function Login() {
     try {
       const currentUser = await authApi.me();
       if (currentUser?.role === "ADMIN") {
+        setLicenseAccessStatus("ACTIVE");
         return "/configuracoes/admin-sistema";
       }
       const subscription = await getCurrentBillingSubscription();
@@ -77,13 +79,17 @@ export default function Login() {
         subscriptionStatus === 'OVERDUE' ||
         paymentStatus === 'OVERDUE'
       ) {
+        setLicenseAccessStatus("BLOCKED");
         return '/financeiro/licenca';
       }
+      setLicenseAccessStatus("ACTIVE");
       return '/dashboard';
     } catch (error) {
-      if (error instanceof ApiError && error.status === 404) {
+      if (error instanceof ApiError && (error.status === 402 || error.status === 404)) {
+        setLicenseAccessStatus("BLOCKED");
         return '/financeiro/licenca';
       }
+      setLicenseAccessStatus("UNKNOWN");
       return '/dashboard';
     }
   };
