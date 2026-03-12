@@ -34,12 +34,30 @@ const formatDateTime = (value?: string | null) => {
   });
 };
 
+const EMOJI_OPTIONS = [
+  "\u{1F600}",
+  "\u{1F601}",
+  "\u{1F602}",
+  "\u{1F609}",
+  "\u{1F60A}",
+  "\u{1F60D}",
+  "\u{1F91D}",
+  "\u{1F44F}",
+  "\u{1F64F}",
+  "\u{1F44D}",
+  "\u{2764}\u{FE0F}",
+  "\u{1F389}",
+  "\u{2728}",
+  "\u{1F4C5}",
+  "\u{1F487}\u{200D}\u{2640}\u{FE0F}",
+  "\u{1F485}",
+];
+
 export default function ChatPage() {
   const navigate = useNavigate();
   const { conversationId } = useParams<{ conversationId?: string }>();
   const [error, setError] = useState<string | null>(null);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
-  const emojiOptions = ["😀", "😁", "😂", "😉", "😊", "😍", "🤝", "👏", "🙏", "👍", "❤️", "🎉", "✨", "📅", "💇‍♀️", "💅"];
   const form = useForm<ChatMessageForm>({
     resolver: zodResolver(chatMessageSchema),
     defaultValues: {
@@ -89,6 +107,46 @@ export default function ChatPage() {
     selectedConversation,
   ]);
 
+  useEffect(() => {
+    const apiBase =
+      ((import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ||
+        "http://localhost:8080/api/v1");
+    const streamUrl = `${apiBase}/chat/stream`;
+    const eventSource = new EventSource(streamUrl, { withCredentials: true });
+    let refreshTimer: number | null = null;
+
+    const scheduleRefresh = (updatedConversationId?: string | null) => {
+      if (refreshTimer) window.clearTimeout(refreshTimer);
+      refreshTimer = window.setTimeout(() => {
+        loadConversations().catch(() => null);
+        const activeConversationId = selectedConversation?.id;
+        if (activeConversationId && (!updatedConversationId || updatedConversationId === activeConversationId)) {
+          loadMessages(activeConversationId).catch(() => null);
+        }
+      }, 250);
+    };
+
+    const handleChatUpdate = (event: MessageEvent) => {
+      try {
+        const payload = JSON.parse(event.data) as { conversationId?: string };
+        scheduleRefresh(payload.conversationId || null);
+      } catch {
+        scheduleRefresh();
+      }
+    };
+
+    eventSource.addEventListener("chat-update", handleChatUpdate);
+    eventSource.onerror = () => {
+      // SSE reconecta automaticamente.
+    };
+
+    return () => {
+      if (refreshTimer) window.clearTimeout(refreshTimer);
+      eventSource.removeEventListener("chat-update", handleChatUpdate);
+      eventSource.close();
+    };
+  }, [loadConversations, loadMessages, selectedConversation?.id]);
+
   const watchedMessage = form.watch("message");
 
   const appendEmoji = (emoji: string) => {
@@ -107,10 +165,7 @@ export default function ChatPage() {
     try {
       await sendMessage(selectedConversation.clientId, content);
       form.reset({ message: "" });
-      await Promise.all([
-        loadConversations(),
-        loadMessages(selectedConversation.id),
-      ]);
+      await Promise.all([loadConversations(), loadMessages(selectedConversation.id)]);
     } catch {
       setError("Nao foi possivel enviar a mensagem.");
     }
@@ -250,7 +305,7 @@ export default function ChatPage() {
                     </PopoverTrigger>
                     <PopoverContent align="end" className="w-56 p-2">
                       <div className="grid grid-cols-8 gap-1">
-                        {emojiOptions.map((emoji) => (
+                        {EMOJI_OPTIONS.map((emoji) => (
                           <button
                             key={emoji}
                             type="button"
