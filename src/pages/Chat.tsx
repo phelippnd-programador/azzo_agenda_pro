@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageEmptyState, PageErrorState } from "@/components/ui/page-states";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MessageCircleMore, SendHorizontal } from "lucide-react";
+import { MessageCircleMore, SendHorizontal, Smile } from "lucide-react";
 import { useChat } from "@/hooks/useChat";
 import type { ChatMessage } from "@/types/chat";
 import { ChatConversationCard } from "@/components/chat/ChatConversationCard";
@@ -37,6 +38,8 @@ export default function ChatPage() {
   const navigate = useNavigate();
   const { conversationId } = useParams<{ conversationId?: string }>();
   const [error, setError] = useState<string | null>(null);
+  const [isEmojiOpen, setIsEmojiOpen] = useState(false);
+  const emojiOptions = ["😀", "😁", "😂", "😉", "😊", "😍", "🤝", "👏", "🙏", "👍", "❤️", "🎉", "✨", "📅", "💇‍♀️", "💅"];
   const form = useForm<ChatMessageForm>({
     resolver: zodResolver(chatMessageSchema),
     defaultValues: {
@@ -87,6 +90,16 @@ export default function ChatPage() {
   ]);
 
   const watchedMessage = form.watch("message");
+
+  const appendEmoji = (emoji: string) => {
+    const current = form.getValues("message") || "";
+    form.setValue("message", `${current}${emoji}`, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    setIsEmojiOpen(false);
+  };
 
   const onSend = form.handleSubmit(async (values) => {
     if (!selectedConversation) return;
@@ -229,6 +242,28 @@ export default function ChatPage() {
                     maxLength={2000}
                     disabled={isSending}
                   />
+                  <Popover open={isEmojiOpen} onOpenChange={setIsEmojiOpen}>
+                    <PopoverTrigger asChild>
+                      <Button type="button" size="icon" disabled={isSending} aria-label="Selecionar emoji">
+                        <Smile className="w-4 h-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-56 p-2">
+                      <div className="grid grid-cols-8 gap-1">
+                        {emojiOptions.map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            className="h-7 w-7 rounded hover:bg-accent text-base"
+                            onClick={() => appendEmoji(emoji)}
+                            aria-label={`Inserir ${emoji}`}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   <Button type="submit" disabled={isSending || !(watchedMessage || "").trim()}>
                     <SendHorizontal className="w-4 h-4 mr-2" />
                     Enviar
