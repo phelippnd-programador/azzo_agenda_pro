@@ -70,7 +70,7 @@ function isSubRouteAllowed(path: string, allowedPath: string): boolean {
 }
 
 export function MenuPermissionsProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [role, setRole] = useState<string | null>(null);
   const [allowedRoutes, setAllowedRoutes] = useState<string[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -93,6 +93,14 @@ export function MenuPermissionsProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    if (String(user?.role || "").toUpperCase() === "ADMIN") {
+      setRole("ADMIN");
+      setAllowedRoutes(["/configuracoes/admin-sistema", "/financeiro/licenca", "/unauthorized"]);
+      setIsEnforced(true);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       const response = await getCurrentMenuPermissions();
@@ -111,7 +119,7 @@ export function MenuPermissionsProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.role]);
 
   useEffect(() => {
     refreshPermissions();

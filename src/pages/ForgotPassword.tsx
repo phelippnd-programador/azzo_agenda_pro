@@ -2,23 +2,24 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Loader2, Mail, Scissors } from "lucide-react";
 import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { forgotPasswordSchema, type ForgotPasswordForm } from "@/schemas/auth";
 
 export default function ForgotPassword() {
-  const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const form = useForm<ForgotPasswordForm>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    if (!email.trim()) {
-      toast.error("Informe seu e-mail para recuperar a senha.");
-      return;
-    }
-
+  const onSubmit = form.handleSubmit(async () => {
     try {
       setIsSubmitting(true);
       await new Promise((resolve) => setTimeout(resolve, 700));
@@ -26,7 +27,12 @@ export default function ForgotPassword() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, (errors) => {
+    const firstError = Object.values(errors)[0];
+    if (firstError?.message) {
+      toast.error(firstError.message);
+    }
+  });
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-card p-4">
@@ -49,7 +55,7 @@ export default function ForgotPassword() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={onSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm">
                   E-mail
@@ -60,8 +66,7 @@ export default function ForgotPassword() {
                     id="email"
                     type="email"
                     placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    {...form.register("email")}
                     className="h-10 sm:h-11 pl-9"
                     disabled={isSubmitting}
                   />

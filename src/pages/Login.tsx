@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +13,7 @@ import { getCurrentBillingSubscription } from '@/services/billingService';
 import { ApiError, authApi } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
 import { setLicenseAccessStatus } from '@/lib/license-access';
+import { loginSchema, type LoginForm } from '@/schemas/auth';
 
 const isDemoLoginEnabled =
   String(import.meta.env.VITE_ENABLE_DEMO_LOGIN ?? 'false').toLowerCase() === 'true';
@@ -20,12 +23,17 @@ const isLocalDemoQuickAccessEnabled =
 export default function Login() {
   const navigate = useNavigate();
   const { login, loginLocalDemo } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [mfaCode, setMfaCode] = useState('');
   const [mfaRequired, setMfaRequired] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const form = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      mfaCode: '',
+    },
+  });
 
   useEffect(() => {
     const showSessionExpiredToast = (message?: string) => {
@@ -94,21 +102,20 @@ export default function Login() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!email || !password) {
-      toast.error('Preencha todos os campos');
-      return;
-    }
-
+  const onSubmit = form.handleSubmit(async (values) => {
     setIsLoading(true);
 
     try {
-      await login(email, password, mfaRequired ? mfaCode : undefined);
+      const mfaCode = values.mfaCode?.trim();
+      if (mfaRequired && (!mfaCode || mfaCode.length !== 6)) {
+        toast.error('Digite o codigo de 6 digitos do seu aplicativo autenticador.');
+        return;
+      }
+
+      await login(values.email, values.password, mfaRequired ? mfaCode : undefined);
       toast.success('Login realizado com sucesso!');
       setMfaRequired(false);
-      setMfaCode('');
+      form.setValue('mfaCode', '');
       const redirectPath = await getPostLoginRoute();
       navigate(redirectPath);
     } catch (error) {
@@ -127,7 +134,12 @@ export default function Login() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, (errors) => {
+    const firstError = Object.values(errors)[0];
+    if (firstError?.message) {
+      toast.error(firstError.message);
+    }
+  });
 
   const handleLocalDemoLogin = async (role: 'OWNER' | 'PROFESSIONAL') => {
     if (!isLocalDemoQuickAccessEnabled) return;
@@ -182,15 +194,14 @@ export default function Login() {
             <CardDescription className="text-sm">Entre na sua conta para continuar</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={onSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm">E-mail</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  {...form.register('email')}
                   disabled={isLoading}
                   className="h-10 sm:h-11"
                 />
@@ -211,8 +222,7 @@ export default function Login() {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="........"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    {...form.register('password')}
                     disabled={isLoading}
                     className="h-10 sm:h-11 pr-10"
                   />
@@ -241,8 +251,12 @@ export default function Login() {
                     inputMode="numeric"
                     maxLength={6}
                     placeholder="000000"
-                    value={mfaCode}
-                    onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    {...form.register('mfaCode', {
+                      onChange: (event) => {
+                        const target = event.target as HTMLInputElement;
+                        target.value = target.value.replace(/\D/g, '').slice(0, 6);
+                      },
+                    })}
                     disabled={isLoading}
                     className="h-10 sm:h-11"
                   />

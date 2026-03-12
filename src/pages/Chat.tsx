@@ -1,5 +1,7 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +13,7 @@ import { MessageCircleMore, SendHorizontal } from "lucide-react";
 import { useChat } from "@/hooks/useChat";
 import type { ChatMessage } from "@/types/chat";
 import { ChatConversationCard } from "@/components/chat/ChatConversationCard";
+import { chatMessageSchema, type ChatMessageForm } from "@/schemas/chat";
 
 const messageStatusVariant = (message: ChatMessage) => {
   if (message.status === "FAILED") return "destructive" as const;
@@ -33,8 +36,13 @@ const formatDateTime = (value?: string | null) => {
 export default function ChatPage() {
   const navigate = useNavigate();
   const { conversationId } = useParams<{ conversationId?: string }>();
-  const [draftMessage, setDraftMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const form = useForm<ChatMessageForm>({
+    resolver: zodResolver(chatMessageSchema),
+    defaultValues: {
+      message: "",
+    },
+  });
   const {
     conversations,
     messages,
@@ -78,14 +86,14 @@ export default function ChatPage() {
     selectedConversation,
   ]);
 
-  const handleSend = async (event: FormEvent) => {
-    event.preventDefault();
+  const watchedMessage = form.watch("message");
+
+  const onSend = form.handleSubmit(async (values) => {
     if (!selectedConversation) return;
-    const content = draftMessage.trim();
-    if (!content) return;
+    const content = values.message.trim();
     try {
       await sendMessage(selectedConversation.clientId, content);
-      setDraftMessage("");
+      form.reset({ message: "" });
       await Promise.all([
         loadConversations(),
         loadMessages(selectedConversation.id),
@@ -93,7 +101,7 @@ export default function ChatPage() {
     } catch {
       setError("Nao foi possivel enviar a mensagem.");
     }
-  };
+  });
 
   if (error) {
     return (
@@ -214,15 +222,14 @@ export default function ChatPage() {
                   )}
                 </div>
 
-                <form onSubmit={handleSend} className="pt-3 border-t flex gap-2">
+                <form onSubmit={onSend} className="pt-3 border-t flex gap-2">
                   <Input
-                    value={draftMessage}
-                    onChange={(event) => setDraftMessage(event.target.value)}
+                    {...form.register("message")}
                     placeholder="Digite a mensagem para o cliente..."
                     maxLength={2000}
                     disabled={isSending}
                   />
-                  <Button type="submit" disabled={isSending || !draftMessage.trim()}>
+                  <Button type="submit" disabled={isSending || !(watchedMessage || "").trim()}>
                     <SendHorizontal className="w-4 h-4 mr-2" />
                     Enviar
                   </Button>

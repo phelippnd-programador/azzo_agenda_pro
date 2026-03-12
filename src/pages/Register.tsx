@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Loader2, Scissors } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
@@ -14,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ApiError, publicLegalApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import { maskCpfCnpj, maskPhoneBr } from "@/lib/input-masks";
+import { registerSchema, type RegisterForm } from "@/schemas/auth";
 import type { LegalDocumentResponse, TermsDocumentType } from "@/types/terms";
 import { toast } from "sonner";
 
@@ -40,16 +43,6 @@ export default function Register() {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  const [salonName, setSalonName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [cpfCnpj, setCpfCnpj] = useState("");
-  const [acceptedLegalTerms, setAcceptedLegalTerms] = useState(false);
   const [termsOfUseVersion, setTermsOfUseVersion] = useState("");
   const [privacyPolicyVersion, setPrivacyPolicyVersion] = useState("");
   const [isLegalOpen, setIsLegalOpen] = useState(false);
@@ -57,8 +50,25 @@ export default function Register() {
   const [legalDocument, setLegalDocument] = useState<LegalDocumentResponse | null>(null);
   const [isLoadingLegal, setIsLoadingLegal] = useState(false);
   const [legalError, setLegalError] = useState<string | null>(null);
+  const form = useForm<RegisterForm>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      salonName: "",
+      phone: "",
+      cpfCnpj: "",
+      acceptedLegalTerms: false,
+    },
+  });
 
-  const passwordStrength = getPasswordStrengthStatus(password);
+  const watchedPassword = form.watch("password");
+  const watchedAcceptedLegalTerms = form.watch("acceptedLegalTerms");
+  const watchedPhone = form.watch("phone");
+  const watchedCpfCnpj = form.watch("cpfCnpj");
+  const passwordStrength = getPasswordStrengthStatus(watchedPassword || "");
 
   useEffect(() => {
     const loadLegalVersions = async () => {
@@ -74,38 +84,20 @@ export default function Register() {
     void loadLegalVersions();
   }, []);
 
-  const handleNextStep = () => {
-    if (!name || !email || !password || !confirmPassword) {
-      toast.error("Preencha todos os campos");
-      return;
-    }
-    if (password.length < 8) {
-      toast.error("A senha deve ter pelo menos 8 caracteres");
-      return;
-    }
-    if (password !== confirmPassword) {
-      toast.error("As senhas nao conferem");
-      return;
-    }
-    if (!acceptedLegalTerms) {
-      toast.error("Voce precisa aceitar os Termos de Uso e a Politica de Privacidade");
+  const handleNextStep = async () => {
+    const isValid = await form.trigger(["name", "email", "password", "confirmPassword", "acceptedLegalTerms"]);
+    if (!isValid) {
+      const firstError = Object.values(form.formState.errors)[0];
+      if (firstError?.message) {
+        toast.error(firstError.message);
+      }
       return;
     }
     setStep(2);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const cpfCnpjDigits = cpfCnpj.replace(/\D/g, "");
-    if (!salonName || !phone || !cpfCnpjDigits) {
-      toast.error("Preencha todos os campos");
-      return;
-    }
-    if (![11, 14].includes(cpfCnpjDigits.length)) {
-      toast.error("Informe um CPF ou CNPJ valido");
-      return;
-    }
+  const onSubmit = form.handleSubmit(async (values) => {
+    const cpfCnpjDigits = values.cpfCnpj.replace(/\D/g, "");
     if (!termsOfUseVersion || !privacyPolicyVersion) {
       toast.error("Nao foi possivel carregar a versao dos termos legais.");
       return;
@@ -114,11 +106,11 @@ export default function Register() {
     setIsLoading(true);
     try {
       await register({
-        name,
-        email,
-        password,
-        salonName,
-        phone,
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        salonName: values.salonName,
+        phone: values.phone,
         cpfCnpj: cpfCnpjDigits,
         acceptedTermsOfUse: true,
         acceptedPrivacyPolicy: true,
@@ -138,7 +130,12 @@ export default function Register() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, (errors) => {
+    const firstError = Object.values(errors)[0];
+    if (firstError?.message) {
+      toast.error(firstError.message);
+    }
+  });
 
   const openLegalDialog = async (type: TermsDocumentType) => {
     try {
@@ -205,8 +202,7 @@ export default function Register() {
                   <Input
                     id="name"
                     placeholder="Seu nome"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    {...form.register("name")}
                     className="h-10 sm:h-11"
                   />
                 </div>
@@ -217,8 +213,7 @@ export default function Register() {
                     id="email"
                     type="email"
                     placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    {...form.register("email")}
                     className="h-10 sm:h-11"
                   />
                 </div>
@@ -230,8 +225,7 @@ export default function Register() {
                       id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Minimo 8 caracteres"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      {...form.register("password")}
                       className="h-10 sm:h-11 pr-10"
                     />
                     <Button
@@ -252,13 +246,13 @@ export default function Register() {
                     <div className="h-1.5 w-full rounded bg-muted">
                       <div
                         className={`h-full rounded transition-all ${
-                          password ? passwordStrength.barClassName : "bg-muted-foreground/40"
+                          watchedPassword ? passwordStrength.barClassName : "bg-muted-foreground/40"
                         }`}
-                        style={{ width: password ? passwordStrength.width : "0%" }}
+                        style={{ width: watchedPassword ? passwordStrength.width : "0%" }}
                       />
                     </div>
-                    <p className={`text-xs ${password ? passwordStrength.textClassName : "text-muted-foreground"}`}>
-                      Seguranca da senha: {password ? passwordStrength.label : "Nao definida"}
+                    <p className={`text-xs ${watchedPassword ? passwordStrength.textClassName : "text-muted-foreground"}`}>
+                      Seguranca da senha: {watchedPassword ? passwordStrength.label : "Nao definida"}
                     </p>
                   </div>
                 </div>
@@ -269,8 +263,7 @@ export default function Register() {
                     id="confirmPassword"
                     type={showPassword ? "text" : "password"}
                     placeholder="Repita a senha"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    {...form.register("confirmPassword")}
                     className="h-10 sm:h-11"
                   />
                 </div>
@@ -278,8 +271,10 @@ export default function Register() {
                 <div className="flex items-start gap-2 rounded-md border border-input p-3">
                   <Checkbox
                     id="acceptLegalTerms"
-                    checked={acceptedLegalTerms}
-                    onCheckedChange={(checked) => setAcceptedLegalTerms(Boolean(checked))}
+                    checked={watchedAcceptedLegalTerms}
+                    onCheckedChange={(checked) =>
+                      form.setValue("acceptedLegalTerms", Boolean(checked), { shouldValidate: true })
+                    }
                   />
                   <Label htmlFor="acceptLegalTerms" className="text-xs leading-relaxed text-muted-foreground">
                     Li e aceito os{" "}
@@ -308,14 +303,13 @@ export default function Register() {
                 </Button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={onSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="salonName" className="text-sm">Nome do Salao</Label>
                   <Input
                     id="salonName"
                     placeholder="Ex: Bella Studio"
-                    value={salonName}
-                    onChange={(e) => setSalonName(e.target.value)}
+                    {...form.register("salonName")}
                     disabled={isLoading}
                     className="h-10 sm:h-11"
                   />
@@ -326,8 +320,10 @@ export default function Register() {
                   <Input
                     id="phone"
                     placeholder="(11) 99999-0000"
-                    value={phone}
-                    onChange={(e) => setPhone(maskPhoneBr(e.target.value))}
+                    value={watchedPhone}
+                    onChange={(e) =>
+                      form.setValue("phone", maskPhoneBr(e.target.value), { shouldValidate: true })
+                    }
                     disabled={isLoading}
                     className="h-10 sm:h-11"
                   />
@@ -338,8 +334,10 @@ export default function Register() {
                   <Input
                     id="cpfCnpj"
                     placeholder="000.000.000-00 ou 00.000.000/0000-00"
-                    value={cpfCnpj}
-                    onChange={(e) => setCpfCnpj(maskCpfCnpj(e.target.value))}
+                    value={watchedCpfCnpj}
+                    onChange={(e) =>
+                      form.setValue("cpfCnpj", maskCpfCnpj(e.target.value), { shouldValidate: true })
+                    }
                     disabled={isLoading}
                     className="h-10 sm:h-11"
                   />
