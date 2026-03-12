@@ -21,6 +21,8 @@ export interface ChatConversation {
   lastMessagePreview?: string | null;
   unreadCount: number;
   updatedAt?: string | null;
+  manualModeUntil?: string | null;
+  manualModeEnabled?: boolean;
 }
 
 export interface ChatConversationListResponse {

@@ -165,7 +165,6 @@ export default function ChatPage() {
     try {
       await sendMessage(selectedConversation.clientId, content);
       form.reset({ message: "" });
-      await Promise.all([loadConversations(), loadMessages(selectedConversation.id)]);
     } catch {
       setError("Nao foi possivel enviar a mensagem.");
     }

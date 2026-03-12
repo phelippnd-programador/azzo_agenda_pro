@@ -21,6 +21,8 @@ const resolveOpenedConversationId = (pathname: string) => {
   return parts[2] || null;
 };
 
+const isOnChatScreen = (pathname: string) => pathname === "/chat" || pathname.startsWith("/chat/");
+
 export function ChatInboxNotifier() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -51,6 +53,7 @@ export function ChatInboxNotifier() {
         if (cancelled) return;
         const conversations = response.items || [];
         const openConversationId = resolveOpenedConversationId(location.pathname);
+        if (isOnChatScreen(location.pathname)) return;
 
         if (!bootstrappedRef.current) {
           const baseline = new Map<string, string>();
@@ -71,6 +74,7 @@ export function ChatInboxNotifier() {
           seenConversationUpdateRef.current.set(conversation.id, stamp);
           if (!isNewer) return;
           if (openConversationId === conversation.id) return;
+          if (!conversation.manualModeEnabled) return;
 
           const dedupeKey = `${conversation.id}:${stamp}`;
           if (shownNotificationsRef.current.has(dedupeKey)) return;
@@ -78,7 +82,8 @@ export function ChatInboxNotifier() {
 
           const clientName = conversation.clientName?.trim() || "Cliente";
           const preview = conversation.lastMessagePreview?.trim() || "Nova mensagem recebida.";
-          toast("Nova mensagem no chat", {
+          toast("Nova mensagem no chat (modo manual)", {
+            id: `chat-manual-${conversation.id}`,
             description: `${clientName}: ${preview}`,
             action: {
               label: "Abrir conversa",

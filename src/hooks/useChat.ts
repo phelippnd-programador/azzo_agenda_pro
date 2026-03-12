@@ -60,6 +60,40 @@ export function useChat(options: UseChatOptions = {}) {
       try {
         setIsSending(true);
         const response = await chatApi.sendMessage({ clientId, content });
+        const nowIso = new Date().toISOString();
+
+        setConversations((prev) => {
+          const next = prev.map((conversation) =>
+            conversation.clientId === clientId
+              ? {
+                  ...conversation,
+                  lastMessagePreview: content,
+                  lastMessageAt: nowIso,
+                  updatedAt: nowIso,
+                }
+              : conversation
+          );
+          next.sort((a, b) => {
+            const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+            const bTime = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+            return bTime - aTime;
+          });
+          return next;
+        });
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: response.messageId,
+            conversationId: response.conversationId,
+            clientId,
+            direction: "OUTBOUND",
+            content,
+            status: response.status,
+            createdAt: nowIso,
+            sentAt: nowIso,
+          },
+        ]);
         return response;
       } catch (err) {
         const uiError = resolveUiError(err, "Erro ao enviar mensagem");
