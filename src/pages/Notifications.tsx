@@ -28,6 +28,19 @@ function formatDate(date: string) {
   }).format(new Date(date));
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  FAILED: "Falhou",
+  SENT: "Enviado",
+  PENDING: "Pendente",
+};
+
+const CHANNEL_LABELS: Record<string, string> = {
+  APPOINTMENT_CREATED: "Agendamento criado",
+  WHATSAPP_REMINDER: "Lembrete WhatsApp",
+  WHATSAPP_CONFIG_ALERT: "Alerta config. WhatsApp",
+  WHATSAPP_DELIVERY_ERROR: "Falha entrega WhatsApp",
+};
+
 function maskDestination(value?: string | null) {
   if (!value) return "-";
   if (!/^[+\d\s()-]+$/.test(value)) return value;
@@ -206,7 +219,7 @@ export default function Notifications() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => void handleMarkAllAsRead()} disabled={!notifications.length}>
+              <Button variant="outline" onClick={() => void handleMarkAllAsRead()} disabled={!notifications.length || unreadCount === 0}>
                 <CheckCheck className="w-4 h-4 mr-2" />
                 Marcar todas como lidas
               </Button>
@@ -245,7 +258,7 @@ export default function Notifications() {
                           className={`border-b hover:bg-muted/40 ${isUnread(item) ? "bg-primary/5" : ""}`}
                         >
                           <td className="py-2">{formatDate(item.sentAt || item.createdAt)}</td>
-                          <td className="py-2">{item.channel || "-"}</td>
+                          <td className="py-2">{CHANNEL_LABELS[item.channel] ?? item.channel ?? "-"}</td>
                           <td className="py-2 max-w-[360px]">
                             <div className="flex items-center gap-2">
                               {isUnread(item) ? <span className="h-2 w-2 rounded-full bg-primary inline-block" /> : null}
@@ -256,7 +269,7 @@ export default function Notifications() {
                             </div>
                           </td>
                           <td className="py-2">
-                            <Badge className={getStatusBadgeClass(item.status)}>{item.status}</Badge>
+                            <Badge className={getStatusBadgeClass(item.status)}>{STATUS_LABELS[item.status] ?? item.status}</Badge>
                           </td>
                           <td className="py-2">{maskDestination(item.destination)}</td>
                           <td className="py-2 text-right">

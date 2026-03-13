@@ -87,7 +87,6 @@ export const useNotificationsStore = create<NotificationsStoreState>((set, get) 
 
   refreshSummary: async () => {
     try {
-      set({ loading: true, error: null });
       const response = await notificationsApi.getAll({ limit: SUMMARY_LIMIT });
       const sorted = sortByNewest(response.items || []);
       set({

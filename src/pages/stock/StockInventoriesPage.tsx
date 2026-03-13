@@ -20,6 +20,13 @@ import type {
 } from "@/types/stock";
 import { formatDateTime } from "./utils";
 
+const INVENTORY_STATUS_LABELS: Record<string, string> = {
+  ABERTO: "Aberto",
+  EM_CONTAGEM: "Em contagem",
+  FECHADO: "Fechado",
+  CANCELADO: "Cancelado",
+};
+
 const initialInventoryForm: CreateStockInventoryRequest = {
   nome: "",
   observacao: "",
@@ -203,7 +210,7 @@ export default function StockInventoriesPage() {
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-medium">{inventory.nome}</p>
-                  <Badge variant={getStatusVariant(inventory.status)}>{inventory.status}</Badge>
+                  <Badge variant={getStatusVariant(inventory.status)}>{INVENTORY_STATUS_LABELS[inventory.status] ?? inventory.status}</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Abertura: {formatDateTime(inventory.dataAbertura)} | Fechamento:{" "}
@@ -227,7 +234,7 @@ export default function StockInventoriesPage() {
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <CardTitle>{selectedInventory.nome}</CardTitle>
-              <Badge variant={getStatusVariant(selectedInventory.status)}>{selectedInventory.status}</Badge>
+              <Badge variant={getStatusVariant(selectedInventory.status)}>{INVENTORY_STATUS_LABELS[selectedInventory.status] ?? selectedInventory.status}</Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -274,13 +281,13 @@ export default function StockInventoriesPage() {
               />
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button onClick={() => void handleRegisterCount()} disabled={isSavingCount}>
+              <Button onClick={() => void handleRegisterCount()} disabled={isSavingCount || selectedInventory.status === "FECHADO" || selectedInventory.status === "CANCELADO"}>
                 {isSavingCount ? "Salvando..." : "Registrar contagem"}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => void handleCloseInventory()}
-                disabled={isClosing || selectedInventory.status === "FECHADO"}
+                disabled={isClosing || selectedInventory.status === "FECHADO" || selectedInventory.status === "CANCELADO"}
               >
                 {isClosing ? "Fechando..." : "Fechar inventario"}
               </Button>

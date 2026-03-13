@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -14,14 +15,22 @@ import {
 
 interface UpcomingAppointmentsProps {
   appointments: Appointment[];
+  onUpdateStatus?: (id: string, status: Appointment["status"]) => Promise<void>;
 }
 
-export function UpcomingAppointments({ appointments }: UpcomingAppointmentsProps) {
+export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingAppointmentsProps) {
+  const navigate = useNavigate();
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2 sm:pb-4">
         <CardTitle className="text-base sm:text-lg">Proximos Agendamentos</CardTitle>
-        <Button variant="ghost" size="sm" className="text-primary text-xs sm:text-sm">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-primary text-xs sm:text-sm"
+          onClick={() => navigate('/agenda')}
+        >
           Ver todos
         </Button>
       </CardHeader>
@@ -70,10 +79,21 @@ export function UpcomingAppointments({ appointments }: UpcomingAppointmentsProps
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>Confirmar</DropdownMenuItem>
-                  <DropdownMenuItem>Iniciar Atendimento</DropdownMenuItem>
-                  <DropdownMenuItem>Reagendar</DropdownMenuItem>
-                  <DropdownMenuItem className="text-destructive">Cancelar</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onUpdateStatus?.(appointment.id, 'CONFIRMED')}>
+                    Confirmar
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onUpdateStatus?.(appointment.id, 'IN_PROGRESS')}>
+                    Iniciar Atendimento
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/agenda')}>
+                    Reagendar
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-destructive"
+                    onClick={() => onUpdateStatus?.(appointment.id, 'CANCELLED')}
+                  >
+                    Cancelar
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

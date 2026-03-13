@@ -46,7 +46,7 @@ export default function Dashboard() {
   const isProfessionalUser = user?.role === 'PROFESSIONAL';
   const { metrics, isLoading: metricsLoading, error: metricsError, refetch: refetchMetrics } =
     useDashboardWithOptions({ enabled: !isProfessionalUser });
-  const { appointments, isLoading: appointmentsLoading } = useAppointments();
+  const { appointments, isLoading: appointmentsLoading, updateAppointmentStatus } = useAppointments();
   const {
     professionals,
     isLoading: professionalsLoading,
@@ -336,7 +336,7 @@ export default function Dashboard() {
 
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="lg:col-span-2">
-            <UpcomingAppointments appointments={enrichedAppointments} />
+            <UpcomingAppointments appointments={enrichedAppointments} onUpdateStatus={updateAppointmentStatus} />
           </div>
 
           <Card>

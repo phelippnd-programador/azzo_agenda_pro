@@ -32,6 +32,11 @@ export function ChatInboxNotifier() {
   const seenConversationUpdateRef = useRef<Map<string, string>>(new Map());
   const shownNotificationsRef = useRef<Set<string>>(new Set());
   const bootstrappedRef = useRef(false);
+  const pathnameRef = useRef(location.pathname);
+
+  useEffect(() => {
+    pathnameRef.current = location.pathname;
+  }, [location.pathname]);
 
   useEffect(() => {
     if (!isAuthenticated || !isChatAllowed) {
@@ -45,6 +50,8 @@ export function ChatInboxNotifier() {
 
     const sync = async () => {
       try {
+        const pathname = pathnameRef.current;
+        if (isOnChatScreen(pathname)) return;
         const response = await chatApi.listConversations({
           todayOnly: true,
           page: 1,
@@ -52,8 +59,7 @@ export function ChatInboxNotifier() {
         });
         if (cancelled) return;
         const conversations = response.items || [];
-        const openConversationId = resolveOpenedConversationId(location.pathname);
-        if (isOnChatScreen(location.pathname)) return;
+        const openConversationId = resolveOpenedConversationId(pathnameRef.current);
 
         if (!bootstrappedRef.current) {
           const baseline = new Map<string, string>();
@@ -104,7 +110,7 @@ export function ChatInboxNotifier() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [isAuthenticated, isChatAllowed, location.pathname, navigate]);
+  }, [isAuthenticated, isChatAllowed, navigate]);
 
   return null;
 }

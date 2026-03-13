@@ -144,6 +144,15 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
+const allowedTransitions: Record<string, string[]> = {
+  PENDING: ['CONFIRMED', 'CANCELLED', 'NO_SHOW'],
+  CONFIRMED: ['IN_PROGRESS', 'CANCELLED', 'NO_SHOW'],
+  IN_PROGRESS: ['COMPLETED', 'CANCELLED'],
+  COMPLETED: [],
+  CANCELLED: [],
+  NO_SHOW: [],
+};
+
 export default function Agenda() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -388,7 +397,7 @@ export default function Agenda() {
       setIsNewAppointmentOpen(false);
       // Reset form
       setNewClientId('');
-      setNewProfessionalId('');
+      setNewProfessionalId(isProfessionalUser && loggedProfessional?.id ? loggedProfessional.id : '');
       setNewServiceId('');
       setNewStartTime('');
       setNewEndTime('');
@@ -956,30 +965,40 @@ export default function Agenda() {
                                         </Button>
                                       </DropdownMenuTrigger>
                                       <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={() => handleStatusChange(apt.id, 'CONFIRMED')}>
-                                          Confirmar
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleStatusChange(apt.id, 'IN_PROGRESS')}>
-                                          Iniciar Atendimento
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleStatusChange(apt.id, 'COMPLETED')}>
-                                          Concluir
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleStatusChange(apt.id, 'NO_SHOW')}>
-                                          Não Compareceu
-                                        </DropdownMenuItem>
+                                        {(allowedTransitions[apt.status] ?? []).includes('CONFIRMED') && (
+                                          <DropdownMenuItem onClick={() => handleStatusChange(apt.id, 'CONFIRMED')}>
+                                            Confirmar
+                                          </DropdownMenuItem>
+                                        )}
+                                        {(allowedTransitions[apt.status] ?? []).includes('IN_PROGRESS') && (
+                                          <DropdownMenuItem onClick={() => handleStatusChange(apt.id, 'IN_PROGRESS')}>
+                                            Iniciar Atendimento
+                                          </DropdownMenuItem>
+                                        )}
+                                        {(allowedTransitions[apt.status] ?? []).includes('COMPLETED') && (
+                                          <DropdownMenuItem onClick={() => handleStatusChange(apt.id, 'COMPLETED')}>
+                                            Concluir
+                                          </DropdownMenuItem>
+                                        )}
+                                        {(allowedTransitions[apt.status] ?? []).includes('NO_SHOW') && (
+                                          <DropdownMenuItem onClick={() => handleStatusChange(apt.id, 'NO_SHOW')}>
+                                            Não Compareceu
+                                          </DropdownMenuItem>
+                                        )}
                                         {!isProfessionalUser && canReassignAppointments && (
                                           <DropdownMenuItem onClick={() => openReassignDialog(apt)}>
                                             Realocar profissional
                                           </DropdownMenuItem>
                                         )}
-                                        <DropdownMenuItem 
-                                          className="text-red-600"
-                                          onClick={() => handleStatusChange(apt.id, 'CANCELLED')}
-                                        >
-                                          Cancelar
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem 
+                                        {(allowedTransitions[apt.status] ?? []).includes('CANCELLED') && (
+                                          <DropdownMenuItem
+                                            className="text-red-600"
+                                            onClick={() => handleStatusChange(apt.id, 'CANCELLED')}
+                                          >
+                                            Cancelar
+                                          </DropdownMenuItem>
+                                        )}
+                                        <DropdownMenuItem
                                           className="text-red-600"
                                           onClick={() => openDeleteAppointmentDialog(apt.id)}
                                         >
@@ -1326,8 +1345,8 @@ export default function Agenda() {
           isLoading={isDeletingAppointment}
           title="Excluir agendamento?"
           description="Você tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita."
-          cancelLabel="Cancel"
-          confirmLabel="Confirm Delete"
+          cancelLabel="Cancelar"
+          confirmLabel="Confirmar exclusão"
           loadingLabel="Excluindo..."
           onOpenChange={(open) => {
             if (isDeletingAppointment) return;

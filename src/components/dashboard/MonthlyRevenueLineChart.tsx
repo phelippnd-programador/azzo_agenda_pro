@@ -71,7 +71,12 @@ export function MonthlyRevenueLineChart() {
         <CardTitle className="text-base sm:text-lg">Faturamento do Mes</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-56 sm:h-64">
+        {points.length === 0 ? (
+          <div className="h-56 sm:h-64 flex items-center justify-center">
+            <p className="text-sm text-muted-foreground">Sem faturamento registrado neste mes.</p>
+          </div>
+        ) : null}
+        <div className={points.length === 0 ? "hidden" : "h-56 sm:h-64"}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={points}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />

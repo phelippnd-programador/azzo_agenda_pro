@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,6 +20,14 @@ const messageStatusVariant = (message: ChatMessage) => {
   if (message.status === "FAILED") return "destructive" as const;
   if (message.status === "READ") return "default" as const;
   return "secondary" as const;
+};
+
+const MESSAGE_STATUS_LABELS: Record<ChatMessage["status"], string> = {
+  QUEUED: "Na fila",
+  SENT: "Enviado",
+  DELIVERED: "Entregue",
+  READ: "Lido",
+  FAILED: "Falhou",
 };
 
 const formatDateTime = (value?: string | null) => {
@@ -58,6 +66,8 @@ export default function ChatPage() {
   const { conversationId } = useParams<{ conversationId?: string }>();
   const [error, setError] = useState<string | null>(null);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const activeConversationIdRef = useRef<string | undefined>(conversationId);
   const form = useForm<ChatMessageForm>({
     resolver: zodResolver(chatMessageSchema),
     defaultValues: {
@@ -108,6 +118,10 @@ export default function ChatPage() {
   ]);
 
   useEffect(() => {
+    activeConversationIdRef.current = conversationId;
+  }, [conversationId]);
+
+  useEffect(() => {
     const apiBase =
       ((import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ||
         "http://localhost:8080/api/v1");
@@ -119,9 +133,9 @@ export default function ChatPage() {
       if (refreshTimer) window.clearTimeout(refreshTimer);
       refreshTimer = window.setTimeout(() => {
         loadConversations().catch(() => null);
-        const activeConversationId = selectedConversation?.id;
-        if (activeConversationId && (!updatedConversationId || updatedConversationId === activeConversationId)) {
-          loadMessages(activeConversationId).catch(() => null);
+        const activeId = activeConversationIdRef.current;
+        if (activeId && (!updatedConversationId || updatedConversationId === activeId)) {
+          loadMessages(activeId).catch(() => null);
         }
       }, 250);
     };
@@ -145,7 +159,13 @@ export default function ChatPage() {
       eventSource.removeEventListener("chat-update", handleChatUpdate);
       eventSource.close();
     };
-  }, [loadConversations, loadMessages, selectedConversation?.id]);
+  }, [loadConversations, loadMessages]);
+
+  useEffect(() => {
+    if (!isLoadingMessages) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isLoadingMessages]);
 
   const watchedMessage = form.watch("message");
 
@@ -248,6 +268,11 @@ export default function ChatPage() {
                       {selectedConversation.clientPhoneMasked || "Sem telefone"}
                     </p>
                   </div>
+                  {selectedConversation.manualModeEnabled ? (
+                    <Badge variant="outline" className="shrink-0 text-amber-600 border-amber-400">
+                      Modo Manual
+                    </Badge>
+                  ) : null}
                 </div>
               </CardHeader>
               <CardContent className="h-[calc(100%-9rem)] flex flex-col">
@@ -263,29 +288,34 @@ export default function ChatPage() {
                       description="Envie uma mensagem para iniciar o atendimento."
                     />
                   ) : (
-                    messages.map((message) => {
-                      const isOutbound = message.direction === "OUTBOUND";
-                      return (
-                        <div
-                          key={message.id}
-                          className={`max-w-[80%] rounded-2xl p-3 border ${
-                            isOutbound
-                              ? "ml-auto bg-primary/10 border-primary/20"
-                              : "bg-muted/40 border-border"
-                          }`}
-                        >
-                          <p className="text-sm whitespace-pre-wrap">
-                            {message.content || "[Conteudo expirado]"}
-                          </p>
-                          <div className="mt-2 flex items-center justify-between gap-2">
-                            <span className="text-[11px] text-muted-foreground">
-                              {formatDateTime(message.createdAt)}
-                            </span>
-                            <Badge variant={messageStatusVariant(message)}>{message.status}</Badge>
+                    <>
+                      {messages.map((message) => {
+                        const isOutbound = message.direction === "OUTBOUND";
+                        return (
+                          <div
+                            key={message.id}
+                            className={`max-w-[80%] rounded-2xl p-3 border ${
+                              isOutbound
+                                ? "ml-auto bg-primary/10 border-primary/20"
+                                : "bg-muted/40 border-border"
+                            }`}
+                          >
+                            <p className="text-sm whitespace-pre-wrap">
+                              {message.content || "[Conteudo expirado]"}
+                            </p>
+                            <div className="mt-2 flex items-center justify-between gap-2">
+                              <span className="text-[11px] text-muted-foreground">
+                                {formatDateTime(message.createdAt)}
+                              </span>
+                              <Badge variant={messageStatusVariant(message)}>
+                                {MESSAGE_STATUS_LABELS[message.status] ?? message.status}
+                              </Badge>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })
+                        );
+                      })}
+                      <div ref={messagesEndRef} />
+                    </>
                   )}
                 </div>
 

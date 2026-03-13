@@ -315,7 +315,9 @@ export default function ProfessionalFinancial() {
   }, [visibleStatsByProfessional]);
   const isOwnerView = !isProfessional;
 
-  if (isLoadingProfessionals || isLoadingProfessionalMetrics || isLoadingServicesMetrics) {
+  const isLoadingMetrics = isLoadingProfessionalMetrics || isLoadingServicesMetrics;
+
+  if (isLoadingProfessionals) {
     return (
       <MainLayout
         title="Financeiro por Profissional"
@@ -339,7 +341,7 @@ export default function ProfessionalFinancial() {
       title="Financeiro por Profissional"
       subtitle="Metricas detalhadas por periodo para dono e equipe."
     >
-      <div className="space-y-4 sm:space-y-6">
+      <div className={`space-y-4 sm:space-y-6 transition-opacity duration-200 ${isLoadingMetrics ? "opacity-50 pointer-events-none" : ""}`}>
         <Card>
           <CardContent className="grid gap-3 p-4 md:grid-cols-4">
             <div className="space-y-2">
@@ -406,6 +408,12 @@ export default function ProfessionalFinancial() {
           </CardContent>
         </Card>
 
+        {preset === "range" && (!customStart || !customEnd) ? (
+          <p className="text-sm text-muted-foreground">
+            Selecione as datas de inicio e fim para filtrar.
+          </p>
+        ) : null}
+
         <div className={`grid gap-4 ${isOwnerView ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
           {isOwnerView ? (
             <Card>
@@ -459,6 +467,7 @@ export default function ProfessionalFinancial() {
                           }
                         />
                         <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                        <Legend />
                         <Bar dataKey="revenue" fill="#7c3aed" name="Faturamento" radius={[6, 6, 0, 0]} />
                         <Bar dataKey="commission" fill="#0ea5e9" name="Comissao" radius={[6, 6, 0, 0]} />
                       </BarChart>
@@ -484,6 +493,7 @@ export default function ProfessionalFinancial() {
                       <XAxis dataKey="name" />
                       <YAxis allowDecimals={false} />
                       <Tooltip />
+                      <Legend />
                       <Bar dataKey="servicesCount" fill="#16a34a" name="Servicos" radius={[6, 6, 0, 0]} />
                       <Bar dataKey="clientsCount" fill="#f59e0b" name="Clientes" radius={[6, 6, 0, 0]} />
                     </BarChart>

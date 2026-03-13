@@ -16,6 +16,12 @@ import { Link, useMatch, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { formatDateTime, getListItems } from "./utils";
 
+const MOVEMENT_TYPE_LABELS: Record<string, string> = {
+  ENTRADA: "Entrada",
+  SAIDA: "Saída",
+  AJUSTE: "Ajuste",
+};
+
 const defaultForm: CreateStockMovementRequest = {
   itemEstoqueId: "",
   tipo: "ENTRADA",
@@ -237,7 +243,7 @@ export default function StockMovementsPage() {
                   <p className="font-medium text-foreground text-sm truncate">{movement.motivo}</p>
                   <div className="flex flex-wrap items-center gap-2 mt-1">
                     <Badge variant="outline" className="text-[10px] sm:text-xs">
-                      {movement.tipo}
+                      {MOVEMENT_TYPE_LABELS[movement.tipo] ?? movement.tipo}
                     </Badge>
                     <span className="text-[10px] sm:text-xs text-muted-foreground">{itemNome}</span>
                     <span className="text-[10px] sm:text-xs text-muted-foreground">

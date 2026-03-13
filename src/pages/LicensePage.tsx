@@ -51,6 +51,30 @@ import { setLicenseAccessStatus } from "@/lib/license-access";
 
 type ActionMode = "IDLE" | "PAY" | "CHANGE";
 
+const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
+  ACTIVE: "Ativa",
+  PENDING: "Pendente",
+  OVERDUE: "Em atraso",
+  EXPIRED: "Expirada",
+  TRIAL: "Trial",
+  INACTIVE: "Inativa",
+};
+
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  PENDING: "Pendente",
+  OVERDUE: "Em atraso",
+  RECEIVED: "Pago",
+  CONFIRMED: "Confirmado",
+  REFUNDED: "Estornado",
+  CANCELLED: "Cancelado",
+};
+
+const BILLING_TYPE_LABELS: Record<string, string> = {
+  PIX: "PIX",
+  BOLETO: "Boleto",
+  CREDIT_CARD: "Cartão de crédito",
+};
+
 const baseSchema = z.object({
   planCode: z.string().min(1, "Selecione um plano."),
   billingType: z.enum(["PIX", "BOLETO", "CREDIT_CARD"]),
@@ -277,6 +301,7 @@ export default function LicensePage() {
   const [lastCardDigits, setLastCardDigits] = useState<string | null>(null);
   const [actionMode, setActionMode] = useState<ActionMode>("IDLE");
   const [paymentHistory, setPaymentHistory] = useState<BillingPaymentItem[]>([]);
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<BillingPaymentItem | null>(null);
   const [hasAppliedQueryDefaults, setHasAppliedQueryDefaults] = useState(false);
   const hasPaidAccess = useMemo(
@@ -302,11 +327,13 @@ export default function LicensePage() {
   );
 
   const loadPaymentHistory = useCallback(async () => {
+    setHistoryError(null);
     try {
       const response = await getBillingPayments();
       setPaymentHistory(response.items || []);
-    } catch {
+    } catch (error) {
       setPaymentHistory([]);
+      setHistoryError(getBillingErrorMessage(error));
     }
   }, []);
 
@@ -640,11 +667,11 @@ export default function LicensePage() {
                 {result ? formatCurrency(result.amountCents) : "Nao informado"}
               </p>
               <p>
-                <strong>Status do plano:</strong> {result?.status || "Sem assinatura"}
+                <strong>Status do plano:</strong> {result ? (SUBSCRIPTION_STATUS_LABELS[result.status] ?? result.status) : "Sem assinatura"}
               </p>
               <p>
                 <strong>Pagamento:</strong>{" "}
-                {result ? getCurrentPaymentStatus(result) || "Nao informado" : "Nao informado"}
+                {result ? (PAYMENT_STATUS_LABELS[getCurrentPaymentStatus(result) ?? ""] ?? getCurrentPaymentStatus(result) ?? "Nao informado") : "Nao informado"}
               </p>
               <p>
                 <strong>Proximo vencimento:</strong>{" "}
@@ -659,7 +686,7 @@ export default function LicensePage() {
                   : "Nao informado"}
               </p>
               <p>
-                <strong>Metodo atual:</strong> {result?.billingType || "Nao informado"}
+                <strong>Metodo atual:</strong> {result ? (BILLING_TYPE_LABELS[result.billingType] ?? result.billingType) : "Nao informado"}
               </p>
               <p>
                 <strong>ID pagamento atual:</strong>{" "}
@@ -909,6 +936,12 @@ export default function LicensePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
+            {historyError ? (
+              <Alert className="border-red-200 bg-red-50">
+                <AlertTitle>Nao foi possivel carregar o historico</AlertTitle>
+                <AlertDescription>{historyError}</AlertDescription>
+              </Alert>
+            ) : null}
             {!orderedHistory.length ? (
               <p className="text-sm text-muted-foreground">Nenhum pagamento registrado ainda.</p>
             ) : (
@@ -919,10 +952,10 @@ export default function LicensePage() {
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground">
-                      {formatCurrency(payment.amountCents)}  -  {payment.billingType}
+                      {formatCurrency(payment.amountCents)}  -  {BILLING_TYPE_LABELS[payment.billingType] ?? payment.billingType}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Status: {payment.status}  -  Competencia:{" "}
+                      Status: {PAYMENT_STATUS_LABELS[payment.status] ?? payment.status}  -  Competencia:{" "}
                       {formatReferenceMonth(payment.referenceMonth)}  -  Vencimento:{" "}
                       {formatDate(payment.dueDate)}
                     </p>
@@ -963,10 +996,10 @@ export default function LicensePage() {
                     <strong>Valor:</strong> {formatCurrency(selectedPayment.amountCents)}
                   </p>
                   <p>
-                    <strong>Metodo:</strong> {selectedPayment.billingType}
+                    <strong>Metodo:</strong> {BILLING_TYPE_LABELS[selectedPayment.billingType] ?? selectedPayment.billingType}
                   </p>
                   <p>
-                    <strong>Status:</strong> {selectedPayment.status}
+                    <strong>Status:</strong> {PAYMENT_STATUS_LABELS[selectedPayment.status] ?? selectedPayment.status}
                   </p>
                   <p>
                     <strong>ID pagamento:</strong>{" "}
@@ -1023,10 +1056,10 @@ export default function LicensePage() {
             </CardHeader>
               <CardContent className="space-y-2 text-sm text-foreground">
                 <p>
-                  <strong>Status do plano:</strong> {result.status}
+                  <strong>Status do plano:</strong> {SUBSCRIPTION_STATUS_LABELS[result.status] ?? result.status}
                 </p>
                 <p>
-                  <strong>Pagamento:</strong> {getCurrentPaymentStatus(result) || "N/A"}
+                  <strong>Pagamento:</strong> {PAYMENT_STATUS_LABELS[getCurrentPaymentStatus(result) ?? ""] ?? getCurrentPaymentStatus(result) ?? "N/A"}
                 </p>
               <p>
                 <strong>Cartao:</strong> final {lastCardDigits}

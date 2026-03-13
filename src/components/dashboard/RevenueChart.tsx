@@ -47,7 +47,8 @@ export function RevenueChart() {
         <div className="flex items-end justify-between gap-1 sm:gap-2 h-36 sm:h-48">
           {weeklyData.map((item, index) => {
             const height = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
-            const isToday = index === new Date().getDay() - 1;
+            const todayDow = new Date().getDay();
+            const isToday = index === (todayDow === 0 ? 6 : todayDow - 1);
 
             return (
               <div key={item.day} className="flex-1 flex flex-col items-center gap-1 sm:gap-2 min-w-0">
@@ -82,7 +83,7 @@ export function RevenueChart() {
           <div className="sm:text-right">
             <p className="text-xs sm:text-sm text-muted-foreground">Media Diaria</p>
             <p className="text-lg sm:text-xl font-bold text-primary">
-              {formatCurrency(weeklyData.reduce((acc, d) => acc + d.value, 0) / 6)}
+              {formatCurrency(weeklyData.reduce((acc, d) => acc + d.value, 0) / weeklyData.length)}
             </p>
           </div>
         </div>

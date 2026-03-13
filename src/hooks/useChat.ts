@@ -44,6 +44,7 @@ export function useChat(options: UseChatOptions = {}) {
     }
     try {
       setIsLoadingMessages(true);
+      setMessages([]);
       const response = await chatApi.listMessages(conversationId, { page: 1, pageSize: 200 });
       setMessages(response.items || []);
     } catch (err) {
