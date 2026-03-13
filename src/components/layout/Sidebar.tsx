@@ -46,6 +46,11 @@ const MENU_REGISTRY = {
   "/chat": { icon: MessageCircleMore, label: "Chat", path: "/chat" },
   "/estoque": { icon: Boxes, label: "Estoque", path: "/estoque" },
   "/financeiro": { icon: DollarSign, label: "Resumo Financeiro", path: "/financeiro" },
+  "/financeiro/comissoes": {
+    icon: Receipt,
+    label: "Comissoes",
+    path: "/financeiro/comissoes",
+  },
   "/financeiro/profissionais": {
     icon: BarChart3,
     label: "Financeiro Profissionais",
@@ -82,6 +87,7 @@ const MAIN_MENU_ORDER = [
   "/chat",
   "/estoque",
   "/financeiro",
+  "/financeiro/comissoes",
   "/financeiro/profissionais",
   "/financeiro/licenca",
   "/auditoria",
@@ -114,6 +120,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
   const visibleMenuEntries: VisibleMenuEntry[] = useMemo(() => {
     const financialGroupPaths = [
       "/financeiro",
+      "/financeiro/comissoes",
       "/financeiro/profissionais",
     ] as const;
     const financialItems = financialGroupPaths

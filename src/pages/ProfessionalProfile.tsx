@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Mail, Percent, Phone, User } from "lucide-react";
+import { ArrowLeft, Coins, Mail, Percent, Phone, User } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageErrorState } from "@/components/ui/page-states";
+import { useMenuPermissions } from "@/contexts/MenuPermissionsContext";
 import { professionalsApi, type Professional } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 
 export default function ProfessionalProfile() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { canAccess } = useMenuPermissions();
   const [professional, setProfessional] = useState<Professional | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,10 +76,18 @@ export default function ProfessionalProfile() {
   return (
     <MainLayout title="Perfil do Profissional" subtitle={professional.name}>
       <div className="space-y-4 sm:space-y-6">
-        <Button variant="outline" onClick={() => navigate("/profissionais")} className="gap-2">
-          <ArrowLeft className="w-4 h-4" />
-          Voltar
-        </Button>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <Button variant="outline" onClick={() => navigate("/profissionais")} className="gap-2">
+            <ArrowLeft className="w-4 h-4" />
+            Voltar
+          </Button>
+          {canAccess(`/profissionais/${professional.id}/comissao`) ? (
+            <Button onClick={() => navigate(`/profissionais/${professional.id}/comissao`)} className="gap-2">
+              <Coins className="w-4 h-4" />
+              Configurar comissao
+            </Button>
+          ) : null}
+        </div>
 
         <Card>
           <CardHeader>

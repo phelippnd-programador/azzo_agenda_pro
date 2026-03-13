@@ -110,6 +110,18 @@ import type {
   SendChatMessageRequest,
   SendChatMessageResponse,
 } from "@/types/chat";
+import type {
+  CommissionAdjustmentRequest,
+  CommissionAdjustmentResponse,
+  CommissionCycleListResponse,
+  CommissionCycleResponse,
+  CommissionEntryStatus,
+  CommissionProfessionalReportResponse,
+  CommissionReportResponse,
+  CommissionRuleSetListResponse,
+  CommissionRuleSetResponse,
+  CommissionRuleSetUpsertRequest,
+} from "@/types/commission";
 import {
   mockAppointments,
   mockClients,
@@ -230,10 +242,13 @@ const ALL_LOCAL_DEMO_ROUTES = [
   "/servicos",
   "/especialidades",
   "/profissionais",
+  "/profissionais/:id/comissao",
   "/clientes",
   "/sugestoes",
   "/chat",
   "/financeiro",
+  "/financeiro/comissoes",
+  "/financeiro/comissoes/:professionalId",
   "/financeiro/profissionais",
   "/financeiro/licenca",
   "/emitir-nota",
@@ -3863,6 +3878,70 @@ export const billingApi = {
     request<AdminBillingActionResponse>("/billing/admin/payments/mark-received", {
       method: "POST",
       body: JSON.stringify({ tenantId, paymentId, validityDays }),
+    }),
+};
+
+export const commissionApi = {
+  listRuleSets: (params?: { professionalId?: string; activeOnly?: boolean }) => {
+    const query = new URLSearchParams();
+    if (params?.professionalId) query.set("professionalId", params.professionalId);
+    if (typeof params?.activeOnly === "boolean") {
+      query.set("activeOnly", String(params.activeOnly));
+    }
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<CommissionRuleSetListResponse>(`/commissions/rules${suffix}`);
+  },
+  createRuleSet: (payload: CommissionRuleSetUpsertRequest) =>
+    request<CommissionRuleSetResponse>("/commissions/rules", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updateRuleSet: (ruleSetId: string, payload: CommissionRuleSetUpsertRequest) =>
+    request<CommissionRuleSetResponse>(`/commissions/rules/${ruleSetId}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  setRuleSetActive: (ruleSetId: string, active: boolean) =>
+    request<CommissionRuleSetResponse>(`/commissions/rules/${ruleSetId}/active`, {
+      method: "PATCH",
+      body: JSON.stringify({ active }),
+    }),
+  getReport: (params: {
+    from: string;
+    to: string;
+    professionalId?: string;
+    status?: CommissionEntryStatus;
+  }) => {
+    const query = new URLSearchParams({
+      from: params.from,
+      to: params.to,
+    });
+    if (params.professionalId) query.set("professionalId", params.professionalId);
+    if (params.status) query.set("status", params.status);
+    return request<CommissionReportResponse>(`/commissions/report?${query.toString()}`);
+  },
+  getProfessionalReport: (professionalId: string, from: string, to: string) =>
+    request<CommissionProfessionalReportResponse>(
+      `/commissions/report/${professionalId}?${new URLSearchParams({ from, to }).toString()}`
+    ),
+  listCycles: (status?: string) =>
+    request<CommissionCycleListResponse>(
+      `/commissions/cycles${status ? `?${new URLSearchParams({ status }).toString()}` : ""}`
+    ),
+  closeCycle: (periodStart: string, periodEnd: string) =>
+    request<CommissionCycleResponse>("/commissions/cycles/close", {
+      method: "POST",
+      body: JSON.stringify({ periodStart, periodEnd }),
+    }),
+  payCycle: (cycleId: string, notes?: string) =>
+    request<CommissionCycleResponse>(`/commissions/cycles/${cycleId}/pay`, {
+      method: "POST",
+      body: JSON.stringify(notes ? { notes } : {}),
+    }),
+  createAdjustment: (payload: CommissionAdjustmentRequest) =>
+    request<CommissionAdjustmentResponse>("/commissions/adjustments", {
+      method: "POST",
+      body: JSON.stringify(payload),
     }),
 };
 

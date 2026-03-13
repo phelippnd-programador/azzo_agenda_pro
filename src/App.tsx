@@ -20,6 +20,7 @@ import Services from "./pages/Services";
 import Specialties from "./pages/Specialties";
 import Professionals from "./pages/Professionals";
 import ProfessionalProfile from "./pages/ProfessionalProfile";
+import ProfessionalCommissionSettings from "./pages/ProfessionalCommissionSettings";
 import Clients from "./pages/Clients";
 import ClientProfile from "./pages/ClientProfile";
 import SuggestionsPage from "./pages/Suggestions";
@@ -36,7 +37,9 @@ import StockPurchaseOrdersPage from "./pages/stock/StockPurchaseOrdersPage";
 import StockTransfersPage from "./pages/stock/StockTransfersPage";
 import StockSettingsPage from "./pages/stock/StockSettingsPage";
 import Financial from "./pages/Financial";
+import FinancialCommissions from "./pages/FinancialCommissions";
 import ProfessionalFinancial from "./pages/ProfessionalFinancial";
+import ProfessionalCommissionReport from "./pages/ProfessionalCommissionReport";
 import Auditoria from "./pages/Auditoria";
 import LgpdRequests from "./pages/LgpdRequests";
 import Login from "./pages/Login";
@@ -263,6 +266,14 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/profissionais/:id/comissao"
+          element={
+            <ProtectedRoute>
+              <ProfessionalCommissionSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/clientes"
           element={
             <ProtectedRoute>
@@ -332,6 +343,22 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Financial />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/financeiro/comissoes"
+          element={
+            <ProtectedRoute>
+              <FinancialCommissions />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/financeiro/comissoes/:professionalId"
+          element={
+            <ProtectedRoute>
+              <ProfessionalCommissionReport />
             </ProtectedRoute>
           }
         />

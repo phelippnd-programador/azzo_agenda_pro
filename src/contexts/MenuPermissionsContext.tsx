@@ -66,6 +66,17 @@ function normalizeRoute(route: string): string {
 function isSubRouteAllowed(path: string, allowedPath: string): boolean {
   if (allowedPath === "/") return path === "/";
   if (path === allowedPath) return true;
+  if (allowedPath.includes(":")) {
+    const escaped = allowedPath
+      .split("/")
+      .map((segment) =>
+        segment.startsWith(":")
+          ? "[^/]+"
+          : segment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      )
+      .join("/");
+    return new RegExp(`^${escaped}$`).test(path);
+  }
   return path.startsWith(`${allowedPath}/`);
 }
 
