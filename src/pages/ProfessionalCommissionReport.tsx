@@ -17,6 +17,20 @@ import type { CommissionProfessionalReportResponse } from "@/types/commission";
 const formatCurrency = (valueCents: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format((valueCents || 0) / 100);
 
+const getOriginLabel = (originType: string) => {
+  if (originType === "SERVICE") return "Servico";
+  if (originType === "PRODUCT") return "Produto";
+  if (originType === "MANUAL_ADJUSTMENT") return "Ajuste manual";
+  return originType;
+};
+
+const getStatusLabel = (status: string) => {
+  if (status === "OPEN") return "Em aberto";
+  if (status === "PAID") return "Pago";
+  if (status === "REVERSED") return "Revertido";
+  return status;
+};
+
 const getMonthRange = () => {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -141,6 +155,7 @@ export default function ProfessionalCommissionReport() {
                     <TableHead className="text-right">Fixo</TableHead>
                     <TableHead className="text-right">Total</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Observacoes</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -148,7 +163,7 @@ export default function ProfessionalCommissionReport() {
                     <TableRow key={entry.id}>
                       <TableCell>
                         <div className="space-y-1">
-                          <p className="font-medium text-foreground">{entry.originType}</p>
+                          <p className="font-medium text-foreground">{getOriginLabel(entry.originType)}</p>
                           <p className="text-xs text-muted-foreground">{entry.originReference || "-"}</p>
                         </div>
                       </TableCell>
@@ -161,8 +176,11 @@ export default function ProfessionalCommissionReport() {
                       <TableCell className="text-right font-semibold">{formatCurrency(entry.totalAmountCents)}</TableCell>
                       <TableCell>
                         <Badge variant={entry.entryStatus === "PAID" ? "default" : entry.entryStatus === "REVERSED" ? "secondary" : "outline"}>
-                          {entry.entryStatus}
+                          {getStatusLabel(entry.entryStatus)}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-64 text-sm text-muted-foreground">
+                        {entry.notes || "-"}
                       </TableCell>
                     </TableRow>
                   ))}

@@ -527,6 +527,11 @@ export default function Financial() {
                           <Badge variant="outline" className="text-[10px] sm:text-xs">
                             {transaction.category}
                           </Badge>
+                          {transaction.professionalId ? (
+                            <Badge variant="secondary" className="text-[10px] sm:text-xs">
+                              Comissao vinculada
+                            </Badge>
+                          ) : null}
                           <span className="flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground">
                             <PaymentIcon className="w-3 h-3" />
                             {getPaymentLabel(transaction.paymentMethod)}
