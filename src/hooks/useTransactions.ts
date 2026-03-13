@@ -36,7 +36,12 @@ export function useTransactions() {
     fetchTransactions();
   }, [fetchTransactions]);
 
-  const createTransaction = async (data: Omit<Transaction, "id" | "createdAt">) => {
+  const createTransaction = async (
+    data: Pick<
+      Transaction,
+      "appointmentId" | "professionalId" | "productId" | "productCategory" | "type" | "category" | "description" | "amount" | "paymentMethod" | "date"
+    >
+  ) => {
     try {
       const newTransaction = await transactionsApi.create(data);
       setTransactions((prev) => [...prev, newTransaction]);

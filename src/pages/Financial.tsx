@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,7 +44,10 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { useTransactions } from '@/hooks/useTransactions';
+import { useProfessionals } from '@/hooks/useProfessionals';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
+import { stockApi } from '@/lib/api';
+import type { StockItem } from '@/types/stock';
 import { toast } from 'sonner';
 
 const formatCurrency = (value: number) => {
@@ -108,8 +111,38 @@ export default function Financial() {
   const [formCategory, setFormCategory] = useState('');
   const [formPaymentMethod, setFormPaymentMethod] = useState<string>('PIX');
   const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0]);
+  const [formProfessionalId, setFormProfessionalId] = useState('');
+  const [formProductId, setFormProductId] = useState('');
+  const [formProductCategory, setFormProductCategory] = useState('');
+  const [stockItems, setStockItems] = useState<StockItem[]>([]);
+  const [isLoadingStockItems, setIsLoadingStockItems] = useState(false);
 
   const { transactions, summary, isLoading, error, refetch, createTransaction, deleteTransaction } = useTransactions();
+  const { professionals } = useProfessionals();
+
+  const isProductIncome = transactionType === 'INCOME' && formCategory === 'Produto';
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadStockItems = async () => {
+      try {
+        setIsLoadingStockItems(true);
+        const response = await stockApi.getItems({ page: 1, limit: 200 });
+        if (cancelled) return;
+        setStockItems(response.items || []);
+      } catch {
+        if (!cancelled) setStockItems([]);
+      } finally {
+        if (!cancelled) setIsLoadingStockItems(false);
+      }
+    };
+
+    loadStockItems();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const getPaymentIcon = (method: string) => {
     const found = paymentMethods.find(p => p.value === method);
@@ -130,11 +163,24 @@ export default function Financial() {
     setFormCategory('');
     setFormPaymentMethod('PIX');
     setFormDate(new Date().toISOString().split('T')[0]);
+    setFormProfessionalId('');
+    setFormProductId('');
+    setFormProductCategory('');
   };
 
   const handleSubmit = async () => {
     if (!formDescription || !formAmount || !formCategory) {
-      toast.error('Preencha todos os campos obrigatórios');
+      toast.error('Preencha todos os campos obrigatorios');
+      return;
+    }
+
+    if (isProductIncome && !formProfessionalId) {
+      toast.error('Selecione o profissional para gerar a comissao do produto');
+      return;
+    }
+
+    if (isProductIncome && !formProductId && !formProductCategory) {
+      toast.error('Selecione um produto ou uma categoria de produto');
       return;
     }
 
@@ -147,6 +193,9 @@ export default function Financial() {
         category: formCategory,
         paymentMethod: formPaymentMethod as 'PIX' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'CASH' | 'OTHER',
         date: new Date(formDate).toISOString(),
+        professionalId: formProfessionalId || undefined,
+        productId: formProductId || undefined,
+        productCategory: formProductCategory || undefined,
       });
 
       setIsNewTransactionOpen(false);
@@ -355,6 +404,62 @@ export default function Financial() {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {isProductIncome ? (
+                    <>
+                      <div className="space-y-2">
+                        <Label>Profissional responsavel *</Label>
+                        <Select value={formProfessionalId} onValueChange={setFormProfessionalId}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o profissional" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {professionals.map((professional) => (
+                              <SelectItem key={professional.id} value={professional.id}>
+                                {professional.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label>Produto</Label>
+                          <Select
+                            value={formProductId}
+                            onValueChange={(value) => {
+                              setFormProductId(value);
+                              if (value) setFormProductCategory('');
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder={isLoadingStockItems ? 'Carregando produtos...' : 'Selecione o produto'} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {stockItems.map((item) => (
+                                <SelectItem key={item.id} value={item.id}>
+                                  {item.nome}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Categoria do produto</Label>
+                          <Input
+                            placeholder="Use se nao quiser vincular a um item"
+                            value={formProductCategory}
+                            onChange={(e) => {
+                              setFormProductCategory(e.target.value);
+                              if (e.target.value) setFormProductId('');
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  ) : null}
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => {
@@ -478,4 +583,6 @@ export default function Financial() {
     </MainLayout>
   );
 }
+
+
 

@@ -101,6 +101,9 @@ export interface Transaction {
   id: string;
   tenantId: string;
   appointmentId?: string;
+  professionalId?: string;
+  productId?: string;
+  productCategory?: string;
   type: 'INCOME' | 'EXPENSE';
   category: string;
   description: string;
