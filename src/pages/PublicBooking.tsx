@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -50,7 +51,7 @@ export default function PublicBooking() {
   const [professionals, setProfessionals] = useState<Professional[]>([]);
 
   // Selection state
-  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [selectedProfessional, setSelectedProfessional] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -96,7 +97,7 @@ export default function PublicBooking() {
       .getAvailability({
         slug,
         date,
-        serviceId: selectedService || undefined,
+        serviceIds: selectedServiceIds,
         professionalId: selectedProfessional || undefined,
       })
       .then((data) => {
@@ -111,11 +112,19 @@ export default function PublicBooking() {
         setSelectedTime(null);
       })
       .finally(() => setIsLoadingAvailability(false));
-  }, [slug, selectedDate, selectedService, selectedProfessional]);
+  }, [slug, selectedDate, selectedServiceIds, selectedProfessional]);
 
-  const selectedServiceData = useMemo(() => 
-    services.find(s => s.id === selectedService),
-    [services, selectedService]
+  const selectedServicesData = useMemo(
+    () => services.filter((service) => selectedServiceIds.includes(service.id)),
+    [services, selectedServiceIds]
+  );
+  const selectedServiceDuration = useMemo(
+    () => selectedServicesData.reduce((sum, service) => sum + Number(service.duration || 0), 0),
+    [selectedServicesData]
+  );
+  const selectedServiceTotal = useMemo(
+    () => selectedServicesData.reduce((sum, service) => sum + Number(service.price || 0), 0),
+    [selectedServicesData]
   );
 
   const selectedProfessionalData = useMemo(() => 
@@ -123,11 +132,15 @@ export default function PublicBooking() {
     [professionals, selectedProfessional]
   );
 
-  const loadProfessionalsForService = async (serviceId: string) => {
+  const loadProfessionalsForServices = async (serviceIds: string[]) => {
     setIsLoadingProfessionals(true);
     try {
       if (slug) {
-        const data = await publicBookingApi.getProfessionals(slug, serviceId);
+        const data = await publicBookingApi.getProfessionals(
+          slug,
+          serviceIds.length === 1 ? serviceIds[0] : undefined,
+          serviceIds
+        );
         const active = data.filter((professional) => professional.isActive);
         setProfessionals(active);
         setSelectedProfessional((prev) =>
@@ -138,12 +151,13 @@ export default function PublicBooking() {
 
       const data = await professionalsApi.getAll();
       const active = data.filter((professional) => professional.isActive);
-      const currentService = services.find((service) => service.id === serviceId);
-      const restrictedIds = currentService?.professionalIds || [];
-      const filtered =
-        restrictedIds.length > 0
-          ? active.filter((professional) => restrictedIds.includes(professional.id))
-          : active;
+      const selectedServices = services.filter((service) => serviceIds.includes(service.id));
+      const restrictedGroups = selectedServices
+        .map((service) => service.professionalIds || [])
+        .filter((ids) => ids.length > 0);
+      const filtered = restrictedGroups.length
+        ? active.filter((professional) => restrictedGroups.every((ids) => ids.includes(professional.id)))
+        : active;
 
       setProfessionals(filtered);
       setSelectedProfessional((prev) =>
@@ -197,8 +211,8 @@ export default function PublicBooking() {
   };
 
   const handleNextStep = async () => {
-    if (currentStep === 1 && selectedService) {
-      await loadProfessionalsForService(selectedService);
+    if (currentStep === 1 && selectedServiceIds.length) {
+      await loadProfessionalsForServices(selectedServiceIds);
       setCurrentStep(2);
       return;
     }
@@ -213,7 +227,7 @@ export default function PublicBooking() {
   const canProceed = () => {
     switch (currentStep) {
       case 1:
-        return selectedService !== null && !isLoadingProfessionals;
+        return selectedServiceIds.length > 0 && !isLoadingProfessionals;
       case 2:
         return selectedProfessional !== null;
       case 3:
@@ -228,7 +242,7 @@ export default function PublicBooking() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedService || !selectedProfessional || !selectedDate || !selectedTime || !selectedServiceData) {
+    if (!selectedServiceIds.length || !selectedProfessional || !selectedDate || !selectedTime || !selectedServicesData.length) {
       toast.error('Preencha todos os campos');
       return;
     }
@@ -242,7 +256,7 @@ export default function PublicBooking() {
       // Calculate end time
       const [hours, minutes] = selectedTime.split(':').map(Number);
       const endDate = new Date();
-      endDate.setHours(hours, minutes + selectedServiceData.duration);
+      endDate.setHours(hours, minutes + selectedServiceDuration);
       const endTime = `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
 
       if (slug) {
@@ -251,7 +265,11 @@ export default function PublicBooking() {
           customerPhone,
           customerEmail,
           professionalId: selectedProfessional,
-          serviceId: selectedService,
+          serviceId: selectedServiceIds.length === 1 ? selectedServiceIds[0] : undefined,
+          items: selectedServiceIds.map((serviceId) => ({
+            serviceId,
+            quantity: 1,
+          })),
           date: formatDateParam(selectedDate),
           startTime: selectedTime,
         });
@@ -259,12 +277,17 @@ export default function PublicBooking() {
         await appointmentsApi.create({
           clientId: 'public_' + Date.now(), // fallback
           professionalId: selectedProfessional,
-          serviceId: selectedService,
           date: formatDateParam(selectedDate),
           startTime: selectedTime,
           endTime,
           status: 'PENDING',
-          totalPrice: selectedServiceData.price,
+          totalPrice: selectedServiceTotal,
+          items: selectedServicesData.map((service) => ({
+            serviceId: service.id,
+            durationMinutes: service.duration,
+            unitPrice: service.price,
+            totalPrice: service.price,
+          })),
           notes: `Cliente: ${customerName} | Tel: ${customerPhone} | Email: ${customerEmail}`,
         });
       }
@@ -278,8 +301,12 @@ export default function PublicBooking() {
     }
   };
 
-  const handleSelectService = (serviceId: string) => {
-    setSelectedService(serviceId);
+  const handleSelectService = (serviceId: string, checked: boolean) => {
+    setSelectedServiceIds((current) =>
+      checked
+        ? [...current, serviceId]
+        : current.filter((currentServiceId) => currentServiceId !== serviceId)
+    );
     setSelectedProfessional(null);
     setSelectedDate(null);
     setSelectedTime(null);
@@ -315,7 +342,7 @@ export default function PublicBooking() {
             <div className="bg-muted/40 rounded-xl p-4 mb-6 text-left space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Serviço:</span>
-                <span className="font-medium">{selectedServiceData?.name}</span>
+                <span className="font-medium">{selectedServicesData.map((service) => service.name).join(', ')}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Profissional:</span>
@@ -338,7 +365,7 @@ export default function PublicBooking() {
               <div className="flex justify-between text-sm pt-2 border-t">
                 <span className="text-muted-foreground">Total:</span>
                 <span className="font-bold text-primary">
-                  {formatCurrency(selectedServiceData?.price || 0)}
+                  {formatCurrency(selectedServiceTotal)}
                 </span>
               </div>
             </div>
@@ -408,42 +435,65 @@ export default function PublicBooking() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {services.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">Nenhum serviço disponível</p>
+                  <p className="text-center text-muted-foreground py-8">Nenhum servico disponivel</p>
                 ) : (
-                  services.map((service) => (
-                    <div
-                      key={service.id}
-                      onClick={() => handleSelectService(service.id)}
-                      className={`p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                        selectedService === service.id
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border hover:border-primary/40'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-medium text-foreground text-sm sm:text-base truncate">
-                            {service.name}
-                          </h3>
-                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
-                            <span className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
-                              <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                              {service.duration} min
-                            </span>
-                            <Badge variant="secondary" className="text-[10px] sm:text-xs">
-                              {service.category}
-                            </Badge>
+                  services.map((service) => {
+                    const checked = selectedServiceIds.includes(service.id);
+                    return (
+                      <label
+                        key={service.id}
+                        className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-3 sm:p-4 transition-all ${
+                          checked ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/40'
+                        }`}
+                      >
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(value) => handleSelectService(service.id, value === true)}
+                          className="mt-0.5"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-medium text-foreground text-sm sm:text-base truncate">
+                                {service.name}
+                              </h3>
+                              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
+                                <span className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
+                                  <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                                  {service.duration} min
+                                </span>
+                                <Badge variant="secondary" className="text-[10px] sm:text-xs">
+                                  {service.category}
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="text-right flex-shrink-0">
+                              <span className="text-base sm:text-lg font-bold text-primary">
+                                {formatCurrency(service.price)}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                        <div className="text-right flex-shrink-0">
-                          <span className="text-base sm:text-lg font-bold text-primary">
-                            {formatCurrency(service.price)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))
+                      </label>
+                    );
+                  })
                 )}
+                {selectedServicesData.length ? (
+                  <div className="rounded-xl border bg-muted/30 p-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Servicos selecionados</span>
+                      <span className="font-medium">{selectedServicesData.length}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Duracao total</span>
+                      <span>{selectedServiceDuration} min</span>
+                    </div>
+                    <div className="mt-1 flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Valor total</span>
+                      <span className="font-semibold text-primary">{formatCurrency(selectedServiceTotal)}</span>
+                    </div>
+                  </div>
+                ) : null}
               </CardContent>
             </>
           )}
@@ -650,7 +700,7 @@ export default function PublicBooking() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Serviço:</span>
-                      <span className="font-medium truncate ml-2">{selectedServiceData?.name}</span>
+                      <span className="font-medium truncate ml-2">{selectedServicesData.map((service) => service.name).join(', ')}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Profissional:</span>
@@ -669,7 +719,7 @@ export default function PublicBooking() {
                     <div className="flex justify-between pt-2 border-t mt-2">
                       <span className="text-foreground font-medium">Total:</span>
                       <span className="font-bold text-primary">
-                        {formatCurrency(selectedServiceData?.price || 0)}
+                        {formatCurrency(selectedServiceTotal)}
                       </span>
                     </div>
                   </div>

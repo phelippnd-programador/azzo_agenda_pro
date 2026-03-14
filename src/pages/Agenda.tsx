@@ -6,8 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { PageErrorState } from '@/components/ui/page-states';
 import {
   Select,
@@ -54,6 +56,7 @@ import {
   FileText,
   Eye,
   Receipt,
+  Info,
 } from 'lucide-react';
 import { useAppointments, Appointment } from '@/hooks/useAppointments';
 import { appointmentsApi, nfseApi, type NfseInvoice } from '@/lib/api';
@@ -144,6 +147,29 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
+const getAppointmentItems = (appointment: Appointment) => {
+  if (Array.isArray(appointment.items) && appointment.items.length > 0) {
+    return appointment.items;
+  }
+
+  if (!appointment.serviceId) return [];
+
+  return [
+    {
+      serviceId: appointment.serviceId,
+      service: appointment.service,
+      durationMinutes: 0,
+      unitPrice: Number(appointment.totalPrice || 0),
+      totalPrice: Number(appointment.totalPrice || 0),
+    },
+  ];
+};
+
+const getAppointmentServiceNames = (appointment: Appointment) =>
+  getAppointmentItems(appointment)
+    .map((item) => item.service?.name)
+    .filter((name): name is string => !!name);
+
 const allowedTransitions: Record<string, string[]> = {
   PENDING: ['CONFIRMED', 'CANCELLED', 'NO_SHOW'],
   CONFIRMED: ['IN_PROGRESS', 'CANCELLED', 'NO_SHOW'],
@@ -151,6 +177,23 @@ const allowedTransitions: Record<string, string[]> = {
   COMPLETED: [],
   CANCELLED: [],
   NO_SHOW: [],
+};
+
+const serviceFlowStatuses = ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] as const;
+
+const getServiceFlowMeta = (status: string) => {
+  const currentIndex = serviceFlowStatuses.findIndex((item) => item === status);
+  if (currentIndex === -1) return null;
+
+  const currentStep = currentIndex + 1;
+  const nextStatus = serviceFlowStatuses[currentIndex + 1];
+
+  return {
+    currentStep,
+    totalSteps: serviceFlowStatuses.length,
+    currentLabel: getStatusLabel(status),
+    nextLabel: nextStatus ? getStatusLabel(nextStatus) : null,
+  };
 };
 
 export default function Agenda() {
@@ -178,7 +221,7 @@ export default function Agenda() {
   // Form state
   const [newClientId, setNewClientId] = useState('');
   const [newProfessionalId, setNewProfessionalId] = useState('');
-  const [newServiceId, setNewServiceId] = useState('');
+  const [newServiceIds, setNewServiceIds] = useState<string[]>([]);
   const [newDate, setNewDate] = useState(toDateKey(currentDate));
   const [newStartTime, setNewStartTime] = useState('');
   const [newEndTime, setNewEndTime] = useState('');
@@ -223,9 +266,17 @@ export default function Agenda() {
     ? loggedProfessional?.id || ''
     : selectedProfessional;
   const activeServices = services.filter(s => s.isActive);
-  const newServiceData = useMemo(
-    () => services.find((service) => service.id === newServiceId) ?? null,
-    [services, newServiceId]
+  const selectedNewServices = useMemo(
+    () => activeServices.filter((service) => newServiceIds.includes(service.id)),
+    [activeServices, newServiceIds]
+  );
+  const combinedNewServiceDuration = useMemo(
+    () => selectedNewServices.reduce((sum, service) => sum + Number(service.duration || 0), 0),
+    [selectedNewServices]
+  );
+  const combinedNewServicePrice = useMemo(
+    () => selectedNewServices.reduce((sum, service) => sum + Number(service.price || 0), 0),
+    [selectedNewServices]
   );
   const {
     slots: availableSlots,
@@ -235,7 +286,8 @@ export default function Agenda() {
   } = useAvailableSlots({
     professionalId: newProfessionalId || undefined,
     date: newDate || undefined,
-    serviceDurationMinutes: newServiceData?.duration,
+    serviceIds: newServiceIds,
+    serviceDurationMinutes: combinedNewServiceDuration,
     bufferMinutes: 0,
   });
 
@@ -362,7 +414,7 @@ export default function Agenda() {
   useEffect(() => {
     setNewStartTime('');
     setNewEndTime('');
-  }, [newDate, newProfessionalId, newServiceId]);
+  }, [newDate, newProfessionalId, newServiceIds]);
 
   useEffect(() => {
     setNewDate(toDateKey(currentDate));
@@ -370,14 +422,13 @@ export default function Agenda() {
 
   const handleCreateAppointment = async () => {
     if (isSubmitting) return;
-    if (!newClientId || !newProfessionalId || !newServiceId || !newDate || !newStartTime || !newEndTime) {
+    if (!newClientId || !newProfessionalId || !newServiceIds.length || !newDate || !newStartTime || !newEndTime) {
       toast.error('Preencha todos os campos');
       return;
     }
 
-    const service = services.find(s => s.id === newServiceId);
-    if (!service) {
-      toast.error('Serviço não encontrado');
+    if (!selectedNewServices.length) {
+      toast.error('Selecione ao menos um servico valido');
       return;
     }
 
@@ -386,19 +437,24 @@ export default function Agenda() {
       await createAppointment({
         clientId: newClientId,
         professionalId: newProfessionalId,
-        serviceId: newServiceId,
         date: newDate,
         startTime: newStartTime,
         endTime: newEndTime,
         status: 'PENDING',
-        totalPrice: service.price,
+        totalPrice: combinedNewServicePrice,
+        items: selectedNewServices.map((service) => ({
+          serviceId: service.id,
+          durationMinutes: service.duration,
+          unitPrice: service.price,
+          totalPrice: service.price,
+        })),
       });
       
       setIsNewAppointmentOpen(false);
       // Reset form
       setNewClientId('');
       setNewProfessionalId(isProfessionalUser && loggedProfessional?.id ? loggedProfessional.id : '');
-      setNewServiceId('');
+      setNewServiceIds([]);
       setNewStartTime('');
       setNewEndTime('');
     } catch (error) {
@@ -435,7 +491,9 @@ export default function Agenda() {
       if (config.emissionMode === 'MANUAL') return;
 
       const client = appointment.client ?? clients.find((item) => item.id === appointment.clientId);
-      const service = appointment.service ?? services.find((item) => item.id === appointment.serviceId);
+      const appointmentServices = findServicesByAppointment(appointment);
+      const appointmentItems = getAppointmentItems(appointment);
+      const totalValue = getAppointmentTotalPrice(appointment);
       const customerDocument = (client as { document?: string } | undefined)?.document || '';
       const customerType = customerDocument.length > 11 ? 'CNPJ' : 'CPF';
 
@@ -449,9 +507,9 @@ export default function Agenda() {
         dataCompetencia: toDateKey(appointment.date),
         naturezaOperacao: 'Prestacao de servico',
         itemListaServico: config.itemListaServicoPadrao,
-        valorServicos: Number(appointment.totalPrice || 0),
+        valorServicos: totalValue,
         valorDeducoes: 0,
-        valorIss: Number(appointment.totalPrice || 0) * (Number(config.aliquotaIssPadrao || 0) / 100),
+        valorIss: totalValue * (Number(config.aliquotaIssPadrao || 0) / 100),
         aliquotaIss: Number(config.aliquotaIssPadrao || 0),
         issRetido: false,
         customer: {
@@ -461,18 +519,20 @@ export default function Agenda() {
           email: client?.email || '',
           phone: client?.phone || '',
         },
-        items: [
-          {
-            lineNumber: 1,
-            descricaoServico: service?.name || 'Servico',
+        items: appointmentItems.map((item, index) => {
+          const service = appointmentServices.find((serviceCandidate) => serviceCandidate.id === item.serviceId);
+          const itemTotal = Number(item.totalPrice || item.unitPrice || 0);
+          return {
+            lineNumber: index + 1,
+            descricaoServico: service?.name || `Servico ${index + 1}`,
             quantidade: 1,
-            valorUnitario: Number(appointment.totalPrice || 0),
-            valorTotal: Number(appointment.totalPrice || 0),
+            valorUnitario: itemTotal,
+            valorTotal: itemTotal,
             itemListaServico: config.itemListaServicoPadrao,
             aliquotaIss: Number(config.aliquotaIssPadrao || 0),
-            valorIss: Number(appointment.totalPrice || 0) * (Number(config.aliquotaIssPadrao || 0) / 100),
-          },
-        ],
+            valorIss: itemTotal * (Number(config.aliquotaIssPadrao || 0) / 100),
+          };
+        }),
       };
       sessionStorage.setItem('nfseDraftPrefill', JSON.stringify(prefill));
 
@@ -559,7 +619,7 @@ export default function Agenda() {
       sessionStorage.setItem('invoiceAppointment', JSON.stringify({
         appointment: selectedAppointment,
         client: selectedClient,
-        service: selectedService,
+        services: selectedServices,
         professional: selectedProfessionalData,
       }));
       navigate('/nota-fiscal');
@@ -582,13 +642,29 @@ export default function Agenda() {
 
   const findClientByAppointment = (appointment: Appointment) =>
     appointment.client ?? clients.find((client) => client.id === appointment.clientId) ?? null;
-  const findServiceByAppointment = (appointment: Appointment) =>
-    appointment.service ?? services.find((service) => service.id === appointment.serviceId) ?? null;
+  const findServicesByAppointment = (appointment: Appointment) => {
+    const items = getAppointmentItems(appointment);
+    return items
+      .map((item) => item.service ?? services.find((service) => service.id === item.serviceId) ?? null)
+      .filter((service): service is NonNullable<typeof service> => !!service);
+  };
+  const getAppointmentTotalPrice = (appointment: Appointment) =>
+    Number(
+      appointment.totalPrice ||
+        getAppointmentItems(appointment).reduce((sum, item) => sum + Number(item.totalPrice || 0), 0)
+    );
+  const getAppointmentServiceLabel = (appointment: Appointment) => {
+    const names = findServicesByAppointment(appointment).map((service) => service.name);
+    return names.length ? names.join(', ') : 'Serviço';
+  };
 
   // Get details for selected appointment
   const selectedClient = selectedAppointment ? findClientByAppointment(selectedAppointment) : null;
   const selectedProfessionalData = selectedAppointment ? professionals.find(p => p.id === selectedAppointment.professionalId) : null;
-  const selectedService = selectedAppointment ? findServiceByAppointment(selectedAppointment) : null;
+  const selectedServices = selectedAppointment ? findServicesByAppointment(selectedAppointment) : [];
+  const selectedAppointmentFlowMeta = selectedAppointment
+    ? getServiceFlowMeta(selectedAppointment.status)
+    : null;
   const reassignTargetProfessionals = useMemo(() => {
     if (!appointmentToReassign) return [];
     return activeProfessionals.filter((prof) => prof.id !== appointmentToReassign.professionalId);
@@ -714,35 +790,56 @@ export default function Agenda() {
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label className="text-sm">Cliente</Label>
-                    <Select value={newClientId} onValueChange={setNewClientId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o cliente" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {clients.map((client) => (
-                          <SelectItem key={client.id} value={client.id}>
-                            {client.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-sm">Serviço</Label>
-                    <Select value={newServiceId} onValueChange={setNewServiceId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o serviço" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {activeServices.map((service) => (
-                          <SelectItem key={service.id} value={service.id}>
-                            {service.name} - {formatCurrency(service.price)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label className="text-sm">Servicos</Label>
+                    <div className="max-h-56 space-y-2 overflow-y-auto rounded-md border p-3">
+                      {activeServices.map((service) => {
+                        const checked = newServiceIds.includes(service.id);
+                        return (
+                          <label
+                            key={service.id}
+                            className="flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors hover:bg-muted/40"
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(value) => {
+                                const nextChecked = value === true;
+                                setNewServiceIds((current) =>
+                                  nextChecked
+                                    ? [...current, service.id]
+                                    : current.filter((serviceId) => serviceId !== service.id)
+                                );
+                              }}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="font-medium">{service.name}</span>
+                                <span className="text-sm text-primary">{formatCurrency(service.price)}</span>
+                              </div>
+                              <div className="mt-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                                <span>{service.category}</span>
+                                <span>{service.duration} min</span>
+                              </div>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {selectedNewServices.length ? (
+                      <div className="rounded-md border bg-muted/30 p-3 text-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Servicos selecionados</span>
+                          <span className="font-medium">{selectedNewServices.length}</span>
+                        </div>
+                        <div className="mt-2 flex items-center justify-between">
+                          <span className="text-muted-foreground">Duracao total</span>
+                          <span>{combinedNewServiceDuration} min</span>
+                        </div>
+                        <div className="mt-1 flex items-center justify-between">
+                          <span className="text-muted-foreground">Valor total</span>
+                          <span className="font-medium text-primary">{formatCurrency(combinedNewServicePrice)}</span>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="space-y-2">
@@ -810,6 +907,14 @@ export default function Agenda() {
             </Dialog>
           </div>
         </div>
+
+        <Alert className="border-primary/20 bg-primary/5">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Fluxo de atendimento</AlertTitle>
+          <AlertDescription>
+            Para concluir um atendimento, siga sempre esta sequencia: Confirmado -&gt; Em atendimento -&gt; Concluido.
+          </AlertDescription>
+        </Alert>
 
         {/* Calendar Grid */}
         {viewMode === 'month' ? (
@@ -910,7 +1015,7 @@ export default function Agenda() {
                           {slotAppointments.map((apt) => {
                             const client = findClientByAppointment(apt);
                             const professional = professionals.find(p => p.id === apt.professionalId);
-                            const service = findServiceByAppointment(apt);
+                            const serviceLabel = getAppointmentServiceLabel(apt);
 
                             return (
                               <div
@@ -931,7 +1036,7 @@ export default function Agenda() {
                                         {client?.name || 'Cliente'}
                                       </p>
                                       <p className="text-[10px] sm:text-xs leading-tight truncate mt-0.5 opacity-80">
-                                        {service?.name}
+                                        {serviceLabel}
                                       </p>
                                       <p className="text-[10px] opacity-60 truncate leading-tight hidden sm:block">
                                         {professional?.name}
@@ -967,7 +1072,7 @@ export default function Agenda() {
                                       <DropdownMenuContent align="end">
                                         {(allowedTransitions[apt.status] ?? []).includes('CONFIRMED') && (
                                           <DropdownMenuItem onClick={() => handleStatusChange(apt.id, 'CONFIRMED')}>
-                                            Confirmar
+                                            Confirmar agendamento
                                           </DropdownMenuItem>
                                         )}
                                         {(allowedTransitions[apt.status] ?? []).includes('IN_PROGRESS') && (
@@ -977,7 +1082,7 @@ export default function Agenda() {
                                         )}
                                         {(allowedTransitions[apt.status] ?? []).includes('COMPLETED') && (
                                           <DropdownMenuItem onClick={() => handleStatusChange(apt.id, 'COMPLETED')}>
-                                            Concluir
+                                            Concluir atendimento
                                           </DropdownMenuItem>
                                         )}
                                         {(allowedTransitions[apt.status] ?? []).includes('NO_SHOW') && (
@@ -1119,6 +1224,20 @@ export default function Agenda() {
                   </Badge>
                 </div>
 
+                {selectedAppointmentFlowMeta ? (
+                  <Alert className="border-primary/20 bg-primary/5">
+                    <Info className="h-4 w-4" />
+                    <AlertTitle>
+                      Etapa {selectedAppointmentFlowMeta.currentStep} de {selectedAppointmentFlowMeta.totalSteps}
+                    </AlertTitle>
+                    <AlertDescription>
+                      {selectedAppointmentFlowMeta.nextLabel
+                        ? `Proximo passo esperado: ${selectedAppointmentFlowMeta.nextLabel}.`
+                        : 'Atendimento finalizado no fluxo operacional.'}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+
                 <Separator />
 
                 {/* Date and Time */}
@@ -1191,23 +1310,31 @@ export default function Agenda() {
                 <div className="space-y-3">
                   <h4 className="font-medium text-sm flex items-center gap-2">
                     <Scissors className="w-4 h-4 text-primary" />
-                    Serviço
+                    Serviços
                   </h4>
-                  {selectedService && (
-                    <div className="bg-muted/40 rounded-lg p-4 space-y-2">
-                      <div className="flex justify-between">
-                        <span className="font-medium">{selectedService.name}</span>
-                        <Badge variant="outline">{selectedService.category}</Badge>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Duração:</span>
-                        <span>{selectedService.duration} minutos</span>
-                      </div>
-                      {selectedService.description && (
-                        <p className="text-sm text-muted-foreground mt-2">{selectedService.description}</p>
-                      )}
+                  {selectedServices.length ? (
+                    <div className="bg-muted/40 rounded-lg p-4 space-y-3">
+                      {selectedServices.map((service) => (
+                        <div key={service.id} className="space-y-2 rounded-md border bg-background/80 p-3">
+                          <div className="flex justify-between gap-2">
+                            <span className="font-medium">{service.name}</span>
+                            <Badge variant="outline">{service.category}</Badge>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Duração:</span>
+                            <span>{service.duration} minutos</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Valor:</span>
+                            <span>{formatCurrency(service.price)}</span>
+                          </div>
+                          {service.description ? (
+                            <p className="text-sm text-muted-foreground">{service.description}</p>
+                          ) : null}
+                        </div>
+                      ))}
                     </div>
-                  )}
+                  ) : null}
                 </div>
 
                 <Separator />
@@ -1254,7 +1381,7 @@ export default function Agenda() {
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Total:</span>
                       <span className="text-2xl font-bold text-primary">
-                        {formatCurrency(selectedAppointment.totalPrice)}
+                        {formatCurrency(getAppointmentTotalPrice(selectedAppointment))}
                       </span>
                     </div>
                   </div>
@@ -1298,7 +1425,7 @@ export default function Agenda() {
                         className="bg-blue-600 hover:bg-blue-700"
                         onClick={() => handleStatusChange(selectedAppointment.id, 'CONFIRMED')}
                       >
-                        Confirmar
+                        Confirmar agendamento
                       </Button>
                     )}
                     {selectedAppointment.status === 'CONFIRMED' && (
@@ -1306,7 +1433,7 @@ export default function Agenda() {
                         className=""
                         onClick={() => handleStatusChange(selectedAppointment.id, 'IN_PROGRESS')}
                       >
-                        Iniciar
+                        Iniciar atendimento
                       </Button>
                     )}
                     {selectedAppointment.status === 'IN_PROGRESS' && (
@@ -1314,7 +1441,7 @@ export default function Agenda() {
                         className="bg-green-600 hover:bg-green-700"
                         onClick={() => handleStatusChange(selectedAppointment.id, 'COMPLETED')}
                       >
-                        Concluir
+                        Concluir atendimento
                       </Button>
                     )}
                     {!['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(selectedAppointment.status) && (

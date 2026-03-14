@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/mockData';
 import { dashboardApi } from '@/lib/api';
 
@@ -15,6 +16,7 @@ const fallbackWeeklyData = [
 
 export function RevenueChart() {
   const [weeklyData, setWeeklyData] = useState(fallbackWeeklyData);
+  const [rangeLabel, setRangeLabel] = useState('');
 
   useEffect(() => {
     const now = new Date();
@@ -25,6 +27,7 @@ export function RevenueChart() {
     sunday.setDate(monday.getDate() + 6);
     const start = monday.toISOString().split('T')[0];
     const end = sunday.toISOString().split('T')[0];
+    setRangeLabel(`${start} a ${end}`);
 
     dashboardApi
       .getWeeklyRevenue(start, end)
@@ -41,7 +44,10 @@ export function RevenueChart() {
   return (
     <Card>
       <CardHeader className="pb-2 sm:pb-4">
-        <CardTitle className="text-base sm:text-lg">Faturamento da Semana</CardTitle>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="text-base sm:text-lg">Faturamento da Semana</CardTitle>
+          {rangeLabel ? <Badge variant="outline">{rangeLabel}</Badge> : null}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="flex items-end justify-between gap-1 sm:gap-2 h-36 sm:h-48">

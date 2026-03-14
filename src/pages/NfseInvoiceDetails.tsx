@@ -1,16 +1,21 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { nfseApi, type NfseInvoice } from "@/lib/api";
-import { resolveUiError } from "@/lib/error-utils";
+import {
+  requiresFiscalTaxConfiguration,
+  requiresNfseConfiguration,
+  resolveUiError,
+} from "@/lib/error-utils";
 import { toast } from "sonner";
 
 export default function NfseInvoiceDetails() {
   const { id = "" } = useParams();
+  const navigate = useNavigate();
   const [invoice, setInvoice] = useState<NfseInvoice | null>(null);
   const [certificatePassword, setCertificatePassword] = useState("");
   const [unlockPassword, setUnlockPassword] = useState("");
@@ -146,6 +151,16 @@ export default function NfseInvoiceDetails() {
                     toast.success("NFS-e enviada para autorizacao.");
                     await load();
                   } catch (error) {
+                    if (requiresFiscalTaxConfiguration(error)) {
+                      toast.error("Configure os dados fiscais do emitente antes de emitir a nota.");
+                      navigate("/configuracoes/fiscal/impostos");
+                      return;
+                    }
+                    if (requiresNfseConfiguration(error)) {
+                      toast.error("Configure a NFS-e deste ambiente antes de emitir a nota.");
+                      navigate("/configuracoes/fiscal/nfse");
+                      return;
+                    }
                     showError(error, "Erro ao autorizar NFS-e");
                   }
                 }}

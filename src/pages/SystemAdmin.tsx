@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { billingApi, configApi, systemAdminApi, usersApi } from "@/lib/api";
 import { toast } from "sonner";
 import type {
@@ -18,10 +19,12 @@ import type {
   GlobalAuditDetail,
   GlobalAuditItem,
   GlobalSuggestionItem,
-  MenuConfigScope,
-  MenuRoleRouteItem,
+  MenuCatalogItem,
+  MenuCatalogItemRequest,
   SessionItem,
   SystemAdminRole,
+  SystemPlanItem,
+  SystemPlanUpsertRequest,
 } from "@/types/system-admin";
 import type { BillingPaymentItem } from "@/types/billing";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,17 +36,76 @@ const AUDIT_STATUS_OPTIONS = ["", "SUCCESS", "ERROR", "DENIED"];
 const AUDIT_CHANNEL_OPTIONS = ["", "API", "WEBHOOK", "SCHEDULER", "SYSTEM"];
 const SUGGESTION_CATEGORY_OPTIONS = ["", "BUG", "MELHORIA", "FUNCIONALIDADE", "USABILIDADE", "OUTRO"];
 
+type MenuCatalogFormState = {
+  id?: string;
+  route: string;
+  label: string;
+  parentId: string;
+  displayOrder: string;
+  iconKey: string;
+  active: boolean;
+  roleVisibilities: Record<SystemAdminRole, boolean>;
+};
+
+type PlanFormState = {
+  id?: string;
+  name: string;
+  description: string;
+  currency: string;
+  priceCents: string;
+  validityMonths: string;
+  validityDays: string;
+  highlight: string;
+  featuresJson: string;
+  active: boolean;
+  trial: boolean;
+  priority: string;
+  maxProfessionals: string;
+};
+
+const createEmptyMenuCatalogForm = (): MenuCatalogFormState => ({
+  route: "",
+  label: "",
+  parentId: "",
+  displayOrder: "0",
+  iconKey: "",
+  active: true,
+  roleVisibilities: {
+    ADMIN: true,
+    OWNER: false,
+    PROFESSIONAL: false,
+  },
+});
+
+const createEmptyPlanForm = (): PlanFormState => ({
+  name: "",
+  description: "",
+  currency: "BRL",
+  priceCents: "0",
+  validityMonths: "1",
+  validityDays: "",
+  highlight: "",
+  featuresJson: "[]",
+  active: true,
+  trial: false,
+  priority: "0",
+  maxProfessionals: "",
+});
+
 export default function SystemAdminPage() {
   const { user } = useAuth();
-  const [role, setRole] = useState<SystemAdminRole>("OWNER");
-  const [menuScope, setMenuScope] = useState<MenuConfigScope>("TENANT");
-  const [routes, setRoutes] = useState<MenuRoleRouteItem[]>([]);
-  const [search, setSearch] = useState("");
-  const [reason, setReason] = useState("Ajuste administrativo de permissoes.");
-  const [isLoadingRoutes, setIsLoadingRoutes] = useState(false);
-  const [isSavingRoutes, setIsSavingRoutes] = useState(false);
+  const [menuCatalogItems, setMenuCatalogItems] = useState<MenuCatalogItem[]>([]);
+  const [isLoadingMenuCatalog, setIsLoadingMenuCatalog] = useState(false);
+  const [isMenuCatalogDialogOpen, setIsMenuCatalogDialogOpen] = useState(false);
+  const [isSavingMenuCatalog, setIsSavingMenuCatalog] = useState(false);
+  const [menuCatalogForm, setMenuCatalogForm] = useState<MenuCatalogFormState>(createEmptyMenuCatalogForm);
 
   const [payments, setPayments] = useState<BillingPaymentItem[]>([]);
+  const [plans, setPlans] = useState<SystemPlanItem[]>([]);
+  const [isLoadingPlans, setIsLoadingPlans] = useState(false);
+  const [isSavingPlan, setIsSavingPlan] = useState(false);
+  const [isPlanDialogOpen, setIsPlanDialogOpen] = useState(false);
+  const [planForm, setPlanForm] = useState<PlanFormState>(createEmptyPlanForm);
   const [activeTenants, setActiveTenants] = useState<AdminTenantItem[]>([]);
   const [selectedTenantId, setSelectedTenantId] = useState("");
   const [isLoadingPayments, setIsLoadingPayments] = useState(false);
@@ -96,31 +158,102 @@ export default function SystemAdminPage() {
   const [adminConfirmPassword, setAdminConfirmPassword] = useState("");
   const [isSavingCredentials, setIsSavingCredentials] = useState(false);
 
-  const filteredRoutes = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return routes;
-    return routes.filter((item) => item.route.toLowerCase().includes(term));
-  }, [routes, search]);
+  const availableParentMenuItems = useMemo(
+    () => menuCatalogItems.filter((item) => item.id !== menuCatalogForm.id),
+    [menuCatalogItems, menuCatalogForm.id]
+  );
 
   const pendingPayments = useMemo(
     () => payments.filter((item) => String(item.status || "").toUpperCase() === "PENDING"),
     [payments]
   );
 
-  const loadRoutes = async (nextRole: SystemAdminRole, scope: MenuConfigScope, tenantId?: string) => {
-    if (scope === "TENANT" && !tenantId) {
-      setRoutes([]);
+  const loadMenuCatalog = async () => {
+    setIsLoadingMenuCatalog(true);
+    try {
+      const response = await configApi.getMenuCatalog();
+      setMenuCatalogItems(response.items || []);
+    } catch {
+      toast.error("Nao foi possivel carregar o catalogo de menus.");
+      setMenuCatalogItems([]);
+    } finally {
+      setIsLoadingMenuCatalog(false);
+    }
+  };
+
+  const openCreateMenuCatalogDialog = () => {
+    setMenuCatalogForm(createEmptyMenuCatalogForm());
+    setIsMenuCatalogDialogOpen(true);
+  };
+
+  const openEditMenuCatalogDialog = (item: MenuCatalogItem) => {
+    const roleVisibilities = ROLES.reduce(
+      (acc, roleOption) => {
+        acc[roleOption] = item.roleVisibilities.some(
+          (visibility) => visibility.role === roleOption && visibility.enabled
+        );
+        return acc;
+      },
+      {} as Record<SystemAdminRole, boolean>
+    );
+    setMenuCatalogForm({
+      id: item.id,
+      route: item.route,
+      label: item.label,
+      parentId: item.parentId || "",
+      displayOrder: String(item.displayOrder ?? 0),
+      iconKey: item.iconKey || "",
+      active: item.active,
+      roleVisibilities,
+    });
+    setIsMenuCatalogDialogOpen(true);
+  };
+
+  const setMenuCatalogRoleVisibility = (roleOption: SystemAdminRole, enabled: boolean) => {
+    setMenuCatalogForm((prev) => ({
+      ...prev,
+      roleVisibilities: {
+        ...prev.roleVisibilities,
+        [roleOption]: enabled,
+      },
+    }));
+  };
+
+  const buildMenuCatalogPayload = (): MenuCatalogItemRequest => ({
+    id: menuCatalogForm.id,
+    route: menuCatalogForm.route.trim(),
+    label: menuCatalogForm.label.trim(),
+    parentId: menuCatalogForm.parentId || undefined,
+    displayOrder: Number(menuCatalogForm.displayOrder || 0),
+    iconKey: menuCatalogForm.iconKey.trim() || undefined,
+    active: menuCatalogForm.active,
+    roleVisibilities: ROLES.map((roleOption) => ({
+      role: roleOption,
+      enabled: Boolean(menuCatalogForm.roleVisibilities[roleOption]),
+    })),
+  });
+
+  const saveMenuCatalogItem = async () => {
+    if (!menuCatalogForm.route.trim() || !menuCatalogForm.label.trim()) {
+      toast.error("Route e titulo sao obrigatorios.");
       return;
     }
-    setIsLoadingRoutes(true);
+    setIsSavingMenuCatalog(true);
     try {
-      const response = await configApi.getRoleRoutes(nextRole, scope, tenantId);
-      setRoutes(response.items || []);
-    } catch (error) {
-      toast.error("Nao foi possivel carregar rotas do perfil.");
-      setRoutes([]);
+      const payload = buildMenuCatalogPayload();
+      if (menuCatalogForm.id) {
+        await configApi.updateMenuCatalogItem(menuCatalogForm.id, payload);
+      } else {
+        await configApi.createMenuCatalogItem(payload);
+      }
+      toast.success(menuCatalogForm.id ? "Menu atualizado." : "Menu criado.");
+      setIsMenuCatalogDialogOpen(false);
+      setMenuCatalogForm(createEmptyMenuCatalogForm());
+      await loadMenuCatalog();
+    } catch {
+      toast.error("Falha ao salvar catalogo de menus.");
     } finally {
-      setIsLoadingRoutes(false);
+      setIsSavingMenuCatalog(false);
     }
   };
 
@@ -138,6 +271,94 @@ export default function SystemAdminPage() {
       setPayments([]);
     } finally {
       setIsLoadingPayments(false);
+    }
+  };
+
+  const loadPlans = async () => {
+    setIsLoadingPlans(true);
+    try {
+      const response = await systemAdminApi.listPlans();
+      setPlans(response.items || []);
+    } catch {
+      toast.error("Nao foi possivel carregar planos.");
+      setPlans([]);
+    } finally {
+      setIsLoadingPlans(false);
+    }
+  };
+
+  const openCreatePlanDialog = () => {
+    setPlanForm(createEmptyPlanForm());
+    setIsPlanDialogOpen(true);
+  };
+
+  const openEditPlanDialog = (plan: SystemPlanItem) => {
+    setPlanForm({
+      id: plan.id,
+      name: plan.name || "",
+      description: plan.description || "",
+      currency: plan.currency || "BRL",
+      priceCents: String(plan.priceCents ?? 0),
+      validityMonths: String(plan.validityMonths ?? 1),
+      validityDays: plan.validityDays != null ? String(plan.validityDays) : "",
+      highlight: plan.highlight || "",
+      featuresJson: plan.featuresJson || "[]",
+      active: plan.active,
+      trial: plan.trial,
+      priority: String(plan.priority ?? 0),
+      maxProfessionals: plan.maxProfessionals != null ? String(plan.maxProfessionals) : "",
+    });
+    setIsPlanDialogOpen(true);
+  };
+
+  const buildPlanPayload = (): SystemPlanUpsertRequest => ({
+    name: planForm.name.trim(),
+    description: planForm.description.trim() || undefined,
+    currency: planForm.currency.trim().toUpperCase() || "BRL",
+    priceCents: Number(planForm.priceCents || 0),
+    validityMonths: Number(planForm.validityMonths || 1),
+    validityDays: planForm.validityDays.trim() ? Number(planForm.validityDays) : undefined,
+    highlight: planForm.highlight.trim() || undefined,
+    featuresJson: planForm.featuresJson.trim() || "[]",
+    active: planForm.active,
+    trial: planForm.trial,
+    priority: Number(planForm.priority || 0),
+    maxProfessionals: planForm.maxProfessionals.trim() ? Number(planForm.maxProfessionals) : undefined,
+  });
+
+  const savePlan = async () => {
+    if (!planForm.name.trim()) {
+      toast.error("Nome do plano obrigatorio.");
+      return;
+    }
+    setIsSavingPlan(true);
+    try {
+      const payload = buildPlanPayload();
+      if (planForm.id) {
+        await systemAdminApi.updatePlan(planForm.id, payload);
+      } else {
+        await systemAdminApi.createPlan(payload);
+      }
+      toast.success(planForm.id ? "Plano atualizado." : "Plano criado.");
+      setIsPlanDialogOpen(false);
+      setPlanForm(createEmptyPlanForm());
+      await loadPlans();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Falha ao salvar plano.";
+      toast.error(message);
+    } finally {
+      setIsSavingPlan(false);
+    }
+  };
+
+  const togglePlanActive = async (plan: SystemPlanItem) => {
+    try {
+      await systemAdminApi.updatePlanActive(plan.id, !plan.active);
+      toast.success(!plan.active ? "Plano ativado." : "Plano desativado.");
+      await loadPlans();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Falha ao atualizar status do plano.";
+      toast.error(message);
     }
   };
 
@@ -324,12 +545,9 @@ export default function SystemAdminPage() {
   };
 
   useEffect(() => {
-    if (menuScope === "TENANT" && !selectedTenantId) return;
-    loadRoutes(role, menuScope, selectedTenantId);
-  }, [role, menuScope, selectedTenantId]);
-
-  useEffect(() => {
     loadActiveTenants();
+    loadMenuCatalog();
+    loadPlans();
     loadCommercialOverview();
     loadGlobalAudits({});
     loadGlobalSuggestions({});
@@ -349,39 +567,6 @@ export default function SystemAdminPage() {
     setAdminName(user?.name || "");
     setAdminEmail(user?.email || "");
   }, [user?.name, user?.email]);
-
-  const toggleRoute = (route: string, enabled: boolean) => {
-    setRoutes((prev) =>
-      prev.map((item) =>
-        item.route === route
-          ? { ...item, enabled, overridden: true, reason: reason || item.reason }
-          : item
-      )
-    );
-  };
-
-  const saveRoutes = async () => {
-    if (menuScope === "TENANT" && !selectedTenantId) {
-      toast.error("Selecione um tenant.");
-      return;
-    }
-    setIsSavingRoutes(true);
-    try {
-      await configApi.applyMenuOverridesBulk({
-        scope: menuScope,
-        tenantId: menuScope === "TENANT" ? selectedTenantId : undefined,
-        role,
-        reason,
-        items: routes.map((item) => ({ route: item.route, enabled: item.enabled })),
-      });
-      toast.success("Permissoes do menu atualizadas.");
-      await loadRoutes(role, menuScope, selectedTenantId);
-    } catch {
-      toast.error("Falha ao salvar permissoes do menu.");
-    } finally {
-      setIsSavingRoutes(false);
-    }
-  };
 
   const forceExpired = async () => {
     setIsChangingLicense(true);
@@ -485,6 +670,16 @@ export default function SystemAdminPage() {
       subtitle="Gerencie menus por role, simule plano vencido e libere pagamentos para testes."
     >
       <div className="space-y-6">
+        <Tabs defaultValue="contexto" className="space-y-4">
+          <TabsList className="flex h-auto flex-wrap justify-start gap-2 bg-transparent p-0">
+            <TabsTrigger value="contexto">Contexto</TabsTrigger>
+            <TabsTrigger value="monitoramento">Monitoramento</TabsTrigger>
+            <TabsTrigger value="menus">Menus</TabsTrigger>
+            <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+            <TabsTrigger value="acesso">Acesso</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="contexto" className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Tenant alvo</CardTitle>
@@ -534,7 +729,9 @@ export default function SystemAdminPage() {
                   </div>
                   <div className="rounded-md border p-3">
                     <p className="text-xs text-muted-foreground">Conversao</p>
-                    <p className="text-xl font-semibold">{commercialOverview.conversionRatePercent.toFixed(1)}%</p>
+                    <p className="text-xl font-semibold">
+                      {Number(commercialOverview.conversionRatePercent || 0).toFixed(1)}%
+                    </p>
                   </div>
                   <div className="rounded-md border p-3">
                     <p className="text-xs text-muted-foreground">Ativos</p>
@@ -551,7 +748,7 @@ export default function SystemAdminPage() {
                   <div className="rounded-md border p-3">
                     <p className="text-xs text-muted-foreground">Recebido 30d</p>
                     <p className="text-xl font-semibold">
-                      R$ {(commercialOverview.revenueReceived30dCents / 100).toFixed(2)}
+                      R$ {(Number(commercialOverview.revenueReceived30dCents || 0) / 100).toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -570,6 +767,10 @@ export default function SystemAdminPage() {
             )}
           </CardContent>
         </Card>
+
+          </TabsContent>
+
+          <TabsContent value="monitoramento" className="space-y-6">
 
         <Card>
           <CardHeader>
@@ -906,6 +1107,126 @@ export default function SystemAdminPage() {
           </CardContent>
         </Card>
 
+          </TabsContent>
+
+        <Dialog open={isMenuCatalogDialogOpen} onOpenChange={setIsMenuCatalogDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>{menuCatalogForm.id ? "Editar menu" : "Novo menu"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Rota</Label>
+                  <Input
+                    placeholder="/financeiro/comissoes"
+                    value={menuCatalogForm.route}
+                    onChange={(event) =>
+                      setMenuCatalogForm((prev) => ({ ...prev, route: event.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Titulo</Label>
+                  <Input
+                    placeholder="Comissoes"
+                    value={menuCatalogForm.label}
+                    onChange={(event) =>
+                      setMenuCatalogForm((prev) => ({ ...prev, label: event.target.value }))
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label>Menu pai</Label>
+                  <Select
+                    value={menuCatalogForm.parentId || "__none__"}
+                    onValueChange={(value) =>
+                      setMenuCatalogForm((prev) => ({
+                        ...prev,
+                        parentId: value === "__none__" ? "" : value,
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sem pai" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Sem pai</SelectItem>
+                      {availableParentMenuItems.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.label} [{item.route}]
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Ordem</Label>
+                  <Input
+                    type="number"
+                    value={menuCatalogForm.displayOrder}
+                    onChange={(event) =>
+                      setMenuCatalogForm((prev) => ({ ...prev, displayOrder: event.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Icone</Label>
+                  <Input
+                    placeholder="Wallet"
+                    value={menuCatalogForm.iconKey}
+                    onChange={(event) =>
+                      setMenuCatalogForm((prev) => ({ ...prev, iconKey: event.target.value }))
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Roles visiveis</Label>
+                <div className="flex flex-wrap gap-4 rounded-md border p-3">
+                  {ROLES.map((roleOption) => (
+                    <label key={roleOption} className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={menuCatalogForm.roleVisibilities[roleOption]}
+                        onCheckedChange={(checked) =>
+                          setMenuCatalogRoleVisibility(roleOption, Boolean(checked))
+                        }
+                      />
+                      {roleOption}
+                    </label>
+                  ))}
+                  <label className="ml-auto flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={menuCatalogForm.active}
+                      onCheckedChange={(checked) =>
+                        setMenuCatalogForm((prev) => ({ ...prev, active: Boolean(checked) }))
+                      }
+                    />
+                    Ativo
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsMenuCatalogDialogOpen(false)}
+                  disabled={isSavingMenuCatalog}
+                >
+                  Cancelar
+                </Button>
+                <Button onClick={saveMenuCatalogItem} disabled={isSavingMenuCatalog}>
+                  {isSavingMenuCatalog ? "Salvando..." : "Salvar menu"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={isAuditDetailOpen} onOpenChange={setIsAuditDetailOpen}>
           <DialogContent className="max-w-3xl max-h-[85vh] overflow-auto">
             <DialogHeader>
@@ -1018,324 +1339,456 @@ export default function SystemAdminPage() {
           </DialogContent>
         </Dialog>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Sessoes</CardTitle>
-            <CardDescription>
-              Revoga refresh tokens para encerrar sessoes de um tenant inteiro ou de um usuario especifico.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-xs text-muted-foreground">
-              O access token atual expira naturalmente; a revogacao bloqueia renovacao e efetiva logout.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant={includeRevokedSessions ? "outline" : "default"}
-                onClick={() => setIncludeRevokedSessions(false)}
-              >
-                Ativas
-              </Button>
-              <Button
-                variant={includeRevokedSessions ? "default" : "outline"}
-                onClick={() => setIncludeRevokedSessions(true)}
-              >
-                Todas
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => loadSessions(selectedTenantId)}
-                disabled={isLoadingSessions}
-              >
-                Atualizar lista
-              </Button>
-            </div>
-            <Input
-              placeholder="User ID (opcional) para revogar apenas esse usuario"
-              value={sessionUserId}
-              onChange={(event) => setSessionUserId(event.target.value)}
-            />
-            <Button onClick={revokeSessions} disabled={isRevokingSessions}>
-              {isRevokingSessions ? "Revogando..." : "Revogar sessoes"}
-            </Button>
+          <TabsContent value="acesso" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Sessoes</CardTitle>
+                <CardDescription>
+                  Revoga refresh tokens para encerrar sessoes de um tenant inteiro ou de um usuario especifico.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  O access token atual expira naturalmente; a revogacao bloqueia renovacao e efetiva logout.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant={includeRevokedSessions ? "outline" : "default"}
+                    onClick={() => setIncludeRevokedSessions(false)}
+                  >
+                    Ativas
+                  </Button>
+                  <Button
+                    variant={includeRevokedSessions ? "default" : "outline"}
+                    onClick={() => setIncludeRevokedSessions(true)}
+                  >
+                    Todas
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => loadSessions(selectedTenantId)}
+                    disabled={isLoadingSessions}
+                  >
+                    Atualizar lista
+                  </Button>
+                </div>
+                <Input
+                  placeholder="User ID (opcional) para revogar apenas esse usuario"
+                  value={sessionUserId}
+                  onChange={(event) => setSessionUserId(event.target.value)}
+                />
+                <Button onClick={revokeSessions} disabled={isRevokingSessions}>
+                  {isRevokingSessions ? "Revogando..." : "Revogar sessoes"}
+                </Button>
 
-            <div className="rounded-md border">
-              <div className="max-h-[260px] overflow-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/50">
-                    <tr>
-                      <th className="px-3 py-2 text-left">Usuario</th>
-                      <th className="px-3 py-2 text-left">Role</th>
-                      <th className="px-3 py-2 text-left">Criado</th>
-                      <th className="px-3 py-2 text-left">Expira</th>
-                      <th className="px-3 py-2 text-left">Status</th>
-                      <th className="px-3 py-2 text-left">Acao</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sessionItems.map((session) => (
-                      <tr key={session.refreshTokenId} className="border-t">
-                        <td className="px-3 py-2">
-                          <div className="flex flex-col">
-                            <span>{session.userName || session.userEmail || session.userId || "-"}</span>
-                            <span className="text-xs text-muted-foreground">{session.userEmail || session.userId}</span>
+                <div className="rounded-md border">
+                  <div className="max-h-[260px] overflow-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/50">
+                        <tr>
+                          <th className="px-3 py-2 text-left">Usuario</th>
+                          <th className="px-3 py-2 text-left">Role</th>
+                          <th className="px-3 py-2 text-left">Criado</th>
+                          <th className="px-3 py-2 text-left">Expira</th>
+                          <th className="px-3 py-2 text-left">Status</th>
+                          <th className="px-3 py-2 text-left">Acao</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sessionItems.map((session) => (
+                          <tr key={session.refreshTokenId} className="border-t">
+                            <td className="px-3 py-2">
+                              <div className="flex flex-col">
+                                <span>{session.userName || session.userEmail || session.userId || "-"}</span>
+                                <span className="text-xs text-muted-foreground">{session.userEmail || session.userId}</span>
+                              </div>
+                            </td>
+                            <td className="px-3 py-2">{session.userRole || "-"}</td>
+                            <td className="px-3 py-2">
+                              {session.createdAt ? new Date(session.createdAt).toLocaleString("pt-BR") : "-"}
+                            </td>
+                            <td className="px-3 py-2">
+                              {session.expiresAt ? new Date(session.expiresAt).toLocaleString("pt-BR") : "-"}
+                            </td>
+                            <td className="px-3 py-2">
+                              <Badge variant={session.active ? "default" : "secondary"}>
+                                {session.active ? "ATIVA" : "INATIVA"}
+                              </Badge>
+                            </td>
+                            <td className="px-3 py-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={!session.active || isRevokingSessions}
+                                onClick={() => revokeSingleSession(session.refreshTokenId)}
+                              >
+                                Revogar
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                        {!isLoadingSessions && sessionItems.length === 0 ? (
+                          <tr>
+                            <td className="px-3 py-4 text-muted-foreground" colSpan={6}>
+                              Nenhuma sessao encontrada.
+                            </td>
+                          </tr>
+                        ) : null}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Credenciais do administrador</CardTitle>
+                <CardDescription>
+                  Altere o usuario (email) e a senha da conta administrativa do sistema.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Nome</Label>
+                    <Input value={adminName} onChange={(event) => setAdminName(event.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Usuario (email)</Label>
+                    <Input value={adminEmail} onChange={(event) => setAdminEmail(event.target.value)} />
+                  </div>
+                </div>
+                <Button variant="outline" onClick={saveAdminProfile} disabled={isSavingCredentials}>
+                  Salvar usuario
+                </Button>
+
+                <Separator />
+
+                <div className="grid gap-3 md:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label>Senha atual</Label>
+                    <Input
+                      type="password"
+                      value={adminCurrentPassword}
+                      onChange={(event) => setAdminCurrentPassword(event.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Nova senha</Label>
+                    <Input
+                      type="password"
+                      value={adminNewPassword}
+                      onChange={(event) => setAdminNewPassword(event.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Confirmar senha</Label>
+                    <Input
+                      type="password"
+                      value={adminConfirmPassword}
+                      onChange={(event) => setAdminConfirmPassword(event.target.value)}
+                    />
+                  </div>
+                </div>
+                <Button onClick={saveAdminPassword} disabled={isSavingCredentials}>
+                  Atualizar senha
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="menus" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Catalogo de menus</CardTitle>
+                <CardDescription>
+                  Cadastre rotas, hierarquia, ordem, icone e visibilidade padrao por role.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={openCreateMenuCatalogDialog}>Novo menu</Button>
+                  <Button variant="outline" onClick={loadMenuCatalog} disabled={isLoadingMenuCatalog}>
+                    Atualizar catalogo
+                  </Button>
+                </div>
+
+                <div className="rounded-md border">
+                  <div className="max-h-[420px] overflow-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/50">
+                        <tr>
+                          <th className="px-3 py-2 text-left">Titulo</th>
+                          <th className="px-3 py-2 text-left">Rota</th>
+                          <th className="px-3 py-2 text-left">Pai</th>
+                          <th className="px-3 py-2 text-left">Ordem</th>
+                          <th className="px-3 py-2 text-left">Icone</th>
+                          <th className="px-3 py-2 text-left">Roles</th>
+                          <th className="px-3 py-2 text-left">Status</th>
+                          <th className="px-3 py-2 text-left">Acao</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {menuCatalogItems.map((item) => (
+                          <tr key={item.id} className="border-t">
+                            <td className="px-3 py-2">
+                              <div className="flex flex-col">
+                                <span className="font-medium">{item.label}</span>
+                                {item.childrenCount > 0 ? (
+                                  <span className="text-xs text-muted-foreground">
+                                    {item.childrenCount} filho(s)
+                                  </span>
+                                ) : null}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 font-mono text-xs">{item.route}</td>
+                            <td className="px-3 py-2">{item.parentLabel || "-"}</td>
+                            <td className="px-3 py-2">{item.displayOrder}</td>
+                            <td className="px-3 py-2">{item.iconKey || "-"}</td>
+                            <td className="px-3 py-2">
+                              <div className="flex flex-wrap gap-1">
+                                {item.roleVisibilities
+                                  .filter((visibility) => visibility.enabled)
+                                  .map((visibility) => (
+                                    <Badge key={`${item.id}-${visibility.role}`} variant="secondary">
+                                      {visibility.role}
+                                    </Badge>
+                                  ))}
+                                {!item.roleVisibilities.some((visibility) => visibility.enabled) ? (
+                                  <span className="text-xs text-muted-foreground">Nenhuma role</span>
+                                ) : null}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2">
+                              <Badge variant={item.active ? "default" : "secondary"}>
+                                {item.active ? "ATIVO" : "INATIVO"}
+                              </Badge>
+                            </td>
+                            <td className="px-3 py-2">
+                              <Button size="sm" variant="outline" onClick={() => openEditMenuCatalogDialog(item)}>
+                                Editar
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                        {!isLoadingMenuCatalog && menuCatalogItems.length === 0 ? (
+                          <tr>
+                            <td className="px-3 py-4 text-muted-foreground" colSpan={8}>
+                              Nenhum menu cadastrado.
+                            </td>
+                          </tr>
+                        ) : null}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="financeiro" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Gerenciador de planos</CardTitle>
+                <CardDescription>Crie, edite, ative e desative planos e o plano trial.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={openCreatePlanDialog}>Novo plano</Button>
+                  <Button variant="outline" onClick={loadPlans} disabled={isLoadingPlans}>
+                    Atualizar planos
+                  </Button>
+                </div>
+
+                <div className="rounded-md border">
+                  <div className="max-h-[320px] overflow-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/50">
+                        <tr>
+                          <th className="px-3 py-2 text-left">Plano</th>
+                          <th className="px-3 py-2 text-left">Tipo</th>
+                          <th className="px-3 py-2 text-left">Preco</th>
+                          <th className="px-3 py-2 text-left">Validade</th>
+                          <th className="px-3 py-2 text-left">Profissionais</th>
+                          <th className="px-3 py-2 text-left">Prioridade</th>
+                          <th className="px-3 py-2 text-left">Status</th>
+                          <th className="px-3 py-2 text-left">Acao</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {plans.map((plan) => (
+                          <tr key={plan.id} className="border-t">
+                            <td className="px-3 py-2">
+                              <div className="flex flex-col">
+                                <span className="font-medium">{plan.name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {plan.highlight || plan.description || "-"}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-3 py-2">
+                              <Badge variant={plan.trial ? "default" : "secondary"}>
+                                {plan.trial ? "TRIAL" : "PAGO"}
+                              </Badge>
+                            </td>
+                            <td className="px-3 py-2">R$ {(Number(plan.priceCents || 0) / 100).toFixed(2)}</td>
+                            <td className="px-3 py-2">{plan.validityDays || plan.validityMonths * 30} dias</td>
+                            <td className="px-3 py-2">{plan.maxProfessionals ?? "-"}</td>
+                            <td className="px-3 py-2">{plan.priority}</td>
+                            <td className="px-3 py-2">
+                              <Badge variant={plan.active ? "default" : "secondary"}>
+                                {plan.active ? "ATIVO" : "INATIVO"}
+                              </Badge>
+                            </td>
+                            <td className="px-3 py-2">
+                              <div className="flex flex-wrap gap-2">
+                                <Button size="sm" variant="outline" onClick={() => openEditPlanDialog(plan)}>
+                                  Editar
+                                </Button>
+                                <Button size="sm" variant={plan.active ? "secondary" : "default"} onClick={() => togglePlanActive(plan)}>
+                                  {plan.active ? "Desativar" : "Ativar"}
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {!isLoadingPlans && plans.length === 0 ? (
+                          <tr>
+                            <td className="px-3 py-4 text-muted-foreground" colSpan={8}>
+                              Nenhum plano cadastrado.
+                            </td>
+                          </tr>
+                        ) : null}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Controle de licenca e pagamentos</CardTitle>
+                <CardDescription>Ferramentas administrativas para testes de fluxo.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" onClick={forceExpired} disabled={isChangingLicense || !selectedTenantId}>
+                    Forcar plano vencido
+                  </Button>
+                  <Button onClick={releaseLicense} disabled={isChangingLicense || !selectedTenantId}>
+                    Liberar licenca (30 dias)
+                  </Button>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2">
+                  <h3 className="font-medium">Pagamentos pendentes</h3>
+                  {isLoadingPayments ? (
+                    <p className="text-sm text-muted-foreground">Carregando pagamentos...</p>
+                  ) : pendingPayments.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Nenhum pagamento pendente.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {pendingPayments.map((payment) => (
+                        <div
+                          key={payment.id || payment.asaasPaymentId}
+                          className="rounded-md border p-3 flex flex-wrap items-center justify-between gap-3"
+                        >
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">
+                              {payment.asaasPaymentId} - {payment.billingType}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Valor: R$ {(Number(payment.amountCents || 0) / 100).toFixed(2)} | Vencimento:{" "}
+                              {payment.dueDate || "-"}
+                            </p>
                           </div>
-                        </td>
-                        <td className="px-3 py-2">{session.userRole || "-"}</td>
-                        <td className="px-3 py-2">
-                          {session.createdAt ? new Date(session.createdAt).toLocaleString("pt-BR") : "-"}
-                        </td>
-                        <td className="px-3 py-2">
-                          {session.expiresAt ? new Date(session.expiresAt).toLocaleString("pt-BR") : "-"}
-                        </td>
-                        <td className="px-3 py-2">
-                          <Badge variant={session.active ? "default" : "secondary"}>
-                            {session.active ? "ATIVA" : "INATIVA"}
-                          </Badge>
-                        </td>
-                        <td className="px-3 py-2">
                           <Button
                             size="sm"
-                            variant="outline"
-                            disabled={!session.active || isRevokingSessions}
-                            onClick={() => revokeSingleSession(session.refreshTokenId)}
+                            onClick={() => markPaymentReceived(payment.asaasPaymentId)}
+                            disabled={isChangingLicense}
                           >
-                            Revogar
+                            Liberar pagamento
                           </Button>
-                        </td>
-                      </tr>
-                    ))}
-                    {!isLoadingSessions && sessionItems.length === 0 ? (
-                      <tr>
-                        <td className="px-3 py-4 text-muted-foreground" colSpan={6}>
-                          Nenhuma sessao encontrada.
-                        </td>
-                      </tr>
-                    ) : null}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Menus e rotas por perfil</CardTitle>
-            <CardDescription>Defina quais rotas ficam visiveis para OWNER e PROFESSIONAL.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-4">
-              <div className="space-y-2">
-                <Label>Perfil</Label>
-                <div className="flex gap-2">
-                  {ROLES.map((option) => (
-                    <Button
-                      key={option}
-                      type="button"
-                      variant={role === option ? "default" : "outline"}
-                      onClick={() => setRole(option)}
-                    >
-                      {option}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Escopo</Label>
-                <Select value={menuScope} onValueChange={(value) => setMenuScope(value as MenuConfigScope)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="GLOBAL">Global (todas as empresas)</SelectItem>
-                    <SelectItem value="TENANT">Por tenant (empresa especifica)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>Motivo da alteracao</Label>
-                <Input value={reason} onChange={(event) => setReason(event.target.value)} />
-              </div>
-            </div>
-
-            {menuScope === "TENANT" ? (
-              <p className="text-xs text-muted-foreground">
-                Aplicando no tenant selecionado: {selectedTenantId || "nenhum"}.
-              </p>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                Aplicando globalmente por role para todos os tenants.
-              </p>
-            )}
-
-            <div className="space-y-2">
-              <Label>Buscar rota</Label>
-              <Input
-                placeholder="Ex.: /configuracoes/fiscal/nfse"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-              />
-            </div>
-
-            <div className="rounded-md border">
-              <div className="max-h-[420px] overflow-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/50">
-                    <tr>
-                      <th className="px-3 py-2 text-left">Rota</th>
-                      <th className="px-3 py-2 text-left">Habilitada</th>
-                      <th className="px-3 py-2 text-left">Origem</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredRoutes.map((item) => (
-                      <tr key={item.route} className="border-t">
-                        <td className="px-3 py-2 font-mono text-xs">{item.route}</td>
-                        <td className="px-3 py-2">
-                          <Checkbox
-                            checked={item.enabled}
-                            onCheckedChange={(checked) => toggleRoute(item.route, Boolean(checked))}
-                          />
-                        </td>
-                        <td className="px-3 py-2">
-                          <Badge variant={item.overridden ? "default" : "secondary"}>
-                            {item.overridden ? "Override" : "Padrao"}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                    {!isLoadingRoutes && filteredRoutes.length === 0 ? (
-                      <tr>
-                        <td className="px-3 py-4 text-muted-foreground" colSpan={3}>
-                          Nenhuma rota encontrada.
-                        </td>
-                      </tr>
-                    ) : null}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <Button
-              onClick={saveRoutes}
-              disabled={isLoadingRoutes || isSavingRoutes || (menuScope === "TENANT" && !selectedTenantId)}
-            >
-              {isSavingRoutes ? "Salvando..." : "Salvar permissoes"}
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Controle de licenca e pagamentos</CardTitle>
-            <CardDescription>Ferramentas administrativas para testes de fluxo.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={forceExpired} disabled={isChangingLicense || !selectedTenantId}>
-                Forcar plano vencido
-              </Button>
-              <Button onClick={releaseLicense} disabled={isChangingLicense || !selectedTenantId}>
-                Liberar licenca (30 dias)
-              </Button>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-2">
-              <h3 className="font-medium">Pagamentos pendentes</h3>
-              {isLoadingPayments ? (
-                <p className="text-sm text-muted-foreground">Carregando pagamentos...</p>
-              ) : pendingPayments.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum pagamento pendente.</p>
-              ) : (
-                <div className="space-y-2">
-                  {pendingPayments.map((payment) => (
-                    <div
-                      key={payment.id || payment.asaasPaymentId}
-                      className="rounded-md border p-3 flex flex-wrap items-center justify-between gap-3"
-                    >
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">
-                          {payment.asaasPaymentId} - {payment.billingType}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Valor: R$ {(Number(payment.amountCents || 0) / 100).toFixed(2)} | Vencimento:{" "}
-                          {payment.dueDate || "-"}
-                        </p>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() => markPaymentReceived(payment.asaasPaymentId)}
-                        disabled={isChangingLicense}
-                      >
-                        Liberar pagamento
-                      </Button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Credenciais do administrador</CardTitle>
-            <CardDescription>
-              Altere o usuario (email) e a senha da conta administrativa do sistema.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Nome</Label>
-                <Input value={adminName} onChange={(event) => setAdminName(event.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Usuario (email)</Label>
-                <Input value={adminEmail} onChange={(event) => setAdminEmail(event.target.value)} />
-              </div>
-            </div>
-            <Button variant="outline" onClick={saveAdminProfile} disabled={isSavingCredentials}>
-              Salvar usuario
-            </Button>
-
-            <Separator />
-
-            <div className="grid gap-3 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label>Senha atual</Label>
-                <Input
-                  type="password"
-                  value={adminCurrentPassword}
-                  onChange={(event) => setAdminCurrentPassword(event.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Nova senha</Label>
-                <Input
-                  type="password"
-                  value={adminNewPassword}
-                  onChange={(event) => setAdminNewPassword(event.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Confirmar senha</Label>
-                <Input
-                  type="password"
-                  value={adminConfirmPassword}
-                  onChange={(event) => setAdminConfirmPassword(event.target.value)}
-                />
-              </div>
-            </div>
-            <Button onClick={saveAdminPassword} disabled={isSavingCredentials}>
-              Atualizar senha
-            </Button>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
+
+      <Dialog open={isPlanDialogOpen} onOpenChange={setIsPlanDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{planForm.id ? "Editar plano" : "Novo plano"}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2 md:col-span-2">
+              <Label>Nome</Label>
+              <Input value={planForm.name} onChange={(event) => setPlanForm((prev) => ({ ...prev, name: event.target.value }))} />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Descricao</Label>
+              <Textarea value={planForm.description} onChange={(event) => setPlanForm((prev) => ({ ...prev, description: event.target.value }))} rows={3} />
+            </div>
+            <div className="space-y-2">
+              <Label>Moeda</Label>
+              <Input value={planForm.currency} onChange={(event) => setPlanForm((prev) => ({ ...prev, currency: event.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Preco em centavos</Label>
+              <Input type="number" value={planForm.priceCents} onChange={(event) => setPlanForm((prev) => ({ ...prev, priceCents: event.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Validade em meses</Label>
+              <Input type="number" value={planForm.validityMonths} onChange={(event) => setPlanForm((prev) => ({ ...prev, validityMonths: event.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Validade em dias</Label>
+              <Input type="number" value={planForm.validityDays} onChange={(event) => setPlanForm((prev) => ({ ...prev, validityDays: event.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Prioridade</Label>
+              <Input type="number" value={planForm.priority} onChange={(event) => setPlanForm((prev) => ({ ...prev, priority: event.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Maximo de profissionais</Label>
+              <Input type="number" value={planForm.maxProfessionals} onChange={(event) => setPlanForm((prev) => ({ ...prev, maxProfessionals: event.target.value }))} />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Destaque</Label>
+              <Input value={planForm.highlight} onChange={(event) => setPlanForm((prev) => ({ ...prev, highlight: event.target.value }))} />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Features JSON</Label>
+              <Textarea value={planForm.featuresJson} onChange={(event) => setPlanForm((prev) => ({ ...prev, featuresJson: event.target.value }))} rows={4} />
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox checked={planForm.active} onCheckedChange={(checked) => setPlanForm((prev) => ({ ...prev, active: Boolean(checked) }))} />
+              Ativo
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox checked={planForm.trial} onCheckedChange={(checked) => setPlanForm((prev) => ({ ...prev, trial: Boolean(checked) }))} />
+              Trial
+            </label>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsPlanDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={savePlan} disabled={isSavingPlan}>
+              {isSavingPlan ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }

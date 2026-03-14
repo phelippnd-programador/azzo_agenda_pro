@@ -32,7 +32,9 @@ import {
   ChevronDown,
   MessageCircleMore,
   Lightbulb,
+  type LucideIcon,
 } from "lucide-react";
+import type { CurrentMenuPermissionItem } from "@/types/menu-permissions";
 
 const MENU_REGISTRY = {
   "/dashboard": { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -98,6 +100,30 @@ const MAIN_MENU_ORDER = [
   "/apuracao-mensal",
 ] as const;
 
+const ICON_REGISTRY: Record<string, LucideIcon> = {
+  LayoutDashboard,
+  Calendar,
+  Scissors,
+  Users,
+  Tag,
+  UserCircle,
+  DollarSign,
+  Settings,
+  Bell,
+  Building2,
+  Receipt,
+  FileText,
+  Calculator,
+  Eye,
+  CreditCard,
+  BarChart3,
+  ShieldCheck,
+  FileSearch,
+  Boxes,
+  MessageCircleMore,
+  Lightbulb,
+};
+
 interface SidebarProps {
   isMobileOpen: boolean;
   onToggleMobile: () => void;
@@ -105,19 +131,103 @@ interface SidebarProps {
 }
 
 type MenuItem = (typeof MENU_REGISTRY)[keyof typeof MENU_REGISTRY];
-type VisibleMenuEntry =
-  | { type: "item"; item: MenuItem }
-  | { type: "group"; key: string; label: string; icon: MenuItem["icon"]; items: MenuItem[] };
+type DynamicMenuNode = {
+  id: string;
+  path: string;
+  label: string;
+  icon: LucideIcon;
+  children: DynamicMenuNode[];
+};
+
+const DYNAMIC_BOTTOM_ROUTES = new Set(["/perfil-salao", "/configuracoes"]);
+const HIDDEN_MENU_ROUTES = new Set(["/unauthorized"]);
+
+function sortMenuNodes<T extends { displayOrder?: number; label?: string }>(items: T[]) {
+  return [...items].sort((left, right) => {
+    const orderDelta = Number(left.displayOrder || 0) - Number(right.displayOrder || 0);
+    if (orderDelta !== 0) return orderDelta;
+    return String(left.label || "").localeCompare(String(right.label || ""), "pt-BR");
+  });
+}
+
+function resolveMenuIcon(item: CurrentMenuPermissionItem): LucideIcon {
+  if (item.iconKey && ICON_REGISTRY[item.iconKey]) return ICON_REGISTRY[item.iconKey];
+  return MENU_REGISTRY[item.route as keyof typeof MENU_REGISTRY]?.icon ?? Settings;
+}
 
 export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const { allowedRoutes } = useMenuPermissions();
+  const { allowedRoutes, menuItems } = useMenuPermissions();
   const allowedSet = new Set(allowedRoutes ?? []);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
-  const visibleMenuEntries: VisibleMenuEntry[] = useMemo(() => {
+  const dynamicMenuNodes = useMemo<DynamicMenuNode[] | null>(() => {
+    if (!menuItems || menuItems.length === 0) return null;
+    const visibleItems = menuItems.filter(
+      (item) =>
+        item.active &&
+        item.route &&
+        !item.route.includes(":") &&
+        !DYNAMIC_BOTTOM_ROUTES.has(item.route) &&
+        !HIDDEN_MENU_ROUTES.has(item.route)
+    );
+    const byId = new Map(visibleItems.map((item) => [item.id, item]));
+    const includedIds = new Set<string>();
+
+    visibleItems.forEach((item) => {
+      if (!allowedSet.has(item.route)) return;
+      includedIds.add(item.id);
+      let currentParentId = item.parentId || null;
+      while (currentParentId) {
+        const parent = byId.get(currentParentId);
+        if (!parent) break;
+        includedIds.add(parent.id);
+        currentParentId = parent.parentId || null;
+      }
+    });
+
+    if (includedIds.size === 0) return [];
+
+    const nodeMap = new Map<string, DynamicMenuNode>();
+    includedIds.forEach((id) => {
+      const item = byId.get(id);
+      if (!item) return;
+      nodeMap.set(id, {
+        id: item.id,
+        path: item.route,
+        label: item.label || MENU_REGISTRY[item.route as keyof typeof MENU_REGISTRY]?.label || item.route,
+        icon: resolveMenuIcon(item),
+        children: [],
+      });
+    });
+
+    const roots: Array<DynamicMenuNode & { displayOrder?: number }> = [];
+    sortMenuNodes(
+      visibleItems.filter((item) => includedIds.has(item.id))
+    ).forEach((item) => {
+      const node = nodeMap.get(item.id);
+      if (!node) return;
+      const parent = item.parentId ? nodeMap.get(item.parentId) : null;
+      if (parent) {
+        parent.children.push(node);
+        parent.children = sortMenuNodes(
+          parent.children.map((child) => ({
+            ...child,
+            displayOrder: visibleItems.find((candidate) => candidate.id === child.id)?.displayOrder,
+          }))
+        ).map(({ displayOrder: _, ...child }) => child);
+      } else {
+        roots.push({ ...node, displayOrder: item.displayOrder });
+      }
+    });
+
+    return sortMenuNodes(roots).map(({ displayOrder: _, ...node }) => node);
+  }, [allowedSet, menuItems]);
+
+  const visibleMenuEntries = useMemo(() => {
+    if (dynamicMenuNodes) return dynamicMenuNodes;
     const financialGroupPaths = [
       "/financeiro",
       "/financeiro/comissoes",
@@ -127,7 +237,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
       .filter((route) => allowedSet.has(route))
       .map((route) => MENU_REGISTRY[route]);
 
-    const entries: VisibleMenuEntry[] = [];
+    const entries: DynamicMenuNode[] = [];
     MAIN_MENU_ORDER.forEach((route) => {
       if (financialGroupPaths.includes(route)) return;
       if (route === "/auditoria/lgpd") {
@@ -135,33 +245,49 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
       } else if (!allowedSet.has(route)) {
         return;
       }
-      entries.push({ type: "item", item: MENU_REGISTRY[route] });
+      const item = MENU_REGISTRY[route];
+      entries.push({
+        id: item.path,
+        path: item.path,
+        label: item.label,
+        icon: item.icon,
+        children: [],
+      });
     });
 
     if (financialItems.length > 0) {
-      const financeInsertIndex = entries.findIndex(
-        (entry) => entry.type === "item" && entry.item.path === "/auditoria"
-      );
-      const financialGroup: VisibleMenuEntry = {
-        type: "group",
-        key: "financeiro",
+      const financeInsertIndex = entries.findIndex((entry) => entry.path === "/auditoria");
+      const financialGroup: DynamicMenuNode = {
+        id: "financeiro",
+        path: "/financeiro",
         label: "Financeiro",
         icon: DollarSign,
-        items: financialItems,
+        children: financialItems.map((item) => ({
+          id: item.path,
+          path: item.path,
+          label: item.label,
+          icon: item.icon,
+          children: [],
+        })),
       };
       if (financeInsertIndex >= 0) entries.splice(financeInsertIndex, 0, financialGroup);
       else entries.push(financialGroup);
     }
 
     return entries;
-  }, [allowedSet]);
+  }, [allowedSet, dynamicMenuNodes]);
   const [salonSlug, setSalonSlug] = useState("meu-salao");
 
   useEffect(() => {
-    const shouldOpenFinanceGroup = location.pathname.startsWith("/financeiro");
-    if (!shouldOpenFinanceGroup) return;
-    setExpandedGroups((prev) => (prev.financeiro ? prev : { ...prev, financeiro: true }));
-  }, [location.pathname]);
+    const matchingGroup = visibleMenuEntries.find((entry) =>
+      entry.children.some(
+        (child) =>
+          location.pathname === child.path || location.pathname.startsWith(`${child.path}/`)
+      )
+    );
+    if (!matchingGroup) return;
+    setExpandedGroups((prev) => (prev[matchingGroup.id] ? prev : { ...prev, [matchingGroup.id]: true }));
+  }, [location.pathname, visibleMenuEntries]);
 
   useEffect(() => {
     const cachedSlug = localStorage.getItem("salon_public_slug");
@@ -216,16 +342,16 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
           <ScrollArea className="flex-1 py-3">
             <nav className="px-2 space-y-0.5">
               {visibleMenuEntries.map((entry) => {
-                if (entry.type === "item") {
+                if (entry.children.length === 0) {
                   const isLgpdSubPage = location.pathname.startsWith("/auditoria/lgpd");
                   const isActive =
-                    (location.pathname === entry.item.path ||
-                      location.pathname.startsWith(`${entry.item.path}/`)) &&
-                    !(entry.item.path === "/auditoria" && isLgpdSubPage);
+                    (location.pathname === entry.path ||
+                      location.pathname.startsWith(`${entry.path}/`)) &&
+                    !(entry.path === "/auditoria" && isLgpdSubPage);
                   return (
                     <Link
-                      key={entry.item.path}
-                      to={entry.item.path}
+                      key={entry.path}
+                      to={entry.path}
                       onClick={() => {
                         if (window.innerWidth < 1024) onToggleMobile();
                       }}
@@ -241,16 +367,16 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
                         {isActive && (
                           <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-r-full" />
                         )}
-                        <entry.item.icon className="w-4 h-4 flex-shrink-0 opacity-80" />
-                        <span className="truncate">{entry.item.label}</span>
+                        <entry.icon className="w-4 h-4 flex-shrink-0 opacity-80" />
+                        <span className="truncate">{entry.label}</span>
                       </div>
                     </Link>
                   );
                 }
 
-                const isOpen = expandedGroups[entry.key] ?? location.pathname.startsWith("/financeiro");
+                const isOpen = expandedGroups[entry.id] ?? false;
                 const activeChildPath =
-                  entry.items
+                  entry.children
                     .filter(
                       (item) =>
                         location.pathname === item.path ||
@@ -258,13 +384,14 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
                     )
                     .sort((left, right) => right.path.length - left.path.length)[0]?.path ?? null;
                 const isGroupActive = Boolean(activeChildPath);
+                const parentIsAccessible = allowedSet.has(entry.path);
 
                 return (
-                  <div key={entry.key} className="space-y-0.5">
+                  <div key={entry.id} className="space-y-0.5">
                     <button
                       type="button"
                       onClick={() =>
-                        setExpandedGroups((prev) => ({ ...prev, [entry.key]: !isOpen }))
+                        setExpandedGroups((prev) => ({ ...prev, [entry.id]: !isOpen }))
                       }
                       className={cn(
                         "w-full flex items-center gap-2.5 h-9 px-3 rounded-md text-sm cursor-pointer select-none transition-colors",
@@ -272,7 +399,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
                           ? "text-primary font-medium"
                           : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"
                       )}
-                    >
+                      >
                       <entry.icon className="w-4 h-4 flex-shrink-0 opacity-80" />
                       <span className="truncate flex-1 text-left">{entry.label}</span>
                       <ChevronDown
@@ -284,7 +411,28 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
                     </button>
                     {isOpen ? (
                       <div className="ml-3 pl-3 border-l border-border space-y-0.5 py-0.5">
-                        {entry.items.map((item) => {
+                        {parentIsAccessible ? (
+                          <Link
+                            key={`${entry.path}-overview`}
+                            to={entry.path}
+                            onClick={() => {
+                              if (window.innerWidth < 1024) onToggleMobile();
+                            }}
+                          >
+                            <div
+                              className={cn(
+                                "flex items-center gap-2.5 h-8 px-2.5 rounded-md text-sm cursor-pointer select-none transition-colors",
+                                location.pathname === entry.path
+                                  ? "bg-primary/8 text-primary font-medium"
+                                  : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"
+                              )}
+                            >
+                              <entry.icon className="w-3.5 h-3.5 flex-shrink-0 opacity-80" />
+                              <span className="truncate">{entry.label}</span>
+                            </div>
+                          </Link>
+                        ) : null}
+                        {entry.children.map((item) => {
                           const isChildActive = activeChildPath === item.path;
                           return (
                             <Link

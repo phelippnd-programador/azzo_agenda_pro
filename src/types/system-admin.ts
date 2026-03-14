@@ -26,6 +26,40 @@ export interface BulkMenuOverrideRequest {
   reason?: string;
 }
 
+export interface MenuCatalogRoleVisibility {
+  role: SystemAdminRole;
+  enabled: boolean;
+}
+
+export interface MenuCatalogItem {
+  id: string;
+  route: string;
+  label: string;
+  parentId?: string | null;
+  parentRoute?: string | null;
+  parentLabel?: string | null;
+  displayOrder: number;
+  iconKey?: string | null;
+  active: boolean;
+  childrenCount: number;
+  roleVisibilities: MenuCatalogRoleVisibility[];
+}
+
+export interface MenuCatalogResponse {
+  items: MenuCatalogItem[];
+}
+
+export interface MenuCatalogItemRequest {
+  id?: string;
+  route: string;
+  label: string;
+  parentId?: string | null;
+  displayOrder: number;
+  iconKey?: string | null;
+  active: boolean;
+  roleVisibilities: MenuCatalogRoleVisibility[];
+}
+
 export interface AdminBillingActionResponse {
   status: string;
   tenantId?: string;
@@ -34,6 +68,43 @@ export interface AdminBillingActionResponse {
   paymentId?: string;
   productId?: string;
   validUntil?: string;
+}
+
+export interface SystemPlanItem {
+  id: string;
+  name: string;
+  description?: string | null;
+  currency: string;
+  priceCents: number;
+  validityMonths: number;
+  validityDays?: number | null;
+  highlight?: string | null;
+  featuresJson?: string | null;
+  active: boolean;
+  trial: boolean;
+  priority: number;
+  maxProfessionals?: number | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SystemPlanListResponse {
+  items: SystemPlanItem[];
+}
+
+export interface SystemPlanUpsertRequest {
+  name: string;
+  description?: string | null;
+  currency: string;
+  priceCents: number;
+  validityMonths: number;
+  validityDays?: number | null;
+  highlight?: string | null;
+  featuresJson?: string | null;
+  active: boolean;
+  trial: boolean;
+  priority: number;
+  maxProfessionals?: number | null;
 }
 
 export interface AdminTenantItem {

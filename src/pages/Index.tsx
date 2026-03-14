@@ -9,13 +9,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageErrorState, PageEmptyState } from '@/components/ui/page-states';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Calendar, DollarSign, Users, TrendingUp, Clock, CheckCircle, Route, UserCheck, CalendarClock, ClipboardCheck } from 'lucide-react';
 import { useDashboardWithOptions } from '@/hooks/useDashboard';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { useClients } from '@/hooks/useClients';
 import { useServices } from '@/hooks/useServices';
-import { initializeDemoData } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 
 const formatCurrency = (value: number) => {
@@ -61,7 +61,6 @@ export default function Dashboard() {
       : appointments;
 
   useEffect(() => {
-    initializeDemoData();
     if (!isProfessionalUser) {
       refetchMetrics();
     }
@@ -94,12 +93,17 @@ export default function Dashboard() {
     const client = clients.find((c) => c.id === apt.clientId);
     const professional = professionals.find((p) => p.id === apt.professionalId);
     const service = services.find((s) => s.id === apt.serviceId);
+    const items = apt.items?.map((item) => ({
+      ...item,
+      service: item.service ?? services.find((serviceCandidate) => serviceCandidate.id === item.serviceId),
+    }));
 
     return {
       ...apt,
       client,
       professional,
       service,
+      items,
     };
   });
 
@@ -208,6 +212,15 @@ export default function Dashboard() {
   return (
     <MainLayout title="Dashboard" subtitle={formattedDate}>
       <div className="space-y-4 sm:space-y-6">
+        <Alert>
+          <Calendar className="h-4 w-4" />
+          <AlertTitle>Periodo das metricas</AlertTitle>
+          <AlertDescription>
+            Este dashboard principal usa periodos fixos: cards de hoje e do mes atual, grafico semanal para a semana corrente
+            e linha mensal para o mes corrente. Para filtros personalizados, use o modulo financeiro detalhado.
+          </AlertDescription>
+        </Alert>
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           <MetricCard
             title="Agendamentos Hoje"
@@ -420,3 +433,4 @@ export default function Dashboard() {
     </MainLayout>
   );
 }
+

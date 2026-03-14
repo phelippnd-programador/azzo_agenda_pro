@@ -9,10 +9,12 @@ import {
 } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCurrentMenuPermissions } from "@/services/menuPermissionsService";
+import type { CurrentMenuPermissionItem } from "@/types/menu-permissions";
 
 type MenuPermissionsContextValue = {
   role: string | null;
   allowedRoutes: string[] | null;
+  menuItems: CurrentMenuPermissionItem[] | null;
   isLoading: boolean;
   isEnforced: boolean;
   canAccess: (path: string) => boolean;
@@ -84,6 +86,7 @@ export function MenuPermissionsProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, user } = useAuth();
   const [role, setRole] = useState<string | null>(null);
   const [allowedRoutes, setAllowedRoutes] = useState<string[] | null>(null);
+  const [menuItems, setMenuItems] = useState<CurrentMenuPermissionItem[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isEnforced, setIsEnforced] = useState(false);
 
@@ -100,6 +103,7 @@ export function MenuPermissionsProvider({ children }: { children: ReactNode }) {
     if (!isAuthenticated) {
       setRole(null);
       setAllowedRoutes(null);
+      setMenuItems(null);
       setIsEnforced(false);
       return;
     }
@@ -107,6 +111,7 @@ export function MenuPermissionsProvider({ children }: { children: ReactNode }) {
     if (String(user?.role || "").toUpperCase() === "ADMIN") {
       setRole("ADMIN");
       setAllowedRoutes(["/configuracoes/admin-sistema", "/financeiro/licenca", "/unauthorized"]);
+      setMenuItems(null);
       setIsEnforced(true);
       setIsLoading(false);
       return;
@@ -121,11 +126,13 @@ export function MenuPermissionsProvider({ children }: { children: ReactNode }) {
 
       setRole(response.role);
       setAllowedRoutes(normalizedRoutes);
+      setMenuItems(response.items || []);
       setIsEnforced(true);
     } catch {
       // Modo seguro: se nao houver permissao previa, bloqueia acesso por padrao.
       // Se ja houver permissao carregada, preserva o ultimo estado valido.
       setAllowedRoutes((prev) => prev ?? []);
+      setMenuItems((prev) => prev ?? []);
       setIsEnforced(true);
     } finally {
       setIsLoading(false);
@@ -149,12 +156,13 @@ export function MenuPermissionsProvider({ children }: { children: ReactNode }) {
     () => ({
       role,
       allowedRoutes,
+      menuItems,
       isLoading,
       isEnforced,
       canAccess,
       refreshPermissions,
     }),
-    [role, allowedRoutes, isLoading, isEnforced, canAccess, refreshPermissions]
+    [role, allowedRoutes, menuItems, isLoading, isEnforced, canAccess, refreshPermissions]
   );
 
   return (

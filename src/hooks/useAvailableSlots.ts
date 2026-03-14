@@ -7,6 +7,7 @@ type UseAvailableSlotsParams = {
   professionalId?: string;
   date?: string;
   serviceDurationMinutes?: number;
+  serviceIds?: string[];
   bufferMinutes?: number;
 };
 
@@ -23,9 +24,9 @@ export function useAvailableSlots(params: UseAvailableSlotsParams) {
     () =>
       !!params.professionalId &&
       !!params.date &&
-      !!params.serviceDurationMinutes &&
-      params.serviceDurationMinutes > 0,
-    [params.date, params.professionalId, params.serviceDurationMinutes]
+      ((Array.isArray(params.serviceIds) && params.serviceIds.length > 0) ||
+        (!!params.serviceDurationMinutes && params.serviceDurationMinutes > 0)),
+    [params.date, params.professionalId, params.serviceDurationMinutes, params.serviceIds]
   );
 
   useEffect(() => {
@@ -45,6 +46,7 @@ export function useAvailableSlots(params: UseAvailableSlotsParams) {
         const response = await appointmentsApi.getAvailableSlots({
           professionalId: params.professionalId!,
           date: params.date!,
+          serviceIds: params.serviceIds,
           serviceDurationMinutes: params.serviceDurationMinutes!,
           bufferMinutes: params.bufferMinutes ?? 0,
         });
@@ -70,7 +72,7 @@ export function useAvailableSlots(params: UseAvailableSlotsParams) {
     return () => {
       isMounted = false;
     };
-  }, [canFetch, params.bufferMinutes, params.date, params.professionalId, params.serviceDurationMinutes]);
+  }, [canFetch, params.bufferMinutes, params.date, params.professionalId, params.serviceDurationMinutes, params.serviceIds]);
 
   return {
     slots,

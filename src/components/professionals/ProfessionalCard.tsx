@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Professional } from "@/lib/api";
-import { Mail, MoreVertical, Percent, Phone } from "lucide-react";
+import { Mail, MoreVertical, Phone } from "lucide-react";
 
 type ProfessionalCardProps = {
   professional: Professional;
@@ -111,14 +111,6 @@ export function ProfessionalCard({
               +{professional.specialties.length - 3}
             </Badge>
           )}
-        </div>
-
-        <div className="flex items-center justify-between pt-3 border-t border-border">
-          <span className="text-xs sm:text-sm text-muted-foreground">Comissao</span>
-          <div className="flex items-center gap-1 text-primary font-semibold">
-            <Percent className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="text-sm sm:text-base">{professional.commissionRate}%</span>
-          </div>
         </div>
       </CardContent>
     </Card>

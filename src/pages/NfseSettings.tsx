@@ -1,15 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { nfseApi, type NfseConfig, type NfseProviderCapabilities } from "@/lib/api";
+import {
+  ApiError,
+  nfseApi,
+  type NfseConfig,
+  type NfseFiscalMunicipality,
+  type NfseFiscalState,
+  type NfseProviderCapabilities,
+} from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import { toast } from "sonner";
+import { Info } from "lucide-react";
 
 const DEFAULT_CONFIG: NfseConfig = {
   ambiente: "HOMOLOGACAO",
@@ -36,19 +45,87 @@ export default function NfseSettings() {
   const [config, setConfig] = useState<NfseConfig>(DEFAULT_CONFIG);
   const [capability, setCapability] = useState<NfseProviderCapabilities>(DEFAULT_CAP);
   const [capabilities, setCapabilities] = useState<NfseProviderCapabilities[]>([]);
+  const [states, setStates] = useState<NfseFiscalState[]>([]);
+  const [configStateUf, setConfigStateUf] = useState("");
+  const [capabilityStateUf, setCapabilityStateUf] = useState("");
+  const [configMunicipalities, setConfigMunicipalities] = useState<NfseFiscalMunicipality[]>([]);
+  const [capabilityMunicipalities, setCapabilityMunicipalities] = useState<NfseFiscalMunicipality[]>([]);
   const [isSavingConfig, setIsSavingConfig] = useState(false);
   const [isSavingCap, setIsSavingCap] = useState(false);
+  const [isConfigUnconfigured, setIsConfigUnconfigured] = useState(false);
   const showError = (error: unknown, fallbackMessage: string) => {
     const uiError = resolveUiError(error, fallbackMessage);
     toast.error(uiError.code ? `[${uiError.code}] ${uiError.message}` : uiError.message);
+  };
+
+  const selectedConfigMunicipality = useMemo(
+    () => configMunicipalities.find((item) => item.codigoIbge === config.municipioCodigoIbge) || null,
+    [configMunicipalities, config.municipioCodigoIbge]
+  );
+  const selectedCapabilityMunicipality = useMemo(
+    () => capabilityMunicipalities.find((item) => item.codigoIbge === capability.municipioCodigoIbge) || null,
+    [capabilityMunicipalities, capability.municipioCodigoIbge]
+  );
+
+  const loadStates = async () => {
+    try {
+      const response = await nfseApi.listStates();
+      setStates(response);
+    } catch {
+      setStates([]);
+    }
+  };
+
+  const loadMunicipalities = async (
+    stateUf: string,
+    target: "config" | "capability",
+    preferredCodigoIbge?: string
+  ) => {
+    if (!stateUf) {
+      if (target === "config") setConfigMunicipalities([]);
+      else setCapabilityMunicipalities([]);
+      return;
+    }
+    try {
+      const response = await nfseApi.listMunicipalities({ stateUf, limit: 1000 });
+      if (target === "config") {
+        setConfigMunicipalities(response);
+        if (preferredCodigoIbge && response.some((item) => item.codigoIbge === preferredCodigoIbge)) {
+          setConfig((prev) => ({ ...prev, municipioCodigoIbge: preferredCodigoIbge }));
+        }
+      } else {
+        setCapabilityMunicipalities(response);
+        if (preferredCodigoIbge && response.some((item) => item.codigoIbge === preferredCodigoIbge)) {
+          setCapability((prev) => ({ ...prev, municipioCodigoIbge: preferredCodigoIbge }));
+        }
+      }
+    } catch {
+      if (target === "config") setConfigMunicipalities([]);
+      else setCapabilityMunicipalities([]);
+    }
   };
 
   const loadConfig = async (ambiente: "HOMOLOGACAO" | "PRODUCAO") => {
     try {
       const response = await nfseApi.getConfig(ambiente);
       setConfig(response);
+      setIsConfigUnconfigured(false);
+      const derivedStateCodigo = response.municipioCodigoIbge?.slice(0, 2) || "";
+      const derivedState = states.find((item) => item.codigoIbge === derivedStateCodigo);
+      const derivedUf = derivedState?.uf || "";
+      setConfigStateUf(derivedUf);
+      if (derivedUf) {
+        await loadMunicipalities(derivedUf, "config", response.municipioCodigoIbge);
+      } else {
+        setConfigMunicipalities([]);
+      }
     } catch (error) {
-      setConfig((prev) => ({ ...prev, ambiente }));
+      if (error instanceof ApiError && error.status === 404) {
+        setIsConfigUnconfigured(true);
+      }
+      setConfig((prev) => ({ ...prev, ambiente, municipioCodigoIbge: "" }));
+      setConfigStateUf("");
+      setConfigMunicipalities([]);
     }
   };
 
@@ -62,9 +139,14 @@ export default function NfseSettings() {
   };
 
   useEffect(() => {
-    void loadConfig("HOMOLOGACAO");
+    void loadStates();
     void loadCapabilities();
   }, []);
+
+  useEffect(() => {
+    if (states.length === 0) return;
+    void loadConfig("HOMOLOGACAO");
+  }, [states]);
 
   return (
     <MainLayout title="Configuracoes NFS-e" subtitle="Parmetros por ambiente e capacidades de provedor por municipio.">
@@ -75,6 +157,16 @@ export default function NfseSettings() {
             <CardDescription>Parametros obrigatorios para emissao de NFS-e.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {isConfigUnconfigured ? (
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertTitle>Configuracao NFS-e inicial pendente</AlertTitle>
+                <AlertDescription>
+                  Ainda nao existe configuracao NFS-e para este ambiente. Preencha os campos abaixo e salve para
+                  iniciar a emissao.
+                </AlertDescription>
+              </Alert>
+            ) : null}
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Ambiente</Label>
@@ -94,11 +186,45 @@ export default function NfseSettings() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Municipio IBGE</Label>
-                <Input
+                <Label>Estado</Label>
+                <Select
+                  value={configStateUf}
+                  onValueChange={(value) => {
+                    setConfigStateUf(value);
+                    setConfig((prev) => ({ ...prev, municipioCodigoIbge: "" }));
+                    void loadMunicipalities(value, "config");
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {states.map((state) => (
+                      <SelectItem key={state.codigoIbge} value={state.uf}>
+                        {state.uf} - {state.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Municipio</Label>
+                <Select
                   value={config.municipioCodigoIbge}
-                  onChange={(e) => setConfig((prev) => ({ ...prev, municipioCodigoIbge: e.target.value }))}
-                />
+                  onValueChange={(value) => setConfig((prev) => ({ ...prev, municipioCodigoIbge: value }))}
+                  disabled={!configStateUf}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o municipio" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {configMunicipalities.map((municipality) => (
+                      <SelectItem key={municipality.codigoIbge} value={municipality.codigoIbge}>
+                        {municipality.nome} ({municipality.codigoIbge})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>Provedor</Label>
@@ -163,6 +289,20 @@ export default function NfseSettings() {
                 </Select>
               </div>
             </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label>Codigo IBGE selecionado</Label>
+                <Input value={config.municipioCodigoIbge || ""} readOnly />
+              </div>
+              <div className="space-y-2">
+                <Label>Codigo TOM</Label>
+                <Input value={selectedConfigMunicipality?.codigoTom || ""} readOnly />
+              </div>
+              <div className="space-y-2">
+                <Label>Codigo TOM com DV</Label>
+                <Input value={selectedConfigMunicipality?.codigoTomComDv || ""} readOnly />
+              </div>
+            </div>
             <div className="flex items-center justify-between rounded-md border p-3">
               <div>
                 <p className="font-medium">Auto emissao ao fechar atendimento</p>
@@ -180,6 +320,7 @@ export default function NfseSettings() {
                   setIsSavingConfig(true);
                   const saved = await nfseApi.saveConfig(config);
                   setConfig(saved);
+                  setIsConfigUnconfigured(false);
                   toast.success("Configuracao NFS-e salva com sucesso.");
                 } catch (error) {
                   showError(error, "Erro ao salvar configuracao NFS-e");
@@ -201,11 +342,45 @@ export default function NfseSettings() {
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Municipio IBGE</Label>
-                <Input
+                <Label>Estado</Label>
+                <Select
+                  value={capabilityStateUf}
+                  onValueChange={(value) => {
+                    setCapabilityStateUf(value);
+                    setCapability((prev) => ({ ...prev, municipioCodigoIbge: "" }));
+                    void loadMunicipalities(value, "capability");
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {states.map((state) => (
+                      <SelectItem key={state.codigoIbge} value={state.uf}>
+                        {state.uf} - {state.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Municipio</Label>
+                <Select
                   value={capability.municipioCodigoIbge}
-                  onChange={(e) => setCapability((prev) => ({ ...prev, municipioCodigoIbge: e.target.value }))}
-                />
+                  onValueChange={(value) => setCapability((prev) => ({ ...prev, municipioCodigoIbge: value }))}
+                  disabled={!capabilityStateUf}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o municipio" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {capabilityMunicipalities.map((municipality) => (
+                      <SelectItem key={municipality.codigoIbge} value={municipality.codigoIbge}>
+                        {municipality.nome} ({municipality.codigoIbge})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>Provedor</Label>
@@ -251,6 +426,20 @@ export default function NfseSettings() {
                     setCapability((prev) => ({ ...prev, acceptedCancelReasonCodes: e.target.value }))
                   }
                 />
+              </div>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label>Codigo IBGE selecionado</Label>
+                <Input value={capability.municipioCodigoIbge || ""} readOnly />
+              </div>
+              <div className="space-y-2">
+                <Label>Codigo TOM</Label>
+                <Input value={selectedCapabilityMunicipality?.codigoTom || ""} readOnly />
+              </div>
+              <div className="space-y-2">
+                <Label>Codigo TOM com DV</Label>
+                <Input value={selectedCapabilityMunicipality?.codigoTomComDv || ""} readOnly />
               </div>
             </div>
             <div className="flex items-center justify-between rounded-md border p-3">
