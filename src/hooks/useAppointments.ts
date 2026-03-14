@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { appointmentsApi, type Appointment, isPlanExpiredApiError } from "@/lib/api";
+import { appointmentsApi, type Appointment, type AppointmentCreateRequest, isPlanExpiredApiError } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import { toast } from "sonner";
 
@@ -103,7 +103,7 @@ export function useAppointments(filters?: AppointmentFilters, options?: UseAppoi
     fetchAppointments({ page: DEFAULT_PAGE, limit: defaultLimit });
   }, [defaultLimit, enabled, fetchAppointments]);
 
-  const createAppointment = async (data: Omit<Appointment, "id" | "createdAt">) => {
+  const createAppointment = async (data: AppointmentCreateRequest) => {
     try {
       const newAppointment = await appointmentsApi.create(data);
       await fetchAppointments({ page: pagination.page, limit: pagination.limit });

@@ -15,14 +15,9 @@ import { resolveUiError } from '@/lib/error-utils';
 import { setLicenseAccessStatus } from '@/lib/license-access';
 import { loginSchema, type LoginForm } from '@/schemas/auth';
 
-const isDemoLoginEnabled =
-  String(import.meta.env.VITE_ENABLE_DEMO_LOGIN ?? 'false').toLowerCase() === 'true';
-const isLocalDemoQuickAccessEnabled =
-  String(import.meta.env.VITE_ENABLE_LOCAL_DEMO ?? 'true').toLowerCase() !== 'false';
-
 export default function Login() {
   const navigate = useNavigate();
-  const { login, loginLocalDemo } = useAuth();
+  const { login } = useAuth();
   const [mfaRequired, setMfaRequired] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -124,12 +119,7 @@ export default function Login() {
         toast.error('Digite o codigo de 6 digitos do seu aplicativo autenticador.');
         return;
       }
-      const uiError = resolveUiError(
-        error,
-        isDemoLoginEnabled
-          ? 'Credenciais invalidas. Tente demo@azzo.com / demo123'
-          : 'Credenciais invalidas.'
-      );
+      const uiError = resolveUiError(error, 'Credenciais invalidas.');
       toast.error(uiError.message);
     } finally {
       setIsLoading(false);
@@ -140,40 +130,6 @@ export default function Login() {
       toast.error(firstError.message);
     }
   });
-
-  const handleLocalDemoLogin = async (role: 'OWNER' | 'PROFESSIONAL') => {
-    if (!isLocalDemoQuickAccessEnabled) return;
-    setIsLoading(true);
-    try {
-      await loginLocalDemo(role);
-      toast.success(
-        role === 'PROFESSIONAL'
-          ? 'Modo demo local (Profissional) ativado.'
-          : 'Modo demo local (Owner) ativado.'
-      );
-      navigate('/dashboard');
-    } catch (error) {
-      toast.error('Erro ao ativar demo local');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDemoLogin = async () => {
-    if (!isDemoLoginEnabled) return;
-    setIsLoading(true);
-    try {
-      await login('demo@azzo.com', 'demo123');
-      toast.success('Bem-vindo ao modo demonstracao!');
-      const redirectPath = await getPostLoginRoute();
-      navigate(redirectPath);
-    } catch (error) {
-      const uiError = resolveUiError(error, 'Erro ao fazer login de demonstracao');
-      toast.error(uiError.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-card p-4">
@@ -278,55 +234,6 @@ export default function Login() {
                 )}
               </Button>
             </form>
-
-            {isDemoLoginEnabled || isLocalDemoQuickAccessEnabled ? (
-              <>
-                <div className="relative my-4 sm:my-6">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-border" />
-                  </div>
-                  <div className="relative flex justify-center text-xs sm:text-sm">
-                    <span className="bg-background px-2 text-muted-foreground">ou</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  {isLocalDemoQuickAccessEnabled ? (
-                    <>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full h-10 sm:h-11"
-                        onClick={() => handleLocalDemoLogin('OWNER')}
-                        disabled={isLoading}
-                      >
-                        Demo Local Owner
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full h-10 sm:h-11"
-                        onClick={() => handleLocalDemoLogin('PROFESSIONAL')}
-                        disabled={isLoading}
-                      >
-                        Demo Local Profissional
-                      </Button>
-                    </>
-                  ) : null}
-                  {isDemoLoginEnabled ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full h-10 sm:h-11"
-                      onClick={handleDemoLogin}
-                      disabled={isLoading}
-                    >
-                      Login Demo Remoto
-                    </Button>
-                  ) : null}
-                </div>
-              </>
-            ) : null}
 
             <p className="text-center text-xs sm:text-sm text-muted-foreground mt-4 sm:mt-6">
               Nao tem uma conta?{' '}

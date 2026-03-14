@@ -1,12 +1,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi, User, initializeDemoData } from '@/lib/api';
+import { authApi, User } from '@/lib/api';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string, mfaCode?: string) => Promise<void>;
-  loginLocalDemo: (role?: "OWNER" | "PROFESSIONAL") => Promise<void>;
   register: (data: {
     name: string;
     email: string;
@@ -29,7 +28,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    initializeDemoData();
     const pathname = typeof window !== "undefined" ? window.location.pathname : "";
     const isPublicBookingRoute = pathname === "/agendar" || pathname.startsWith("/agendar/");
 
@@ -54,11 +52,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const currentUser = await authApi.me();
     setUser(currentUser);
-  };
-
-  const loginLocalDemo = async (role: "OWNER" | "PROFESSIONAL" = "OWNER") => {
-    const localDemoUser = await authApi.loginLocalDemo(role);
-    setUser(localDemoUser);
   };
 
   const register = async (data: {
@@ -95,7 +88,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         isLoading,
         login,
-        loginLocalDemo,
         register,
         logout,
       }}

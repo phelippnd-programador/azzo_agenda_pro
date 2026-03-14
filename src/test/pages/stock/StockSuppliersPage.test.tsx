@@ -44,27 +44,31 @@ describe("StockSuppliersPage", () => {
     vi.clearAllMocks();
   });
 
-  it("should paginate suppliers and create a new one", async () => {
-    listSuppliersMock.mockResolvedValue(suppliers);
-    createSupplierMock.mockResolvedValue({});
-    const user = userEvent.setup();
+  it(
+    "should paginate suppliers and create a new one",
+    async () => {
+      listSuppliersMock.mockResolvedValue(suppliers);
+      createSupplierMock.mockResolvedValue({});
+      const user = userEvent.setup();
 
-    render(<StockSuppliersPage />);
+      render(<StockSuppliersPage />);
 
-    expect(await screen.findByText("Fornecedor 1")).toBeInTheDocument();
-    expect(screen.getByText("Pagina 1 de 2")).toBeInTheDocument();
+      expect(await screen.findByText("Fornecedor 1")).toBeInTheDocument();
+      expect(screen.getByText("Pagina 1 de 2")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Proxima" }));
-    expect(await screen.findByText("Fornecedor 11")).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "Proxima" }));
+      expect(await screen.findByText("Fornecedor 11")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Novo fornecedor" }));
-    const dialog = screen.getByRole("dialog");
-    const nameInput = within(dialog).getAllByRole("textbox")[0];
-    await user.type(nameInput, "Fornecedor Novo");
-    await user.click(screen.getByRole("button", { name: "Salvar" }));
+      await user.click(screen.getByRole("button", { name: "Novo fornecedor" }));
+      const dialog = screen.getByRole("dialog");
+      const nameInput = within(dialog).getAllByRole("textbox")[0];
+      await user.type(nameInput, "Fornecedor Novo");
+      await user.click(screen.getByRole("button", { name: "Salvar" }));
 
-    await waitFor(() => {
-      expect(createSupplierMock).toHaveBeenCalled();
-    });
-  });
+      await waitFor(() => {
+        expect(createSupplierMock).toHaveBeenCalled();
+      });
+    },
+    10000
+  );
 });

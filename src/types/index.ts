@@ -65,6 +65,23 @@ export interface Service {
   createdAt: Date;
 }
 
+export interface AppointmentItem {
+  id?: string;
+  serviceId: string;
+  service?: Service;
+  orderIndex?: number;
+  durationMinutes: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+export interface AppointmentCreateItemInput {
+  serviceId: string;
+  durationMinutes?: number;
+  unitPrice?: number;
+  totalPrice?: number;
+}
+
 export interface Client {
   id: string;
   tenantId: string;
@@ -86,8 +103,9 @@ export interface Appointment {
   client?: Client;
   professionalId: string;
   professional?: Professional;
-  serviceId: string;
+  serviceId?: string;
   service?: Service;
+  items?: AppointmentItem[];
   date: Date;
   startTime: string;
   endTime: string;

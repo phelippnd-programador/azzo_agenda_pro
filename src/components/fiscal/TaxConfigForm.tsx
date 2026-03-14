@@ -14,8 +14,10 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { fiscalApi } from '@/lib/api';
+import { ApiError, fiscalApi } from '@/lib/api';
 import { maskCnpj, maskPhoneBr, maskCep, onlyDigits } from '@/lib/input-masks';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 export function TaxConfigForm() {
   const { toast } = useToast();
@@ -43,11 +45,13 @@ export function TaxConfigForm() {
   const [nfceCscProduction, setNfceCscProduction] = useState('');
   const [nfceCscIdTokenProduction, setNfceCscIdTokenProduction] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isUnconfigured, setIsUnconfigured] = useState(false);
 
   useEffect(() => {
     fiscalApi
       .getTaxConfig()
       .then((config) => {
+        setIsUnconfigured(false);
         setRegime(config.regime);
         setIcmsRate(String(config.icmsRate));
         setPisRate(String(config.pisRate));
@@ -72,7 +76,10 @@ export function TaxConfigForm() {
         setNfceCscProduction(config.nfceCscProduction || '');
         setNfceCscIdTokenProduction(onlyDigits(config.nfceCscIdTokenProduction || '').slice(0, 6));
       })
-      .catch(() => {
+      .catch((error) => {
+        if (error instanceof ApiError && error.status === 404) {
+          setIsUnconfigured(true);
+        }
         setIcmsRate('2.75');
         setPisRate('0.65');
         setCofinsRate('3.00');
@@ -127,6 +134,7 @@ export function TaxConfigForm() {
         title: 'Configuracao salva',
         description: 'As aliquotas de impostos foram atualizadas com sucesso.',
       });
+      setIsUnconfigured(false);
     } catch {
       toast({
         title: 'Erro ao salvar',
@@ -147,6 +155,16 @@ export function TaxConfigForm() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {isUnconfigured ? (
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertTitle>Configuracao fiscal inicial pendente</AlertTitle>
+            <AlertDescription>
+              Este tenant ainda nao possui configuracao fiscal cadastrada. Preencha os dados abaixo e salve para
+              habilitar o fluxo fiscal.
+            </AlertDescription>
+          </Alert>
+        ) : null}
         <div className="space-y-2">
           <Label htmlFor="regime">Regime Tributario</Label>
           <Select value={regime} onValueChange={handleRegimeChange}>

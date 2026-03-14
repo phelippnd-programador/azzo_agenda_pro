@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { dashboardApi } from "@/lib/api";
 import {
@@ -25,6 +26,7 @@ const formatCurrency = (value: number) =>
 
 export function MonthlyRevenueLineChart() {
   const [points, setPoints] = useState<RevenuePoint[]>([]);
+  const [rangeLabel, setRangeLabel] = useState("");
 
   useEffect(() => {
     const now = new Date();
@@ -32,6 +34,7 @@ export function MonthlyRevenueLineChart() {
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     const start = monthStart.toISOString().split("T")[0];
     const end = monthEnd.toISOString().split("T")[0];
+    setRangeLabel(`${start} a ${end}`);
 
     dashboardApi
       .getWeeklyRevenue(start, end)
@@ -68,7 +71,10 @@ export function MonthlyRevenueLineChart() {
   return (
     <Card>
       <CardHeader className="pb-2 sm:pb-4">
-        <CardTitle className="text-base sm:text-lg">Faturamento do Mes</CardTitle>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="text-base sm:text-lg">Faturamento do Mes</CardTitle>
+          {rangeLabel ? <Badge variant="outline">{rangeLabel}</Badge> : null}
+        </div>
       </CardHeader>
       <CardContent>
         {points.length === 0 ? (

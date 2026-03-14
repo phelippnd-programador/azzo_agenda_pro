@@ -133,7 +133,11 @@ export function WhatsAppIntegrationCard() {
       setIsTesting(true);
       const result = await testWhatsAppConnection();
       setTestResult(result.message);
-      toast.success(result.success ? "Conexao validada" : "Conexao nao validada");
+      if (result.success) {
+        toast.success("Conexao validada");
+      } else {
+        toast.error(result.message || "Conexao nao validada");
+      }
     } catch (error) {
       const uiError = resolveUiError(error, "Erro ao testar conexao com WhatsApp");
       setTestResult(uiError.message || "Nao foi possivel testar a conexao no momento.");

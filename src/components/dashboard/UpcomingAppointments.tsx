@@ -20,6 +20,15 @@ interface UpcomingAppointmentsProps {
 
 export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingAppointmentsProps) {
   const navigate = useNavigate();
+  const getServiceLabel = (appointment: Appointment) => {
+    const names =
+      appointment.items
+        ?.map((item) => item.service?.name)
+        .filter((name): name is string => !!name) || [];
+
+    if (names.length) return names.join(', ');
+    return appointment.service?.name || 'Serviço';
+  };
 
   return (
     <Card>
@@ -60,7 +69,7 @@ export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingA
                   </Badge>
                 </div>
                 <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                  {appointment.service?.name}
+                  {getServiceLabel(appointment)}
                   <span className="hidden sm:inline"> com {appointment.professional?.name}</span>
                 </p>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-1">

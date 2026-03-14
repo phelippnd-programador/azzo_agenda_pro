@@ -1,0 +1,80 @@
+import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import Professionals from "@/pages/Professionals";
+
+vi.mock("@/hooks/useProfessionals", () => ({
+  useProfessionals: () => ({
+    professionals: [
+      {
+        id: "pro-1",
+        name: "Ana Costa",
+        email: "ana@qa.local",
+        phone: "(11) 99999-0000",
+        specialties: ["Cabelo"],
+        isActive: true,
+        workingHours: [],
+      },
+    ],
+    professionalLimits: { currentCount: 1, maxProfessionals: 3, canCreate: true },
+    pagination: { page: 1, limit: 20, total: 1, hasMore: false },
+    isLoading: false,
+    isLimitsLoading: false,
+    error: null,
+    refetch: vi.fn(),
+    goToPage: vi.fn(),
+    createProfessional: vi.fn(),
+    updateProfessional: vi.fn(),
+    deleteProfessional: vi.fn(),
+    resetProfessionalPassword: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useSpecialties", () => ({
+  useSpecialties: () => ({
+    specialties: [{ id: "sp-1", name: "Cabelo" }],
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  }),
+}));
+
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({
+    user: { id: "owner-1", role: "OWNER", name: "Owner QA" },
+  }),
+}));
+
+vi.mock("@/contexts/MenuPermissionsContext", () => ({
+  useMenuPermissions: () => ({
+    isLoading: false,
+    allowedRoutes: ["/profissionais"],
+    menuItems: [],
+    hasRoutePermission: () => true,
+    refreshPermissions: vi.fn(),
+  }),
+}));
+
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+vi.mock("@/components/chat/ChatInboxNotifier", () => ({
+  ChatInboxNotifier: () => null,
+}));
+
+describe("Professionals", () => {
+  it("should render professional list and new professional action", async () => {
+    render(
+      <MemoryRouter initialEntries={["/profissionais"]}>
+        <Professionals />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText("Comissao por profissional")).toBeInTheDocument();
+    expect(screen.getAllByText("Ana Costa").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: /Novo Profissional/i })).toBeInTheDocument();
+  });
+});

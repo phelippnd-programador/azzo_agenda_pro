@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ import type { WorkingHours } from "@/types";
 import { toast } from "sonner";
 import { ProfessionalLimitMeter } from "@/components/professionals/ProfessionalLimitMeter";
 import { ProfessionalCard } from "@/components/professionals/ProfessionalCard";
+import { Info } from "lucide-react";
 
 const defaultWorkingHours: WorkingHours[] = [
   { dayOfWeek: 1, startTime: "09:00", endTime: "18:00", isWorking: true },
@@ -70,7 +72,6 @@ export default function Professionals() {
   const [formEmail, setFormEmail] = useState("");
   const [formPhone, setFormPhone] = useState("");
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
-  const [formCommission, setFormCommission] = useState("40");
   const [formIsActive, setFormIsActive] = useState(true);
   const [formWorkingHours, setFormWorkingHours] = useState<WorkingHours[]>(
     defaultWorkingHours
@@ -113,7 +114,6 @@ export default function Professionals() {
     setFormEmail("");
     setFormPhone("");
     setSelectedSpecialties([]);
-    setFormCommission("40");
     setFormIsActive(true);
     setFormWorkingHours(defaultWorkingHours);
     setIsWorkingHoursDisabled(false);
@@ -125,7 +125,6 @@ export default function Professionals() {
     setFormEmail(prof.email);
     setFormPhone(prof.phone);
     setSelectedSpecialties(prof.specialties || []);
-    setFormCommission(String(prof.commissionRate));
     setFormIsActive(prof.isActive);
     const hasWorkingHours = Array.isArray(prof.workingHours) && prof.workingHours.length > 0;
     if (!hasWorkingHours) {
@@ -198,7 +197,7 @@ export default function Professionals() {
         email: formEmail,
         phone: formPhone,
         specialties: selectedSpecialties,
-        commissionRate: parseInt(formCommission, 10),
+        commissionRate: 0,
         isActive: formIsActive,
         workingHours: formWorkingHours,
       };
@@ -284,6 +283,15 @@ export default function Professionals() {
           limits={professionalLimits}
           isLoading={isLimitsLoading}
         />
+
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle>Comissao por profissional</AlertTitle>
+          <AlertDescription>
+            A configuracao principal de comissao agora e feita no modulo novo. Use o perfil do profissional ou
+            <strong> Financeiro &gt; Comissoes</strong> para configurar regras e acompanhar apuracao.
+          </AlertDescription>
+        </Alert>
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
           <div className="relative flex-1 max-w-md">
@@ -403,19 +411,6 @@ export default function Professionals() {
                     </div>
                   )}
                 </div>
-
-                <div className="space-y-2">
-                  <Label>Taxa de Comissao (%)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    placeholder="40"
-                    value={formCommission}
-                    onChange={(e) => setFormCommission(e.target.value)}
-                  />
-                </div>
-
                 <div className="space-y-2">
                   <Label>Horario de trabalho</Label>
                   <div className="rounded-lg border p-3 space-y-2">

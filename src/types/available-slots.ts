@@ -7,6 +7,7 @@ export interface TimeSlotResponse {
 export interface AvailableSlotsParams {
   professionalId: string;
   date: string;
-  serviceDurationMinutes: number;
+  serviceDurationMinutes?: number;
+  serviceIds?: string[];
   bufferMinutes?: number;
 }

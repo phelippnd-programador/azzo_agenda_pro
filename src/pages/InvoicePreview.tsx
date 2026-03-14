@@ -23,6 +23,10 @@ import { fiscalApi } from "@/lib/api";
 type InvoiceAppointmentPayload = {
   appointment?: {
     totalPrice?: number;
+    items?: Array<{
+      totalPrice?: number;
+      unitPrice?: number;
+    }>;
   };
   client?: {
     document?: string;
@@ -31,6 +35,9 @@ type InvoiceAppointmentPayload = {
   service?: {
     price?: number;
   };
+  services?: Array<{
+    price?: number;
+  }>;
 };
 
 const DEFAULT_RATES = {
@@ -95,9 +102,25 @@ export default function InvoicePreview() {
 
     try {
       const payload = JSON.parse(raw) as InvoiceAppointmentPayload;
+      const totalFromItems = Array.isArray(payload.appointment?.items)
+        ? payload.appointment.items.reduce(
+            (sum, item) => sum + Number(item.totalPrice ?? item.unitPrice ?? 0),
+            0
+          )
+        : 0;
       const totalFromAppointment = Number(payload.appointment?.totalPrice ?? 0);
+      const totalFromServices = Array.isArray(payload.services)
+        ? payload.services.reduce((sum, service) => sum + Number(service.price ?? 0), 0)
+        : 0;
       const totalFromService = Number(payload.service?.price ?? 0);
-      const initialValue = totalFromAppointment > 0 ? totalFromAppointment : totalFromService;
+      const initialValue =
+        totalFromItems > 0
+          ? totalFromItems
+          : totalFromAppointment > 0
+            ? totalFromAppointment
+            : totalFromServices > 0
+              ? totalFromServices
+              : totalFromService;
       const document = payload.client?.document || payload.client?.cpfCnpj || "";
 
       if (initialValue > 0) {

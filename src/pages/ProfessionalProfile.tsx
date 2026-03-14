@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Coins, Mail, Percent, Phone, User } from "lucide-react";
+import { ArrowLeft, Coins, Info, Mail, Phone, User } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,16 @@ export default function ProfessionalProfile() {
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertTitle>Comissao do profissional</AlertTitle>
+                <AlertDescription>
+                  A apuracao principal de comissao e feita pelo modulo novo. Use o botao
+                  <strong> Configurar comissao</strong> para definir regras e acompanhar os lancamentos.
+                </AlertDescription>
+              </Alert>
+            </div>
             <p className="text-sm">
               <span className="font-medium">E-mail:</span>{" "}
               <span className="inline-flex items-center gap-1">
@@ -111,19 +122,12 @@ export default function ProfessionalProfile() {
                 {professional.phone || "-"}
               </span>
             </p>
-            <p className="text-sm">
-              <span className="font-medium">Comissao:</span>{" "}
-              <span className="inline-flex items-center gap-1">
-                <Percent className="w-3.5 h-3.5 text-muted-foreground" />
-                {professional.commissionRate}%
-              </span>
-            </p>
-            <p className="text-sm">
-              <span className="font-medium">Status:</span>{" "}
+            <div className="text-sm flex items-center gap-2">
+              <span className="font-medium">Status:</span>
               <Badge variant={professional.isActive ? "default" : "secondary"}>
                 {professional.isActive ? "Ativo" : "Inativo"}
               </Badge>
-            </p>
+            </div>
             <div className="sm:col-span-2 text-sm">
               <span className="font-medium">Especialidades:</span>{" "}
               {professional.specialties.length ? professional.specialties.join(", ") : "-"}
