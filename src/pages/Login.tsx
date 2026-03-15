@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,12 +16,15 @@ import { resolveUiError } from '@/lib/error-utils';
 import { setLicenseAccessStatus } from '@/lib/license-access';
 import { loginSchema, type LoginForm } from '@/schemas/auth';
 
+const REMEMBER_LOGIN_STORAGE_KEY = "azzo_remembered_login";
+
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [mfaRequired, setMfaRequired] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberPassword, setRememberPassword] = useState(false);
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -29,6 +33,20 @@ export default function Login() {
       mfaCode: '',
     },
   });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const raw = localStorage.getItem(REMEMBER_LOGIN_STORAGE_KEY);
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw) as { email?: string; password?: string };
+      if (parsed.email) form.setValue("email", parsed.email);
+      if (parsed.password) form.setValue("password", parsed.password);
+      setRememberPassword(Boolean(parsed.email || parsed.password));
+    } catch {
+      localStorage.removeItem(REMEMBER_LOGIN_STORAGE_KEY);
+    }
+  }, [form]);
 
   useEffect(() => {
     const showSessionExpiredToast = (message?: string) => {
@@ -105,6 +123,20 @@ export default function Login() {
       if (mfaRequired && (!mfaCode || mfaCode.length !== 6)) {
         toast.error('Digite o codigo de 6 digitos do seu aplicativo autenticador.');
         return;
+      }
+
+      if (typeof window !== "undefined") {
+        if (rememberPassword) {
+          localStorage.setItem(
+            REMEMBER_LOGIN_STORAGE_KEY,
+            JSON.stringify({
+              email: values.email.trim(),
+              password: values.password,
+            })
+          );
+        } else {
+          localStorage.removeItem(REMEMBER_LOGIN_STORAGE_KEY);
+        }
       }
 
       await login(values.email, values.password, mfaRequired ? mfaCode : undefined);
@@ -218,6 +250,18 @@ export default function Login() {
                   />
                 </div>
               ) : null}
+
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="rememberPassword"
+                  checked={rememberPassword}
+                  onCheckedChange={(checked) => setRememberPassword(Boolean(checked))}
+                  disabled={isLoading}
+                />
+                <Label htmlFor="rememberPassword" className="text-sm text-muted-foreground">
+                  Salvar senha neste dispositivo
+                </Label>
+              </div>
 
               <Button
                 type="submit"

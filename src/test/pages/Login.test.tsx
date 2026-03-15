@@ -44,6 +44,7 @@ vi.mock("sonner", () => ({
 describe("Login", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
   });
 
   it("should render login form and submit valid credentials", async () => {
@@ -61,5 +62,25 @@ describe("Login", () => {
 
     expect(mocks.login).toHaveBeenCalledWith("owner@qa.local", "Pr14052019!", undefined);
     expect(await screen.findByText("Bem-vindo de volta!")).toBeInTheDocument();
+  });
+
+  it("should persist credentials locally when remember password is checked", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/login"]}>
+        <Login />
+      </MemoryRouter>
+    );
+
+    await user.type(screen.getByLabelText("E-mail"), "owner@qa.local");
+    await user.type(screen.getByLabelText("Senha"), "Pr14052019!");
+    await user.click(screen.getByLabelText("Salvar senha neste dispositivo"));
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
+
+    expect(JSON.parse(localStorage.getItem("azzo_remembered_login") || "{}")).toEqual({
+      email: "owner@qa.local",
+      password: "Pr14052019!",
+    });
   });
 });
