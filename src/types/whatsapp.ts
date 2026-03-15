@@ -16,7 +16,12 @@ export interface WhatsAppConfigResponse {
   accessTokenConfigured?: boolean;
   phoneNumberId?: string;
   businessAccountId?: string;
+  businessId?: string;
+  displayPhoneNumber?: string;
   webhookVerifyToken?: string;
+  webhookVerifyTokenConfigured?: boolean;
+  onboardingStatus?: string;
+  tokenSource?: string;
   canSchedule?: boolean;
   canCancel?: boolean;
   canReschedule?: boolean;
@@ -25,4 +30,29 @@ export interface WhatsAppConfigResponse {
 export interface WhatsAppTestResponse {
   success: boolean;
   message: string;
+}
+
+export interface WhatsAppEmbeddedSignupStatusResponse {
+  connected: boolean;
+  whatsappEnabled: boolean;
+  accessTokenConfigured: boolean;
+  webhookVerifyTokenConfigured: boolean;
+  webhookVerifyToken?: string;
+  onboardingStatus: string;
+  tokenSource: string;
+  phoneNumberId?: string;
+  businessAccountId?: string;
+  businessId?: string;
+  displayPhoneNumber?: string;
+  lastError?: string;
+}
+
+export interface WhatsAppEmbeddedSignupCompleteRequest {
+  code: string;
+  setupInfo: {
+    wabaId: string;
+    phoneNumberId: string;
+    businessId?: string;
+    phoneNumber?: string;
+  };
 }

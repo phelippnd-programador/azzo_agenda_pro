@@ -15,6 +15,8 @@ import type { TaxRegime } from "@/types/fiscal";
 import type {
   WhatsAppConfigRequest,
   WhatsAppConfigResponse,
+  WhatsAppEmbeddedSignupCompleteRequest,
+  WhatsAppEmbeddedSignupStatusResponse,
   WhatsAppTestResponse,
 } from "@/types/whatsapp";
 import type { CurrentMenuPermissionsResponse } from "@/types/menu-permissions";
@@ -1379,6 +1381,13 @@ export const tenantApi = {
   testWhatsAppConnection: () =>
     request<WhatsAppTestResponse>("/tenant/whatsapp/test", {
       method: "POST",
+    }),
+  getWhatsAppEmbeddedSignupStatus: () =>
+    request<WhatsAppEmbeddedSignupStatusResponse>("/tenant/whatsapp/embedded-signup/status"),
+  completeWhatsAppEmbeddedSignup: (data: WhatsAppEmbeddedSignupCompleteRequest) =>
+    request<WhatsAppEmbeddedSignupStatusResponse>("/tenant/whatsapp/embedded-signup/complete", {
+      method: "POST",
+      body: JSON.stringify(data),
     }),
 };
 
