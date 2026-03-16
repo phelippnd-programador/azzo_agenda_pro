@@ -173,7 +173,7 @@ export default function StockTransfersPage() {
       </CardContent>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Nova transferencia</DialogTitle>
             <DialogDescription>Registre uma transferencia entre unidades.</DialogDescription>

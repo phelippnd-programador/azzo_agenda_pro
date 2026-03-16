@@ -249,7 +249,7 @@ export default function Specialties() {
           if (!open) setSpecialtyToEdit(null);
         }}
       >
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar especialidade</DialogTitle>
             <DialogDescription>Atualize nome e descricao da especialidade.</DialogDescription>

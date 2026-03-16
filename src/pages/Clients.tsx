@@ -1,16 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageErrorState } from '@/components/ui/page-states';
 import { HighlightMetricCard } from '@/components/ui/highlight-metric-card';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
   TableBody,
@@ -19,15 +17,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,15 +32,12 @@ import {
   Grid3X3,
   List,
   Users,
-  Loader2,
 } from 'lucide-react';
 import { useClients } from '@/hooks/useClients';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
-import { maskPhoneBr } from '@/lib/input-masks';
 import { ClientCard } from '@/components/clients/ClientCard';
-import { utilsApi } from '@/lib/api';
-import { resolveUiError } from '@/lib/error-utils';
-import { toast } from 'sonner';
+import { ClientUpsertDialog } from '@/components/clients/ClientUpsertDialog';
+import { maskPhoneBr } from '@/lib/input-masks';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
@@ -64,36 +50,12 @@ export default function Clients() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
-  const [isNewClientOpen, setIsNewClientOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingClient, setEditingClient] = useState<string | null>(null);
+  const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+  const [editingClientId, setEditingClientId] = useState<string | null>(null);
   const [clientToDelete, setClientToDelete] = useState<string | null>(null);
   const [isDeletingClient, setIsDeletingClient] = useState(false);
 
-  // Form state
-  const [formName, setFormName] = useState('');
-  const [formEmail, setFormEmail] = useState('');
-  const [formPhone, setFormPhone] = useState('');
-  const [formBirthDate, setFormBirthDate] = useState('');
-  const [formNotes, setFormNotes] = useState('');
-  const [formZipCode, setFormZipCode] = useState('');
-  const [formStreet, setFormStreet] = useState('');
-  const [formNumber, setFormNumber] = useState('');
-  const [formComplement, setFormComplement] = useState('');
-  const [formNeighborhood, setFormNeighborhood] = useState('');
-  const [formCity, setFormCity] = useState('');
-  const [formState, setFormState] = useState('');
-  const [isAddressLoading, setIsAddressLoading] = useState(false);
-  const [lastResolvedCep, setLastResolvedCep] = useState('');
-
   const { clients, pagination, isLoading, error, refetch, goToPage, createClient, updateClient, deleteClient } = useClients();
-
-  const normalizeCep = (value: string) => value.replace(/\D/g, '').slice(0, 8);
-  const formatCep = (value: string) => {
-    const cep = normalizeCep(value);
-    if (cep.length <= 5) return cep;
-    return `${cep.slice(0, 5)}-${cep.slice(5)}`;
-  };
 
   const filteredClients = clients.filter((client) =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -101,110 +63,11 @@ export default function Clients() {
     client.phone.includes(searchTerm)
   );
   const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.limit));
+  const editingClient = editingClientId ? clients.find((client) => client.id === editingClientId) ?? null : null;
 
-  const resetForm = () => {
-    setFormName('');
-    setFormEmail('');
-    setFormPhone('');
-    setFormBirthDate('');
-    setFormNotes('');
-    setFormZipCode('');
-    setFormStreet('');
-    setFormNumber('');
-    setFormComplement('');
-    setFormNeighborhood('');
-    setFormCity('');
-    setFormState('');
-    setLastResolvedCep('');
-    setEditingClient(null);
-  };
-
-  const openEditDialog = (client: typeof clients[0]) => {
-    setFormName(client.name);
-    setFormEmail(client.email);
-    setFormPhone(client.phone);
-    setFormBirthDate(client.birthDate || '');
-    setFormNotes(client.notes || '');
-    setFormZipCode(client.address?.zipCode || '');
-    setFormStreet(client.address?.street || '');
-    setFormNumber(client.address?.number || '');
-    setFormComplement(client.address?.complement || '');
-    setFormNeighborhood(client.address?.neighborhood || '');
-    setFormCity(client.address?.city || '');
-    setFormState(client.address?.state || '');
-    setLastResolvedCep(normalizeCep(client.address?.zipCode || ''));
-    setEditingClient(client.id);
-    setIsNewClientOpen(true);
-  };
-
-  useEffect(() => {
-    const cep = normalizeCep(formZipCode);
-
-    if (cep.length < 8) {
-      if (lastResolvedCep) setLastResolvedCep('');
-      return;
-    }
-
-    if (cep === lastResolvedCep) return;
-
-    const timer = setTimeout(async () => {
-      try {
-        setIsAddressLoading(true);
-        const data = await utilsApi.getAddressByCep(cep);
-        setFormStreet((data.street || '').trim());
-        setFormComplement((data.complement || '').trim());
-        setFormNeighborhood((data.neighborhood || '').trim());
-        setFormCity((data.city || '').trim());
-        setFormState((data.state || '').trim().toUpperCase());
-        setLastResolvedCep(cep);
-      } catch (err) {
-        toast.error(resolveUiError(err, 'Nao foi possivel buscar o endereco pelo CEP').message);
-      } finally {
-        setIsAddressLoading(false);
-      }
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [formZipCode, lastResolvedCep]);
-
-  const handleSubmit = async () => {
-    if (!formName || !formPhone) {
-      toast.error('Nome e telefone são obrigatórios');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const clientData = {
-        name: formName,
-        email: formEmail,
-        phone: formPhone,
-        birthDate: formBirthDate || undefined,
-        notes: formNotes || undefined,
-        address: {
-          zipCode: formZipCode || undefined,
-          street: formStreet || undefined,
-          number: formNumber || undefined,
-          complement: formComplement || undefined,
-          neighborhood: formNeighborhood || undefined,
-          city: formCity || undefined,
-          state: formState || undefined,
-        },
-      };
-
-      if (editingClient) {
-        await updateClient(editingClient, clientData);
-      } else {
-        await createClient(clientData);
-      }
-
-      setIsNewClientOpen(false);
-      resetForm();
-    } catch (error) {
-      // Error is handled in the hook
-    } finally {
-      setIsSubmitting(false);
-    }
+  const openEditDialog = (client: typeof clients[number]) => {
+    setEditingClientId(client.id);
+    setIsClientDialogOpen(true);
   };
 
   const openDeleteDialog = (id: string) => {
@@ -222,7 +85,7 @@ export default function Clients() {
       await deleteClient(clientToDelete);
       setClientToDelete(null);
     } catch (error) {
-      // Error is handled in the hook
+      // handled in hook
     } finally {
       setIsDeletingClient(false);
     }
@@ -233,8 +96,8 @@ export default function Clients() {
       <MainLayout title="Clientes" subtitle="Gerencie sua base de clientes">
         <div className="space-y-4">
           <Skeleton className="h-12 w-full" />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3, 4, 5, 6].map(i => (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
               <Skeleton key={i} className="h-48" />
             ))}
           </div>
@@ -258,10 +121,9 @@ export default function Clients() {
   return (
     <MainLayout title="Clientes" subtitle="Gerencie sua base de clientes">
       <div className="space-y-4 sm:space-y-6">
-        {/* Header Controls */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="relative max-w-md flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Buscar clientes..."
               value={searchTerm}
@@ -271,189 +133,44 @@ export default function Clients() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex border rounded-lg overflow-hidden">
+            <div className="flex overflow-hidden rounded-lg border">
               <Button
                 variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                 size="icon"
                 onClick={() => setViewMode('grid')}
-                className="rounded-none h-8 w-8 sm:h-9 sm:w-9"
+                className="h-8 w-8 rounded-none sm:h-9 sm:w-9"
               >
-                <Grid3X3 className="w-4 h-4" />
+                <Grid3X3 className="h-4 w-4" />
               </Button>
               <Button
                 variant={viewMode === 'table' ? 'secondary' : 'ghost'}
                 size="icon"
                 onClick={() => setViewMode('table')}
-                className="rounded-none h-8 w-8 sm:h-9 sm:w-9"
+                className="h-8 w-8 rounded-none sm:h-9 sm:w-9"
               >
-                <List className="w-4 h-4" />
+                <List className="h-4 w-4" />
               </Button>
             </div>
 
-            <Dialog open={isNewClientOpen} onOpenChange={(open) => {
-              setIsNewClientOpen(open);
-              if (!open) resetForm();
-            }}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Plus className="w-4 h-4" />
-                  <span className="hidden sm:inline">Novo</span> Cliente
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md mx-4 sm:mx-auto max-h-[85vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>{editingClient ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
-                  <DialogDescription>
-                    {editingClient ? 'Atualize os dados do cliente' : 'Cadastre um novo cliente'}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label>Nome Completo *</Label>
-                    <Input
-                      placeholder="Nome do cliente"
-                      value={formName}
-                      onChange={(e) => setFormName(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Telefone *</Label>
-                      <Input
-                        placeholder="(11) 99999-0000"
-                        value={formPhone}
-                        onChange={(e) => setFormPhone(maskPhoneBr(e.target.value))}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>E-mail</Label>
-                      <Input
-                        type="email"
-                        placeholder="email@exemplo.com"
-                        value={formEmail}
-                        onChange={(e) => setFormEmail(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Data de Nascimento</Label>
-                    <Input
-                      type="date"
-                      value={formBirthDate}
-                      onChange={(e) => setFormBirthDate(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Observações</Label>
-                    <Textarea
-                      placeholder="Preferências, alergias, etc."
-                      value={formNotes}
-                      onChange={(e) => setFormNotes(e.target.value)}
-                      rows={2}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>CEP</Label>
-                    <Input
-                      placeholder="00000-000"
-                      value={formZipCode}
-                      onChange={(e) => setFormZipCode(formatCep(e.target.value))}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {isAddressLoading ? 'Buscando endereco pelo CEP...' : 'Ao informar um CEP valido, o endereco sera sugerido automaticamente.'}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Logradouro</Label>
-                    <Input
-                      placeholder="Rua, avenida..."
-                      value={formStreet}
-                      onChange={(e) => setFormStreet(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Numero</Label>
-                      <Input
-                        placeholder="123"
-                        value={formNumber}
-                        onChange={(e) => setFormNumber(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Complemento</Label>
-                      <Input
-                        placeholder="Apto, sala..."
-                        value={formComplement}
-                        onChange={(e) => setFormComplement(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Bairro</Label>
-                    <Input
-                      placeholder="Bairro"
-                      value={formNeighborhood}
-                      onChange={(e) => setFormNeighborhood(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Cidade</Label>
-                      <Input
-                        placeholder="Cidade"
-                        value={formCity}
-                        onChange={(e) => setFormCity(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>UF</Label>
-                      <Input
-                        placeholder="SP"
-                        value={formState}
-                        onChange={(e) => setFormState(e.target.value.toUpperCase())}
-                        maxLength={2}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => {
-                    setIsNewClientOpen(false);
-                    resetForm();
-                  }}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleSubmit} disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        {editingClient ? 'Salvando...' : 'Cadastrando...'}
-                      </>
-                    ) : (
-                      editingClient ? 'Salvar' : 'Cadastrar'
-                    )}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <Button
+              className="gap-2"
+              onClick={() => {
+                setEditingClientId(null);
+                setIsClientDialogOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Novo</span> Cliente
+            </Button>
           </div>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
           <HighlightMetricCard
             title="Total de Clientes"
             value={String(pagination.total)}
             icon={Users}
-            className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20"
+            className="border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5"
             titleClassName="text-primary"
             valueClassName="text-primary"
             iconContainerClassName="bg-primary/15"
@@ -463,11 +180,11 @@ export default function Clients() {
             title="Ativos (30 dias)"
             value={String(
               clients.filter(
-                (c) => c.lastVisit && new Date(c.lastVisit) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+                (client) => client.lastVisit && new Date(client.lastVisit) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
               ).length
             )}
             icon={Calendar}
-            className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
+            className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50"
             titleClassName="text-green-700"
             valueClassName="text-green-800"
             iconContainerClassName="bg-green-100"
@@ -475,9 +192,9 @@ export default function Clients() {
           />
           <HighlightMetricCard
             title="Faturamento Total"
-            value={formatCurrency(clients.reduce((sum, c) => sum + c.totalSpent, 0))}
+            value={formatCurrency(clients.reduce((sum, client) => sum + client.totalSpent, 0))}
             icon={DollarSign}
-            className="bg-gradient-to-br from-indigo-50 to-blue-50 border-indigo-200"
+            className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50"
             titleClassName="text-indigo-700"
             valueClassName="text-indigo-800"
             iconContainerClassName="bg-indigo-100"
@@ -485,21 +202,20 @@ export default function Clients() {
           />
         </div>
 
-        {/* Clients List */}
         {filteredClients.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
-              <Users className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+              <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
               <p className="text-muted-foreground">Nenhum cliente encontrado</p>
-              {searchTerm && (
+              {searchTerm ? (
                 <Button variant="link" onClick={() => setSearchTerm('')}>
                   Limpar busca
                 </Button>
-              )}
+              ) : null}
             </CardContent>
           </Card>
         ) : viewMode === 'grid' ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             {filteredClients.map((client) => (
               <ClientCard
                 key={client.id}
@@ -521,7 +237,7 @@ export default function Clients() {
                     <TableHead className="hidden md:table-cell">E-mail</TableHead>
                     <TableHead className="text-center">Visitas</TableHead>
                     <TableHead className="text-right">Total Gasto</TableHead>
-                    <TableHead className="w-10"></TableHead>
+                    <TableHead className="w-10" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -529,21 +245,21 @@ export default function Clients() {
                     <TableRow key={client.id}>
                       <TableCell>
                         <div className="flex items-center gap-2 sm:gap-3">
-                          <Avatar className="w-8 h-8 flex-shrink-0">
-                            <AvatarFallback className="bg-primary/15 text-primary text-xs">
+                          <Avatar className="h-8 w-8 flex-shrink-0">
+                            <AvatarFallback className="bg-primary/15 text-xs text-primary">
                               {client.name.slice(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div className="min-w-0">
-                            <p className="font-medium text-sm truncate max-w-[120px] sm:max-w-none">
+                            <p className="max-w-[120px] truncate text-sm font-medium sm:max-w-none">
                               {client.name}
                             </p>
                             <p className="text-xs text-muted-foreground sm:hidden">{maskPhoneBr(client.phone, false)}</p>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell text-sm">{maskPhoneBr(client.phone, false)}</TableCell>
-                      <TableCell className="hidden md:table-cell text-sm truncate max-w-[150px]">
+                      <TableCell className="hidden text-sm sm:table-cell">{maskPhoneBr(client.phone, false)}</TableCell>
+                      <TableCell className="hidden max-w-[150px] truncate text-sm md:table-cell">
                         {client.email || '-'}
                       </TableCell>
                       <TableCell className="text-center">
@@ -551,14 +267,14 @@ export default function Clients() {
                           {client.totalVisits}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right font-medium text-primary text-sm">
+                      <TableCell className="text-right text-sm font-medium text-primary">
                         {formatCurrency(client.totalSpent)}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreVertical className="w-4 h-4" />
+                              <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
@@ -586,7 +302,7 @@ export default function Clients() {
         )}
 
         {!searchTerm && totalPages > 1 ? (
-          <div className="flex items-center justify-between gap-3 border rounded-lg p-3 bg-muted/20">
+          <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/20 p-3">
             <p className="text-sm text-muted-foreground">
               Pagina {pagination.page} de {totalPages}
             </p>
@@ -611,6 +327,16 @@ export default function Clients() {
           </div>
         ) : null}
 
+        <ClientUpsertDialog
+          open={isClientDialogOpen}
+          onOpenChange={(open) => {
+            setIsClientDialogOpen(open);
+            if (!open) setEditingClientId(null);
+          }}
+          initialClient={editingClient}
+          onSubmit={(payload, clientId) => (clientId ? updateClient(clientId, payload) : createClient(payload))}
+        />
+
         <DeleteConfirmationDialog
           open={!!clientToDelete}
           isLoading={isDeletingClient}
@@ -626,4 +352,3 @@ export default function Clients() {
     </MainLayout>
   );
 }
-

@@ -413,7 +413,7 @@ export default function InvoiceEmission() {
             }
           }}
         >
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Autorizar Nota Fiscal</DialogTitle>
               <DialogDescription>

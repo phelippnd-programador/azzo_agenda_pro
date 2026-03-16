@@ -206,7 +206,7 @@ export default function StockItemsPage() {
             <Button className="gap-2" asChild>
               <Link to="/estoque/itens/novo"><Plus className="h-4 w-4" />Novo item</Link>
             </Button>
-            <DialogContent>
+            <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Novo item</DialogTitle>
                 <DialogDescription>Cadastre um item para controle de estoque.</DialogDescription>
@@ -301,7 +301,7 @@ export default function StockItemsPage() {
           }
         }}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar item</DialogTitle>
             <DialogDescription>Atualize dados do item selecionado.</DialogDescription>

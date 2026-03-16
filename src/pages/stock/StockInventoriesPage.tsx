@@ -303,7 +303,7 @@ export default function StockInventoriesPage() {
           if (!open && isCreateRoute) navigate("/estoque/inventarios", { replace: true });
         }}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Novo inventario</DialogTitle>
             <DialogDescription>Cadastre um inventario para iniciar a contagem.</DialogDescription>

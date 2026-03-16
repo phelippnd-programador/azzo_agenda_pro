@@ -240,7 +240,7 @@ export default function StockPurchaseOrdersPage() {
       ) : null}
 
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Novo pedido de compra</DialogTitle>
             <DialogDescription>Crie um pedido para acompanhar o recebimento.</DialogDescription>

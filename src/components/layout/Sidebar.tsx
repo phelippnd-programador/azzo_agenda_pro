@@ -2,7 +2,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMenuPermissions } from "@/contexts/MenuPermissionsContext";
 import {
@@ -160,7 +159,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
   const navigate = useNavigate();
   const { logout } = useAuth();
   const { allowedRoutes, menuItems } = useMenuPermissions();
-  const allowedSet = new Set(allowedRoutes ?? []);
+  const allowedSet = useMemo(() => new Set(allowedRoutes ?? []), [allowedRoutes]);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
   const dynamicMenuNodes = useMemo<DynamicMenuNode[] | null>(() => {
@@ -339,7 +338,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
             </Button>
           </div>
 
-          <ScrollArea className="flex-1 py-3">
+          <div className="flex-1 overflow-y-auto py-3">
             <nav className="px-2 space-y-0.5">
               {visibleMenuEntries.map((entry) => {
                 if (entry.children.length === 0) {
@@ -472,7 +471,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
                 </div>
               </Link>
             </div>
-          </ScrollArea>
+          </div>
 
           {/* Bottom nav */}
           <div className="px-2 pb-3 pt-2 border-t border-sidebar-border space-y-0.5">

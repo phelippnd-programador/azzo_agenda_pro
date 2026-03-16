@@ -317,7 +317,7 @@ export default function Professionals() {
                 Novo Profissional
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md mx-4 sm:mx-auto max-h-[85vh] overflow-y-auto">
+            <DialogContent className="max-w-md mx-4 sm:mx-auto sm:max-w-2xl max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
                   {editingProfessional ? "Editar Profissional" : "Novo Profissional"}

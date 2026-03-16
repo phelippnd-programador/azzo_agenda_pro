@@ -140,7 +140,7 @@ export default function StockMovementsPage() {
             <Button variant="outline" className="gap-2" asChild>
               <Link to="/estoque/movimentacoes/nova"><ArrowLeftRight className="h-4 w-4" />Nova movimentacao</Link>
             </Button>
-            <DialogContent>
+            <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Nova movimentacao</DialogTitle>
                 <DialogDescription>Registre entrada, saida ou ajuste de saldo.</DialogDescription>

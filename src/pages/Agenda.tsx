@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
@@ -58,6 +57,9 @@ import {
   Eye,
   Receipt,
   Info,
+  CheckCircle2,
+  Circle,
+  Lock,
 } from 'lucide-react';
 import { useAppointments, Appointment } from '@/hooks/useAppointments';
 import { appointmentsApi, clientsApi, nfseApi, type NfseInvoice } from '@/lib/api';
@@ -69,6 +71,7 @@ import { useAvailableSlots } from '@/hooks/useAvailableSlots';
 import { useAuth } from '@/contexts/AuthContext';
 import { AvailableSlotsList } from '@/components/appointments/AvailableSlotsList';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
+import { ClientUpsertDialog } from '@/components/clients/ClientUpsertDialog';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import type { AppointmentCustomerNote, ClientAppointmentHistoryItem } from '@/types';
@@ -198,6 +201,9 @@ const getServiceFlowMeta = (status: string) => {
   };
 };
 
+const serviceHasAssignedProfessionals = (professionalIds?: string[] | null) =>
+  Array.isArray(professionalIds) && professionalIds.length > 0;
+
 export default function Agenda() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -229,8 +235,10 @@ export default function Agenda() {
 
   // Form state
   const [newClientId, setNewClientId] = useState('');
+  const [newClientSearch, setNewClientSearch] = useState('');
+  const [isNewClientDialogOpen, setIsNewClientDialogOpen] = useState(false);
   const [newProfessionalId, setNewProfessionalId] = useState('');
-  const [newServiceIds, setNewServiceIds] = useState<string[]>([]);
+  const [newServiceId, setNewServiceId] = useState('');
   const [newDate, setNewDate] = useState(toDateKey(currentDate));
   const [newStartTime, setNewStartTime] = useState('');
   const [newEndTime, setNewEndTime] = useState('');
@@ -274,29 +282,123 @@ export default function Agenda() {
   const effectiveSelectedProfessional = isProfessionalUser
     ? loggedProfessional?.id || ''
     : selectedProfessional;
-  const activeServices = services.filter(s => s.isActive);
-  const selectedNewServices = useMemo(
-    () => activeServices.filter((service) => newServiceIds.includes(service.id)),
-    [activeServices, newServiceIds]
+  const effectiveNewProfessionalId = isProfessionalUser
+    ? loggedProfessional?.id || newProfessionalId
+    : newProfessionalId;
+  const activeServicesCatalog = useMemo(
+    () => services.filter((service) => service.isActive),
+    [services]
   );
-  const combinedNewServiceDuration = useMemo(
-    () => selectedNewServices.reduce((sum, service) => sum + Number(service.duration || 0), 0),
-    [selectedNewServices]
+  const availableNewProfessionals = useMemo(() => {
+    if (!newServiceId) return activeProfessionals;
+    return activeProfessionals.filter((professional) =>
+      activeServicesCatalog.some((service) =>
+        service.id === newServiceId &&
+        serviceHasAssignedProfessionals(service.professionalIds) &&
+        service.professionalIds.includes(professional.id)
+      )
+    );
+  }, [activeProfessionals, activeServicesCatalog, newServiceId]);
+  const activeServices = useMemo(
+    () =>
+      activeServicesCatalog.filter((service) => {
+        if (!effectiveNewProfessionalId) return true;
+        return (
+          serviceHasAssignedProfessionals(service.professionalIds) &&
+          service.professionalIds.includes(effectiveNewProfessionalId)
+        );
+      }),
+    [activeServicesCatalog, effectiveNewProfessionalId]
   );
-  const combinedNewServicePrice = useMemo(
-    () => selectedNewServices.reduce((sum, service) => sum + Number(service.price || 0), 0),
-    [selectedNewServices]
+  const selectedNewService = useMemo(
+    () => activeServicesCatalog.find((service) => service.id === newServiceId) ?? null,
+    [activeServicesCatalog, newServiceId]
   );
+  const selectedNewClient = useMemo(
+    () => clients.find((client) => client.id === newClientId) ?? null,
+    [clients, newClientId]
+  );
+  const filteredClients = useMemo(() => {
+    const query = newClientSearch.trim().toLowerCase();
+    if (!query) return clients;
+    return clients.filter((client) =>
+      [client.name, client.phone, client.email]
+        .filter(Boolean)
+        .some((value) => value!.toLowerCase().includes(query))
+    );
+  }, [clients, newClientSearch]);
+  const selectedNewServiceDuration = Number(selectedNewService?.duration || 0);
+  const selectedNewServicePrice = Number(selectedNewService?.price || 0);
+  const canChooseService = !!selectedNewClient;
+  const hasProfessionalsForSelectedService = !selectedNewService || availableNewProfessionals.length > 0;
+  const isEffectiveProfessionalValid =
+    !!effectiveNewProfessionalId &&
+    availableNewProfessionals.some((professional) => professional.id === effectiveNewProfessionalId);
+  const canChooseProfessional = !!selectedNewService;
+  const canChooseDate = !!selectedNewService && hasProfessionalsForSelectedService && isEffectiveProfessionalValid;
+  const canChooseSlot = !!selectedNewService && hasProfessionalsForSelectedService && isEffectiveProfessionalValid && !!newDate;
+  const canSubmitNewAppointment =
+    !!newClientId &&
+    !!newServiceId &&
+    isEffectiveProfessionalValid &&
+    !!newDate &&
+    !!newStartTime &&
+    !!newEndTime;
+  const selectedServiceIds = useMemo(
+    () => (newServiceId ? [newServiceId] : []),
+    [newServiceId]
+  );
+  const stepStates = useMemo(
+    () => [
+      {
+        id: 'client',
+        number: 1,
+        title: 'Cliente',
+        done: !!selectedNewClient,
+        active: !selectedNewClient,
+      },
+      {
+        id: 'service',
+        number: 2,
+        title: 'Servico',
+        done: !!selectedNewService,
+        active: !!selectedNewClient && !selectedNewService,
+      },
+      {
+        id: 'professional',
+        number: 3,
+        title: 'Profissional',
+        done: isEffectiveProfessionalValid,
+        active: !!selectedNewService && !isEffectiveProfessionalValid,
+      },
+      {
+        id: 'date',
+        number: 4,
+        title: 'Data',
+        done: canChooseDate,
+        active: isEffectiveProfessionalValid && !canChooseDate,
+      },
+      {
+        id: 'slot',
+        number: 5,
+        title: 'Horario',
+        done: !!newStartTime && !!newEndTime,
+        active: canChooseSlot && !newStartTime,
+      },
+    ],
+    [selectedNewClient, selectedNewService, isEffectiveProfessionalValid, canChooseDate, canChooseSlot, newStartTime, newEndTime]
+  );
+  const completedSteps = stepStates.filter((step) => step.done).length;
   const {
     slots: availableSlots,
     isLoading: isLoadingAvailableSlots,
     error: availableSlotsError,
     canFetch: canFetchAvailableSlots,
   } = useAvailableSlots({
-    professionalId: newProfessionalId || undefined,
+    professionalId: effectiveNewProfessionalId || undefined,
     date: newDate || undefined,
-    serviceIds: newServiceIds,
-    serviceDurationMinutes: combinedNewServiceDuration,
+    serviceIds: selectedServiceIds,
+    serviceDurationMinutes: selectedNewServiceDuration,
     bufferMinutes: 0,
   });
 
@@ -421,9 +523,26 @@ export default function Agenda() {
   }, [isProfessionalUser, loggedProfessional?.id]);
 
   useEffect(() => {
+    if (!newServiceId) return;
+    const stillAvailable = activeServices.some((service) => service.id === newServiceId);
+    if (!stillAvailable) {
+      setNewServiceId('');
+    }
+  }, [activeServices, newServiceId]);
+
+  useEffect(() => {
+    if (isProfessionalUser) return;
+    if (!newProfessionalId) return;
+    const isStillAvailable = availableNewProfessionals.some((professional) => professional.id === newProfessionalId);
+    if (!isStillAvailable) {
+      setNewProfessionalId('');
+    }
+  }, [availableNewProfessionals, isProfessionalUser, newProfessionalId]);
+
+  useEffect(() => {
     setNewStartTime('');
     setNewEndTime('');
-  }, [newDate, newProfessionalId, newServiceIds]);
+  }, [newDate, newProfessionalId, newServiceId]);
 
   useEffect(() => {
     setNewDate(toDateKey(currentDate));
@@ -431,13 +550,13 @@ export default function Agenda() {
 
   const handleCreateAppointment = async () => {
     if (isSubmitting) return;
-    if (!newClientId || !newProfessionalId || !newServiceIds.length || !newDate || !newStartTime || !newEndTime) {
+    if (!newClientId || !effectiveNewProfessionalId || !newServiceId || !newDate || !newStartTime || !newEndTime) {
       toast.error('Preencha todos os campos');
       return;
     }
 
-    if (!selectedNewServices.length) {
-      toast.error('Selecione ao menos um servico valido');
+    if (!selectedNewService) {
+      toast.error('Selecione um servico valido');
       return;
     }
 
@@ -445,25 +564,26 @@ export default function Agenda() {
     try {
       await createAppointment({
         clientId: newClientId,
-        professionalId: newProfessionalId,
+        professionalId: effectiveNewProfessionalId,
         date: newDate,
         startTime: newStartTime,
         endTime: newEndTime,
         status: 'PENDING',
-        totalPrice: combinedNewServicePrice,
-        items: selectedNewServices.map((service) => ({
-          serviceId: service.id,
-          durationMinutes: service.duration,
-          unitPrice: service.price,
-          totalPrice: service.price,
-        })),
+        totalPrice: selectedNewServicePrice,
+        items: [{
+          serviceId: selectedNewService.id,
+          durationMinutes: selectedNewService.duration,
+          unitPrice: selectedNewService.price,
+          totalPrice: selectedNewService.price,
+        }],
       });
       
       setIsNewAppointmentOpen(false);
       // Reset form
       setNewClientId('');
+      setNewClientSearch('');
       setNewProfessionalId(isProfessionalUser && loggedProfessional?.id ? loggedProfessional.id : '');
-      setNewServiceIds([]);
+      setNewServiceId('');
       setNewStartTime('');
       setNewEndTime('');
     } catch (error) {
@@ -870,35 +990,167 @@ export default function Agenda() {
                   <span className="hidden sm:inline">Novo</span> Agendamento
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md mx-4 sm:mx-auto max-h-[85vh] overflow-y-auto">
+              <DialogContent className="mx-4 max-h-[92vh] overflow-y-auto sm:mx-auto sm:max-w-[96vw] lg:max-w-[94vw] xl:max-w-6xl">
                 <DialogHeader>
                   <DialogTitle>Novo Agendamento</DialogTitle>
                   <DialogDescription>
-                    Preencha os dados para criar um novo agendamento
+                    Monte o atendimento por etapas e selecione o melhor horario disponivel.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm">Servicos</Label>
-                    <div className="max-h-56 space-y-2 overflow-y-auto rounded-md border p-3">
+                <div className="rounded-xl border bg-muted/20 p-4">
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Fluxo guiado</p>
+                      <p className="text-xs text-muted-foreground">
+                        Cada etapa libera a seguinte. Conclusao atual: {completedSteps}/{stepStates.length}.
+                      </p>
+                    </div>
+                    <Badge variant={canSubmitNewAppointment ? 'default' : 'secondary'}>
+                      {canSubmitNewAppointment ? 'Pronto para criar' : 'Preencha as etapas'}
+                    </Badge>
+                  </div>
+                  <div className="mt-4 grid gap-2 md:grid-cols-5">
+                    {stepStates.map((step) => (
+                      <div
+                        key={step.id}
+                        className={`rounded-lg border px-3 py-2 text-sm ${
+                          step.done
+                            ? 'border-primary/30 bg-primary/5'
+                            : step.active
+                              ? 'border-amber-300 bg-amber-50'
+                              : 'bg-background'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          {step.done ? (
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                          ) : step.active ? (
+                            <Circle className="h-4 w-4 text-amber-600" />
+                          ) : (
+                            <Lock className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          <span className="font-medium">
+                            {step.number}. {step.title}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid gap-4 py-4 lg:grid-cols-2 lg:items-start">
+                  <div className={`space-y-3 rounded-xl border p-4 ${selectedNewClient ? 'border-primary/30 bg-primary/[0.03]' : ''}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Etapa 1</p>
+                        <Label className="text-sm">Cliente</Label>
+                      </div>
+                      {selectedNewClient ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8"
+                          onClick={() => setIsNewClientDialogOpen(true)}
+                        >
+                          <Plus className="mr-1 h-4 w-4" />
+                          Novo cliente
+                        </Button>
+                      ) : null}
+                    </div>
+                    <div className="space-y-3 rounded-lg border border-dashed p-3">
+                      <Input
+                        placeholder="Pesquisar cliente por nome, telefone ou email"
+                        value={newClientSearch}
+                        onChange={(e) => setNewClientSearch(e.target.value)}
+                      />
+                      <div className="max-h-56 space-y-2 overflow-y-auto">
+                        {filteredClients.length ? (
+                          filteredClients.map((client) => {
+                            const isSelected = newClientId === client.id;
+                            return (
+                              <button
+                                key={client.id}
+                                type="button"
+                                className={`w-full rounded-md border p-3 text-left transition-colors ${
+                                  isSelected ? 'border-primary bg-primary/5' : 'hover:bg-muted/40'
+                                }`}
+                                onClick={() => setNewClientId(client.id)}
+                              >
+                                <p className="truncate text-sm font-medium">{client.name}</p>
+                                <p className="mt-1 truncate text-xs text-muted-foreground">
+                                  {[client.phone, client.email].filter(Boolean).join(' - ') || 'Sem contato cadastrado'}
+                                </p>
+                              </button>
+                            );
+                          })
+                        ) : (
+                          <div className="space-y-2 rounded-md border p-3 text-sm">
+                            <p>Nenhum cliente encontrado.</p>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                              onClick={() => setIsNewClientDialogOpen(true)}
+                            >
+                              <Plus className="mr-2 h-4 w-4" />
+                              Cadastrar novo cliente
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {!selectedNewClient ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="w-full"
+                        onClick={() => setIsNewClientDialogOpen(true)}
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Cliente nao encontrado? Cadastrar agora
+                      </Button>
+                    ) : (
+                      <div className="rounded-md border bg-muted/30 p-3">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-9 w-9">
+                            <AvatarFallback className="bg-primary/15 text-primary">
+                              {selectedNewClient.name.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">{selectedNewClient.name}</p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {[selectedNewClient.phone, selectedNewClient.email].filter(Boolean).join(' - ') || 'Sem contato cadastrado'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                    <div className={`space-y-3 rounded-xl border p-4 lg:row-span-2 ${canChooseService ? '' : 'opacity-60'} ${selectedNewService ? 'border-primary/30 bg-primary/[0.03]' : ''}`}>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Etapa 2</p>
+                      <Label className="text-sm">Servico</Label>
+                      <p className="text-xs text-muted-foreground">
+                        {canChooseService
+                          ? 'Selecione um servico para filtrar os profissionais compativeis.'
+                          : 'Primeiro selecione ou cadastre um cliente.'}
+                      </p>
+                    </div>
+                    <div className={`max-h-56 space-y-2 overflow-y-auto rounded-md border p-3 ${canChooseService ? '' : 'pointer-events-none bg-muted/20'}`}>
                       {activeServices.map((service) => {
-                        const checked = newServiceIds.includes(service.id);
+                        const isSelected = newServiceId === service.id;
                         return (
-                          <label
+                          <button
                             key={service.id}
-                            className="flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors hover:bg-muted/40"
+                            type="button"
+                            className={`flex w-full items-start gap-3 rounded-md border p-3 text-left transition-colors ${
+                              isSelected ? 'border-primary bg-primary/5' : 'hover:bg-muted/40'
+                            }`}
+                            onClick={() => setNewServiceId(isSelected ? "" : service.id)}
                           >
-                            <Checkbox
-                              checked={checked}
-                              onCheckedChange={(value) => {
-                                const nextChecked = value === true;
-                                setNewServiceIds((current) =>
-                                  nextChecked
-                                    ? [...current, service.id]
-                                    : current.filter((serviceId) => serviceId !== service.id)
-                                );
-                              }}
-                            />
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center justify-between gap-2">
                                 <span className="font-medium">{service.name}</span>
@@ -909,58 +1161,119 @@ export default function Agenda() {
                                 <span>{service.duration} min</span>
                               </div>
                             </div>
-                          </label>
+                          </button>
                         );
                       })}
                     </div>
-                    {selectedNewServices.length ? (
+                    {selectedNewService ? (
                       <div className="rounded-md border bg-muted/30 p-3 text-sm">
                         <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Servicos selecionados</span>
-                          <span className="font-medium">{selectedNewServices.length}</span>
+                          <span className="text-muted-foreground">Servico selecionado</span>
+                          <span className="font-medium">{selectedNewService.name}</span>
                         </div>
                         <div className="mt-2 flex items-center justify-between">
-                          <span className="text-muted-foreground">Duracao total</span>
-                          <span>{combinedNewServiceDuration} min</span>
+                          <span className="text-muted-foreground">Duracao</span>
+                          <span>{selectedNewServiceDuration} min</span>
                         </div>
                         <div className="mt-1 flex items-center justify-between">
-                          <span className="text-muted-foreground">Valor total</span>
-                          <span className="font-medium text-primary">{formatCurrency(combinedNewServicePrice)}</span>
+                          <span className="text-muted-foreground">Valor</span>
+                          <span className="font-medium text-primary">{formatCurrency(selectedNewServicePrice)}</span>
                         </div>
                       </div>
                     ) : null}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-sm">Profissional</Label>
+                  <div className={`space-y-3 rounded-xl border p-4 ${canChooseProfessional ? '' : 'opacity-60'} ${isEffectiveProfessionalValid ? 'border-primary/30 bg-primary/[0.03]' : ''}`}>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Etapa 3</p>
+                      <Label className="text-sm">Profissional</Label>
+                      <p className="text-xs text-muted-foreground">
+                        {!canChooseProfessional
+                          ? 'A selecao do profissional depende do servico escolhido.'
+                          : !hasProfessionalsForSelectedService
+                            ? 'Sem profissional atuando neste servico.'
+                            : canChooseProfessional
+                          ? 'Agora escolha quem executara esse servico.'
+                          : 'A selecao do profissional depende do servico escolhido.'}
+                      </p>
+                    </div>
                     <Select
-                      value={isProfessionalUser ? (loggedProfessional?.id || newProfessionalId) : newProfessionalId}
+                      value={effectiveNewProfessionalId}
                       onValueChange={setNewProfessionalId}
-                      disabled={isProfessionalUser}
+                      disabled={isProfessionalUser || !canChooseProfessional || !hasProfessionalsForSelectedService}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione o profissional" />
+                        <SelectValue
+                          placeholder={
+                            hasProfessionalsForSelectedService
+                              ? 'Selecione o profissional'
+                              : 'Sem profissional atuando neste servico'
+                          }
+                        />
                       </SelectTrigger>
                       <SelectContent>
-                        {activeProfessionals.map((prof) => (
+                        {availableNewProfessionals.map((prof) => (
                           <SelectItem key={prof.id} value={prof.id}>
                             {prof.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    {canChooseProfessional && !hasProfessionalsForSelectedService ? (
+                      <p className="text-sm text-amber-700">
+                        Sem profissional atuando neste servico. Ajuste o cadastro do servico ou escolha outro.
+                      </p>
+                    ) : null}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-sm">Data</Label>
+                  <div className={`space-y-3 rounded-xl border p-4 ${canChooseDate ? '' : 'opacity-60'} ${canChooseDate ? 'border-primary/30 bg-primary/[0.03]' : ''}`}>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Etapa 4</p>
+                      <Label className="text-sm">Data</Label>
+                      <p className="text-xs text-muted-foreground">
+                        {canChooseDate
+                          ? 'Defina a data para consultar os horarios disponiveis.'
+                          : 'A data so fica disponivel depois da escolha do profissional.'}
+                      </p>
+                    </div>
                     <Input
                       type="date"
                       value={newDate}
+                      disabled={!canChooseDate}
                       onChange={(e) => setNewDate(e.target.value)}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm">Horários sugeridos</Label>
+
+                  <div className={`space-y-3 rounded-xl border p-4 lg:col-span-2 ${canChooseSlot ? '' : 'opacity-60'} ${newStartTime ? 'border-primary/30 bg-primary/[0.03]' : ''}`}>
+                    <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Etapa 5</p>
+                        <p className="text-sm font-medium">Horarios sugeridos</p>
+                        <p className="text-xs text-muted-foreground">
+                          {canChooseSlot
+                            ? 'Escolha um horario depois de definir servico, profissional e data.'
+                            : 'Os horarios aparecem quando cliente, servico, profissional e data estiverem definidos.'}
+                        </p>
+                      </div>
+                      <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm lg:min-w-72">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-muted-foreground">Cliente</span>
+                          <span className="text-right font-medium">{selectedNewClient?.name || "Nao selecionado"}</span>
+                        </div>
+                        <div className="mt-1 flex items-center justify-between gap-3">
+                          <span className="text-muted-foreground">Servico</span>
+                          <span className="font-medium">{selectedNewService?.name || "Nao selecionado"}</span>
+                        </div>
+                        <div className="mt-1 flex items-center justify-between gap-3">
+                          <span className="text-muted-foreground">Duracao</span>
+                          <span className="font-medium">{selectedNewServiceDuration || 0} min</span>
+                        </div>
+                        <div className="mt-1 flex items-center justify-between gap-3">
+                          <span className="text-muted-foreground">Valor</span>
+                          <span className="font-medium text-primary">{formatCurrency(selectedNewServicePrice)}</span>
+                        </div>
+                      </div>
+                    </div>
                     <AvailableSlotsList
                       slots={availableSlots}
                       isLoading={isLoadingAvailableSlots}
@@ -985,7 +1298,7 @@ export default function Agenda() {
                   </Button>
                   <Button
                     onClick={handleCreateAppointment}
-                    disabled={isSubmitting || !newStartTime || !newEndTime}
+                    disabled={isSubmitting || !canSubmitNewAppointment}
                     isLoading={isSubmitting}
                     loadingText="Criando..."
                   >
@@ -994,6 +1307,17 @@ export default function Agenda() {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+            <ClientUpsertDialog
+              open={isNewClientDialogOpen}
+              onOpenChange={setIsNewClientDialogOpen}
+              onSubmit={(payload) => createClient(payload)}
+              onSubmitted={(client) => {
+                if (client?.id) {
+                  setNewClientId(client.id);
+                  setNewClientSearch(client.name || "");
+                }
+              }}
+            />
           </div>
         </div>
 
@@ -1243,7 +1567,7 @@ export default function Agenda() {
         ) : null}
 
         <Dialog open={isReassignDialogOpen} onOpenChange={setIsReassignDialogOpen}>
-          <DialogContent className="max-w-md mx-4 sm:mx-auto max-h-[85vh] overflow-y-auto">
+          <DialogContent className="max-w-md mx-4 sm:mx-auto sm:max-w-xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Realocar Agendamento</DialogTitle>
               <DialogDescription>
@@ -1717,5 +2041,3 @@ export default function Agenda() {
     </MainLayout>
   );
 }
-
-

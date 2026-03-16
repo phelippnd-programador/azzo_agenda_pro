@@ -335,7 +335,7 @@ export default function Financial() {
                   <span className="hidden sm:inline">Nova</span> Saída
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md mx-4 sm:mx-auto max-h-[85vh] overflow-y-auto">
+              <DialogContent className="max-w-md mx-4 sm:mx-auto sm:max-w-2xl max-h-[85vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className={transactionType === 'INCOME' ? 'text-green-700' : 'text-red-700'}>
                     {transactionType === 'INCOME' ? 'Nova Entrada' : 'Nova Saída'}
