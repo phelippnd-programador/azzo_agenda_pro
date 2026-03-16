@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -49,6 +49,8 @@ import { useClients } from '@/hooks/useClients';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { maskPhoneBr } from '@/lib/input-masks';
 import { ClientCard } from '@/components/clients/ClientCard';
+import { utilsApi } from '@/lib/api';
+import { resolveUiError } from '@/lib/error-utils';
 import { toast } from 'sonner';
 
 const formatCurrency = (value: number) => {
@@ -74,8 +76,24 @@ export default function Clients() {
   const [formPhone, setFormPhone] = useState('');
   const [formBirthDate, setFormBirthDate] = useState('');
   const [formNotes, setFormNotes] = useState('');
+  const [formZipCode, setFormZipCode] = useState('');
+  const [formStreet, setFormStreet] = useState('');
+  const [formNumber, setFormNumber] = useState('');
+  const [formComplement, setFormComplement] = useState('');
+  const [formNeighborhood, setFormNeighborhood] = useState('');
+  const [formCity, setFormCity] = useState('');
+  const [formState, setFormState] = useState('');
+  const [isAddressLoading, setIsAddressLoading] = useState(false);
+  const [lastResolvedCep, setLastResolvedCep] = useState('');
 
   const { clients, pagination, isLoading, error, refetch, goToPage, createClient, updateClient, deleteClient } = useClients();
+
+  const normalizeCep = (value: string) => value.replace(/\D/g, '').slice(0, 8);
+  const formatCep = (value: string) => {
+    const cep = normalizeCep(value);
+    if (cep.length <= 5) return cep;
+    return `${cep.slice(0, 5)}-${cep.slice(5)}`;
+  };
 
   const filteredClients = clients.filter((client) =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -90,6 +108,14 @@ export default function Clients() {
     setFormPhone('');
     setFormBirthDate('');
     setFormNotes('');
+    setFormZipCode('');
+    setFormStreet('');
+    setFormNumber('');
+    setFormComplement('');
+    setFormNeighborhood('');
+    setFormCity('');
+    setFormState('');
+    setLastResolvedCep('');
     setEditingClient(null);
   };
 
@@ -99,9 +125,47 @@ export default function Clients() {
     setFormPhone(client.phone);
     setFormBirthDate(client.birthDate || '');
     setFormNotes(client.notes || '');
+    setFormZipCode(client.address?.zipCode || '');
+    setFormStreet(client.address?.street || '');
+    setFormNumber(client.address?.number || '');
+    setFormComplement(client.address?.complement || '');
+    setFormNeighborhood(client.address?.neighborhood || '');
+    setFormCity(client.address?.city || '');
+    setFormState(client.address?.state || '');
+    setLastResolvedCep(normalizeCep(client.address?.zipCode || ''));
     setEditingClient(client.id);
     setIsNewClientOpen(true);
   };
+
+  useEffect(() => {
+    const cep = normalizeCep(formZipCode);
+
+    if (cep.length < 8) {
+      if (lastResolvedCep) setLastResolvedCep('');
+      return;
+    }
+
+    if (cep === lastResolvedCep) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        setIsAddressLoading(true);
+        const data = await utilsApi.getAddressByCep(cep);
+        setFormStreet((data.street || '').trim());
+        setFormComplement((data.complement || '').trim());
+        setFormNeighborhood((data.neighborhood || '').trim());
+        setFormCity((data.city || '').trim());
+        setFormState((data.state || '').trim().toUpperCase());
+        setLastResolvedCep(cep);
+      } catch (err) {
+        toast.error(resolveUiError(err, 'Nao foi possivel buscar o endereco pelo CEP').message);
+      } finally {
+        setIsAddressLoading(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [formZipCode, lastResolvedCep]);
 
   const handleSubmit = async () => {
     if (!formName || !formPhone) {
@@ -117,6 +181,15 @@ export default function Clients() {
         phone: formPhone,
         birthDate: formBirthDate || undefined,
         notes: formNotes || undefined,
+        address: {
+          zipCode: formZipCode || undefined,
+          street: formStreet || undefined,
+          number: formNumber || undefined,
+          complement: formComplement || undefined,
+          neighborhood: formNeighborhood || undefined,
+          city: formCity || undefined,
+          state: formState || undefined,
+        },
       };
 
       if (editingClient) {
@@ -282,6 +355,74 @@ export default function Clients() {
                       rows={2}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label>CEP</Label>
+                    <Input
+                      placeholder="00000-000"
+                      value={formZipCode}
+                      onChange={(e) => setFormZipCode(formatCep(e.target.value))}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {isAddressLoading ? 'Buscando endereco pelo CEP...' : 'Ao informar um CEP valido, o endereco sera sugerido automaticamente.'}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Logradouro</Label>
+                    <Input
+                      placeholder="Rua, avenida..."
+                      value={formStreet}
+                      onChange={(e) => setFormStreet(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Numero</Label>
+                      <Input
+                        placeholder="123"
+                        value={formNumber}
+                        onChange={(e) => setFormNumber(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Complemento</Label>
+                      <Input
+                        placeholder="Apto, sala..."
+                        value={formComplement}
+                        onChange={(e) => setFormComplement(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Bairro</Label>
+                    <Input
+                      placeholder="Bairro"
+                      value={formNeighborhood}
+                      onChange={(e) => setFormNeighborhood(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Cidade</Label>
+                      <Input
+                        placeholder="Cidade"
+                        value={formCity}
+                        onChange={(e) => setFormCity(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>UF</Label>
+                      <Input
+                        placeholder="SP"
+                        value={formState}
+                        onChange={(e) => setFormState(e.target.value.toUpperCase())}
+                        maxLength={2}
+                      />
+                    </div>
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => {
@@ -424,7 +565,9 @@ export default function Clients() {
                             <DropdownMenuItem onClick={() => openEditDialog(client)}>
                               Editar
                             </DropdownMenuItem>
-                            <DropdownMenuItem>Ver Histórico</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openProfilePage(client.id)}>
+                              Ver Historico
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                               className="text-red-600"
                               onClick={() => openDeleteDialog(client.id)}

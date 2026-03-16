@@ -1,7 +1,10 @@
 import type {
   Appointment,
+  AppointmentCustomerNote,
   AppointmentCreateItemInput,
   Client,
+  ClientAppointmentHistoryResponse,
+  DashboardCustomerRankingResponse,
   DashboardMetrics,
   Professional,
   Specialty,
@@ -140,7 +143,10 @@ import { toast } from "sonner";
 
 export type {
   Appointment,
+  AppointmentCustomerNote,
   Client,
+  ClientAppointmentHistoryResponse,
+  DashboardCustomerRankingResponse,
   DashboardMetrics,
   Professional,
   Specialty,
@@ -160,6 +166,12 @@ export type AppointmentCreateRequest = {
   serviceId?: string;
   totalPrice?: number;
   items?: AppointmentCreateItemInput[];
+};
+
+export type AppointmentCustomerNoteRequest = {
+  serviceExecutionNotes?: string;
+  clientFeedbackNotes?: string;
+  internalFollowupNotes?: string;
 };
 
 export type ProfessionalLimits = {
@@ -716,6 +728,10 @@ export const dashboardApi = {
       total: number;
       average: number;
     }>(`/dashboard/revenue/weekly?start=${start}&end=${end}`),
+  getCustomerMetrics: (start: string, end: string, limit = 10) =>
+    request<DashboardCustomerRankingResponse>(
+      `/dashboard/metrics/customers?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=${encodeURIComponent(String(limit))}`
+    ),
 };
 
 /* ================= CHAT ================= */
@@ -898,6 +914,10 @@ export const clientsApi = {
     return request<ListResponse<Client>>(`/clients${suffix}`);
   },
   getById: (id: string) => request<Client>(`/clients/${id}`),
+  getAppointmentHistory: (id: string, page = 0, size = 20) =>
+    request<ClientAppointmentHistoryResponse>(
+      `/clients/${id}/appointment-history?page=${encodeURIComponent(String(page))}&size=${encodeURIComponent(String(size))}`
+    ),
   create: (data: Partial<Client>) =>
     request<Client>("/clients", {
       method: "POST",
@@ -952,6 +972,16 @@ export const appointmentsApi = {
   updateStatus: (id: string, status: string) =>
     request<Appointment>(`/appointments/${id}/status?value=${status}`, {
       method: "PATCH",
+    }),
+  addCustomerNote: (appointmentId: string, payload: AppointmentCustomerNoteRequest) =>
+    request<AppointmentCustomerNote>(`/appointments/${appointmentId}/customer-notes`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updateCustomerNote: (appointmentId: string, noteId: string, payload: AppointmentCustomerNoteRequest) =>
+    request<AppointmentCustomerNote>(`/appointments/${appointmentId}/customer-notes/${noteId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
     }),
   reassignProfessional: (appointmentId: string, professionalId: string) =>
     request<Appointment>(

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { UpcomingAppointments } from '@/components/dashboard/UpcomingAppointments';
@@ -17,6 +17,8 @@ import { useProfessionals } from '@/hooks/useProfessionals';
 import { useClients } from '@/hooks/useClients';
 import { useServices } from '@/hooks/useServices';
 import { useAuth } from '@/contexts/AuthContext';
+import { dashboardApi } from '@/lib/api';
+import type { DashboardCustomerRankingResponse } from '@/types';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
@@ -44,6 +46,7 @@ const calculateGrowthPercent = (current: number, previous: number): number | nul
 export default function Dashboard() {
   const { user } = useAuth();
   const isProfessionalUser = user?.role === 'PROFESSIONAL';
+  const [customerRanking, setCustomerRanking] = useState<DashboardCustomerRankingResponse | null>(null);
   const { metrics, isLoading: metricsLoading, error: metricsError, refetch: refetchMetrics } =
     useDashboardWithOptions({ enabled: !isProfessionalUser });
   const { appointments, isLoading: appointmentsLoading, updateAppointmentStatus } = useAppointments();
@@ -65,6 +68,28 @@ export default function Dashboard() {
       refetchMetrics();
     }
   }, [isProfessionalUser, refetchMetrics]);
+
+  useEffect(() => {
+    let mounted = true;
+    const todayDate = new Date();
+    const start = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1).toISOString().split('T')[0];
+    const end = todayDate.toISOString().split('T')[0];
+
+    dashboardApi
+      .getCustomerMetrics(start, end, 5)
+      .then((data) => {
+        if (!mounted) return;
+        setCustomerRanking(data);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setCustomerRanking(null);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const today = new Date().toISOString().split('T')[0];
   const yesterdayDate = new Date();
@@ -429,6 +454,37 @@ export default function Dashboard() {
             <MonthlyRevenueLineChart />
           </div>
         ) : null}
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Clientes com mais servicos no periodo</CardTitle>
+            {customerRanking?.lastUpdatedAt ? (
+              <p className="text-sm text-muted-foreground">
+                Atualizado em {new Date(customerRanking.lastUpdatedAt).toLocaleString('pt-BR')}
+              </p>
+            ) : null}
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {customerRanking?.items?.length ? customerRanking.items.map((item) => (
+              <div key={item.clientId} className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{item.rank}. {item.clientName}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {item.completedServices} servico(s) • {item.completedAppointments} atendimento(s)
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-medium text-primary">{formatCurrency(item.revenueTotal)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {item.lastAppointmentDate ? new Date(`${item.lastAppointmentDate}T12:00:00`).toLocaleDateString('pt-BR') : '-'}
+                  </p>
+                </div>
+              </div>
+            )) : (
+              <p className="text-sm text-muted-foreground">Nenhum ranking de clientes disponivel no periodo.</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </MainLayout>
   );

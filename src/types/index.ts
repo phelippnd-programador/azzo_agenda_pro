@@ -88,12 +88,83 @@ export interface Client {
   name: string;
   email: string;
   phone: string;
-  birthDate?: Date;
+  birthDate?: Date | string;
   notes?: string;
+  address?: ClientAddress;
+  topServices?: ClientTopService[];
   totalVisits: number;
   totalSpent: number;
-  lastVisit?: Date;
-  createdAt: Date;
+  lastVisit?: Date | string;
+  createdAt: Date | string;
+}
+
+export interface ClientAddress {
+  zipCode?: string;
+  street?: string;
+  number?: string;
+  complement?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+}
+
+export interface ClientTopService {
+  serviceId: string;
+  serviceName: string;
+  topProfessionalId?: string;
+  topProfessionalName?: string;
+  completedAppointments: number;
+  completedServices: number;
+  revenueTotal: number;
+  lastAppointmentDate?: string;
+}
+
+export interface AppointmentCustomerNote {
+  noteId: string;
+  appointmentId: string;
+  clientId: string;
+  recordedByUserId?: string;
+  recordedAt: string;
+  updatedAt?: string;
+  serviceExecutionNotes?: string;
+  clientFeedbackNotes?: string;
+  internalFollowupNotes?: string;
+}
+
+export interface ClientAppointmentHistoryItem {
+  appointmentId: string;
+  date: string;
+  status: AppointmentStatus;
+  professionalId?: string;
+  professionalName?: string;
+  notes?: string;
+  services: AppointmentItem[];
+  careNotes: AppointmentCustomerNote[];
+}
+
+export interface ClientAppointmentHistoryResponse {
+  clientId: string;
+  page: number;
+  size: number;
+  totalItems: number;
+  items: ClientAppointmentHistoryItem[];
+}
+
+export interface DashboardCustomerRankingItem {
+  rank: number;
+  clientId: string;
+  clientName: string;
+  completedAppointments: number;
+  completedServices: number;
+  revenueTotal: number;
+  lastAppointmentDate?: string;
+}
+
+export interface DashboardCustomerRankingResponse {
+  startDate: string;
+  endDate: string;
+  lastUpdatedAt?: string;
+  items: DashboardCustomerRankingItem[];
 }
 
 export interface Appointment {

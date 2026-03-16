@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -59,7 +60,7 @@ import {
   Info,
 } from 'lucide-react';
 import { useAppointments, Appointment } from '@/hooks/useAppointments';
-import { appointmentsApi, nfseApi, type NfseInvoice } from '@/lib/api';
+import { appointmentsApi, clientsApi, nfseApi, type NfseInvoice } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { useClients } from '@/hooks/useClients';
@@ -70,6 +71,7 @@ import { AvailableSlotsList } from '@/components/appointments/AvailableSlotsList
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import type { AppointmentCustomerNote, ClientAppointmentHistoryItem } from '@/types';
 
 const timeSlots = [
   '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
@@ -217,6 +219,13 @@ export default function Agenda() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [appointmentToDeleteId, setAppointmentToDeleteId] = useState<string | null>(null);
   const [isDeletingAppointment, setIsDeletingAppointment] = useState(false);
+  const [selectedAppointmentHistoryItem, setSelectedAppointmentHistoryItem] =
+    useState<ClientAppointmentHistoryItem | null>(null);
+  const [isLoadingCareHistory, setIsLoadingCareHistory] = useState(false);
+  const [isSavingCareNote, setIsSavingCareNote] = useState(false);
+  const [serviceExecutionNotes, setServiceExecutionNotes] = useState('');
+  const [clientFeedbackNotes, setClientFeedbackNotes] = useState('');
+  const [internalFollowupNotes, setInternalFollowupNotes] = useState('');
 
   // Form state
   const [newClientId, setNewClientId] = useState('');
@@ -613,6 +622,72 @@ export default function Agenda() {
     setIsViewDetailsOpen(true);
   };
 
+  const resetCareNoteForm = () => {
+    setServiceExecutionNotes('');
+    setClientFeedbackNotes('');
+    setInternalFollowupNotes('');
+  };
+
+  const loadSelectedAppointmentHistoryItem = async (appointment: Appointment, clientId: string) => {
+    setIsLoadingCareHistory(true);
+    try {
+      const history = await clientsApi.getAppointmentHistory(clientId, 0, 50);
+      const currentHistoryItem =
+        history.items.find((item) => item.appointmentId === appointment.id) ?? null;
+      setSelectedAppointmentHistoryItem(currentHistoryItem);
+    } catch (err) {
+      setSelectedAppointmentHistoryItem(null);
+      toast.error(resolveUiError(err, 'Nao foi possivel carregar o historico deste cliente.').message);
+    } finally {
+      setIsLoadingCareHistory(false);
+    }
+  };
+
+  const handleSaveCareNote = async () => {
+    if (!selectedAppointment) return;
+
+    const payload = {
+      serviceExecutionNotes: serviceExecutionNotes.trim() || undefined,
+      clientFeedbackNotes: clientFeedbackNotes.trim() || undefined,
+      internalFollowupNotes: internalFollowupNotes.trim() || undefined,
+    };
+
+    if (!payload.serviceExecutionNotes && !payload.clientFeedbackNotes && !payload.internalFollowupNotes) {
+      toast.error('Preencha ao menos um detalhe do atendimento.');
+      return;
+    }
+
+    setIsSavingCareNote(true);
+    try {
+      const createdNote = await appointmentsApi.addCustomerNote(selectedAppointment.id, payload);
+      setSelectedAppointmentHistoryItem((previous) => {
+        if (!previous) {
+          return {
+            appointmentId: selectedAppointment.id,
+            date: toDateKey(selectedAppointment.date),
+            status: selectedAppointment.status,
+            professionalId: selectedAppointment.professionalId,
+            professionalName: selectedProfessionalData?.name,
+            notes: selectedAppointment.notes,
+            services: getAppointmentItems(selectedAppointment),
+            careNotes: [createdNote],
+          };
+        }
+
+        return {
+          ...previous,
+          careNotes: [createdNote, ...(previous.careNotes || [])],
+        };
+      });
+      resetCareNoteForm();
+      toast.success('Registro operacional salvo com sucesso.');
+    } catch (err) {
+      toast.error(resolveUiError(err, 'Nao foi possivel salvar o registro operacional.').message);
+    } finally {
+      setIsSavingCareNote(false);
+    }
+  };
+
   const handleViewInvoice = () => {
     if (selectedAppointment) {
       // Store appointment data in sessionStorage for invoice preview
@@ -665,10 +740,24 @@ export default function Agenda() {
   const selectedAppointmentFlowMeta = selectedAppointment
     ? getServiceFlowMeta(selectedAppointment.status)
     : null;
+  const selectedCareNotes = selectedAppointmentHistoryItem?.careNotes ?? [];
+  const canRegisterCareNotes =
+    !!selectedAppointment &&
+    !['CANCELLED', 'NO_SHOW'].includes(selectedAppointment.status);
   const reassignTargetProfessionals = useMemo(() => {
     if (!appointmentToReassign) return [];
     return activeProfessionals.filter((prof) => prof.id !== appointmentToReassign.professionalId);
   }, [activeProfessionals, appointmentToReassign]);
+
+  useEffect(() => {
+    if (!isViewDetailsOpen || !selectedAppointment || !selectedClient?.id) {
+      setSelectedAppointmentHistoryItem(null);
+      resetCareNoteForm();
+      return;
+    }
+
+    void loadSelectedAppointmentHistoryItem(selectedAppointment, selectedClient.id);
+  }, [isViewDetailsOpen, selectedAppointment, selectedClient?.id]);
 
   if (isLoading) {
     return (
@@ -1205,7 +1294,16 @@ export default function Agenda() {
         </Dialog>
 
         {/* Appointment Details Sheet */}
-        <Sheet open={isViewDetailsOpen} onOpenChange={setIsViewDetailsOpen}>
+        <Sheet
+          open={isViewDetailsOpen}
+          onOpenChange={(open) => {
+            setIsViewDetailsOpen(open);
+            if (!open) {
+              setSelectedAppointmentHistoryItem(null);
+              resetCareNoteForm();
+            }
+          }}
+        >
           <SheetContent className="w-full sm:max-w-md overflow-y-auto">
             <SheetHeader>
               <SheetTitle>Detalhes do Agendamento</SheetTitle>
@@ -1403,6 +1501,138 @@ export default function Agenda() {
                   </>
                 )}
 
+                <Separator />
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <h4 className="font-medium text-sm flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-primary" />
+                      Rastro operacional do atendimento
+                    </h4>
+                    {isLoadingCareHistory ? (
+                      <Badge variant="outline">Carregando</Badge>
+                    ) : (
+                      <Badge variant="secondary">
+                        {selectedCareNotes.length} registro(s)
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="rounded-lg border bg-muted/20 p-4 space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="serviceExecutionNotes">Execucao do servico</Label>
+                      <Textarea
+                        id="serviceExecutionNotes"
+                        placeholder="Descreva tecnicas aplicadas, variacoes do servico e ocorrencias relevantes."
+                        value={serviceExecutionNotes}
+                        onChange={(event) => setServiceExecutionNotes(event.target.value)}
+                        rows={3}
+                        disabled={!canRegisterCareNotes || isSavingCareNote}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="clientFeedbackNotes">Feedback do cliente</Label>
+                      <Textarea
+                        id="clientFeedbackNotes"
+                        placeholder="Registre percepcoes, preferencias, sensibilidade e retorno do cliente."
+                        value={clientFeedbackNotes}
+                        onChange={(event) => setClientFeedbackNotes(event.target.value)}
+                        rows={3}
+                        disabled={!canRegisterCareNotes || isSavingCareNote}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="internalFollowupNotes">Proximo passo / acompanhamento</Label>
+                      <Textarea
+                        id="internalFollowupNotes"
+                        placeholder="Informe recomendacoes, manutencao, pendencias ou abordagem sugerida para o proximo atendimento."
+                        value={internalFollowupNotes}
+                        onChange={(event) => setInternalFollowupNotes(event.target.value)}
+                        rows={3}
+                        disabled={!canRegisterCareNotes || isSavingCareNote}
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        onClick={handleSaveCareNote}
+                        disabled={!canRegisterCareNotes || isSavingCareNote}
+                      >
+                        {isSavingCareNote ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Salvando...
+                          </>
+                        ) : (
+                          'Salvar registro operacional'
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={resetCareNoteForm}
+                        disabled={isSavingCareNote}
+                      >
+                        Limpar
+                      </Button>
+                    </div>
+
+                    {!canRegisterCareNotes ? (
+                      <p className="text-xs text-muted-foreground">
+                        Registros operacionais ficam bloqueados para agendamentos cancelados ou marcados como nao compareceu.
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="space-y-3">
+                    {isLoadingCareHistory ? (
+                      <div className="space-y-2">
+                        <Skeleton className="h-20 w-full" />
+                        <Skeleton className="h-20 w-full" />
+                      </div>
+                    ) : selectedCareNotes.length ? (
+                      selectedCareNotes.map((note: AppointmentCustomerNote) => (
+                        <div key={note.noteId} className="rounded-lg border p-3 space-y-2">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-sm font-medium">
+                              Registro em {new Date(note.recordedAt).toLocaleString('pt-BR')}
+                            </p>
+                            <Badge variant="outline">Atendimento</Badge>
+                          </div>
+                          {note.serviceExecutionNotes ? (
+                            <p className="text-sm text-muted-foreground">
+                              <span className="font-medium text-foreground">Execucao:</span> {note.serviceExecutionNotes}
+                            </p>
+                          ) : null}
+                          {note.clientFeedbackNotes ? (
+                            <p className="text-sm text-muted-foreground">
+                              <span className="font-medium text-foreground">Feedback:</span> {note.clientFeedbackNotes}
+                            </p>
+                          ) : null}
+                          {note.internalFollowupNotes ? (
+                            <p className="text-sm text-muted-foreground">
+                              <span className="font-medium text-foreground">Proximo passo:</span> {note.internalFollowupNotes}
+                            </p>
+                          ) : null}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Nenhum registro operacional foi salvo para este atendimento.
+                      </p>
+                    )}
+                  </div>
+                  {selectedAppointment.status === 'IN_PROGRESS' && selectedCareNotes.length === 0 ? (
+                    <Alert className="border-amber-200 bg-amber-50">
+                      <Info className="h-4 w-4" />
+                      <AlertTitle>Registro obrigatorio antes da conclusao</AlertTitle>
+                      <AlertDescription>
+                        Salve ao menos um detalhe operacional do cliente para habilitar a conclusao do atendimento.
+                      </AlertDescription>
+                    </Alert>
+                  ) : null}
+                </div>
+
                 {/* Invoice Preview Button */}
                 {selectedAppointment.status === 'COMPLETED' && (
                   <>
@@ -1439,6 +1669,7 @@ export default function Agenda() {
                     {selectedAppointment.status === 'IN_PROGRESS' && (
                       <Button 
                         className="bg-green-600 hover:bg-green-700"
+                        disabled={selectedCareNotes.length === 0}
                         onClick={() => handleStatusChange(selectedAppointment.id, 'COMPLETED')}
                       >
                         Concluir atendimento
