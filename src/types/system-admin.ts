@@ -224,3 +224,56 @@ export interface GlobalSuggestionListResponse {
   items: GlobalSuggestionItem[];
   limit: number;
 }
+
+export interface EmailTemplateSummaryItem {
+  templateType: string;
+  label: string;
+  configured: boolean;
+  active: boolean;
+  updatedAt?: string | null;
+}
+
+export interface EmailTemplateListResponse {
+  items: EmailTemplateSummaryItem[];
+}
+
+export interface EmailTemplateDetailResponse {
+  templateType: string;
+  label: string;
+  configured: boolean;
+  active: boolean;
+  fromEmail?: string | null;
+  fromName?: string | null;
+  replyTo?: string | null;
+  subjectTemplate: string;
+  htmlTemplate: string;
+  placeholders: string[];
+  updatedAt?: string | null;
+  updatedBy?: string | null;
+  sampleValues: Record<string, string>;
+}
+
+export interface EmailTemplateUpsertRequest {
+  active?: boolean | null;
+  fromEmail?: string | null;
+  fromName?: string | null;
+  replyTo?: string | null;
+  subjectTemplate: string;
+  htmlTemplate: string;
+}
+
+export interface EmailTemplateStatusUpdateRequest {
+  active: boolean;
+}
+
+export interface EmailTemplatePreviewResponse {
+  templateType: string;
+  label: string;
+  subject: string;
+  html: string;
+  fromEmail?: string | null;
+  fromName?: string | null;
+  replyTo?: string | null;
+  placeholders: string[];
+  sampleValues: Record<string, string>;
+}

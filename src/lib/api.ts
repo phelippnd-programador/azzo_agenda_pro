@@ -26,6 +26,11 @@ import type { CurrentMenuPermissionsResponse } from "@/types/menu-permissions";
 import type {
   AdminBillingActionResponse,
   CommercialOverview,
+  EmailTemplateDetailResponse,
+  EmailTemplateListResponse,
+  EmailTemplatePreviewResponse,
+  EmailTemplateStatusUpdateRequest,
+  EmailTemplateUpsertRequest,
   GlobalAuditDetail,
   BulkMenuOverrideRequest,
   GlobalAuditListResponse,
@@ -1564,6 +1569,29 @@ export const systemAdminApi = {
     request<GlobalSuggestionListResponse["items"][number]>(`/admin/system/suggestions/${id}`),
   updateGlobalSuggestion: (id: string, payload: SuggestionUpdateRequest) =>
     request<GlobalSuggestionListResponse["items"][number]>(`/admin/system/suggestions/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  listEmailTemplates: () =>
+    request<EmailTemplateListResponse>("/admin/system/email-templates"),
+  getEmailTemplate: (type: string) =>
+    request<EmailTemplateDetailResponse>(`/admin/system/email-templates/${type}`),
+  updateEmailTemplate: (type: string, payload: EmailTemplateUpsertRequest) =>
+    request<EmailTemplateDetailResponse>(`/admin/system/email-templates/${type}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  previewEmailTemplate: (type: string, payload: EmailTemplateUpsertRequest) =>
+    request<EmailTemplatePreviewResponse>(`/admin/system/email-templates/${type}/preview`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  restoreDefaultEmailTemplate: (type: string) =>
+    request<EmailTemplateDetailResponse>(`/admin/system/email-templates/${type}/restore-default`, {
+      method: "POST",
+    }),
+  updateEmailTemplateStatus: (type: string, payload: EmailTemplateStatusUpdateRequest) =>
+    request<EmailTemplateDetailResponse>(`/admin/system/email-templates/${type}/active`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),

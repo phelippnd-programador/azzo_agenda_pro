@@ -16,6 +16,9 @@ import { toast } from "sonner";
 import type {
   AdminTenantItem,
   CommercialOverview,
+  EmailTemplateDetailResponse,
+  EmailTemplateSummaryItem,
+  EmailTemplateUpsertRequest,
   GlobalAuditDetail,
   GlobalAuditItem,
   GlobalSuggestionItem,
@@ -35,6 +38,20 @@ const AUDIT_MODULE_OPTIONS = ["", "AUTH", "RBAC", "FINANCE", "FISCAL", "SYSTEM"]
 const AUDIT_STATUS_OPTIONS = ["", "SUCCESS", "ERROR", "DENIED"];
 const AUDIT_CHANNEL_OPTIONS = ["", "API", "WEBHOOK", "SCHEDULER", "SYSTEM"];
 const SUGGESTION_CATEGORY_OPTIONS = ["", "BUG", "MELHORIA", "FUNCIONALIDADE", "USABILIDADE", "OUTRO"];
+
+type EmailTemplateFormState = {
+  templateType: string;
+  label: string;
+  configured: boolean;
+  active: boolean;
+  fromEmail: string;
+  fromName: string;
+  replyTo: string;
+  subjectTemplate: string;
+  htmlTemplate: string;
+  placeholders: string[];
+  sampleValues: Record<string, string>;
+};
 
 type MenuCatalogFormState = {
   id?: string;
@@ -92,6 +109,20 @@ const createEmptyPlanForm = (): PlanFormState => ({
   maxProfessionals: "",
 });
 
+const createEmptyEmailTemplateForm = (): EmailTemplateFormState => ({
+  templateType: "PASSWORD_RESET",
+  label: "Redefinicao de senha",
+  configured: false,
+  active: true,
+  fromEmail: "",
+  fromName: "",
+  replyTo: "",
+  subjectTemplate: "",
+  htmlTemplate: "",
+  placeholders: [],
+  sampleValues: {},
+});
+
 export default function SystemAdminPage() {
   const { user } = useAuth();
   const [menuCatalogItems, setMenuCatalogItems] = useState<MenuCatalogItem[]>([]);
@@ -99,6 +130,11 @@ export default function SystemAdminPage() {
   const [isMenuCatalogDialogOpen, setIsMenuCatalogDialogOpen] = useState(false);
   const [isSavingMenuCatalog, setIsSavingMenuCatalog] = useState(false);
   const [menuCatalogForm, setMenuCatalogForm] = useState<MenuCatalogFormState>(createEmptyMenuCatalogForm);
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplateSummaryItem[]>([]);
+  const [selectedEmailTemplateType, setSelectedEmailTemplateType] = useState("PASSWORD_RESET");
+  const [emailTemplateForm, setEmailTemplateForm] = useState<EmailTemplateFormState>(createEmptyEmailTemplateForm);
+  const [isLoadingEmailTemplates, setIsLoadingEmailTemplates] = useState(false);
+  const [isSavingEmailTemplate, setIsSavingEmailTemplate] = useState(false);
 
   const [payments, setPayments] = useState<BillingPaymentItem[]>([]);
   const [plans, setPlans] = useState<SystemPlanItem[]>([]);
@@ -167,6 +203,33 @@ export default function SystemAdminPage() {
     () => payments.filter((item) => String(item.status || "").toUpperCase() === "PENDING"),
     [payments]
   );
+
+  const applyEmailTemplatePreview = (template: string, values: Record<string, string>) => {
+    let rendered = template || "";
+    Object.entries(values || {}).forEach(([key, value]) => {
+      rendered = rendered.replaceAll(`{{${key}}}`, value ?? "");
+    });
+    return rendered;
+  };
+
+  const emailTemplatePreviewSubject = useMemo(
+    () => applyEmailTemplatePreview(emailTemplateForm.subjectTemplate, emailTemplateForm.sampleValues),
+    [emailTemplateForm.subjectTemplate, emailTemplateForm.sampleValues]
+  );
+
+  const emailTemplatePreviewHtml = useMemo(
+    () => applyEmailTemplatePreview(emailTemplateForm.htmlTemplate, emailTemplateForm.sampleValues),
+    [emailTemplateForm.htmlTemplate, emailTemplateForm.sampleValues]
+  );
+
+  const buildEmailTemplatePayload = (): EmailTemplateUpsertRequest => ({
+    active: emailTemplateForm.active,
+    fromEmail: emailTemplateForm.fromEmail.trim() || undefined,
+    fromName: emailTemplateForm.fromName.trim() || undefined,
+    replyTo: emailTemplateForm.replyTo.trim() || undefined,
+    subjectTemplate: emailTemplateForm.subjectTemplate,
+    htmlTemplate: emailTemplateForm.htmlTemplate,
+  });
 
   const loadMenuCatalog = async () => {
     setIsLoadingMenuCatalog(true);
@@ -391,6 +454,125 @@ export default function SystemAdminPage() {
     }
   };
 
+  const applyEmailTemplateDetail = (detail: EmailTemplateDetailResponse) => {
+    setEmailTemplateForm({
+      templateType: detail.templateType,
+      label: detail.label,
+      configured: detail.configured,
+      active: detail.active,
+      fromEmail: detail.fromEmail || "",
+      fromName: detail.fromName || "",
+      replyTo: detail.replyTo || "",
+      subjectTemplate: detail.subjectTemplate || "",
+      htmlTemplate: detail.htmlTemplate || "",
+      placeholders: detail.placeholders || [],
+      sampleValues: detail.sampleValues || {},
+    });
+  };
+
+  const loadEmailTemplates = async (templateType?: string) => {
+    setIsLoadingEmailTemplates(true);
+    try {
+      const response = await systemAdminApi.listEmailTemplates();
+      const items = response.items || [];
+      setEmailTemplates(items);
+      const effectiveType = templateType || selectedEmailTemplateType || items[0]?.templateType || "PASSWORD_RESET";
+      const detail = await systemAdminApi.getEmailTemplate(effectiveType);
+      setSelectedEmailTemplateType(detail.templateType);
+      applyEmailTemplateDetail(detail);
+    } catch {
+      toast.error("Nao foi possivel carregar templates de email.");
+      setEmailTemplates([]);
+      setEmailTemplateForm(createEmptyEmailTemplateForm());
+    } finally {
+      setIsLoadingEmailTemplates(false);
+    }
+  };
+
+  const selectEmailTemplate = async (templateType: string) => {
+    setSelectedEmailTemplateType(templateType);
+    setIsLoadingEmailTemplates(true);
+    try {
+      const detail = await systemAdminApi.getEmailTemplate(templateType);
+      applyEmailTemplateDetail(detail);
+    } catch {
+      toast.error("Nao foi possivel carregar o template selecionado.");
+    } finally {
+      setIsLoadingEmailTemplates(false);
+    }
+  };
+
+  const saveEmailTemplate = async () => {
+    if (!emailTemplateForm.subjectTemplate.trim() || !emailTemplateForm.htmlTemplate.trim()) {
+      toast.error("Assunto e HTML sao obrigatorios.");
+      return;
+    }
+    setIsSavingEmailTemplate(true);
+    try {
+      const saved = await systemAdminApi.updateEmailTemplate(selectedEmailTemplateType, buildEmailTemplatePayload());
+      applyEmailTemplateDetail(saved);
+      await loadEmailTemplates(saved.templateType);
+      toast.success(emailTemplateForm.configured ? "Template atualizado com sucesso." : "Template criado com sucesso.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Falha ao salvar template.";
+      toast.error(message);
+    } finally {
+      setIsSavingEmailTemplate(false);
+    }
+  };
+
+  const createEmailTemplate = async () => {
+    if (!emailTemplateForm.subjectTemplate.trim() || !emailTemplateForm.htmlTemplate.trim()) {
+      toast.error("Assunto e HTML sao obrigatorios.");
+      return;
+    }
+    setIsSavingEmailTemplate(true);
+    try {
+      const created = await systemAdminApi.updateEmailTemplate(selectedEmailTemplateType, {
+        ...buildEmailTemplatePayload(),
+        active: true,
+      });
+      applyEmailTemplateDetail(created);
+      await loadEmailTemplates(created.templateType);
+      toast.success("Template criado com sucesso.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Falha ao criar template.";
+      toast.error(message);
+    } finally {
+      setIsSavingEmailTemplate(false);
+    }
+  };
+
+  const toggleEmailTemplateStatus = async (active: boolean) => {
+    setIsSavingEmailTemplate(true);
+    try {
+      const updated = await systemAdminApi.updateEmailTemplateStatus(selectedEmailTemplateType, { active });
+      applyEmailTemplateDetail(updated);
+      await loadEmailTemplates(updated.templateType);
+      toast.success(active ? "Template ativado." : "Template desativado.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Falha ao atualizar status do template.";
+      toast.error(message);
+    } finally {
+      setIsSavingEmailTemplate(false);
+    }
+  };
+
+  const restoreDefaultEmailTemplate = async () => {
+    setIsSavingEmailTemplate(true);
+    try {
+      const restored = await systemAdminApi.restoreDefaultEmailTemplate(selectedEmailTemplateType);
+      applyEmailTemplateDetail(restored);
+      await loadEmailTemplates(restored.templateType);
+      toast.success("Template restaurado para o padrao.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Falha ao restaurar template.";
+      toast.error(message);
+    } finally {
+      setIsSavingEmailTemplate(false);
+    }
+  };
+
   const loadGlobalAudits = async (filters?: Partial<typeof auditFilters>) => {
     const payload = { ...auditFilters, ...(filters || {}) };
     setIsLoadingGlobalAudits(true);
@@ -547,6 +729,7 @@ export default function SystemAdminPage() {
   useEffect(() => {
     loadActiveTenants();
     loadMenuCatalog();
+    loadEmailTemplates();
     loadPlans();
     loadCommercialOverview();
     loadGlobalAudits({});
@@ -674,6 +857,7 @@ export default function SystemAdminPage() {
           <TabsList className="flex h-auto flex-wrap justify-start gap-2 bg-transparent p-0">
             <TabsTrigger value="contexto">Contexto</TabsTrigger>
             <TabsTrigger value="monitoramento">Monitoramento</TabsTrigger>
+            <TabsTrigger value="emails">Templates de Email</TabsTrigger>
             <TabsTrigger value="menus">Menus</TabsTrigger>
             <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
             <TabsTrigger value="acesso">Acesso</TabsTrigger>
@@ -1107,6 +1291,225 @@ export default function SystemAdminPage() {
           </CardContent>
         </Card>
 
+          </TabsContent>
+
+          <TabsContent value="emails" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Templates de email</CardTitle>
+                <CardDescription>
+                  Edite assunto, remetente e HTML dos emails do sistema com preview em tempo real.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-medium">Tipos de template</h3>
+                      <Button variant="outline" size="sm" onClick={() => loadEmailTemplates()} disabled={isLoadingEmailTemplates}>
+                        Atualizar
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      {emailTemplates.map((item) => (
+                        <button
+                          key={item.templateType}
+                          type="button"
+                          onClick={() => selectEmailTemplate(item.templateType)}
+                          className={`w-full rounded-lg border px-3 py-3 text-left transition ${
+                            selectedEmailTemplateType === item.templateType
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:bg-muted/40"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <p className="font-medium">{item.label}</p>
+                              <p className="text-xs text-muted-foreground">{item.templateType}</p>
+                            </div>
+                            <div className="flex flex-col items-end gap-1">
+                              <Badge variant={item.configured ? "default" : "secondary"}>
+                                {item.configured ? "Configurado" : "Padrao"}
+                              </Badge>
+                              <Badge variant={item.active ? "default" : "outline"}>
+                                {item.active ? "Ativo" : "Inativo"}
+                              </Badge>
+                            </div>
+                          </div>
+                          <p className="mt-2 text-xs text-muted-foreground">
+                            {item.updatedAt ? `Atualizado em ${new Date(item.updatedAt).toLocaleString("pt-BR")}` : "Usando fallback padrao do sistema"}
+                          </p>
+                        </button>
+                      ))}
+                      {!isLoadingEmailTemplates && emailTemplates.length === 0 ? (
+                        <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                          Nenhum template disponivel.
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-6 2xl:grid-cols-2">
+                    <Card className="border-dashed">
+                      <CardHeader>
+                        <CardTitle className="text-base">{emailTemplateForm.label}</CardTitle>
+                        <CardDescription>
+                          O template salvo aqui passa a ser usado no envio real do sistema.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant={emailTemplateForm.configured ? "default" : "secondary"}>
+                            {emailTemplateForm.configured ? "Template criado" : "Template ainda nao criado"}
+                          </Badge>
+                          <Badge variant={emailTemplateForm.active ? "default" : "outline"}>
+                            {emailTemplateForm.active ? "Ativo no envio" : "Inativo no envio"}
+                          </Badge>
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div className="space-y-2">
+                            <Label>From email</Label>
+                            <Input
+                              value={emailTemplateForm.fromEmail}
+                              onChange={(event) =>
+                                setEmailTemplateForm((prev) => ({ ...prev, fromEmail: event.target.value }))
+                              }
+                              placeholder="no-reply@azzoholding.com.br"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>From name</Label>
+                            <Input
+                              value={emailTemplateForm.fromName}
+                              onChange={(event) =>
+                                setEmailTemplateForm((prev) => ({ ...prev, fromName: event.target.value }))
+                              }
+                              placeholder="Azzo Agenda Pro"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Reply-to</Label>
+                          <Input
+                            value={emailTemplateForm.replyTo}
+                            onChange={(event) =>
+                              setEmailTemplateForm((prev) => ({ ...prev, replyTo: event.target.value }))
+                            }
+                            placeholder="support@azzoholding.com.br"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Assunto</Label>
+                          <Input
+                            value={emailTemplateForm.subjectTemplate}
+                            onChange={(event) =>
+                              setEmailTemplateForm((prev) => ({ ...prev, subjectTemplate: event.target.value }))
+                            }
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>HTML</Label>
+                          <Textarea
+                            value={emailTemplateForm.htmlTemplate}
+                            onChange={(event) =>
+                              setEmailTemplateForm((prev) => ({ ...prev, htmlTemplate: event.target.value }))
+                            }
+                            rows={20}
+                            className="font-mono text-xs"
+                          />
+                        </div>
+
+                        <div className="rounded-lg border bg-muted/30 p-4">
+                          <p className="text-sm font-medium">Placeholders disponiveis</p>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {emailTemplateForm.placeholders.map((placeholder) => (
+                              <Badge key={placeholder} variant="secondary">
+                                {placeholder}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap justify-end gap-2">
+                          <Button variant="outline" onClick={restoreDefaultEmailTemplate} disabled={isSavingEmailTemplate}>
+                            Restaurar padrao
+                          </Button>
+                          {emailTemplateForm.configured ? (
+                            <Button
+                              variant="outline"
+                              onClick={() => toggleEmailTemplateStatus(!emailTemplateForm.active)}
+                              disabled={isSavingEmailTemplate}
+                            >
+                              {emailTemplateForm.active ? "Desativar" : "Ativar"}
+                            </Button>
+                          ) : null}
+                          {emailTemplateForm.configured ? (
+                            <Button onClick={saveEmailTemplate} disabled={isSavingEmailTemplate}>
+                              {isSavingEmailTemplate ? "Salvando..." : "Salvar alteracoes"}
+                            </Button>
+                          ) : (
+                            <Button onClick={createEmailTemplate} disabled={isSavingEmailTemplate}>
+                              {isSavingEmailTemplate ? "Criando..." : "Criar template a partir do padrao"}
+                            </Button>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Preview</CardTitle>
+                        <CardDescription>
+                          A visualizacao ao lado usa dados de exemplo e atualiza conforme voce edita o codigo.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid gap-3 md:grid-cols-3">
+                          <div className="rounded-lg border p-3">
+                            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">From</p>
+                            <p className="mt-2 text-sm font-medium">{emailTemplateForm.fromName || "Sem nome"}</p>
+                            <p className="text-sm text-muted-foreground">{emailTemplateForm.fromEmail || "Fallback global"}</p>
+                          </div>
+                          <div className="rounded-lg border p-3">
+                            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Reply-to</p>
+                            <p className="mt-2 text-sm">{emailTemplateForm.replyTo || "Nao definido"}</p>
+                          </div>
+                          <div className="rounded-lg border p-3">
+                            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Assunto renderizado</p>
+                            <p className="mt-2 text-sm font-medium">{emailTemplatePreviewSubject || "-"}</p>
+                          </div>
+                        </div>
+
+                        <div className="rounded-lg border bg-muted/20 p-4">
+                          <p className="text-sm font-medium">Valores de exemplo</p>
+                          <div className="mt-3 grid gap-2 md:grid-cols-2">
+                            {Object.entries(emailTemplateForm.sampleValues || {}).map(([key, value]) => (
+                              <div key={key} className="rounded-md border bg-background p-3">
+                                <p className="text-xs text-muted-foreground">{`{{${key}}}`}</p>
+                                <p className="mt-1 text-sm">{value}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="overflow-hidden rounded-xl border bg-white">
+                          <iframe
+                            title="Preview do template de email"
+                            srcDoc={emailTemplatePreviewHtml}
+                            sandbox=""
+                            className="h-[720px] w-full bg-white"
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
         <Dialog open={isMenuCatalogDialogOpen} onOpenChange={setIsMenuCatalogDialogOpen}>
