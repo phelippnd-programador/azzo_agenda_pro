@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { authApi } from "@/lib/api";
+import { resolveUiError } from "@/lib/error-utils";
 import { forgotPasswordSchema, type ForgotPasswordForm } from "@/schemas/auth";
 
 export default function ForgotPassword() {
@@ -19,11 +21,14 @@ export default function ForgotPassword() {
     },
   });
 
-  const onSubmit = form.handleSubmit(async () => {
+  const onSubmit = form.handleSubmit(async (values) => {
     try {
       setIsSubmitting(true);
-      await new Promise((resolve) => setTimeout(resolve, 700));
-      toast.success("Se o e-mail existir, voce recebera instrucoes de recuperacao.");
+      const response = await authApi.forgotPassword(values.email);
+      toast.success(response.message || "Se o e-mail existir, voce recebera instrucoes de recuperacao.");
+      form.reset({ email: "" });
+    } catch (error) {
+      toast.error(resolveUiError(error, "Nao foi possivel solicitar a redefinicao de senha.").message);
     } finally {
       setIsSubmitting(false);
     }

@@ -44,6 +44,7 @@ import Auditoria from "./pages/Auditoria";
 import LgpdRequests from "./pages/LgpdRequests";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Register from "./pages/Register";
 import Notifications from "./pages/Notifications";
 import PublicBooking from "./pages/PublicBooking";
@@ -180,6 +181,10 @@ function AppRoutes() {
               <ForgotPassword />
             </PublicRoute>
           }
+        />
+        <Route
+          path="/redefinir-senha"
+          element={<ResetPassword />}
         />
         <Route
           path="/cadastro"

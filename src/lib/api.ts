@@ -702,6 +702,28 @@ export const authApi = {
     }
     clearSession();
   },
+
+  async forgotPassword(email: string) {
+    return request<{ message: string }>(
+      "/auth/forgot-password",
+      {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      },
+      false
+    );
+  },
+
+  async resetPassword(token: string, password: string) {
+    return request<{ message: string }>(
+      "/auth/reset-password",
+      {
+        method: "POST",
+        body: JSON.stringify({ token, password }),
+      },
+      false
+    );
+  },
 };
 
 /* ================= DASHBOARD ================= */
