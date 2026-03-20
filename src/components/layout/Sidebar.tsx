@@ -151,6 +151,8 @@ const HIDDEN_MENU_ROUTES = new Set([
   "/estoque/transferencias",
   "/clientes/importacoes",
   "/clientes/importacoes/:jobId",
+  "/servicos/importacoes",
+  "/servicos/importacoes/:jobId",
 ]);
 
 function sortMenuNodes<T extends { displayOrder?: number; label?: string }>(items: T[]) {

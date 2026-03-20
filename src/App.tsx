@@ -17,6 +17,9 @@ import {
 import Index from "./pages/Index";
 import Agenda from "./pages/Agenda";
 import Services from "./pages/Services";
+import ServicesOverviewPage from "./pages/services/ServicesOverviewPage";
+import ServiceImportsPage from "./pages/services/ServiceImportsPage";
+import ServiceImportDetailPage from "./pages/services/ServiceImportDetailPage";
 import Specialties from "./pages/Specialties";
 import Professionals from "./pages/Professionals";
 import ProfessionalProfile from "./pages/ProfessionalProfile";
@@ -248,7 +251,11 @@ function AppRoutes() {
               <Services />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<ServicesOverviewPage />} />
+          <Route path="importacoes" element={<ServiceImportsPage />} />
+          <Route path="importacoes/:jobId" element={<ServiceImportDetailPage />} />
+        </Route>
         <Route
           path="/especialidades"
           element={

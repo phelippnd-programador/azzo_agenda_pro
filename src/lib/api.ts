@@ -125,6 +125,12 @@ import type {
   ClientImportTemplateFormat,
 } from "@/types/client-import";
 import type {
+  ServiceImportErrorLine,
+  ServiceImportJob,
+  ServiceImportMode,
+  ServiceImportTemplateFormat,
+} from "@/types/service-import";
+import type {
   ChatAppointmentMarker,
   ChatConversation,
   ChatConversationListResponse,
@@ -1225,6 +1231,32 @@ export const clientImportApi = {
     request<ClientImportErrorLine[]>(`/clients/importacoes/${jobId}/erros`),
   cancelImportJob: (jobId: string) =>
     request<ClientImportJob>(`/clients/importacoes/${jobId}/cancelar`, {
+      method: "POST",
+    }),
+};
+
+export const serviceImportApi = {
+  listImportJobs: () => request<ServiceImportJob[]>("/services/importacoes"),
+  downloadImportTemplate: (params?: { formato?: ServiceImportTemplateFormat }) => {
+    const query = new URLSearchParams();
+    query.set("formato", params?.formato ?? "xlsx");
+    return requestBlob(`/services/importacoes/modelo?${query.toString()}`);
+  },
+  createImportJob: (params: { arquivo: File; modoImportacao: ServiceImportMode; dryRun?: boolean }) => {
+    const formData = new FormData();
+    formData.append("arquivo", params.arquivo);
+    formData.append("modoImportacao", params.modoImportacao);
+    if (typeof params.dryRun === "boolean") formData.append("dryRun", String(params.dryRun));
+    return request<ServiceImportJob>("/services/importacoes", {
+      method: "POST",
+      body: formData,
+    });
+  },
+  getImportJobById: (jobId: string) => request<ServiceImportJob>(`/services/importacoes/${jobId}`),
+  getImportErrors: (jobId: string) =>
+    request<ServiceImportErrorLine[]>(`/services/importacoes/${jobId}/erros`),
+  cancelImportJob: (jobId: string) =>
+    request<ServiceImportJob>(`/services/importacoes/${jobId}/cancelar`, {
       method: "POST",
     }),
 };
