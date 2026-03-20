@@ -58,6 +58,7 @@ type FacebookSdk = {
     callback: (response: FacebookLoginResponse) => void,
     options?: Record<string, unknown>
   ) => void;
+  getLoginStatus: (callback: (response: FacebookLoginResponse) => void) => void;
 };
 
 type WindowWithMetaSdk = Window & {
@@ -274,6 +275,11 @@ export function WhatsAppIntegrationCard() {
         return;
       }
 
+      console.log("Meta Embedded Signup postMessage recebido", {
+        origin: event.origin,
+        payload,
+      });
+
       const setupInfo = extractSetupInfo(payload);
       if (setupInfo) {
         pendingSetupInfoRef.current = setupInfo;
@@ -373,9 +379,30 @@ export function WhatsAppIntegrationCard() {
       await new Promise<void>((resolve, reject) => {
         sdk.login(
           (response) => {
+            console.log("Meta Embedded Signup FB.login response", response);
             const code = response.authResponse?.code?.trim();
             if (!code) {
-              reject(new Error("A Meta nao retornou o code do Embedded Signup."));
+              sdk.getLoginStatus((statusResponse) => {
+                console.log(
+                  "Meta Embedded Signup FB.getLoginStatus response",
+                  statusResponse
+                );
+
+                const fallbackMessage =
+                  response.status === "not_authorized" ||
+                  statusResponse?.status === "not_authorized"
+                    ? "A Meta nao autorizou o app para concluir o Embedded Signup. Verifique permissoes, app/config e a conta usada no popup."
+                    : response.status === "unknown" ||
+                        statusResponse?.status === "unknown"
+                      ? "A Meta retornou status=unknown no Embedded Signup. Isso geralmente indica cancelamento do popup, fechamento da janela ou falha de configuracao/autorizacao no app da Meta."
+                      : "A Meta nao retornou o code do Embedded Signup.";
+
+                reject(
+                  new Error(
+                    `${fallbackMessage} Verifique os objetos 'Meta Embedded Signup FB.login response' e 'Meta Embedded Signup FB.getLoginStatus response' no console.`
+                  )
+                );
+              });
               return;
             }
             resolve(handleFinalizeEmbeddedSignup(code));
