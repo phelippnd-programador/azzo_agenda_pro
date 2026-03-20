@@ -139,7 +139,19 @@ type DynamicMenuNode = {
 };
 
 const DYNAMIC_BOTTOM_ROUTES = new Set(["/perfil-salao", "/configuracoes"]);
-const HIDDEN_MENU_ROUTES = new Set(["/unauthorized"]);
+const HIDDEN_MENU_ROUTES = new Set([
+  "/unauthorized",
+  "/estoque/visao-geral",
+  "/estoque/itens",
+  "/estoque/movimentacoes",
+  "/estoque/importacoes",
+  "/estoque/inventarios",
+  "/estoque/fornecedores",
+  "/estoque/pedidos-compra",
+  "/estoque/transferencias",
+  "/clientes/importacoes",
+  "/clientes/importacoes/:jobId",
+]);
 
 function sortMenuNodes<T extends { displayOrder?: number; label?: string }>(items: T[]) {
   return [...items].sort((left, right) => {

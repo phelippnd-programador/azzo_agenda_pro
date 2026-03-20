@@ -119,6 +119,12 @@ import type {
   StockMovement,
 } from "@/types/stock";
 import type {
+  ClientImportErrorLine,
+  ClientImportJob,
+  ClientImportMode,
+  ClientImportTemplateFormat,
+} from "@/types/client-import";
+import type {
   ChatAppointmentMarker,
   ChatConversation,
   ChatConversationListResponse,
@@ -1193,6 +1199,32 @@ export const stockApi = {
     ),
   cancelImportJob: (jobId: string) =>
     request<StockImportJob>(`/estoque/importacoes/${jobId}/cancelar`, {
+      method: "POST",
+    }),
+};
+
+export const clientImportApi = {
+  listImportJobs: () => request<ClientImportJob[]>("/clients/importacoes"),
+  downloadImportTemplate: (params?: { formato?: ClientImportTemplateFormat }) => {
+    const query = new URLSearchParams();
+    query.set("formato", params?.formato ?? "xlsx");
+    return requestBlob(`/clients/importacoes/modelo?${query.toString()}`);
+  },
+  createImportJob: (params: { arquivo: File; modoImportacao: ClientImportMode; dryRun?: boolean }) => {
+    const formData = new FormData();
+    formData.append("arquivo", params.arquivo);
+    formData.append("modoImportacao", params.modoImportacao);
+    if (typeof params.dryRun === "boolean") formData.append("dryRun", String(params.dryRun));
+    return request<ClientImportJob>("/clients/importacoes", {
+      method: "POST",
+      body: formData,
+    });
+  },
+  getImportJobById: (jobId: string) => request<ClientImportJob>(`/clients/importacoes/${jobId}`),
+  getImportErrors: (jobId: string) =>
+    request<ClientImportErrorLine[]>(`/clients/importacoes/${jobId}/erros`),
+  cancelImportJob: (jobId: string) =>
+    request<ClientImportJob>(`/clients/importacoes/${jobId}/cancelar`, {
       method: "POST",
     }),
 };

@@ -23,6 +23,9 @@ import ProfessionalProfile from "./pages/ProfessionalProfile";
 import ProfessionalCommissionSettings from "./pages/ProfessionalCommissionSettings";
 import Clients from "./pages/Clients";
 import ClientProfile from "./pages/ClientProfile";
+import ClientImportsPage from "./pages/clients/ClientImportsPage";
+import ClientImportDetailPage from "./pages/clients/ClientImportDetailPage";
+import ClientsOverviewPage from "./pages/clients/ClientsOverviewPage";
 import SuggestionsPage from "./pages/Suggestions";
 import ChatPage from "./pages/Chat";
 import Stock from "./pages/Stock";
@@ -285,7 +288,11 @@ function AppRoutes() {
               <Clients />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<ClientsOverviewPage />} />
+          <Route path="importacoes" element={<ClientImportsPage />} />
+          <Route path="importacoes/:jobId" element={<ClientImportDetailPage />} />
+        </Route>
         <Route
           path="/clientes/:id"
           element={
