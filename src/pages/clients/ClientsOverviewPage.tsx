@@ -25,7 +25,6 @@ import {
 import {
   Search,
   Plus,
-  Download,
   MoreVertical,
   Calendar,
   DollarSign,
@@ -128,10 +127,6 @@ export default function ClientsOverviewPage() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <Button variant="outline" onClick={() => navigate('/clientes/importacoes')} className="gap-2">
-            <Download className="h-4 w-4" />
-            Importacoes
-          </Button>
           <div className="flex overflow-hidden rounded-lg border">
             <Button
               variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
