@@ -25,6 +25,24 @@ vi.mock("sonner", () => ({
   },
 }));
 
+vi.mock("@/components/layout/MainLayout", () => ({
+  MainLayout: ({
+    children,
+    title,
+    subtitle,
+  }: {
+    children: React.ReactNode;
+    title: string;
+    subtitle?: string;
+  }) => (
+    <div>
+      <h1>{title}</h1>
+      {subtitle ? <p>{subtitle}</p> : null}
+      {children}
+    </div>
+  ),
+}));
+
 describe("StockSettingsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();

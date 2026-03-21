@@ -186,6 +186,11 @@ export interface Appointment {
   createdAt: Date;
 }
 
+export interface TransactionCategory {
+  id: string;
+  name: string;
+}
+
 export interface Transaction {
   id: string;
   tenantId: string;
@@ -200,6 +205,10 @@ export interface Transaction {
   paymentMethod: 'CASH' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'PIX' | 'OTHER';
   date: Date;
   createdAt: Date;
+  reconciled?: boolean;
+  reconciledAt?: string;
+  source?: string;
+  recurringId?: string;
 }
 
 export interface DashboardMetrics {
