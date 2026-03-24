@@ -1,7 +1,9 @@
 import type {
   Appointment,
+  AppointmentDetailResponse,
   AppointmentCustomerNote,
   AppointmentCreateItemInput,
+  AppointmentTimelineEvent,
   Client,
   ClientAppointmentHistoryResponse,
   DashboardCustomerRankingResponse,
@@ -161,7 +163,9 @@ import { toast } from "sonner";
 
 export type {
   Appointment,
+  AppointmentDetailResponse,
   AppointmentCustomerNote,
+  AppointmentTimelineEvent,
   Client,
   ClientAppointmentHistoryResponse,
   DashboardCustomerRankingResponse,
@@ -954,10 +958,25 @@ export const clientsApi = {
     return request<ListResponse<Client>>(`/clients${suffix}`);
   },
   getById: (id: string) => request<Client>(`/clients/${id}`),
-  getAppointmentHistory: (id: string, page = 0, size = 20) =>
-    request<ClientAppointmentHistoryResponse>(
-      `/clients/${id}/appointment-history?page=${encodeURIComponent(String(page))}&size=${encodeURIComponent(String(size))}`
-    ),
+  getAppointmentHistory: (
+    id: string,
+    page = 0,
+    size = 20,
+    filters?: {
+      from?: string;
+      to?: string;
+      serviceId?: string;
+    }
+  ) => {
+    const query = new URLSearchParams({
+      page: String(page),
+      size: String(size),
+    });
+    if (filters?.from) query.set("from", filters.from);
+    if (filters?.to) query.set("to", filters.to);
+    if (filters?.serviceId) query.set("serviceId", filters.serviceId);
+    return request<ClientAppointmentHistoryResponse>(`/clients/${id}/appointment-history?${query.toString()}`);
+  },
   create: (data: Partial<Client>) =>
     request<Client>("/clients", {
       method: "POST",
@@ -989,6 +1008,7 @@ export const appointmentsApi = {
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return request<ListResponse<Appointment>>(`/appointments${suffix}`);
   },
+  getById: (id: string) => request<AppointmentDetailResponse>(`/appointments/${id}`),
   create: (data: AppointmentCreateRequest) =>
     request<Appointment>("/appointments", {
       method: "POST",

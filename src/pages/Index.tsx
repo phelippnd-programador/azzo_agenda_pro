@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { RankedBarCard } from '@/components/common/RankedBarCard';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { UpcomingAppointments } from '@/components/dashboard/UpcomingAppointments';
@@ -455,36 +456,24 @@ export default function Dashboard() {
           </div>
         ) : null}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Clientes com mais servicos no periodo</CardTitle>
-            {customerRanking?.lastUpdatedAt ? (
-              <p className="text-sm text-muted-foreground">
-                Atualizado em {new Date(customerRanking.lastUpdatedAt).toLocaleString('pt-BR')}
-              </p>
-            ) : null}
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {customerRanking?.items?.length ? customerRanking.items.map((item) => (
-              <div key={item.clientId} className="flex items-center justify-between gap-3 rounded-lg border p-3">
-                <div className="min-w-0">
-                  <p className="font-medium truncate">{item.rank}. {item.clientName}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {item.completedServices} servico(s) • {item.completedAppointments} atendimento(s)
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium text-primary">{formatCurrency(item.revenueTotal)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {item.lastAppointmentDate ? new Date(`${item.lastAppointmentDate}T12:00:00`).toLocaleDateString('pt-BR') : '-'}
-                  </p>
-                </div>
-              </div>
-            )) : (
-              <p className="text-sm text-muted-foreground">Nenhum ranking de clientes disponivel no periodo.</p>
-            )}
-          </CardContent>
-        </Card>
+        <RankedBarCard
+          title="Clientes com mais servicos no periodo"
+          icon={Users}
+          subtitle={customerRanking?.lastUpdatedAt ? `Atualizado em ${new Date(customerRanking.lastUpdatedAt).toLocaleString('pt-BR')}` : undefined}
+          items={(customerRanking?.items || []).map((item) => ({
+            id: item.clientId,
+            name: item.clientName,
+            value: item.completedServices,
+            badgeText: formatCurrency(item.revenueTotal),
+            metaText: `${item.completedServices} servico(s) - ${item.completedAppointments} atendimento(s) - ultima: ${
+              item.lastAppointmentDate ? new Date(`${item.lastAppointmentDate}T12:00:00`).toLocaleDateString('pt-BR') : '-'
+            }`,
+          }))}
+          maxItems={5}
+          valueLabel="Servicos"
+          labelPrefix="Cliente"
+          emptyMessage="Nenhum ranking de clientes disponivel no periodo."
+        />
       </div>
     </MainLayout>
   );

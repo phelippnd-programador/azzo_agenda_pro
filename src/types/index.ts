@@ -131,6 +131,28 @@ export interface AppointmentCustomerNote {
   internalFollowupNotes?: string;
 }
 
+export interface AppointmentTimelineEvent {
+  eventId: string;
+  action: string;
+  actionLabel: string;
+  actorUserId?: string;
+  actorName?: string;
+  actorRole?: string;
+  status?: string;
+  sourceChannel?: string;
+  createdAt: string;
+  changedFields: string[];
+  before?: unknown;
+  after?: unknown;
+  metadata?: unknown;
+}
+
+export interface AppointmentDetailResponse {
+  appointment: Appointment;
+  careNotes: AppointmentCustomerNote[];
+  timeline: AppointmentTimelineEvent[];
+}
+
 export interface ClientAppointmentHistoryItem {
   appointmentId: string;
   date: string;
