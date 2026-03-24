@@ -1,7 +1,9 @@
 import type {
   Appointment,
+  AppointmentDetailResponse,
   AppointmentCustomerNote,
   AppointmentCreateItemInput,
+  AppointmentTimelineEvent,
   Client,
   ClientAppointmentHistoryResponse,
   DashboardCustomerRankingResponse,
@@ -10,6 +12,7 @@ import type {
   Specialty,
   Service,
   Transaction,
+  TransactionCategory,
   User,
 } from "@/types";
 import type { Invoice, InvoiceFormData } from "@/types/invoice";
@@ -160,7 +163,9 @@ import { toast } from "sonner";
 
 export type {
   Appointment,
+  AppointmentDetailResponse,
   AppointmentCustomerNote,
+  AppointmentTimelineEvent,
   Client,
   ClientAppointmentHistoryResponse,
   DashboardCustomerRankingResponse,
@@ -953,10 +958,25 @@ export const clientsApi = {
     return request<ListResponse<Client>>(`/clients${suffix}`);
   },
   getById: (id: string) => request<Client>(`/clients/${id}`),
-  getAppointmentHistory: (id: string, page = 0, size = 20) =>
-    request<ClientAppointmentHistoryResponse>(
-      `/clients/${id}/appointment-history?page=${encodeURIComponent(String(page))}&size=${encodeURIComponent(String(size))}`
-    ),
+  getAppointmentHistory: (
+    id: string,
+    page = 0,
+    size = 20,
+    filters?: {
+      from?: string;
+      to?: string;
+      serviceId?: string;
+    }
+  ) => {
+    const query = new URLSearchParams({
+      page: String(page),
+      size: String(size),
+    });
+    if (filters?.from) query.set("from", filters.from);
+    if (filters?.to) query.set("to", filters.to);
+    if (filters?.serviceId) query.set("serviceId", filters.serviceId);
+    return request<ClientAppointmentHistoryResponse>(`/clients/${id}/appointment-history?${query.toString()}`);
+  },
   create: (data: Partial<Client>) =>
     request<Client>("/clients", {
       method: "POST",
@@ -988,6 +1008,7 @@ export const appointmentsApi = {
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return request<ListResponse<Appointment>>(`/appointments${suffix}`);
   },
+  getById: (id: string) => request<AppointmentDetailResponse>(`/appointments/${id}`),
   create: (data: AppointmentCreateRequest) =>
     request<Appointment>("/appointments", {
       method: "POST",
@@ -1263,21 +1284,141 @@ export const serviceImportApi = {
 
 /* ================= FINANCE ================= */
 
+export type TransactionListParams = {
+  from?: string;
+  to?: string;
+  type?: string;
+  categoryId?: string;
+  paymentMethod?: string;
+  professionalId?: string;
+  reconciled?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type TransactionPagedResponse = {
+  items: Transaction[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+};
+
 export const transactionsApi = {
-  getAll: () => request<Transaction[]>("/finance/transactions"),
-  getSummary: () =>
-    request<{ totalIncome: number; totalExpenses: number; balance: number }>(
-      "/finance/transactions/summary"
-    ),
+  getAll: (params?: TransactionListParams) => {
+    const query = new URLSearchParams();
+    if (params?.from) query.set("from", params.from);
+    if (params?.to) query.set("to", params.to);
+    if (params?.type) query.set("type", params.type);
+    if (params?.categoryId) query.set("categoryId", params.categoryId);
+    if (params?.paymentMethod) query.set("paymentMethod", params.paymentMethod);
+    if (params?.professionalId) query.set("professionalId", params.professionalId);
+    if (params?.reconciled) query.set("reconciled", params.reconciled);
+    if (typeof params?.page === "number") query.set("page", String(params.page));
+    if (typeof params?.limit === "number") query.set("limit", String(params.limit));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<TransactionPagedResponse>(`/finance/transactions${suffix}`);
+  },
+  getSummary: (params?: { from?: string; to?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.from) query.set("from", params.from);
+    if (params?.to) query.set("to", params.to);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<{ totalIncome: number; totalExpenses: number; balance: number }>(
+      `/finance/transactions/summary${suffix}`
+    );
+  },
   create: (data: Partial<Transaction>) =>
     request<Transaction>("/finance/transactions", {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  update: (id: string, data: Partial<Transaction>) =>
+    request<Transaction>(`/finance/transactions/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  reconcile: (id: string) =>
+    request<Transaction>(`/finance/transactions/${id}/reconcile`, {
+      method: "PATCH",
+    }),
   delete: (id: string) =>
     request<void>(`/finance/transactions/${id}`, {
       method: "DELETE",
     }),
+  exportCsv: (params?: { from?: string; to?: string; type?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.from) query.set("from", params.from);
+    if (params?.to) query.set("to", params.to);
+    if (params?.type) query.set("type", params.type);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return requestBlob(`/finance/transactions/export${suffix}`);
+  },
+  getCashFlow: (params?: { from?: string; to?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.from) query.set("from", params.from);
+    if (params?.to) query.set("to", params.to);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<Array<{ date: string; income: number; expenses: number; balance: number }>>(
+      `/finance/transactions/cash-flow${suffix}`
+    );
+  },
+};
+
+export const transactionCategoriesApi = {
+  getAll: () => request<Array<TransactionCategory & { transactionCount: number }>>("/finance/transactions/categories"),
+  create: (name: string) =>
+    request<TransactionCategory & { transactionCount: number }>("/finance/transactions/categories", {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    }),
+  update: (id: string, name: string) =>
+    request<TransactionCategory & { transactionCount: number }>(`/finance/transactions/categories/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ name }),
+    }),
+  delete: (id: string) =>
+    request<void>(`/finance/transactions/categories/${id}`, {
+      method: "DELETE",
+    }),
+};
+
+/* ================= RECURRING TRANSACTIONS ================= */
+
+export type RecurringTransaction = {
+  id: string;
+  type: "INCOME" | "EXPENSE";
+  categoryId?: string;
+  categoryName?: string;
+  description: string;
+  amount: number;
+  paymentMethod: string;
+  frequency: "MONTHLY" | "WEEKLY";
+  dayOfMonth?: number;
+  dayOfWeek?: number;
+  active: boolean;
+  createdAt: string;
+};
+
+export type RecurringTransactionCreateInput = {
+  type: "INCOME" | "EXPENSE";
+  categoryId?: string;
+  description: string;
+  amount: number;
+  paymentMethod: string;
+  frequency: "MONTHLY" | "WEEKLY";
+  dayOfMonth?: number;
+  dayOfWeek?: number;
+};
+
+export const recurringTransactionsApi = {
+  getAll: () => request<RecurringTransaction[]>("/finance/transactions/recurring"),
+  create: (data: RecurringTransactionCreateInput) =>
+    request<RecurringTransaction>("/finance/transactions/recurring", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) =>
+    request<void>(`/finance/transactions/recurring/${id}`, { method: "DELETE" }),
 };
 
 /* ================= REPORTS ================= */

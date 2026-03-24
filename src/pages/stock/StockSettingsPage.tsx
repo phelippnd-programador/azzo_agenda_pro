@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -49,68 +50,80 @@ export default function StockSettingsPage() {
   };
 
   if (isLoading || !settings) {
-    return <Skeleton className="h-64 w-full" />;
+    return (
+      <MainLayout
+        title="Configuracoes de estoque"
+        subtitle="Parametros de alerta e politicas operacionais do modulo de estoque."
+      >
+        <Skeleton className="h-64 w-full" />
+      </MainLayout>
+    );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Configuracoes de estoque</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={settings.alertaEstoqueMinimoAtivo}
-            onChange={(e) =>
-              setSettings((prev) =>
-                prev ? { ...prev, alertaEstoqueMinimoAtivo: e.target.checked } : prev
-              )
-            }
-          />
-          Ativar alerta de estoque minimo
-        </label>
+    <MainLayout
+      title="Configuracoes de estoque"
+      subtitle="Parametros de alerta e politicas operacionais do modulo de estoque."
+    >
+      <Card>
+        <CardHeader>
+          <CardTitle>Configuracoes de estoque</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={settings.alertaEstoqueMinimoAtivo}
+              onChange={(e) =>
+                setSettings((prev) =>
+                  prev ? { ...prev, alertaEstoqueMinimoAtivo: e.target.checked } : prev
+                )
+              }
+            />
+            Ativar alerta de estoque minimo
+          </label>
 
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={settings.bloquearSaidaSemSaldo}
-            onChange={(e) =>
-              setSettings((prev) => (prev ? { ...prev, bloquearSaidaSemSaldo: e.target.checked } : prev))
-            }
-          />
-          Bloquear saida sem saldo
-        </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={settings.bloquearSaidaSemSaldo}
+              onChange={(e) =>
+                setSettings((prev) => (prev ? { ...prev, bloquearSaidaSemSaldo: e.target.checked } : prev))
+              }
+            />
+            Bloquear saida sem saldo
+          </label>
 
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={settings.permitirAjusteNegativoComPermissao}
-            onChange={(e) =>
-              setSettings((prev) =>
-                prev ? { ...prev, permitirAjusteNegativoComPermissao: e.target.checked } : prev
-              )
-            }
-          />
-          Permitir ajuste negativo com permissao
-        </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={settings.permitirAjusteNegativoComPermissao}
+              onChange={(e) =>
+                setSettings((prev) =>
+                  prev ? { ...prev, permitirAjusteNegativoComPermissao: e.target.checked } : prev
+                )
+              }
+            />
+            Permitir ajuste negativo com permissao
+          </label>
 
-        <div className="space-y-1">
-          <Label>Dias de cobertura meta</Label>
-          <Input
-            type="number"
-            min="1"
-            value={settings.diasCoberturaMeta}
-            onChange={(e) =>
-              setSettings((prev) => (prev ? { ...prev, diasCoberturaMeta: Number(e.target.value || 0) } : prev))
-            }
-          />
-        </div>
+          <div className="space-y-1">
+            <Label>Dias de cobertura meta</Label>
+            <Input
+              type="number"
+              min="1"
+              value={settings.diasCoberturaMeta}
+              onChange={(e) =>
+                setSettings((prev) => (prev ? { ...prev, diasCoberturaMeta: Number(e.target.value || 0) } : prev))
+              }
+            />
+          </div>
 
-        <Button onClick={() => void handleSave()} disabled={isSaving}>
-          {isSaving ? "Salvando..." : "Salvar configuracoes"}
-        </Button>
-      </CardContent>
-    </Card>
+          <Button onClick={() => void handleSave()} disabled={isSaving}>
+            {isSaving ? "Salvando..." : "Salvar configuracoes"}
+          </Button>
+        </CardContent>
+      </Card>
+    </MainLayout>
   );
 }

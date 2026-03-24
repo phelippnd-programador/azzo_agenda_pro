@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   completeWhatsAppEmbeddedSignup,
   getWhatsAppConfig,
@@ -65,6 +66,8 @@ type WindowWithMetaSdk = Window & {
   FB?: FacebookSdk;
   fbAsyncInit?: () => void;
 };
+
+type SetupMode = "meta" | "manual";
 
 function normalizeMessageEventData(raw: unknown): Record<string, unknown> | null {
   if (!raw) return null;
@@ -183,10 +186,12 @@ async function loadMetaSdk(appId: string): Promise<FacebookSdk> {
 
 export function WhatsAppIntegrationCard() {
   const queryClient = useQueryClient();
+  const [setupMode, setSetupMode] = useState<SetupMode>("meta");
   const [activateIntegration, setActivateIntegration] = useState(false);
   const [canSchedule, setCanSchedule] = useState(true);
   const [canCancel, setCanCancel] = useState(true);
   const [canReschedule, setCanReschedule] = useState(true);
+  const [manualAccessToken, setManualAccessToken] = useState("");
   const [phoneNumberId, setPhoneNumberId] = useState("");
   const [businessAccountId, setBusinessAccountId] = useState("");
   const [webhookVerifyToken, setWebhookVerifyToken] = useState("");
@@ -234,6 +239,11 @@ export function WhatsAppIntegrationCard() {
 
         setConfigStatus(config);
         setEmbeddedStatus(embedded);
+        setSetupMode(
+          (embedded.tokenSource || config.tokenSource || "MANUAL") === "MANUAL"
+            ? "manual"
+            : "meta"
+        );
         setActivateIntegration(Boolean(config.whatsappEnabled || config.enabled));
         setCanSchedule(config.canSchedule ?? true);
         setCanCancel(config.canCancel ?? true);
@@ -293,6 +303,11 @@ export function WhatsAppIntegrationCard() {
 
     setConfigStatus(config);
     setEmbeddedStatus(embedded);
+    setSetupMode(
+      (embedded.tokenSource || config.tokenSource || "MANUAL") === "MANUAL"
+        ? "manual"
+        : "meta"
+    );
     setActivateIntegration(Boolean(config.whatsappEnabled || config.enabled));
     setCanSchedule(config.canSchedule ?? true);
     setCanCancel(config.canCancel ?? true);
@@ -419,8 +434,17 @@ export function WhatsAppIntegrationCard() {
   };
 
   const handleSave = async () => {
-    if (activateIntegration && !phoneNumberId.trim()) {
-      toast.error("Conecte o WhatsApp via Meta antes de ativar a integracao.");
+    if (!phoneNumberId.trim()) {
+      toast.error(
+        setupMode === "manual"
+          ? "Informe o Phone Number ID para salvar a configuracao manual."
+          : "Conecte o WhatsApp via Meta antes de salvar a integracao."
+      );
+      return;
+    }
+
+    if (setupMode === "manual" && !isTokenConfigured && !manualAccessToken.trim()) {
+      toast.error("Informe o Access Token na primeira configuracao manual do WhatsApp.");
       return;
     }
 
@@ -428,9 +452,11 @@ export function WhatsAppIntegrationCard() {
       setIsSaving(true);
       setTestResult(EMPTY_RESULT);
 
+      const trimmedAccessToken = manualAccessToken.trim();
       const response = await saveWhatsAppConfig({
         whatsappEnabled: activateIntegration,
         enabled: activateIntegration,
+        accessToken: setupMode === "manual" && trimmedAccessToken ? trimmedAccessToken : undefined,
         phoneNumberId: phoneNumberId.trim(),
         businessAccountId: businessAccountId.trim() || undefined,
         webhookVerifyToken: webhookVerifyToken.trim() || undefined,
@@ -447,6 +473,7 @@ export function WhatsAppIntegrationCard() {
       setBusinessId(response.businessId || businessId);
       setDisplayPhoneNumber(response.displayPhoneNumber || displayPhoneNumber);
       setWebhookVerifyToken(response.webhookVerifyToken || webhookVerifyToken);
+      setManualAccessToken("");
 
       toast.success(
         activateIntegration
@@ -547,96 +574,178 @@ export function WhatsAppIntegrationCard() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-dashed bg-muted/30 p-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Conectar com a Meta</p>
-              <p className="text-xs text-muted-foreground">
-                Abre o fluxo oficial do Embedded Signup para vincular WABA,
-                numero e token sem preenchimento manual.
-              </p>
+        <Tabs value={setupMode} onValueChange={(value) => setSetupMode(value as SetupMode)} className="space-y-4">
+          <TabsList className="grid h-auto w-full grid-cols-2 gap-2">
+            <TabsTrigger value="meta">Meta</TabsTrigger>
+            <TabsTrigger value="manual">Configuracao manual</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="meta" className="space-y-4">
+            <div className="rounded-xl border border-dashed bg-muted/30 p-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Conectar com a Meta</p>
+                  <p className="text-xs text-muted-foreground">
+                    Abre o fluxo oficial do Embedded Signup para vincular WABA,
+                    numero e token sem preenchimento manual.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleLaunchEmbeddedSignup}
+                  disabled={
+                    isLaunchingEmbeddedSignup ||
+                    isFinalizingEmbeddedSignup ||
+                    !isEmbeddedConfigured
+                  }
+                >
+                  {isLaunchingEmbeddedSignup || isFinalizingEmbeddedSignup ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <ShieldCheck className="mr-2 h-4 w-4" />
+                  )}
+                  Conectar via Meta
+                </Button>
+              </div>
             </div>
-            <Button
-              type="button"
-              onClick={handleLaunchEmbeddedSignup}
-              disabled={
-                isLaunchingEmbeddedSignup ||
-                isFinalizingEmbeddedSignup ||
-                !isEmbeddedConfigured
-              }
-            >
-              {isLaunchingEmbeddedSignup || isFinalizingEmbeddedSignup ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <ShieldCheck className="mr-2 h-4 w-4" />
-              )}
-              Conectar via Meta
-            </Button>
-          </div>
-        </div>
 
-        {!isConnected ? (
-          <Alert className="border-yellow-200 bg-yellow-50 text-yellow-900">
-            <AlertCircle className="h-4 w-4 !text-yellow-700" />
-            <AlertTitle>Integracao nao ativa</AlertTitle>
-            <AlertDescription>
-              Conclua o onboarding da Meta para habilitar o envio via WhatsApp.
-            </AlertDescription>
-          </Alert>
-        ) : null}
+            {!isConnected ? (
+              <Alert className="border-yellow-200 bg-yellow-50 text-yellow-900">
+                <AlertCircle className="h-4 w-4 !text-yellow-700" />
+                <AlertTitle>Integracao nao ativa</AlertTitle>
+                <AlertDescription>
+                  Conclua o onboarding da Meta para habilitar o envio via WhatsApp.
+                </AlertDescription>
+              </Alert>
+            ) : null}
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-lg border p-3">
-            <p className="text-sm font-medium">Phone Number ID</p>
-            <p className="mt-1 break-all text-xs text-muted-foreground">
-              {phoneNumberId || "Nao informado"}
-            </p>
-          </div>
-          <div className="rounded-lg border p-3">
-            <p className="text-sm font-medium">Business Account ID</p>
-            <p className="mt-1 break-all text-xs text-muted-foreground">
-              {businessAccountId || "Nao informado"}
-            </p>
-          </div>
-          <div className="rounded-lg border p-3">
-            <p className="text-sm font-medium">Business ID</p>
-            <p className="mt-1 break-all text-xs text-muted-foreground">
-              {businessId || "Nao informado"}
-            </p>
-          </div>
-          <div className="rounded-lg border p-3">
-            <p className="text-sm font-medium">Numero exibido</p>
-            <p className="mt-1 break-all text-xs text-muted-foreground">
-              {displayPhoneNumber || "Nao informado"}
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-2 rounded-lg border p-3">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-medium">Webhook Verify Token</p>
-              <p className="text-xs text-muted-foreground">
-                Use este valor ao verificar o webhook do WhatsApp na Meta.
-              </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-lg border p-3">
+                <p className="text-sm font-medium">Phone Number ID</p>
+                <p className="mt-1 break-all text-xs text-muted-foreground">
+                  {phoneNumberId || "Nao informado"}
+                </p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-sm font-medium">Business Account ID</p>
+                <p className="mt-1 break-all text-xs text-muted-foreground">
+                  {businessAccountId || "Nao informado"}
+                </p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-sm font-medium">Business ID</p>
+                <p className="mt-1 break-all text-xs text-muted-foreground">
+                  {businessId || "Nao informado"}
+                </p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-sm font-medium">Numero exibido</p>
+                <p className="mt-1 break-all text-xs text-muted-foreground">
+                  {displayPhoneNumber || "Nao informado"}
+                </p>
+              </div>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                handleCopy(
-                  webhookVerifyToken,
-                  "Webhook verify token copiado."
-                )
-              }
-            >
-              <Copy className="mr-2 h-4 w-4" />
-              Copiar
-            </Button>
-          </div>
-          <Input value={webhookVerifyToken} readOnly />
-        </div>
+          </TabsContent>
+
+          <TabsContent value="manual" className="space-y-4">
+            <Alert className="border-blue-200 bg-blue-50 text-blue-900">
+              <AlertCircle className="h-4 w-4 !text-blue-700" />
+              <AlertTitle>Configuracao manual para o dono do salao</AlertTitle>
+              <AlertDescription>
+                Use este modo quando precisar informar manualmente o token e os IDs do WhatsApp Cloud API.
+                Se o token ja estiver salvo, deixe o campo em branco para manter o valor atual.
+              </AlertDescription>
+            </Alert>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-sm font-medium" htmlFor="whatsapp-manual-access-token">
+                  Access Token
+                </label>
+                <Input
+                  id="whatsapp-manual-access-token"
+                  type="password"
+                  autoComplete="off"
+                  value={manualAccessToken}
+                  placeholder={
+                    isTokenConfigured
+                      ? "Ja configurado no backend. Preencha apenas para substituir."
+                      : "Cole o access token do WhatsApp Cloud API"
+                  }
+                  onChange={(event) => setManualAccessToken(event.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Token configurado no backend: {isTokenConfigured ? "Sim" : "Nao"}.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium" htmlFor="whatsapp-manual-phone-number-id">
+                  Phone Number ID
+                </label>
+                <Input
+                  id="whatsapp-manual-phone-number-id"
+                  value={phoneNumberId}
+                  placeholder="Informe o Phone Number ID"
+                  onChange={(event) => setPhoneNumberId(event.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium" htmlFor="whatsapp-manual-business-account-id">
+                  Business Account ID
+                </label>
+                <Input
+                  id="whatsapp-manual-business-account-id"
+                  value={businessAccountId}
+                  placeholder="Opcional"
+                  onChange={(event) => setBusinessAccountId(event.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <div className="flex items-center justify-between gap-3">
+                  <label className="text-sm font-medium" htmlFor="whatsapp-manual-webhook-token">
+                    Webhook Verify Token
+                  </label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      handleCopy(
+                        webhookVerifyToken,
+                        "Webhook verify token copiado."
+                      )
+                    }
+                  >
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copiar
+                  </Button>
+                </div>
+                <Input
+                  id="whatsapp-manual-webhook-token"
+                  value={webhookVerifyToken}
+                  placeholder="Gerado automaticamente se ficar em branco"
+                  onChange={(event) => setWebhookVerifyToken(event.target.value)}
+                />
+              </div>
+
+              <div className="rounded-lg border p-3">
+                <p className="text-sm font-medium">Business ID</p>
+                <p className="mt-1 break-all text-xs text-muted-foreground">
+                  {businessId || "Nao informado"}
+                </p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-sm font-medium">Numero exibido</p>
+                <p className="mt-1 break-all text-xs text-muted-foreground">
+                  {displayPhoneNumber || "Nao informado"}
+                </p>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
 
         <div className="flex items-center justify-between rounded-lg border p-3">
           <div>
