@@ -36,15 +36,9 @@ import { useServices } from '@/hooks/useServices';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/lib/format';
 
 const categories = ['Todos', 'Cabelo', 'Barba', 'Unhas', 'Estetica', 'Maquiagem', 'Outros'];
-
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-};
 
 export default function ServicesOverviewPage() {
   const [searchTerm, setSearchTerm] = useState('');

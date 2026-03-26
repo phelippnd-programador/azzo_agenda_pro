@@ -33,12 +33,28 @@ vi.mock("@/hooks/useTransactions", () => ({
       },
     ],
     summary: { totalIncome: 45, totalExpenses: 0, balance: 45 },
+    totalCount: 1,
+    totalPages: 1,
+    page: 0,
+    setPage: vi.fn(),
     isLoading: false,
     error: null,
     refetch: vi.fn(),
     createTransaction: createTransactionMock,
+    updateTransaction: vi.fn(),
     deleteTransaction: deleteTransactionMock,
   }),
+  useTransactionCategories: () => ({
+    categories: [{ id: "cat-1", name: "Produto" }],
+    isLoading: false,
+    createCategory: vi.fn(),
+    updateCategory: vi.fn(),
+    deleteCategory: vi.fn(),
+  }),
+  getDateRangeFromFilter: vi.fn(() => ({
+    from: "2026-03-01",
+    to: "2026-03-31",
+  })),
 }));
 
 vi.mock("@/hooks/useProfessionals", () => ({
@@ -75,9 +91,9 @@ describe("Financial", () => {
     );
 
     expect(await screen.findByText("Entradas")).toBeInTheDocument();
-    expect(screen.getByText("Saidas")).toBeInTheDocument();
+    expect(screen.getByText(/Sa.das/i)).toBeInTheDocument();
     expect(screen.getByText("Venda de produto")).toBeInTheDocument();
-    expect(screen.getByText("Comissao vinculada")).toBeInTheDocument();
+    expect(screen.getByText(/Comiss.o vinculada/i)).toBeInTheDocument();
   });
 
   it("should open income dialog", async () => {

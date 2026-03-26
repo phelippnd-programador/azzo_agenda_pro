@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { formatCurrency } from '@/lib/format';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -128,12 +129,6 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
     return items.reduce((sum, item) => sum + item.totalPrice, 0);
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
 
   const validateForm = (): boolean => {
     if (!customer.document || !customer.name) {

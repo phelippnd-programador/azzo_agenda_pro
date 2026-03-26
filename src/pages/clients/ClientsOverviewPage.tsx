@@ -37,13 +37,7 @@ import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmation
 import { ClientCard } from '@/components/clients/ClientCard';
 import { ClientUpsertDialog } from '@/components/clients/ClientUpsertDialog';
 import { maskPhoneBr } from '@/lib/input-masks';
-
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-};
+import { formatCurrency } from '@/lib/format';
 
 export default function ClientsOverviewPage() {
   const navigate = useNavigate();

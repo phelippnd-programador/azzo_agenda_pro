@@ -1,42 +1,23 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Scissors,
-  Clock,
-  DollarSign,
   ChevronLeft,
   ChevronRight,
   Check,
-  Calendar,
-  User,
-  Phone,
   Loader2,
 } from 'lucide-react';
 import { servicesApi, professionalsApi, appointmentsApi, publicBookingApi, Service, Professional } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
-import { maskPhoneBr } from '@/lib/input-masks';
 import { toast } from 'sonner';
-
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-};
-
-const timeSlots = [
-  '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-  '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
-  '17:00', '17:30', '18:00', '18:30',
-];
+import { BookingSuccessScreen } from '@/components/public-booking/BookingSuccessScreen';
+import { BookingServiceStep } from '@/components/public-booking/BookingServiceStep';
+import { BookingProfessionalStep } from '@/components/public-booking/BookingProfessionalStep';
+import { BookingDateTimeStep } from '@/components/public-booking/BookingDateTimeStep';
+import { BookingCustomerStep } from '@/components/public-booking/BookingCustomerStep';
 
 export default function PublicBooking() {
   const { slug } = useParams();
@@ -127,7 +108,7 @@ export default function PublicBooking() {
     [selectedServicesData]
   );
 
-  const selectedProfessionalData = useMemo(() => 
+  const selectedProfessionalData = useMemo(() =>
     professionals.find(p => p.id === selectedProfessional),
     [professionals, selectedProfessional]
   );
@@ -326,59 +307,13 @@ export default function PublicBooking() {
 
   if (bookingComplete) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-card flex items-center justify-center p-4">
-        <Card className="max-w-md w-full text-center">
-          <CardContent className="pt-8 pb-8">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check className="w-8 h-8 text-green-600" />
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
-              Agendamento Confirmado!
-            </h2>
-            <p className="text-muted-foreground mb-6 text-sm sm:text-base">
-              Seu agendamento foi realizado com sucesso. Você receberá uma confirmação em breve.
-            </p>
-            
-            <div className="bg-muted/40 rounded-xl p-4 mb-6 text-left space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Serviço:</span>
-                <span className="font-medium">{selectedServicesData.map((service) => service.name).join(', ')}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Profissional:</span>
-                <span className="font-medium">{selectedProfessionalData?.name}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Data:</span>
-                <span className="font-medium">
-                  {selectedDate?.toLocaleDateString('pt-BR', {
-                    weekday: 'long',
-                    day: 'numeric',
-                    month: 'long',
-                  })}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Horário:</span>
-                <span className="font-medium">{selectedTime}</span>
-              </div>
-              <div className="flex justify-between text-sm pt-2 border-t">
-                <span className="text-muted-foreground">Total:</span>
-                <span className="font-bold text-primary">
-                  {formatCurrency(selectedServiceTotal)}
-                </span>
-              </div>
-            </div>
-
-            <Button
-              onClick={() => window.location.reload()}
-              className="w-full bg-primary hover:bg-primary/90"
-            >
-              Fazer Novo Agendamento
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <BookingSuccessScreen
+        selectedServicesData={selectedServicesData}
+        selectedProfessionalData={selectedProfessionalData}
+        selectedDate={selectedDate}
+        selectedTime={selectedTime}
+        selectedServiceTotal={selectedServiceTotal}
+      />
     );
   }
 
@@ -426,306 +361,58 @@ export default function PublicBooking() {
         <Card className="shadow-xl border-0">
           {/* Step 1: Select Service */}
           {currentStep === 1 && (
-            <>
-              <CardHeader>
-                <CardTitle className="text-lg sm:text-xl">Escolha o Serviço</CardTitle>
-                <CardDescription className="text-sm">
-                  Selecione o serviço que deseja agendar
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {services.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">Nenhum servico disponivel</p>
-                ) : (
-                  services.map((service) => {
-                    const checked = selectedServiceIds.includes(service.id);
-                    return (
-                      <label
-                        key={service.id}
-                        className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-3 sm:p-4 transition-all ${
-                          checked ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/40'
-                        }`}
-                      >
-                        <Checkbox
-                          checked={checked}
-                          onCheckedChange={(value) => handleSelectService(service.id, value === true)}
-                          className="mt-0.5"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="min-w-0 flex-1">
-                              <h3 className="font-medium text-foreground text-sm sm:text-base truncate">
-                                {service.name}
-                              </h3>
-                              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
-                                <span className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
-                                  <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                                  {service.duration} min
-                                </span>
-                                <Badge variant="secondary" className="text-[10px] sm:text-xs">
-                                  {service.category}
-                                </Badge>
-                              </div>
-                            </div>
-                            <div className="text-right flex-shrink-0">
-                              <span className="text-base sm:text-lg font-bold text-primary">
-                                {formatCurrency(service.price)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </label>
-                    );
-                  })
-                )}
-                {selectedServicesData.length ? (
-                  <div className="rounded-xl border bg-muted/30 p-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Servicos selecionados</span>
-                      <span className="font-medium">{selectedServicesData.length}</span>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Duracao total</span>
-                      <span>{selectedServiceDuration} min</span>
-                    </div>
-                    <div className="mt-1 flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Valor total</span>
-                      <span className="font-semibold text-primary">{formatCurrency(selectedServiceTotal)}</span>
-                    </div>
-                  </div>
-                ) : null}
-              </CardContent>
-            </>
+            <BookingServiceStep
+              services={services}
+              selectedServiceIds={selectedServiceIds}
+              selectedServicesData={selectedServicesData}
+              selectedServiceDuration={selectedServiceDuration}
+              selectedServiceTotal={selectedServiceTotal}
+              onSelectService={handleSelectService}
+            />
           )}
 
           {/* Step 2: Select Professional */}
           {currentStep === 2 && (
-            <>
-              <CardHeader>
-                <CardTitle className="text-lg sm:text-xl">Escolha o Profissional</CardTitle>
-                <CardDescription className="text-sm">
-                  Selecione quem irá atendê-lo
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {isLoadingProfessionals ? (
-                  <p className="text-center text-muted-foreground py-8">Carregando profissionais...</p>
-                ) : professionals.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">Nenhum profissional disponível</p>
-                ) : (
-                  professionals.map((professional) => (
-                    <div
-                      key={professional.id}
-                      onClick={() => setSelectedProfessional(professional.id)}
-                      className={`p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                        selectedProfessional === professional.id
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border hover:border-primary/40'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 sm:gap-4">
-                        <Avatar className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0">
-                          <AvatarImage src={professional.avatar} />
-                          <AvatarFallback className="bg-primary/15 text-primary text-sm">
-                            {professional.name.slice(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-medium text-foreground text-sm sm:text-base truncate">
-                            {professional.name}
-                          </h3>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {(Array.isArray(professional.specialties)
-                              ? professional.specialties
-                              : []
-                            )
-                              .slice(0, 3)
-                              .map((spec, i) => (
-                              <Badge key={i} variant="outline" className="text-[10px] sm:text-xs">
-                                {spec}
-                              </Badge>
-                              ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </>
+            <BookingProfessionalStep
+              professionals={professionals}
+              selectedProfessional={selectedProfessional}
+              isLoadingProfessionals={isLoadingProfessionals}
+              onSelect={setSelectedProfessional}
+            />
           )}
 
           {/* Step 3: Select Date and Time */}
           {currentStep === 3 && (
-            <>
-              <CardHeader>
-                <CardTitle className="text-lg sm:text-xl">Escolha Data e Horário</CardTitle>
-                <CardDescription className="text-sm">
-                  Selecione quando deseja ser atendido
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4 sm:space-y-6">
-                {/* Calendar */}
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <Button variant="ghost" size="icon" onClick={() => navigateMonth('prev')} className="h-8 w-8">
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <span className="font-medium text-sm sm:text-base capitalize">
-                      {currentMonth.toLocaleDateString('pt-BR', {
-                        month: 'long',
-                        year: 'numeric',
-                      })}
-                    </span>
-                    <Button variant="ghost" size="icon" onClick={() => navigateMonth('next')} className="h-8 w-8">
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-7 gap-1 text-center mb-2">
-                    {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, i) => (
-                      <span key={i} className="text-[10px] sm:text-xs font-medium text-muted-foreground py-1">
-                        {day}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="grid grid-cols-7 gap-1">
-                    {getDaysInMonth().map((date, i) => (
-                      <button
-                        key={i}
-                        onClick={() => date && isDateSelectable(date) && setSelectedDate(date)}
-                        disabled={!date || !isDateSelectable(date)}
-                        className={`aspect-square rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-                          !date
-                            ? 'invisible'
-                            : !isDateSelectable(date)
-                            ? 'text-muted-foreground/50 cursor-not-allowed'
-                            : selectedDate?.toDateString() === date.toDateString()
-                            ? 'bg-primary text-primary-foreground'
-                            : 'hover:bg-primary/10 text-foreground'
-                        }`}
-                      >
-                        {date?.getDate()}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Time Slots */}
-                {selectedDate && (
-                  <div>
-                    <Label className="text-sm font-medium mb-3 block">Horários Disponíveis</Label>
-                    {isLoadingAvailability && slug && (
-                      <p className="text-sm text-muted-foreground mb-2">Consultando disponibilidade...</p>
-                    )}
-                    {!isLoadingAvailability && slug && availableSlots.length === 0 && (
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Nao ha horarios disponiveis para esta data.
-                      </p>
-                    )}
-                    <div className="grid grid-cols-4 gap-2">
-                      {(slug ? availableSlots : timeSlots).map((time) => (
-                        <Button
-                          key={time}
-                          variant={selectedTime === time ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setSelectedTime(time)}
-                          className={`text-xs sm:text-sm ${
-                            selectedTime === time ? 'bg-primary hover:bg-primary/90' : ''
-                          }`}
-                        >
-                          {time}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </>
+            <BookingDateTimeStep
+              currentMonth={currentMonth}
+              selectedDate={selectedDate}
+              selectedTime={selectedTime}
+              availableSlots={availableSlots}
+              isLoadingAvailability={isLoadingAvailability}
+              slug={slug}
+              getDaysInMonth={getDaysInMonth}
+              isDateSelectable={isDateSelectable}
+              navigateMonth={navigateMonth}
+              onSelectDate={setSelectedDate}
+              onSelectTime={setSelectedTime}
+            />
           )}
 
           {/* Step 4: Customer Info */}
           {currentStep === 4 && (
-            <>
-              <CardHeader>
-                <CardTitle className="text-lg sm:text-xl">Seus Dados</CardTitle>
-                <CardDescription className="text-sm">
-                  Preencha seus dados para confirmar o agendamento
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-sm">Nome Completo *</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="name"
-                      placeholder="Seu nome"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      className="pl-9"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-sm">WhatsApp *</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="phone"
-                      placeholder="(11) 99999-0000"
-                      value={customerPhone}
-                      onChange={(e) => setCustomerPhone(maskPhoneBr(e.target.value))}
-                      className="pl-9"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm">E-mail (opcional)</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={customerEmail}
-                    onChange={(e) => setCustomerEmail(e.target.value)}
-                  />
-                </div>
-
-                {/* Summary */}
-                <div className="bg-muted/40 rounded-xl p-4 mt-6">
-                  <h4 className="font-medium text-foreground mb-3 text-sm">Resumo do Agendamento</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Serviço:</span>
-                      <span className="font-medium truncate ml-2">{selectedServicesData.map((service) => service.name).join(', ')}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Profissional:</span>
-                      <span className="font-medium truncate ml-2">{selectedProfessionalData?.name}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Data:</span>
-                      <span className="font-medium">
-                        {selectedDate?.toLocaleDateString('pt-BR')}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Horário:</span>
-                      <span className="font-medium">{selectedTime}</span>
-                    </div>
-                    <div className="flex justify-between pt-2 border-t mt-2">
-                      <span className="text-foreground font-medium">Total:</span>
-                      <span className="font-bold text-primary">
-                        {formatCurrency(selectedServiceTotal)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </>
+            <BookingCustomerStep
+              customerName={customerName}
+              customerPhone={customerPhone}
+              customerEmail={customerEmail}
+              selectedServicesData={selectedServicesData}
+              selectedProfessionalData={selectedProfessionalData}
+              selectedDate={selectedDate}
+              selectedTime={selectedTime}
+              selectedServiceTotal={selectedServiceTotal}
+              onChangeName={setCustomerName}
+              onChangePhone={setCustomerPhone}
+              onChangeEmail={setCustomerEmail}
+            />
           )}
 
           {/* Navigation Buttons */}
@@ -782,5 +469,3 @@ export default function PublicBooking() {
     </div>
   );
 }
-
-

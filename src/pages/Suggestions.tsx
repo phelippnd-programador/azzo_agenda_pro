@@ -9,19 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { suggestionsApi } from "@/lib/api";
+import { formatDateTime } from "@/lib/format";
 import type { SuggestionItem } from "@/types/suggestion";
 
 const SUGGESTION_CATEGORIES = ["BUG", "MELHORIA", "FUNCIONALIDADE", "USABILIDADE", "OUTRO"] as const;
-
-const formatDateTime = (value?: string) => {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
-};
 
 export default function SuggestionsPage() {
   const [title, setTitle] = useState("");

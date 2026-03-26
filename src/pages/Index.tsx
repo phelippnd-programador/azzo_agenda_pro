@@ -20,13 +20,7 @@ import { useServices } from '@/hooks/useServices';
 import { useAuth } from '@/contexts/AuthContext';
 import { dashboardApi } from '@/lib/api';
 import type { DashboardCustomerRankingResponse } from '@/types';
-
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-};
+import { formatCurrency } from '@/lib/format';
 
 const normalizeDateToIso = (value: unknown) => {
   if (!value) return '';

@@ -13,9 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { commissionApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import type { CommissionProfessionalReportResponse } from "@/types/commission";
-
-const formatCurrency = (valueCents: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format((valueCents || 0) / 100);
+import { formatCurrencyCents as formatCurrency } from "@/lib/format";
 
 const getOriginLabel = (originType: string) => {
   if (originType === "SERVICE") return "Servico";

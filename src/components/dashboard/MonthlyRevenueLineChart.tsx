@@ -11,18 +11,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { formatCurrency } from "@/lib/format";
 
 type RevenuePoint = {
   label: string;
   date: string;
   value: number;
 };
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
 
 export function MonthlyRevenueLineChart() {
   const [points, setPoints] = useState<RevenuePoint[]>([]);

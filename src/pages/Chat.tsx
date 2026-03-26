@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { formatDateTime } from "@/lib/format";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,18 +29,6 @@ const MESSAGE_STATUS_LABELS: Record<ChatMessage["status"], string> = {
   DELIVERED: "Entregue",
   READ: "Lido",
   FAILED: "Falhou",
-};
-
-const formatDateTime = (value?: string | null) => {
-  if (!value) return "-";
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "-";
-  return parsed.toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 };
 
 const EMOJI_OPTIONS = [

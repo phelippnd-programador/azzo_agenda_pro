@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import Clients from "@/pages/Clients";
+import ClientsOverviewPage from "@/pages/clients/ClientsOverviewPage";
 
 vi.mock("@/hooks/useClients", () => ({
   useClients: () => ({
@@ -59,7 +60,11 @@ describe("Clients", () => {
   it("should render client metrics and new client action", async () => {
     render(
       <MemoryRouter initialEntries={["/clientes"]}>
-        <Clients />
+        <Routes>
+          <Route path="/clientes" element={<Clients />}>
+            <Route index element={<ClientsOverviewPage />} />
+          </Route>
+        </Routes>
       </MemoryRouter>
     );
 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { formatCurrency } from "@/lib/format";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useProfessionals } from "@/hooks/useProfessionals";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,12 +42,6 @@ type ProfessionalStats = {
   servicesCount: number;
   clientsCount: number;
 };
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
 
 const formatPercent = (value: number) =>
   `${new Intl.NumberFormat("pt-BR", {

@@ -15,7 +15,6 @@ import {
   useMenuPermissions,
 } from "@/contexts/MenuPermissionsContext";
 import Index from "./pages/Index";
-import Agenda from "./pages/Agenda";
 import Services from "./pages/Services";
 import ServicesOverviewPage from "./pages/services/ServicesOverviewPage";
 import ServiceImportsPage from "./pages/services/ServiceImportsPage";
@@ -42,7 +41,6 @@ import StockSuppliersPage from "./pages/stock/StockSuppliersPage";
 import StockPurchaseOrdersPage from "./pages/stock/StockPurchaseOrdersPage";
 import StockTransfersPage from "./pages/stock/StockTransfersPage";
 import StockSettingsPage from "./pages/stock/StockSettingsPage";
-import Financial from "./pages/Financial";
 import FinancialCommissions from "./pages/FinancialCommissions";
 import ProfessionalFinancial from "./pages/ProfessionalFinancial";
 import ProfessionalCommissionReport from "./pages/ProfessionalCommissionReport";
@@ -64,7 +62,6 @@ import NfseInvoices from "./pages/NfseInvoices";
 import NfseInvoiceForm from "./pages/NfseInvoiceForm";
 import NfseInvoiceDetails from "./pages/NfseInvoiceDetails";
 import NfseInvoicePdf from "./pages/NfseInvoicePdf";
-import SystemAdminPage from "./pages/SystemAdmin";
 import InvoicePreview from "./pages/InvoicePreview";
 import InvoiceEmission from "./pages/InvoiceEmission";
 import ApuracaoMensal from "./pages/ApuracaoMensal";
@@ -74,10 +71,14 @@ import LegalDocument from "./pages/LegalDocument";
 import { NotificationsProvider } from "@/providers/NotificationsProvider";
 import { FullScreenLoader } from "@/components/ui/full-screen-loader";
 import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
+import { isFiscalOwnerPath } from "@/lib/fiscal-paths";
 
 const SalePage = lazy(() => import("./pages/SalePage"));
 const CheckoutSuccess = lazy(() => import("./pages/CheckoutSuccess"));
 const CheckoutError = lazy(() => import("./pages/CheckoutError"));
+const Agenda = lazy(() => import("./pages/Agenda"));
+const Financial = lazy(() => import("./pages/Financial"));
+const SystemAdminPage = lazy(() => import("./pages/SystemAdmin"));
 
 const queryClient = new QueryClient();
 
@@ -92,15 +93,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
   const { canAccess, isLoading: isPermissionsLoading, isEnforced } = useMenuPermissions();
-  const isFiscalOwnerOnlyPath =
-    location.pathname.startsWith("/emitir-nota")
-    || location.pathname.startsWith("/nota-fiscal")
-    || location.pathname.startsWith("/apuracao-mensal")
-    || location.pathname.startsWith("/configuracoes/fiscal")
-    || location.pathname.startsWith("/fiscal/nfse")
-    || location.pathname.startsWith("/config-impostos");
-  const isSystemAdminPath = location.pathname.startsWith("/configuracoes/admin-sistema");
-
   if (isLoading || isPermissionsLoading || (isAuthenticated && !isEnforced)) {
     return <FullScreenLoader />;
   }
@@ -109,11 +101,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (isFiscalOwnerOnlyPath && user?.role !== "OWNER") {
+  if (isFiscalOwnerPath(location.pathname) && user?.role !== "OWNER") {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  if (isSystemAdminPath && user?.role !== "ADMIN") {
+  if (location.pathname.startsWith("/configuracoes/admin-sistema") && user?.role !== "ADMIN") {
     return <Navigate to="/unauthorized" replace />;
   }
 

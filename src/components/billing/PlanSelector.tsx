@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { formatCurrencyCents as formatCurrency } from "@/lib/format";
 import type { BillingPlanOption } from "@/components/billing/types";
 
 type PlanSelectorProps = {
@@ -10,12 +11,6 @@ type PlanSelectorProps = {
   selectedPlanCode: string;
   onSelect: (planCode: string) => void;
 };
-
-const formatCurrency = (amountCents: number) =>
-  new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(amountCents / 100);
 
 export function PlanSelector({
   plans,
