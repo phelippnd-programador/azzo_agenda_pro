@@ -1,9 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   Dialog,
   DialogContent,
@@ -19,14 +21,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CheckCircle2, Circle, Lock, Plus } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Check, ChevronLeft, ChevronRight, Loader2, Plus } from 'lucide-react';
 import { useClients } from '@/hooks/useClients';
 import { useServices } from '@/hooks/useServices';
 import { useAvailableSlots } from '@/hooks/useAvailableSlots';
 import { ClientUpsertDialog } from '@/components/clients/ClientUpsertDialog';
 import { AvailableSlotsList } from '@/components/appointments/AvailableSlotsList';
+import { ConfirmationDialog } from '@/components/common/ConfirmationDialog';
+import { resolveUiError } from '@/lib/error-utils';
 import { formatCurrency, toDateKey } from '@/lib/format';
-import type { Professional } from '@/lib/api';
+import { appointmentsApi, type Professional } from '@/lib/api';
+import type { AppointmentConflictDetails, AppointmentConflictSummary, AppointmentSchedulingSettings } from '@/types/available-slots';
 
 type CreateAppointmentPayload = {
   clientId: string;
@@ -37,6 +43,9 @@ type CreateAppointmentPayload = {
   status: 'PENDING';
   totalPrice: number;
   items: Array<{ serviceId: string; durationMinutes: number; unitPrice: number; totalPrice: number }>;
+  origin?: string;
+  allowConflict?: boolean;
+  conflictAcknowledged?: boolean;
 };
 
 interface NewAppointmentDialogProps {
@@ -49,8 +58,67 @@ interface NewAppointmentDialogProps {
   createAppointment: (payload: CreateAppointmentPayload) => Promise<void>;
 }
 
+const stepItems = [
+  { number: 1, title: 'Cliente' },
+  { number: 2, title: 'Servico' },
+  { number: 3, title: 'Profissional' },
+  { number: 4, title: 'Data e horario' },
+  { number: 5, title: 'Revisao' },
+] as const;
+
 const serviceHasAssignedProfessionals = (professionalIds?: string[] | null) =>
   Array.isArray(professionalIds) && professionalIds.length > 0;
+
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const calculateEndTime = (startTime: string, durationMinutes: number) => {
+  const [hours, minutes] = startTime.split(':').map(Number);
+  if (Number.isNaN(hours) || Number.isNaN(minutes) || durationMinutes <= 0) return '';
+  const totalMinutes = (hours * 60) + minutes + durationMinutes;
+  const normalizedHours = Math.floor(totalMinutes / 60) % 24;
+  const normalizedMinutes = totalMinutes % 60;
+  return `${String(normalizedHours).padStart(2, '0')}:${String(normalizedMinutes).padStart(2, '0')}`;
+};
+
+const extractConflictDetails = (value: unknown): AppointmentConflictDetails | null => {
+  if (!isObject(value)) return null;
+  const candidate = isObject(value.details) ? value.details : value;
+  if (!isObject(candidate)) return null;
+  return {
+    requestedDate: typeof candidate.requestedDate === 'string' ? candidate.requestedDate : undefined,
+    requestedStartTime: typeof candidate.requestedStartTime === 'string' ? candidate.requestedStartTime : undefined,
+    requestedEndTime: typeof candidate.requestedEndTime === 'string' ? candidate.requestedEndTime : undefined,
+    origin: typeof candidate.origin === 'string' ? candidate.origin : undefined,
+    canOverride: typeof candidate.canOverride === 'boolean' ? candidate.canOverride : undefined,
+    allowConflictingAppointmentsOnManualScheduling:
+      typeof candidate.allowConflictingAppointmentsOnManualScheduling === 'boolean'
+        ? candidate.allowConflictingAppointmentsOnManualScheduling
+        : undefined,
+    conflicts: Array.isArray(candidate.conflicts) ? (candidate.conflicts as AppointmentConflictSummary[]) : [],
+  };
+};
+
+const buildConflictDetailsFromSlot = (
+  slot: { startTime: string; endTime: string; conflicts?: AppointmentConflictSummary[] },
+  date: string,
+): AppointmentConflictDetails => ({
+  requestedDate: date,
+  requestedStartTime: String(slot.startTime).slice(0, 5),
+  requestedEndTime: String(slot.endTime).slice(0, 5),
+  canOverride: true,
+  allowConflictingAppointmentsOnManualScheduling: true,
+  conflicts: slot.conflicts || [],
+});
+
+const getConflictBlockedMessage = (details: AppointmentConflictDetails | null) => {
+  if (!details) {
+    return 'Este estabelecimento nao permite criar agendamento em horario ja ocupado para o mesmo profissional.';
+  }
+  return details.allowConflictingAppointmentsOnManualScheduling === false
+    ? 'Este estabelecimento esta com o conflito manual desativado. Ajuste a configuracao da agenda para permitir agendamento em horario ja ocupado.'
+    : 'Este horario nao pode ser assumido manualmente na configuracao atual do estabelecimento.';
+};
 
 export function NewAppointmentDialog({
   open,
@@ -61,6 +129,7 @@ export function NewAppointmentDialog({
   activeProfessionals,
   createAppointment,
 }: NewAppointmentDialogProps) {
+  const [currentStep, setCurrentStep] = useState(1);
   const [newClientId, setNewClientId] = useState('');
   const [newClientSearch, setNewClientSearch] = useState('');
   const [isNewClientDialogOpen, setIsNewClientDialogOpen] = useState(false);
@@ -69,7 +138,13 @@ export function NewAppointmentDialog({
   const [newDate, setNewDate] = useState(toDateKey(currentDate));
   const [newStartTime, setNewStartTime] = useState('');
   const [newEndTime, setNewEndTime] = useState('');
+  const [slotMode, setSlotMode] = useState<'suggested' | 'manual'>('suggested');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [appointmentSettings, setAppointmentSettings] = useState<AppointmentSchedulingSettings | null>(null);
+  const [isLoadingSettings, setIsLoadingSettings] = useState(false);
+  const [pendingConflictPayload, setPendingConflictPayload] = useState<CreateAppointmentPayload | null>(null);
+  const [conflictDetails, setConflictDetails] = useState<AppointmentConflictDetails | null>(null);
+  const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
 
   const { clients, createClient } = useClients({ enabled: open });
   const { services } = useServices({ enabled: open });
@@ -113,6 +188,10 @@ export function NewAppointmentDialog({
     () => activeServicesCatalog.find((s) => s.id === newServiceId) ?? null,
     [activeServicesCatalog, newServiceId],
   );
+  const selectedProfessional = useMemo(
+    () => activeProfessionals.find((professional) => professional.id === effectiveProfessionalId) ?? null,
+    [activeProfessionals, effectiveProfessionalId],
+  );
 
   const filteredClients = useMemo(() => {
     const query = newClientSearch.trim().toLowerCase();
@@ -139,25 +218,46 @@ export function NewAppointmentDialog({
     !!newClientId && !!newServiceId && isEffectiveProfessionalValid && !!newDate && !!newStartTime && !!newEndTime;
 
   const selectedServiceIds = useMemo(() => (newServiceId ? [newServiceId] : []), [newServiceId]);
+  const selectedServiceDuration = Number(selectedNewService?.duration || 0);
 
   const { slots, isLoading: isLoadingSlots, error: slotsError, canFetch } = useAvailableSlots({
     professionalId: effectiveProfessionalId || undefined,
     date: newDate || undefined,
     serviceIds: selectedServiceIds,
-    serviceDurationMinutes: Number(selectedNewService?.duration || 0),
+    serviceDurationMinutes: selectedServiceDuration,
     bufferMinutes: 0,
+    mode: 'manual',
   });
-
-  const stepStates = useMemo(
-    () => [
-      { id: 'client', number: 1, title: 'Cliente', done: !!selectedNewClient, active: !selectedNewClient },
-      { id: 'service', number: 2, title: 'Servico', done: !!selectedNewService, active: !!selectedNewClient && !selectedNewService },
-      { id: 'professional', number: 3, title: 'Profissional', done: isEffectiveProfessionalValid, active: !!selectedNewService && !isEffectiveProfessionalValid },
-      { id: 'date', number: 4, title: 'Data', done: canChooseDate, active: isEffectiveProfessionalValid && !canChooseDate },
-      { id: 'slot', number: 5, title: 'Horario', done: !!newStartTime && !!newEndTime, active: canChooseSlot && !newStartTime },
-    ],
-    [selectedNewClient, selectedNewService, isEffectiveProfessionalValid, canChooseDate, canChooseSlot, newStartTime, newEndTime],
+  const selectedSlot = useMemo(
+    () =>
+      slots.find(
+        (slot) => String(slot.startTime).slice(0, 5) === newStartTime && String(slot.endTime).slice(0, 5) === newEndTime,
+      ) ?? null,
+    [newEndTime, newStartTime, slots],
   );
+  const allowManualConflict = Boolean(appointmentSettings?.allowConflictingAppointmentsOnManualScheduling);
+
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    setCurrentStep(1);
+    setIsLoadingSettings(true);
+    appointmentsApi
+      .getSettings()
+      .then((response) => {
+        if (active) setAppointmentSettings(response);
+      })
+      .catch((error) => {
+        if (!active) return;
+        toast.error(resolveUiError(error, 'Nao foi possivel carregar a configuracao da agenda.').message);
+      })
+      .finally(() => {
+        if (active) setIsLoadingSettings(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [open]);
 
   // Reset slot when deps change
   useEffect(() => { setNewStartTime(''); setNewEndTime(''); }, [newDate, newProfessionalId, newServiceId]);
@@ -177,93 +277,195 @@ export function NewAppointmentDialog({
     if (!availableNewProfessionals.some((p) => p.id === newProfessionalId)) setNewProfessionalId('');
   }, [availableNewProfessionals, isProfessionalUser, newProfessionalId]);
 
+  useEffect(() => {
+    if (!selectedNewClient && currentStep > 1) {
+      setCurrentStep(1);
+      return;
+    }
+    if (!selectedNewService && currentStep > 2) {
+      setCurrentStep(2);
+      return;
+    }
+    if (!isEffectiveProfessionalValid && currentStep > 3) {
+      setCurrentStep(3);
+      return;
+    }
+    if ((!newDate || !newStartTime || !newEndTime) && currentStep > 4) {
+      setCurrentStep(4);
+    }
+  }, [
+    currentStep,
+    isEffectiveProfessionalValid,
+    newDate,
+    newEndTime,
+    newStartTime,
+    selectedNewClient,
+    selectedNewService,
+  ]);
+
   const resetForm = () => {
+    setCurrentStep(1);
     setNewClientId('');
     setNewClientSearch('');
     setNewProfessionalId(isProfessionalUser && loggedProfessional?.id ? loggedProfessional.id : '');
     setNewServiceId('');
     setNewStartTime('');
     setNewEndTime('');
+    setSlotMode('suggested');
+    setPendingConflictPayload(null);
+    setConflictDetails(null);
+    setIsConflictDialogOpen(false);
   };
 
-  const handleSubmit = async () => {
-    if (isSubmitting || !canSubmit || !selectedNewService) return;
+  const applyStartTime = (value: string) => {
+    const normalized = value.slice(0, 5);
+    setNewStartTime(normalized);
+    setNewEndTime(calculateEndTime(normalized, selectedServiceDuration));
+  };
+
+  const buildPayload = (overrideConflict = false): CreateAppointmentPayload | null => {
+    if (!selectedNewService || !effectiveProfessionalId) return null;
+    return {
+      clientId: newClientId,
+      professionalId: effectiveProfessionalId,
+      date: newDate,
+      startTime: newStartTime,
+      endTime: newEndTime,
+      status: 'PENDING',
+      totalPrice: Number(selectedNewService.price),
+      items: [{
+        serviceId: selectedNewService.id,
+        durationMinutes: selectedNewService.duration,
+        unitPrice: selectedNewService.price,
+        totalPrice: selectedNewService.price,
+      }],
+      origin: 'INTERNAL_MANUAL',
+      allowConflict: overrideConflict,
+      conflictAcknowledged: overrideConflict,
+    };
+  };
+
+  const closeDialog = () => {
+    onOpenChange(false);
+    resetForm();
+  };
+
+  const canProceed = () => {
+    switch (currentStep) {
+      case 1:
+        return !!selectedNewClient;
+      case 2:
+        return !!selectedNewService;
+      case 3:
+        return isEffectiveProfessionalValid;
+      case 4:
+        return !!newDate && !!newStartTime && !!newEndTime;
+      case 5:
+        return canSubmit;
+      default:
+        return false;
+    }
+  };
+
+  const handleNextStep = () => {
+    if (!canProceed() || currentStep >= stepItems.length) return;
+    setCurrentStep((value) => value + 1);
+  };
+
+  const handlePreviousStep = () => {
+    setCurrentStep((value) => Math.max(1, value - 1));
+  };
+
+  const handleSubmitPayload = async (payload: CreateAppointmentPayload) => {
     setIsSubmitting(true);
     try {
-      await createAppointment({
-        clientId: newClientId,
-        professionalId: effectiveProfessionalId,
-        date: newDate,
-        startTime: newStartTime,
-        endTime: newEndTime,
-        status: 'PENDING',
-        totalPrice: Number(selectedNewService.price),
-        items: [{
-          serviceId: selectedNewService.id,
-          durationMinutes: selectedNewService.duration,
-          unitPrice: selectedNewService.price,
-          totalPrice: selectedNewService.price,
-        }],
-      });
-      onOpenChange(false);
-      resetForm();
+      await createAppointment(payload);
+      closeDialog();
+    } catch (error) {
+      const uiError = resolveUiError(error, 'Nao foi possivel criar o agendamento.');
+      if (String(uiError.code || '').toUpperCase() === 'APPOINTMENT_CONFLICT') {
+        const details = extractConflictDetails(uiError.details);
+        if (details?.canOverride && !payload.allowConflict) {
+          setPendingConflictPayload(payload);
+          setConflictDetails(details);
+          setIsConflictDialogOpen(true);
+          return;
+        }
+        toast.error(details?.canOverride ? uiError.message : getConflictBlockedMessage(details));
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const completedSteps = stepStates.filter((s) => s.done).length;
+  const handleSubmit = async () => {
+    if (isSubmitting || !canSubmit) return;
+    const payload = buildPayload(false);
+    if (!payload) return;
+    if (selectedSlot?.conflicting && allowManualConflict) {
+      setPendingConflictPayload(payload);
+      setConflictDetails(buildConflictDetailsFromSlot({
+        startTime: String(selectedSlot.startTime),
+        endTime: String(selectedSlot.endTime),
+        conflicts: selectedSlot.conflicts,
+      }, newDate));
+      setIsConflictDialogOpen(true);
+      return;
+    }
+    await handleSubmitPayload(payload);
+  };
+
+  const handleConfirmConflict = async () => {
+    if (!pendingConflictPayload) return;
+    await handleSubmitPayload({
+      ...pendingConflictPayload,
+      allowConflict: true,
+      conflictAcknowledged: true,
+    });
+  };
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="mx-4 max-h-[92vh] overflow-y-auto sm:mx-auto sm:max-w-[96vw] lg:max-w-[94vw] xl:max-w-6xl">
+      <Dialog
+        open={open}
+        onOpenChange={(nextOpen) => {
+          onOpenChange(nextOpen);
+          if (!nextOpen) resetForm();
+        }}
+      >
+        <DialogContent className="mx-4 max-h-[92vh] overflow-y-auto sm:mx-auto sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>Novo Agendamento</DialogTitle>
             <DialogDescription>
-              Monte o atendimento por etapas e selecione o melhor horário disponível.
+              Siga as etapas para montar o atendimento interno com o mesmo fluxo guiado do agendamento publico.
             </DialogDescription>
           </DialogHeader>
-
-          {/* Progress steps */}
-          <div className="rounded-xl border bg-muted/20 p-4">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-sm font-medium">Fluxo guiado</p>
-                <p className="text-xs text-muted-foreground">
-                  Cada etapa libera a seguinte. Conclusão atual: {completedSteps}/{stepStates.length}.
-                </p>
-              </div>
-              <Badge variant={canSubmit ? 'default' : 'secondary'}>
-                {canSubmit ? 'Pronto para criar' : 'Preencha as etapas'}
-              </Badge>
-            </div>
-            <div className="mt-4 grid gap-2 md:grid-cols-5">
-              {stepStates.map((step) => (
+          <div className="flex items-center justify-center gap-2 sm:gap-4">
+            {stepItems.map((step) => (
+              <div key={step.number} className="flex items-center">
                 <div
-                  key={step.id}
-                  className={`rounded-lg border px-3 py-2 text-sm ${
-                    step.done ? 'border-primary/30 bg-primary/5' : step.active ? 'border-amber-300 bg-amber-50' : 'bg-background'
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-colors sm:h-9 sm:w-9 sm:text-sm ${
+                    currentStep >= step.number
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    {step.done ? (
-                      <CheckCircle2 className="h-4 w-4 text-primary" />
-                    ) : step.active ? (
-                      <Circle className="h-4 w-4 text-amber-600" />
-                    ) : (
-                      <Lock className="h-4 w-4 text-muted-foreground" />
-                    )}
-                    <span className="font-medium">{step.number}. {step.title}</span>
-                  </div>
+                  {currentStep > step.number ? <Check className="h-4 w-4" /> : step.number}
                 </div>
-              ))}
-            </div>
+                {step.number < stepItems.length && (
+                  <div
+                    className={`mx-1 h-1 w-5 rounded sm:mx-2 sm:w-10 ${
+                      currentStep > step.number ? 'bg-primary' : 'bg-muted'
+                    }`}
+                  />
+                )}
+              </div>
+            ))}
           </div>
 
-          <div className="grid gap-4 py-4 lg:grid-cols-2 lg:items-start">
+          <div className="space-y-4 py-4">
             {/* Step 1 — Cliente */}
-            <div className={`space-y-3 rounded-xl border p-4 ${selectedNewClient ? 'border-primary/30 bg-primary/[0.03]' : ''}`}>
+            <div className={`${currentStep === 1 ? '' : 'hidden '}space-y-3 rounded-xl border p-4 ${selectedNewClient ? 'border-primary/30 bg-primary/[0.03]' : ''}`}>
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Etapa 1</p>
@@ -332,7 +534,7 @@ export function NewAppointmentDialog({
             </div>
 
             {/* Step 2 — Serviço */}
-            <div className={`space-y-3 rounded-xl border p-4 lg:row-span-2 ${canChooseService ? '' : 'opacity-60'} ${selectedNewService ? 'border-primary/30 bg-primary/[0.03]' : ''}`}>
+            <div className={`${currentStep === 2 ? '' : 'hidden '}space-y-3 rounded-xl border p-4 ${selectedNewService ? 'border-primary/30 bg-primary/[0.03]' : ''}`}>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Etapa 2</p>
                 <Label className="text-sm">Serviço</Label>
@@ -384,7 +586,7 @@ export function NewAppointmentDialog({
             </div>
 
             {/* Step 3 — Profissional */}
-            <div className={`space-y-3 rounded-xl border p-4 ${canChooseProfessional ? '' : 'opacity-60'} ${isEffectiveProfessionalValid ? 'border-primary/30 bg-primary/[0.03]' : ''}`}>
+            <div className={`${currentStep === 3 ? '' : 'hidden '}space-y-3 rounded-xl border p-4 ${isEffectiveProfessionalValid ? 'border-primary/30 bg-primary/[0.03]' : ''}`}>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Etapa 3</p>
                 <Label className="text-sm">Profissional</Label>
@@ -416,7 +618,7 @@ export function NewAppointmentDialog({
             </div>
 
             {/* Step 4 — Data */}
-            <div className={`space-y-3 rounded-xl border p-4 ${canChooseDate ? 'border-primary/30 bg-primary/[0.03]' : 'opacity-60'}`}>
+            <div className={`${currentStep === 4 ? '' : 'hidden '}space-y-3 rounded-xl border p-4 ${canChooseDate ? 'border-primary/30 bg-primary/[0.03]' : 'opacity-60'}`}>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Etapa 4</p>
                 <Label className="text-sm">Data</Label>
@@ -435,14 +637,14 @@ export function NewAppointmentDialog({
             </div>
 
             {/* Step 5 — Horário */}
-            <div className={`space-y-3 rounded-xl border p-4 lg:col-span-2 ${canChooseSlot ? '' : 'opacity-60'} ${newStartTime ? 'border-primary/30 bg-primary/[0.03]' : ''}`}>
+            <div className={`${currentStep === 4 ? '' : 'hidden '}space-y-4 rounded-xl border p-4 ${canChooseSlot ? '' : 'opacity-60'} ${newStartTime ? 'border-primary/30 bg-primary/[0.03]' : ''}`}>
               <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Etapa 5</p>
-                  <p className="text-sm font-medium">Horários sugeridos</p>
+                  <p className="text-sm font-medium">Horários e inserção manual</p>
                   <p className="text-xs text-muted-foreground">
                     {canChooseSlot
-                      ? 'Escolha um horário depois de definir serviço, profissional e data.'
+                      ? 'Veja horários vagos, identifique conflitos em vermelho e digite o horário quando precisar.'
                       : 'Os horários aparecem quando cliente, serviço, profissional e data estiverem definidos.'}
                   </p>
                 </div>
@@ -457,7 +659,7 @@ export function NewAppointmentDialog({
                   </div>
                   <div className="mt-1 flex items-center justify-between gap-3">
                     <span className="text-muted-foreground">Duração</span>
-                    <span className="font-medium">{Number(selectedNewService?.duration || 0)} min</span>
+                    <span className="font-medium">{selectedServiceDuration} min</span>
                   </div>
                   <div className="mt-1 flex items-center justify-between gap-3">
                     <span className="text-muted-foreground">Valor</span>
@@ -465,25 +667,169 @@ export function NewAppointmentDialog({
                   </div>
                 </div>
               </div>
-              <AvailableSlotsList
-                slots={slots}
-                isLoading={isLoadingSlots}
-                error={slotsError}
-                canFetch={canFetch}
-                selectedStartTime={newStartTime}
-                onSelect={(slot) => { setNewStartTime(slot.startTime); setNewEndTime(slot.endTime); }}
-              />
+
+              {isLoadingSettings ? (
+                <p className="text-xs text-muted-foreground">Carregando política de conflito da agenda...</p>
+              ) : allowManualConflict ? (
+                <Alert className="border-red-200 bg-red-50 text-red-950">
+                  <AlertTitle>Conflito manual permitido neste estabelecimento</AlertTitle>
+                  <AlertDescription>
+                    Os horários vagos continuam como referência principal. Horários em conflito aparecem em vermelho e exigem confirmação explícita antes da criação.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <Alert>
+                  <AlertTitle>Agenda interna em modo estrito</AlertTitle>
+                  <AlertDescription>
+                    Os horários vagos continuam visíveis normalmente. Horários em conflito não podem ser assumidos neste estabelecimento.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <Tabs value={slotMode} onValueChange={(value) => setSlotMode(value as 'suggested' | 'manual')}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="suggested">Sugestões</TabsTrigger>
+                  <TabsTrigger value="manual">Manual</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="suggested" className="space-y-3">
+                  <AvailableSlotsList
+                    slots={slots}
+                    isLoading={isLoadingSlots}
+                    error={slotsError}
+                    canFetch={canFetch}
+                    selectedStartTime={newStartTime}
+                    onSelect={(slot) => {
+                      setSlotMode('suggested');
+                      applyStartTime(String(slot.startTime).slice(0, 5));
+                    }}
+                  />
+                </TabsContent>
+
+                <TabsContent value="manual" className="space-y-3">
+                  <div className="rounded-lg border p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-medium">Horário manual</p>
+                        <p className="text-xs text-muted-foreground">
+                          Digite o horário inicial. O horário final será calculado automaticamente.
+                        </p>
+                      </div>
+                      <Badge variant="outline">Entrada direta</Badge>
+                    </div>
+                    <div className="mt-4 grid gap-3 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="manual-start-time">Horário inicial</Label>
+                        <Input
+                          id="manual-start-time"
+                          type="time"
+                          step={300}
+                          value={newStartTime}
+                          disabled={!canChooseSlot}
+                          onChange={(e) => {
+                            setSlotMode('manual');
+                            applyStartTime(e.target.value);
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="manual-end-time">Horário final</Label>
+                        <Input id="manual-end-time" type="time" value={newEndTime} disabled />
+                      </div>
+                    </div>
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      Se o horário digitado conflitar com outro atendimento e a configuração do estabelecimento permitir, o sistema vai pedir confirmação antes de salvar.
+                    </p>
+                  </div>
+                </TabsContent>
+              </Tabs>
+
+              {selectedSlot?.conflicting ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  Horário em conflito com {selectedSlot.conflicts?.length || 1} atendimento(s). A criação exigirá confirmação explícita.
+                </div>
+              ) : null}
+
               {newStartTime && newEndTime && (
                 <p className="text-xs text-muted-foreground">Selecionado: {newStartTime} - {newEndTime}</p>
               )}
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={isSubmitting || !canSubmit} isLoading={isSubmitting} loadingText="Criando...">
-              Criar Agendamento
-            </Button>
+            {currentStep === 5 && (
+              <div className="space-y-4 rounded-xl border p-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Etapa 5</p>
+                  <p className="text-lg font-semibold">Revise antes de criar</p>
+                  <p className="text-sm text-muted-foreground">Confira os dados principais do atendimento antes da confirmacao final.</p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-lg border bg-muted/20 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Cliente</p>
+                    <p className="mt-2 font-medium">{selectedNewClient?.name || 'Nao selecionado'}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {[selectedNewClient?.phone, selectedNewClient?.email].filter(Boolean).join(' - ') || 'Sem contato cadastrado'}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/20 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Servico</p>
+                    <p className="mt-2 font-medium">{selectedNewService?.name || 'Nao selecionado'}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {selectedServiceDuration} min � {formatCurrency(Number(selectedNewService?.price || 0))}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/20 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Profissional</p>
+                    <p className="mt-2 font-medium">{selectedProfessional?.name || 'Nao selecionado'}</p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/20 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Agenda</p>
+                    <p className="mt-2 font-medium">{newDate || 'Data nao informada'}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {newStartTime && newEndTime ? `${newStartTime} - ${newEndTime}` : 'Horario nao informado'}
+                    </p>
+                  </div>
+                </div>
+                {selectedSlot?.conflicting && allowManualConflict && (
+                  <Alert className="border-red-200 bg-red-50 text-red-950">
+                    <AlertTitle>Horario com sobreposicao assumida manualmente</AlertTitle>
+                    <AlertDescription>
+                      Este horario ja possui atendimento para o mesmo profissional. Ao confirmar, o sistema ainda exigira sua confirmacao explicita.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            )}
+          <DialogFooter className="flex-row items-center justify-between gap-2 sm:justify-between">
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={closeDialog}>Cancelar</Button>
+              {currentStep > 1 && (
+                <Button variant="outline" onClick={handlePreviousStep}>
+                  <ChevronLeft className="mr-1 h-4 w-4" />
+                  Voltar
+                </Button>
+              )}
+            </div>
+            {currentStep < stepItems.length ? (
+              <Button onClick={handleNextStep} disabled={!canProceed()}>
+                Continuar
+                <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            ) : (
+              <Button onClick={handleSubmit} disabled={isSubmitting || !canSubmit}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Criando...
+                  </>
+                ) : (
+                  <>
+                    <Check className="mr-1 h-4 w-4" />
+                    Criar agendamento
+                  </>
+                )}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -499,6 +845,43 @@ export function NewAppointmentDialog({
           }
         }}
       />
+
+      <ConfirmationDialog
+        open={isConflictDialogOpen}
+        onOpenChange={setIsConflictDialogOpen}
+        title="Confirmar conflito de horário?"
+        description="Este horário já possui atendimento para o mesmo profissional. A decisão de assumir a sobreposição ficará registrada na auditoria."
+        confirmLabel="Criar mesmo assim"
+        loadingLabel="Criando..."
+        isLoading={isSubmitting}
+        confirmClassName="bg-red-600 hover:bg-red-700"
+        onConfirm={handleConfirmConflict}
+      >
+        <div className="space-y-3 text-sm">
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-red-900">
+            Solicitação: {conflictDetails?.requestedDate || newDate} {conflictDetails?.requestedStartTime || newStartTime} - {conflictDetails?.requestedEndTime || newEndTime}
+          </div>
+          <div className="space-y-2">
+            <p className="font-medium">Conflitos identificados</p>
+            {(conflictDetails?.conflicts || []).map((conflict, index) => (
+              <div key={`${conflict.appointmentId || index}`} className="rounded-md border p-3">
+                <p className="font-medium">
+                  {conflict.startTime} - {conflict.endTime}
+                </p>
+                <p className="text-muted-foreground">
+                  {[conflict.clientName, conflict.serviceName, conflict.status].filter(Boolean).join(' - ')}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </ConfirmationDialog>
     </>
   );
 }
+
+
+
+
+
+

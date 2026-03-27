@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useMenuPermissions } from '@/contexts/MenuPermissionsContext';
 import { SettingsNotificationsTab } from '@/components/settings/SettingsNotificationsTab';
 import { SettingsAccountTab } from '@/components/settings/SettingsAccountTab';
+import { AppointmentConflictSettingsCard } from '@/components/settings/AppointmentConflictSettingsCard';
 
 export default function Settings() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -132,6 +133,7 @@ export default function Settings() {
                   </Button>
                 </div>
               ) : null}
+              {user?.role === 'OWNER' ? <AppointmentConflictSettingsCard /> : null}
             </CardContent>
           </Card>
         </TabsContent>

@@ -3,11 +3,23 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import Settings from "@/pages/Settings";
 
-const { updateNotificationsMock, updateMeMock, getMfaStatusMock, getSettingsMock, setupMfaMock, toastSuccessMock, toastErrorMock } = vi.hoisted(() => ({
+const {
+  updateNotificationsMock,
+  updateMeMock,
+  getMfaStatusMock,
+  getSettingsMock,
+  getAppointmentSettingsMock,
+  updateAppointmentSettingsMock,
+  setupMfaMock,
+  toastSuccessMock,
+  toastErrorMock,
+} = vi.hoisted(() => ({
   updateNotificationsMock: vi.fn(),
   updateMeMock: vi.fn(),
   getMfaStatusMock: vi.fn(),
   getSettingsMock: vi.fn(),
+  getAppointmentSettingsMock: vi.fn(),
+  updateAppointmentSettingsMock: vi.fn(),
   setupMfaMock: vi.fn(),
   toastSuccessMock: vi.fn(),
   toastErrorMock: vi.fn(),
@@ -57,6 +69,11 @@ vi.mock("@/lib/api", async () => {
       get: getSettingsMock,
       updateNotifications: updateNotificationsMock,
     },
+    appointmentsApi: {
+      ...actual.appointmentsApi,
+      getSettings: getAppointmentSettingsMock,
+      updateSettings: updateAppointmentSettingsMock,
+    },
     usersApi: {
       ...actual.usersApi,
       updateMe: updateMeMock,
@@ -77,6 +94,8 @@ describe("Settings", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getSettingsMock.mockResolvedValue({ notifications: { emailNotifications: true, smsNotifications: true, whatsappNotifications: true, reminderHours: 24 } });
+    getAppointmentSettingsMock.mockResolvedValue({ allowConflictingAppointmentsOnManualScheduling: false });
+    updateAppointmentSettingsMock.mockResolvedValue({ allowConflictingAppointmentsOnManualScheduling: false });
     getMfaStatusMock.mockResolvedValue({ enabled: false, enrolled: false });
     updateNotificationsMock.mockResolvedValue(undefined);
     updateMeMock.mockResolvedValue(undefined);

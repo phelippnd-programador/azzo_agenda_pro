@@ -1,5 +1,11 @@
 import { useCallback } from "react";
-import { appointmentsApi, isPlanExpiredApiError, type Appointment, type AppointmentCreateRequest } from "@/lib/api";
+import {
+  ApiError,
+  appointmentsApi,
+  isPlanExpiredApiError,
+  type Appointment,
+  type AppointmentCreateRequest,
+} from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import { useResourceList, type UseResourceListOptions } from "@/hooks/useResourceList";
 import { toast } from "sonner";
@@ -13,19 +19,20 @@ type AppointmentFilters = {
 };
 
 const STATUS_MESSAGES: Record<string, string> = {
-  CONFIRMED:   "Agendamento confirmado!",
+  CONFIRMED: "Agendamento confirmado!",
   IN_PROGRESS: "Atendimento iniciado!",
-  COMPLETED:   "Atendimento concluído!",
-  CANCELLED:   "Agendamento cancelado.",
-  NO_SHOW:     "Cliente não compareceu.",
+  COMPLETED: "Atendimento concluido!",
+  CANCELLED: "Agendamento cancelado.",
+  NO_SHOW: "Cliente nao compareceu.",
 };
+
+const isAppointmentConflictError = (error: unknown) =>
+  error instanceof ApiError && String(error.code || "").toUpperCase() === "APPOINTMENT_CONFLICT";
 
 export function useAppointments(
   filters?: AppointmentFilters,
   options?: UseResourceListOptions,
 ) {
-  // fetchFn fecha sobre os filtros — quando filters muda, useCallback recria a fn
-  // e useResourceList re-executa o fetch automaticamente via dep do useEffect interno
   const fetchFn = useCallback(
     (params: { page: number; limit: number }) =>
       appointmentsApi.getAll({
@@ -34,7 +41,6 @@ export function useAppointments(
         professionalId: filters?.professionalId,
         status: filters?.status,
       }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [filters?.date, filters?.professionalId, filters?.status],
   );
 
@@ -48,8 +54,9 @@ export function useAppointments(
       toast.success("Agendamento criado com sucesso!");
       return result;
     } catch (err) {
-      if (!isPlanExpiredApiError(err))
+      if (!isPlanExpiredApiError(err) && !isAppointmentConflictError(err)) {
         toast.error(resolveUiError(err, "Erro ao criar agendamento").message);
+      }
       throw err;
     }
   };
@@ -61,8 +68,9 @@ export function useAppointments(
       toast.success(STATUS_MESSAGES[status] ?? "Status atualizado!");
       return result;
     } catch (err) {
-      if (!isPlanExpiredApiError(err))
+      if (!isPlanExpiredApiError(err)) {
         toast.error(resolveUiError(err, "Erro ao atualizar status").message);
+      }
       throw err;
     }
   };
@@ -71,10 +79,11 @@ export function useAppointments(
     try {
       await appointmentsApi.delete(id);
       await _fetch({ page: pagination.page, limit: pagination.limit });
-      toast.success("Agendamento excluído!");
+      toast.success("Agendamento excluido!");
     } catch (err) {
-      if (!isPlanExpiredApiError(err))
+      if (!isPlanExpiredApiError(err)) {
         toast.error(resolveUiError(err, "Erro ao excluir agendamento").message);
+      }
       throw err;
     }
   };
@@ -86,8 +95,9 @@ export function useAppointments(
       toast.success("Agendamento realocado com sucesso!");
       return result;
     } catch (err) {
-      if (!isPlanExpiredApiError(err))
+      if (!isPlanExpiredApiError(err)) {
         toast.error(resolveUiError(err, "Erro ao realocar agendamento").message);
+      }
       throw err;
     }
   };

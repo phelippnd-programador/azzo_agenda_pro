@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { StatusBadge } from '@/components/common/StatusBadge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,8 +25,8 @@ import { clientsApi, appointmentsApi } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
 import { formatCurrency, toDateKey } from '@/lib/format';
 import {
-  getStatusBadgeColor,
-  getStatusLabel,
+  appointmentStatusBadgeToneMap,
+  appointmentStatusLabelMap,
   getServiceFlowMeta,
   getAppointmentItems,
 } from '@/lib/appointment-status';
@@ -181,9 +181,12 @@ export function AppointmentDetailsSheet({
             {/* Status */}
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Status</span>
-              <Badge className={getStatusBadgeColor(appointment.status)}>
-                {getStatusLabel(appointment.status)}
-              </Badge>
+              <StatusBadge
+                status={appointment.status}
+                labelMap={appointmentStatusLabelMap}
+                toneMap={appointmentStatusBadgeToneMap}
+                className="text-xs"
+              />
             </div>
 
             {flowMeta && (

@@ -2,7 +2,7 @@ import { Calendar, Clock3, FileText, History, Mail, Phone, Scissors, User } from
 import { AppointmentTimelineCard, appointmentStatusLabels, formatStatusLabel } from "./AppointmentTimelineCard";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/common/StatusBadge";
 import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
@@ -13,20 +13,9 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDateOnly, formatDateTime, formatDateLong } from "@/lib/format";
+import { appointmentStatusBadgeToneMap } from "@/lib/appointment-status";
 import type { AppointmentDetailResponse, AppointmentItem } from "@/types";
 import type { Client } from "@/lib/api";
-
-const getStatusBadgeColor = (status?: string): string => {
-  const colors: Record<string, string> = {
-    PENDING: "bg-amber-100 text-amber-700 border-amber-200",
-    CONFIRMED: "bg-sky-100 text-sky-700 border-sky-200",
-    IN_PROGRESS: "bg-primary/10 text-primary border-primary/20",
-    COMPLETED: "bg-green-100 text-green-700 border-green-200",
-    CANCELLED: "bg-red-100 text-red-700 border-red-200",
-    NO_SHOW: "bg-slate-100 text-slate-600 border-slate-200",
-  };
-  return colors[status || ""] || colors.PENDING;
-};
 
 const getAppointmentItems = (appointment: AppointmentDetailResponse["appointment"]): AppointmentItem[] => {
   if (Array.isArray(appointment.items) && appointment.items.length > 0) {
@@ -97,9 +86,12 @@ export function ClientAppointmentDetailSheet({
           <div className="mt-6 space-y-6">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Status</span>
-              <Badge className={getStatusBadgeColor(detailAppointment.status)}>
-                {formatStatusLabel(detailAppointment.status)}
-              </Badge>
+              <StatusBadge
+                status={detailAppointment.status}
+                labelMap={appointmentStatusLabels}
+                toneMap={appointmentStatusBadgeToneMap}
+                className="text-xs"
+              />
             </div>
 
             {appointmentDetail!.timeline.length ? (

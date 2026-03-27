@@ -62,7 +62,13 @@ import type {
   NotificationsFilters,
   NotificationsListResponse,
 } from "@/types/notification";
-import type { AvailableSlotsParams, TimeSlotResponse } from "@/types/available-slots";
+import type {
+  AppointmentConflictDetails,
+  AppointmentSchedulingSettings,
+  AvailableSlotsParams,
+  ManualTimeSlotResponse,
+  TimeSlotResponse,
+} from "@/types/available-slots";
 import type {
   CheckoutConfirmResponse,
   CheckoutIntentRequest,
@@ -188,6 +194,9 @@ export type AppointmentCreateRequest = {
   serviceId?: string;
   totalPrice?: number;
   items?: AppointmentCreateItemInput[];
+  origin?: string;
+  allowConflict?: boolean;
+  conflictAcknowledged?: boolean;
 };
 
 export type AppointmentCustomerNoteRequest = {
@@ -1027,6 +1036,25 @@ export const appointmentsApi = {
     }
     return request<TimeSlotResponse[]>(`/appointments/available-slots?${query.toString()}`);
   },
+  getManualSlots: (params: AvailableSlotsParams) => {
+    const query = new URLSearchParams({
+      professionalId: params.professionalId,
+      date: params.date,
+      bufferMinutes: String(params.bufferMinutes ?? 0),
+    });
+    if (params.serviceIds?.length) {
+      query.set("serviceIds", params.serviceIds.join(","));
+    } else if (params.serviceDurationMinutes && params.serviceDurationMinutes > 0) {
+      query.set("serviceDurationMinutes", String(params.serviceDurationMinutes));
+    }
+    return request<ManualTimeSlotResponse[]>(`/appointments/manual-slots?${query.toString()}`);
+  },
+  getSettings: () => request<AppointmentSchedulingSettings>("/appointments/settings"),
+  updateSettings: (payload: Partial<AppointmentSchedulingSettings>) =>
+    request<AppointmentSchedulingSettings>("/appointments/settings", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
   getMonthlyMetric: (mes: number, ano: number) =>
     request<AppointmentMonthlyMetric[]>(`/appointments/metric?mes=${mes}&ano=${ano}`),
   updateStatus: (id: string, status: string) =>
