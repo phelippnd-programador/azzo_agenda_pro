@@ -189,6 +189,27 @@ export interface DashboardCustomerRankingResponse {
   items: DashboardCustomerRankingItem[];
 }
 
+export interface DashboardWhatsAppReactivationPoint {
+  metricDate: string;
+  abandonedCount: number;
+  reactivatedCount: number;
+  convertedCount: number;
+}
+
+export interface DashboardWhatsAppReactivationResponse {
+  startDate: string;
+  endDate: string;
+  totalAbandoned: number;
+  totalReactivated: number;
+  totalConverted: number;
+  reactivationRate: number;
+  stoppedAtServiceSelection: number;
+  stoppedAtProfessionalSelection: number;
+  stoppedAtTimeSelection: number;
+  stoppedAtFinalReview: number;
+  points: DashboardWhatsAppReactivationPoint[];
+}
+
 export interface Appointment {
   id: string;
   tenantId: string;

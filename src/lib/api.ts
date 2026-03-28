@@ -8,6 +8,7 @@ import type {
   ClientAppointmentHistoryResponse,
   DashboardCustomerRankingResponse,
   DashboardMetrics,
+  DashboardWhatsAppReactivationResponse,
   Professional,
   Specialty,
   Service,
@@ -176,6 +177,7 @@ export type {
   ClientAppointmentHistoryResponse,
   DashboardCustomerRankingResponse,
   DashboardMetrics,
+  DashboardWhatsAppReactivationResponse,
   Professional,
   Specialty,
   Service,
@@ -784,6 +786,10 @@ export const dashboardApi = {
   getCustomerMetrics: (start: string, end: string, limit = 10) =>
     request<DashboardCustomerRankingResponse>(
       `/dashboard/metrics/customers?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=${encodeURIComponent(String(limit))}`
+    ),
+  getWhatsAppReactivationMetrics: (days = 30) =>
+    request<DashboardWhatsAppReactivationResponse>(
+      `/dashboard/metrics/whatsapp-reactivation?days=${encodeURIComponent(String(days))}`
     ),
 };
 

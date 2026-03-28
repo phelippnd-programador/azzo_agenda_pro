@@ -14,6 +14,10 @@ vi.mock("@/components/dashboard/MonthlyRevenueLineChart", () => ({
   MonthlyRevenueLineChart: () => <div>MonthlyRevenueLineChartMock</div>,
 }));
 
+vi.mock("@/components/dashboard/WhatsAppReactivationChart", () => ({
+  WhatsAppReactivationChart: () => <div>WhatsAppReactivationChartMock</div>,
+}));
+
 vi.mock("@/hooks/useDashboard", () => ({
   useDashboardWithOptions: () => ({
     metrics: {
@@ -98,6 +102,7 @@ describe("Dashboard", () => {
     expect(screen.getByText("Agendamentos Hoje")).toBeInTheDocument();
     expect(screen.getByText("Faturamento Hoje")).toBeInTheDocument();
     expect(screen.getByText("Nao Concluidos Hoje no Agendamento")).toBeInTheDocument();
+    expect(screen.getByText("WhatsAppReactivationChartMock")).toBeInTheDocument();
     expect(screen.getByText("RevenueChartMock")).toBeInTheDocument();
   });
 });

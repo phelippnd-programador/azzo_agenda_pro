@@ -5,6 +5,7 @@ import { MetricCard } from '@/components/dashboard/MetricCard';
 import { UpcomingAppointments } from '@/components/dashboard/UpcomingAppointments';
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
 import { MonthlyRevenueLineChart } from '@/components/dashboard/MonthlyRevenueLineChart';
+import { WhatsAppReactivationChart } from '@/components/dashboard/WhatsAppReactivationChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -366,6 +367,8 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {!isProfessionalUser ? <WhatsAppReactivationChart /> : null}
 
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="lg:col-span-2">
