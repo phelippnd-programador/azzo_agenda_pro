@@ -81,8 +81,10 @@ export default function Login() {
   }, []);
 
   const getPostLoginRoute = async (): Promise<string> => {
+    let currentUserRole: string | null = null;
     try {
       const currentUser = await authApi.me();
+      currentUserRole = currentUser?.role ?? null;
       if (currentUser?.role === "ADMIN") {
         setLicenseAccessStatus("ACTIVE");
         return "/configuracoes/admin-sistema";
@@ -104,6 +106,9 @@ export default function Login() {
         return '/financeiro/licenca';
       }
       setLicenseAccessStatus("ACTIVE");
+      if (currentUser?.role === "PROFESSIONAL") {
+        return "/agenda";
+      }
       return '/dashboard';
     } catch (error) {
       if (error instanceof ApiError && (error.status === 402 || error.status === 404)) {
@@ -111,7 +116,7 @@ export default function Login() {
         return '/financeiro/licenca';
       }
       setLicenseAccessStatus("UNKNOWN");
-      return '/dashboard';
+      return currentUserRole === "PROFESSIONAL" ? "/agenda" : "/dashboard";
     }
   };
 

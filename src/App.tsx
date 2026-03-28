@@ -82,10 +82,24 @@ const SystemAdminPage = lazy(() => import("./pages/SystemAdmin"));
 
 const queryClient = new QueryClient();
 
-const getFirstAllowedRoute = (allowedRoutes: string[] | null) => {
-  if (!allowedRoutes?.length) return "/dashboard";
+const getFirstAllowedRoute = (
+  allowedRoutes: string[] | null,
+  role?: string | null
+) => {
+  if (!allowedRoutes?.length) {
+    return role === "PROFESSIONAL" ? "/agenda" : "/dashboard";
+  }
+
+  const preferredRoutes =
+    role === "PROFESSIONAL"
+      ? ["/agenda", "/clientes", "/chat", "/sugestoes", "/notificacoes"]
+      : ["/dashboard"];
+
+  const preferredRoute = preferredRoutes.find((route) => allowedRoutes.includes(route));
+  if (preferredRoute) return preferredRoute;
+
   const firstBusinessRoute = allowedRoutes.find((route) => route !== "/unauthorized");
-  return firstBusinessRoute || "/dashboard";
+  return firstBusinessRoute || (role === "PROFESSIONAL" ? "/agenda" : "/dashboard");
 };
 
 // Protected Route Component
@@ -118,7 +132,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 // Public Route Component (redirects to dashboard if authenticated)
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const { allowedRoutes, isLoading: isPermissionsLoading, isEnforced } = useMenuPermissions();
 
   if (isLoading || (isAuthenticated && (isPermissionsLoading || !isEnforced))) {
@@ -126,14 +140,14 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (isAuthenticated) {
-    return <Navigate to={getFirstAllowedRoute(allowedRoutes)} replace />;
+    return <Navigate to={getFirstAllowedRoute(allowedRoutes, user?.role)} replace />;
   }
 
   return <>{children}</>;
 }
 
 function RootRoute() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const { allowedRoutes, isLoading: isPermissionsLoading, isEnforced } = useMenuPermissions();
 
   if (isLoading || (isAuthenticated && (isPermissionsLoading || !isEnforced))) {
@@ -142,7 +156,7 @@ function RootRoute() {
 
   return (
     <Navigate
-      to={isAuthenticated ? getFirstAllowedRoute(allowedRoutes) : "/compras"}
+      to={isAuthenticated ? getFirstAllowedRoute(allowedRoutes, user?.role) : "/compras"}
       replace
     />
   );
