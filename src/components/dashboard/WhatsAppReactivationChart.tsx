@@ -21,9 +21,15 @@ import { formatDateOnly } from "@/lib/format";
 import type { DashboardWhatsAppReactivationResponse } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const DEFAULT_DAYS = 30;
+const DEFAULT_DAYS = "30";
+const PERIOD_OPTIONS = [
+  { label: "7 dias", value: "7" },
+  { label: "15 dias", value: "15" },
+  { label: "30 dias", value: "30" },
+] as const;
 
 const stageCards = [
   {
@@ -71,15 +77,17 @@ const emptyMetrics: DashboardWhatsAppReactivationResponse = {
 };
 
 export function WhatsAppReactivationChart() {
+  const [days, setDays] = useState(DEFAULT_DAYS);
   const [metrics, setMetrics] = useState<DashboardWhatsAppReactivationResponse>(emptyMetrics);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     let mounted = true;
+    setIsLoading(true);
 
     dashboardApi
-      .getWhatsAppReactivationMetrics(DEFAULT_DAYS)
+      .getWhatsAppReactivationMetrics(Number(days))
       .then((data) => {
         if (!mounted) return;
         setMetrics(data);
@@ -98,7 +106,7 @@ export function WhatsAppReactivationChart() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [days]);
 
   if (isLoading) {
     return (
@@ -138,7 +146,7 @@ export function WhatsAppReactivationChart() {
   const rangeLabel =
     metrics.startDate && metrics.endDate
       ? `${formatDateOnly(metrics.startDate)} a ${formatDateOnly(metrics.endDate)}`
-      : `${DEFAULT_DAYS} dias`;
+      : `${days} dias`;
 
   const pendingRecovery = Math.max(metrics.totalAbandoned - metrics.totalConverted, 0);
 
@@ -155,7 +163,21 @@ export function WhatsAppReactivationChart() {
               Clientes que pararam no fluxo e quantos voltaram para concluir o agendamento.
             </p>
           </div>
-          <Badge variant="outline">{rangeLabel}</Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline">{rangeLabel}</Badge>
+            <Select value={days} onValueChange={setDays}>
+              <SelectTrigger className="w-[120px] bg-white/80">
+                <SelectValue placeholder="Periodo" />
+              </SelectTrigger>
+              <SelectContent>
+                {PERIOD_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -210,6 +210,49 @@ export interface DashboardWhatsAppReactivationResponse {
   points: DashboardWhatsAppReactivationPoint[];
 }
 
+export interface DashboardWhatsAppReactivationQueueItem {
+  cycleId: string;
+  clientId?: string | null;
+  conversationId?: string | null;
+  appointmentIdCreatedAfterAbandonment?: string | null;
+  customerName?: string | null;
+  userIdentifier?: string | null;
+  abandonedAt?: string | null;
+  status?: string | null;
+  statusLabel?: string | null;
+  lastStage?: string | null;
+  lastStageLabel?: string | null;
+  lastServiceName?: string | null;
+  lastProfessionalName?: string | null;
+  lastRequestedDate?: string | null;
+  lastRequestedTime?: string | null;
+  assistantLastPrompt?: string | null;
+  customerLastMessage?: string | null;
+  nextAttemptNumber?: number | null;
+  nextAttemptAt?: string | null;
+  reactivatedAt?: string | null;
+  convertedAt?: string | null;
+  respondedAt?: string | null;
+  cancelReason?: string | null;
+  latestAttemptNumber?: number | null;
+  latestAttemptStatus?: string | null;
+  latestAttemptStatusLabel?: string | null;
+  latestAttemptAt?: string | null;
+  latestAttemptError?: string | null;
+  manualInterventionSuggested?: boolean | null;
+  manualInterventionReason?: string | null;
+  manualInterventionAttempts?: number | null;
+}
+
+export interface DashboardWhatsAppReactivationQueueResponse {
+  startDate: string;
+  endDate: string;
+  statusFilter: string;
+  limit: number;
+  items: DashboardWhatsAppReactivationQueueItem[];
+  exceptionItems: DashboardWhatsAppReactivationQueueItem[];
+}
+
 export interface Appointment {
   id: string;
   tenantId: string;

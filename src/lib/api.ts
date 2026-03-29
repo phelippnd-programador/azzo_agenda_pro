@@ -8,6 +8,7 @@ import type {
   ClientAppointmentHistoryResponse,
   DashboardCustomerRankingResponse,
   DashboardMetrics,
+  DashboardWhatsAppReactivationQueueResponse,
   DashboardWhatsAppReactivationResponse,
   Professional,
   Specialty,
@@ -177,6 +178,7 @@ export type {
   ClientAppointmentHistoryResponse,
   DashboardCustomerRankingResponse,
   DashboardMetrics,
+  DashboardWhatsAppReactivationQueueResponse,
   DashboardWhatsAppReactivationResponse,
   Professional,
   Specialty,
@@ -791,6 +793,16 @@ export const dashboardApi = {
     request<DashboardWhatsAppReactivationResponse>(
       `/dashboard/metrics/whatsapp-reactivation?days=${encodeURIComponent(String(days))}`
     ),
+  getWhatsAppReactivationQueue: (params?: { days?: number; status?: string; limit?: number }) => {
+    const query = new URLSearchParams();
+    if (params?.days) query.set("days", String(params.days));
+    if (params?.status) query.set("status", params.status);
+    if (params?.limit) query.set("limit", String(params.limit));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<DashboardWhatsAppReactivationQueueResponse>(
+      `/dashboard/metrics/whatsapp-reactivation/queue${suffix}`
+    );
+  },
 };
 
 /* ================= CHAT ================= */
@@ -1592,6 +1604,13 @@ export type AppSettings = {
     whatsappNotifications: boolean;
     reminderHours: number;
   };
+  reactivation: {
+    enabled: boolean;
+    respectBusinessHours: boolean;
+    sendWindowStart: string;
+    sendWindowEnd: string;
+    maxAttemptsEnabled: number;
+  };
   businessHours: Record<
     string,
     {
@@ -1611,6 +1630,11 @@ export const settingsApi = {
     }),
   updateNotifications: (data: AppSettings["notifications"]) =>
     request<AppSettings["notifications"]>("/settings/notifications", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  updateReactivation: (data: AppSettings["reactivation"]) =>
+    request<AppSettings["reactivation"]>("/settings/reactivation", {
       method: "PUT",
       body: JSON.stringify(data),
     }),

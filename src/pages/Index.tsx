@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { RankedBarCard } from '@/components/common/RankedBarCard';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { UpcomingAppointments } from '@/components/dashboard/UpcomingAppointments';
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
 import { MonthlyRevenueLineChart } from '@/components/dashboard/MonthlyRevenueLineChart';
+import { NoShowInsights } from '@/components/dashboard/NoShowInsights';
 import { WhatsAppReactivationChart } from '@/components/dashboard/WhatsAppReactivationChart';
+import { WhatsAppReactivationQueue } from '@/components/dashboard/WhatsAppReactivationQueue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +22,9 @@ import { useClients } from '@/hooks/useClients';
 import { useServices } from '@/hooks/useServices';
 import { useAuth } from '@/contexts/AuthContext';
 import { dashboardApi } from '@/lib/api';
+import { shouldForceLogoutOnDashboardRetry } from '@/lib/dashboard-auth-retry';
 import type { DashboardCustomerRankingResponse } from '@/types';
+import type { DashboardProfessionalMetricsResponse } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
 
 const normalizeDateToIso = (value: unknown) => {
@@ -34,15 +38,13 @@ const normalizeDateToIso = (value: unknown) => {
   return '';
 };
 
-const calculateGrowthPercent = (current: number, previous: number): number | null => {
-  if (previous <= 0) return null;
-  return ((current - previous) * 100) / previous;
-};
-
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const isProfessionalUser = user?.role === 'PROFESSIONAL';
   const [customerRanking, setCustomerRanking] = useState<DashboardCustomerRankingResponse | null>(null);
+  const [professionalMetrics, setProfessionalMetrics] = useState<DashboardProfessionalMetricsResponse | null>(null);
+  const [professionalMetricsLoading, setProfessionalMetricsLoading] = useState(false);
+  const [professionalMetricsError, setProfessionalMetricsError] = useState<string | null>(null);
   const { metrics, isLoading: metricsLoading, error: metricsError, refetch: refetchMetrics } =
     useDashboardWithOptions({ enabled: !isProfessionalUser });
   const { appointments, isLoading: appointmentsLoading, updateAppointmentStatus } = useAppointments();
@@ -88,27 +90,43 @@ export default function Dashboard() {
   }, []);
 
   const today = new Date().toISOString().split('T')[0];
-  const yesterdayDate = new Date();
-  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-  const yesterday = yesterdayDate.toISOString().split('T')[0];
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
-  const currentDay = currentDate.getDate();
-  const previousMonthStartDate = new Date(currentYear, currentMonth - 1, 1);
-  const previousMonthEndDate = new Date(currentYear, currentMonth, 0);
-  const previousMonthComparableEndDate = new Date(
-    currentYear,
-    currentMonth - 1,
-    Math.min(currentDay, previousMonthEndDate.getDate())
-  );
+  const monthStartIso = new Date(currentYear, currentMonth, 1).toISOString().split('T')[0];
+  const monthEndIso = new Date(currentYear, currentMonth + 1, 0).toISOString().split('T')[0];
+
+  const fetchProfessionalMetrics = useCallback(async () => {
+    if (!isProfessionalUser || !loggedProfessional?.id) {
+      setProfessionalMetrics(null);
+      setProfessionalMetricsError(null);
+      setProfessionalMetricsLoading(false);
+      return;
+    }
+
+    try {
+      setProfessionalMetricsLoading(true);
+      const data = await dashboardApi.getProfessionalMetrics(monthStartIso, monthEndIso, loggedProfessional.id);
+      setProfessionalMetrics(data);
+      setProfessionalMetricsError(null);
+    } catch (error) {
+      setProfessionalMetrics(null);
+      setProfessionalMetricsError(
+        error instanceof Error ? error.message : 'Erro ao carregar metricas do profissional'
+      );
+    } finally {
+      setProfessionalMetricsLoading(false);
+    }
+  }, [isProfessionalUser, loggedProfessional?.id, monthEndIso, monthStartIso]);
+
+  useEffect(() => {
+    if (!isProfessionalUser) return;
+    void fetchProfessionalMetrics();
+  }, [fetchProfessionalMetrics, isProfessionalUser]);
 
   const todayAppointments = scopedAppointments
     .filter((appointment) => normalizeDateToIso(appointment.date) === today)
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
-  const yesterdayAppointments = scopedAppointments.filter(
-    (appointment) => normalizeDateToIso(appointment.date) === yesterday
-  );
 
   const enrichedAppointments = todayAppointments.map((apt) => {
     const client = clients.find((c) => c.id === apt.clientId);
@@ -132,53 +150,54 @@ export default function Dashboard() {
     ? professionals.filter((professional) => professional.id === loggedProfessional?.id && professional.isActive)
     : professionals.filter((professional) => professional.isActive);
 
-  const professionalScopedMetrics = {
-    todayAppointments: todayAppointments.length,
-    todayRevenue: todayAppointments.reduce((sum, appointment) => sum + (appointment.totalPrice || 0), 0),
-    monthlyRevenue: scopedAppointments
-      .filter((appointment) => {
-        const date = normalizeDateToIso(appointment.date);
-        if (!date) return false;
-        return date.startsWith(today.slice(0, 7));
-      })
-      .reduce((sum, appointment) => sum + (appointment.totalPrice || 0), 0),
-    totalClients: new Set(scopedAppointments.map((appointment) => appointment.clientId)).size,
-    todayAppointmentsGrowthPercent: calculateGrowthPercent(
-      todayAppointments.length,
-      yesterdayAppointments.length
-    ),
-    todayRevenueGrowthPercent: calculateGrowthPercent(
-      todayAppointments.reduce((sum, appointment) => sum + (appointment.totalPrice || 0), 0),
-      yesterdayAppointments.reduce((sum, appointment) => sum + (appointment.totalPrice || 0), 0)
-    ),
-    totalClientsGrowthPercent: calculateGrowthPercent(
-      new Set(scopedAppointments.map((appointment) => appointment.clientId)).size,
-      new Set(
-        scopedAppointments
-          .filter((appointment) => {
+  const topProfessionalItems = !isProfessionalUser
+    ? professionals
+        .map((professional) => {
+          const professionalAppointments = appointments.filter((appointment) => {
             const iso = normalizeDateToIso(appointment.date);
-            return !!iso && iso < today;
-          })
-          .map((appointment) => appointment.clientId)
-      ).size
-    ),
-    monthlyRevenueGrowthPercent: calculateGrowthPercent(
-      scopedAppointments
-        .filter((appointment) => {
-          const date = normalizeDateToIso(appointment.date);
-          if (!date) return false;
-          return date.startsWith(today.slice(0, 7));
+            return (
+              appointment.professionalId === professional.id &&
+              appointment.status === 'COMPLETED' &&
+              !!iso &&
+              iso >= monthStartIso &&
+              iso <= monthEndIso
+            );
+          });
+
+          const clientsServed = new Set(professionalAppointments.map((appointment) => appointment.clientId)).size;
+          const revenueTotal = professionalAppointments.reduce(
+            (sum, appointment) => sum + (appointment.totalPrice || 0),
+            0
+          );
+
+          return {
+            id: professional.id,
+            name: professional.name,
+            value: professionalAppointments.length,
+            badgeText:
+              professionalAppointments.length > 0 ? `${professionalAppointments.length} atendimento(s)` : undefined,
+            metaText:
+              professionalAppointments.length > 0
+                ? `${formatCurrency(revenueTotal)} • ${clientsServed} cliente(s)`
+                : undefined,
+          };
         })
-        .reduce((sum, appointment) => sum + (appointment.totalPrice || 0), 0),
-      scopedAppointments
-        .filter((appointment) => {
-          const iso = normalizeDateToIso(appointment.date);
-          if (!iso) return false;
-          const date = new Date(`${iso}T00:00:00`);
-          return date >= previousMonthStartDate && date <= previousMonthComparableEndDate;
+        .filter((item) => item.value > 0)
+        .sort((a, b) => {
+          if (b.value !== a.value) return b.value - a.value;
+          return a.name.localeCompare(b.name);
         })
-        .reduce((sum, appointment) => sum + (appointment.totalPrice || 0), 0)
-    ),
+    : [];
+
+  const professionalScopedMetrics = {
+    todayAppointments: professionalMetrics?.completedServices ?? 0,
+    todayRevenue: professionalMetrics?.revenueTotal ?? 0,
+    monthlyRevenue: professionalMetrics?.commissionTotal ?? 0,
+    totalClients: professionalMetrics?.clientsServed ?? 0,
+    todayAppointmentsGrowthPercent: null,
+    todayRevenueGrowthPercent: null,
+    totalClientsGrowthPercent: null,
+    monthlyRevenueGrowthPercent: null,
     pendingAppointments: todayAppointments.filter(
       (appointment) => appointment.status === 'PENDING' || appointment.status === 'CONFIRMED'
     ).length,
@@ -199,7 +218,29 @@ export default function Dashboard() {
     year: 'numeric',
   });
 
-  if ((metricsLoading && !isProfessionalUser) || appointmentsLoading || professionalsLoading) {
+  const handleRetryDashboardLoad = async () => {
+    const hasSessionHint =
+      typeof window !== 'undefined' ? Boolean(window.localStorage.getItem('auth_user')) : true;
+
+    const currentError = isProfessionalUser ? professionalMetricsError : metricsError;
+
+    if (shouldForceLogoutOnDashboardRetry(currentError, hasSessionHint)) {
+      await logout();
+      if (typeof window !== 'undefined') {
+        window.location.assign('/login?reason=session-expired');
+      }
+      return;
+    }
+
+    if (isProfessionalUser) {
+      await fetchProfessionalMetrics();
+      return;
+    }
+
+    refetchMetrics();
+  };
+
+  if ((metricsLoading && !isProfessionalUser) || professionalMetricsLoading || appointmentsLoading || professionalsLoading) {
     return (
       <MainLayout title="Dashboard" subtitle={formattedDate}>
         <div className="space-y-4 sm:space-y-6">
@@ -218,13 +259,13 @@ export default function Dashboard() {
     );
   }
 
-  if (!isProfessionalUser && metricsError) {
+  if ((!isProfessionalUser && metricsError) || (isProfessionalUser && professionalMetricsError)) {
     return (
       <MainLayout title="Dashboard" subtitle={formattedDate}>
         <PageErrorState
           title="Nao foi possivel carregar o dashboard"
-          description={metricsError}
-          action={{ label: "Tentar novamente", onClick: refetchMetrics }}
+          description={isProfessionalUser ? professionalMetricsError : metricsError}
+          action={{ label: "Tentar novamente", onClick: () => void handleRetryDashboardLoad() }}
         />
       </MainLayout>
     );
@@ -237,59 +278,76 @@ export default function Dashboard() {
           <Calendar className="h-4 w-4" />
           <AlertTitle>Periodo das metricas</AlertTitle>
           <AlertDescription>
-            Este dashboard principal usa periodos fixos: cards de hoje e do mes atual, grafico semanal para a semana corrente
-            e linha mensal para o mes corrente. Para filtros personalizados, use o modulo financeiro detalhado.
+            {isProfessionalUser
+              ? 'Este dashboard profissional usa metricas consolidadas da view materializada no periodo fixo do mes atual.'
+              : 'Este dashboard principal usa periodos fixos: cards de hoje e do mes atual, grafico semanal para a semana corrente e linha mensal para o mes corrente. Para filtros personalizados, use o modulo financeiro detalhado.'}
           </AlertDescription>
         </Alert>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           <MetricCard
-            title="Agendamentos Hoje"
+            title={isProfessionalUser ? 'Servicos concluidos' : 'Agendamentos Hoje'}
             value={resolvedMetrics.todayAppointments}
-            icon={Calendar}
-            trend={{
-              value: resolvedMetrics.todayAppointmentsGrowthPercent ?? null,
-              isPositive: (resolvedMetrics.todayAppointmentsGrowthPercent ?? 0) >= 0,
-              unavailableLabel: 'Sem dados anteriores',
-            }}
-            iconClassName="bg-primary"
+            icon={isProfessionalUser ? CheckCircle : Calendar}
+            trend={
+              isProfessionalUser
+                ? undefined
+                : {
+                    value: resolvedMetrics.todayAppointmentsGrowthPercent ?? null,
+                    isPositive: (resolvedMetrics.todayAppointmentsGrowthPercent ?? 0) >= 0,
+                    unavailableLabel: 'Sem dados anteriores',
+                  }
+            }
+            iconClassName={isProfessionalUser ? 'bg-emerald-600' : 'bg-primary'}
           />
           <MetricCard
-            title="Faturamento Hoje"
+            title={isProfessionalUser ? 'Faturamento no periodo' : 'Faturamento Hoje'}
             value={formatCurrency(resolvedMetrics.todayRevenue)}
             icon={DollarSign}
-            trend={{
-              value: resolvedMetrics.todayRevenueGrowthPercent ?? null,
-              isPositive: (resolvedMetrics.todayRevenueGrowthPercent ?? 0) >= 0,
-              unavailableLabel: 'Sem dados anteriores',
-            }}
+            trend={
+              isProfessionalUser
+                ? undefined
+                : {
+                    value: resolvedMetrics.todayRevenueGrowthPercent ?? null,
+                    isPositive: (resolvedMetrics.todayRevenueGrowthPercent ?? 0) >= 0,
+                    unavailableLabel: 'Sem dados anteriores',
+                  }
+            }
             iconClassName="bg-green-600"
           />
           <MetricCard
-            title="Clientes Ativos"
+            title={isProfessionalUser ? 'Clientes atendidos' : 'Clientes Ativos'}
             value={resolvedMetrics.totalClients}
             icon={Users}
-            trend={{
-              value: resolvedMetrics.totalClientsGrowthPercent ?? null,
-              isPositive: (resolvedMetrics.totalClientsGrowthPercent ?? 0) >= 0,
-              unavailableLabel: 'Sem dados anteriores',
-            }}
+            trend={
+              isProfessionalUser
+                ? undefined
+                : {
+                    value: resolvedMetrics.totalClientsGrowthPercent ?? null,
+                    isPositive: (resolvedMetrics.totalClientsGrowthPercent ?? 0) >= 0,
+                    unavailableLabel: 'Sem dados anteriores',
+                  }
+            }
             iconClassName="bg-primary"
           />
           <MetricCard
-            title="Faturamento Mensal"
+            title={isProfessionalUser ? 'Comissao no periodo' : 'Faturamento Mensal'}
             value={formatCurrency(resolvedMetrics.monthlyRevenue)}
             icon={TrendingUp}
-            trend={{
-              value: resolvedMetrics.monthlyRevenueGrowthPercent ?? null,
-              isPositive: (resolvedMetrics.monthlyRevenueGrowthPercent ?? 0) >= 0,
-              unavailableLabel: 'Sem dados anteriores',
-            }}
+            trend={
+              isProfessionalUser
+                ? undefined
+                : {
+                    value: resolvedMetrics.monthlyRevenueGrowthPercent ?? null,
+                    isPositive: (resolvedMetrics.monthlyRevenueGrowthPercent ?? 0) >= 0,
+                    unavailableLabel: 'Sem dados anteriores',
+                  }
+            }
             iconClassName="bg-blue-600"
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        {!isProfessionalUser ? <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
             <CardContent className="p-3 sm:p-4 flex items-center gap-3">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -312,9 +370,9 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </div> : null}
 
-        <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50">
+        {!isProfessionalUser ? <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50">
           <CardHeader className="pb-3">
             <CardTitle className="text-base sm:text-lg">
               Nao Concluidos Hoje no Agendamento
@@ -366,9 +424,18 @@ export default function Dashboard() {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> : null}
 
         {!isProfessionalUser ? <WhatsAppReactivationChart /> : null}
+        {!isProfessionalUser ? <WhatsAppReactivationQueue /> : null}
+        {!isProfessionalUser ? (
+          <NoShowInsights
+            appointments={scopedAppointments}
+            clients={clients}
+            professionals={professionals}
+            services={services}
+          />
+        ) : null}
 
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="lg:col-span-2">
@@ -471,6 +538,20 @@ export default function Dashboard() {
           labelPrefix="Cliente"
           emptyMessage="Nenhum ranking de clientes disponivel no periodo."
         />
+
+        {!isProfessionalUser ? (
+          <RankedBarCard
+            title="Top profissionais no dashboard"
+            icon={TrendingUp}
+            subtitle={`Mes atual: ${new Date(`${monthStartIso}T12:00:00`).toLocaleDateString('pt-BR')} a ${new Date(`${monthEndIso}T12:00:00`).toLocaleDateString('pt-BR')}`}
+            items={topProfessionalItems}
+            maxItems={5}
+            valueLabel="Atendimentos concluidos"
+            labelPrefix="Profissional"
+            emptyMessage="Nenhum profissional com atendimento concluido no periodo."
+            valueFormatter={(value) => `${value} atendimento(s)`}
+          />
+        ) : null}
       </div>
     </MainLayout>
   );
