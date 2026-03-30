@@ -18,8 +18,6 @@ import { Calendar, DollarSign, Users, TrendingUp, Clock, CheckCircle, Route, Use
 import { useDashboardWithOptions } from '@/hooks/useDashboard';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useProfessionals } from '@/hooks/useProfessionals';
-import { useClients } from '@/hooks/useClients';
-import { useServices } from '@/hooks/useServices';
 import { useAuth } from '@/contexts/AuthContext';
 import { dashboardApi } from '@/lib/api';
 import { shouldForceLogoutOnDashboardRetry } from '@/lib/dashboard-auth-retry';
@@ -52,8 +50,6 @@ export default function Dashboard() {
     professionals,
     isLoading: professionalsLoading,
   } = useProfessionals({ fetchLimits: false });
-  const { clients } = useClients();
-  const { services } = useServices();
 
   const loggedProfessional = professionals.find((professional) => professional.userId === user?.id) ?? null;
   const scopedAppointments =
@@ -129,19 +125,15 @@ export default function Dashboard() {
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
   const enrichedAppointments = todayAppointments.map((apt) => {
-    const client = clients.find((c) => c.id === apt.clientId);
     const professional = professionals.find((p) => p.id === apt.professionalId);
-    const service = services.find((s) => s.id === apt.serviceId);
     const items = apt.items?.map((item) => ({
       ...item,
-      service: item.service ?? services.find((serviceCandidate) => serviceCandidate.id === item.serviceId),
+      service: item.service,
     }));
 
     return {
       ...apt,
-      client,
       professional,
-      service,
       items,
     };
   });
@@ -429,12 +421,7 @@ export default function Dashboard() {
         {!isProfessionalUser ? <WhatsAppReactivationChart /> : null}
         {!isProfessionalUser ? <WhatsAppReactivationQueue /> : null}
         {!isProfessionalUser ? (
-          <NoShowInsights
-            appointments={scopedAppointments}
-            clients={clients}
-            professionals={professionals}
-            services={services}
-          />
+          <NoShowInsights />
         ) : null}
 
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">

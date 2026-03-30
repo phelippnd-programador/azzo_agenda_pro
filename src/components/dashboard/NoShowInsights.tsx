@@ -1,102 +1,43 @@
+import { useEffect, useState } from "react";
 import { AlertCircle, CalendarClock, ReceiptText, UserRoundX } from "lucide-react";
-import type { Appointment, Client, Professional, Service } from "@/types";
+import { Link } from "react-router-dom";
+import { dashboardApi, type DashboardNoShowInsightsResponse } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { formatCurrency, formatDateOnly } from "@/lib/format";
 
-type NoShowInsightsProps = {
-  appointments: Appointment[];
-  clients: Client[];
-  professionals: Professional[];
-  services: Service[];
-};
-
-const normalizeDateToIso = (value: unknown) => {
-  if (!value) return "";
-  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString().split("T")[0];
-  if (typeof value === "string") {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-    const parsed = new Date(value);
-    if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().split("T")[0];
-  }
-  return "";
-};
-
-const calculateGrowthPercent = (current: number, previous: number): number | null => {
-  if (previous <= 0) return null;
+const calculateGrowthPercent = (current: number, previous?: number | null): number | null => {
+  if (!previous || previous <= 0) return null;
   return ((current - previous) * 100) / previous;
 };
 
-export function NoShowInsights({
-  appointments,
-  clients,
-  professionals,
-  services,
-}: NoShowInsightsProps) {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const currentDay = now.getDate();
-  const todayIso = now.toISOString().split("T")[0];
-  const monthStartIso = new Date(year, month, 1).toISOString().split("T")[0];
-  const previousMonthStartDate = new Date(year, month - 1, 1);
-  const previousMonthEndDate = new Date(year, month, 0);
-  const previousMonthComparableEndDate = new Date(
-    year,
-    month - 1,
-    Math.min(currentDay, previousMonthEndDate.getDate())
-  );
-  const previousMonthStartIso = previousMonthStartDate.toISOString().split("T")[0];
-  const previousMonthEndIso = previousMonthComparableEndDate.toISOString().split("T")[0];
-  const lastSevenDaysStartIso = new Date(year, month, now.getDate() - 6).toISOString().split("T")[0];
+export function NoShowInsights() {
+  const [data, setData] = useState<DashboardNoShowInsightsResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const currentPeriodAppointments = appointments.filter((appointment) => {
-    const iso = normalizeDateToIso(appointment.date);
-    return !!iso && iso >= monthStartIso && iso <= todayIso;
-  });
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        setIsLoading(true);
+        const response = await dashboardApi.getNoShowInsights();
+        if (!cancelled) setData(response);
+      } catch {
+        if (!cancelled) setData(null);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const previousPeriodAppointments = appointments.filter((appointment) => {
-    const iso = normalizeDateToIso(appointment.date);
-    return !!iso && iso >= previousMonthStartIso && iso <= previousMonthEndIso;
-  });
-
-  const currentNoShows = currentPeriodAppointments.filter((appointment) => appointment.status === "NO_SHOW");
-  const previousNoShows = previousPeriodAppointments.filter((appointment) => appointment.status === "NO_SHOW");
-  const noShowCount = currentNoShows.length;
-  const noShowGrowthPercent = calculateGrowthPercent(noShowCount, previousNoShows.length);
-
-  const eligibleCurrentAppointments = currentPeriodAppointments.filter((appointment) =>
-    appointment.status === "COMPLETED" || appointment.status === "NO_SHOW"
-  );
-  const noShowRate = eligibleCurrentAppointments.length > 0
-    ? (noShowCount * 100) / eligibleCurrentAppointments.length
-    : 0;
-
-  const lastSevenDaysNoShows = appointments.filter((appointment) => {
-    const iso = normalizeDateToIso(appointment.date);
-    return !!iso && iso >= lastSevenDaysStartIso && iso <= todayIso && appointment.status === "NO_SHOW";
-  }).length;
-
-  const noShowLostRevenue = currentNoShows.reduce((sum, appointment) => sum + (appointment.totalPrice || 0), 0);
-
-  const recentNoShows = [...currentNoShows]
-    .sort((a, b) => {
-      const dateCompare = normalizeDateToIso(b.date).localeCompare(normalizeDateToIso(a.date));
-      if (dateCompare !== 0) return dateCompare;
-      return (b.startTime || "").localeCompare(a.startTime || "");
-    })
-    .slice(0, 5)
-    .map((appointment) => ({
-      ...appointment,
-      clientName: clients.find((client) => client.id === appointment.clientId)?.name || "Cliente nao identificado",
-      professionalName:
-        professionals.find((professional) => professional.id === appointment.professionalId)?.name || "Profissional nao identificado",
-      serviceName:
-        appointment.items?.[0]?.service?.name ||
-        services.find((service) => service.id === appointment.serviceId)?.name ||
-        "Servico nao identificado",
-    }));
+  const growth = calculateGrowthPercent(data?.totalNoShows ?? 0, data?.previousPeriodNoShows);
+  const items = data?.recentItems ?? [];
 
   return (
     <Card className="border-rose-200 bg-gradient-to-br from-rose-50/80 to-orange-50/60">
@@ -113,11 +54,11 @@ export function NoShowInsights({
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard
             title="No-show no mes"
-            value={noShowCount}
+            value={isLoading ? "..." : data?.totalNoShows ?? 0}
             icon={AlertCircle}
             trend={{
-              value: noShowGrowthPercent,
-              isPositive: (noShowGrowthPercent ?? 0) <= 0,
+              value: growth,
+              isPositive: (growth ?? 0) <= 0,
               unavailableLabel: "Sem comparativo anterior",
             }}
             iconClassName="bg-rose-600"
@@ -125,21 +66,21 @@ export function NoShowInsights({
           />
           <MetricCard
             title="Taxa de no-show"
-            value={`${noShowRate.toFixed(1)}%`}
+            value={isLoading ? "..." : `${(data?.noShowRate ?? 0).toFixed(1)}%`}
             icon={CalendarClock}
             iconClassName="bg-orange-500"
             className="border-orange-200 bg-white/80"
           />
           <MetricCard
             title="Ultimos 7 dias"
-            value={lastSevenDaysNoShows}
+            value={isLoading ? "..." : data?.lastSevenDaysNoShows ?? 0}
             icon={CalendarClock}
             iconClassName="bg-amber-500"
             className="border-amber-200 bg-white/80"
           />
           <MetricCard
             title="Receita em risco"
-            value={formatCurrency(noShowLostRevenue)}
+            value={isLoading ? "..." : formatCurrency(data?.revenueAtRisk ?? 0)}
             icon={ReceiptText}
             iconClassName="bg-slate-700"
             className="border-slate-200 bg-white/80"
@@ -154,27 +95,32 @@ export function NoShowInsights({
                 Ultimos casos para o time acompanhar, contactar ou analisar recorrencia.
               </p>
             </div>
-            <Badge variant="outline" className="border-rose-200 bg-rose-50 text-rose-800">
-              {noShowCount} no mes
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-rose-200 bg-rose-50 text-rose-800">
+                {isLoading ? "..." : `${data?.totalNoShows ?? 0} no mes`}
+              </Badge>
+              <Button asChild size="sm" variant="outline" className="border-rose-200">
+                <Link to="/relatorio/no-show">Abrir pagina</Link>
+              </Button>
+            </div>
           </div>
 
-          {recentNoShows.length === 0 ? (
+          {!isLoading && items.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-center text-sm text-muted-foreground">
               Nenhum no-show registrado no periodo atual.
             </div>
           ) : (
             <div className="space-y-3">
-              {recentNoShows.map((appointment) => (
+              {items.map((appointment) => (
                 <div
-                  key={appointment.id}
+                  key={appointment.appointmentId}
                   className="rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3"
                 >
                   <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                      <p className="font-medium text-slate-900">{appointment.clientName}</p>
+                      <p className="font-medium text-slate-900">{appointment.clientName || "Cliente nao identificado"}</p>
                       <p className="text-sm text-muted-foreground">
-                        {appointment.serviceName} • {appointment.professionalName}
+                        {(appointment.serviceNames || []).join(", ") || "Servico nao identificado"} • {appointment.professionalName || "Profissional nao identificado"}
                       </p>
                     </div>
                     <Badge variant="outline" className="border-rose-200 bg-rose-50 text-rose-800">
@@ -182,7 +128,7 @@ export function NoShowInsights({
                     </Badge>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                    <span>{formatDateOnly(appointment.date)}</span>
+                    <span>{appointment.date ? formatDateOnly(appointment.date) : "-"}</span>
                     <span>{appointment.startTime} - {appointment.endTime}</span>
                     <span>{formatCurrency(appointment.totalPrice || 0)}</span>
                   </div>

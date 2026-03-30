@@ -55,6 +55,7 @@ import PublicBooking from "./pages/PublicBooking";
 import Settings from "./pages/Settings";
 import LicensePage from "./pages/LicensePage";
 import SalonProfile from "./pages/SalonProfile";
+import NoShowReport from "./pages/NoShowReport";
 import TaxConfig from "./pages/TaxConfig";
 import FiscalCertificatesSettings from "./pages/FiscalCertificatesSettings";
 import NfseSettings from "./pages/NfseSettings";
@@ -247,6 +248,54 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Agenda />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/relatorio"
+          element={
+            <ProtectedRoute>
+              <Navigate to="/relatorio/no-show" replace />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/relatorio/no-show"
+          element={
+            <ProtectedRoute>
+              <NoShowReport />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/relatorios"
+          element={
+            <ProtectedRoute>
+              <Navigate to="/relatorio/no-show" replace />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/relatorios/no-show"
+          element={
+            <ProtectedRoute>
+              <Navigate to="/relatorio/no-show" replace />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/agenda/no-show"
+          element={
+            <ProtectedRoute>
+              <Navigate to="/relatorio/no-show" replace />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/agenda/no-show/*"
+          element={
+            <ProtectedRoute>
+              <Navigate to="/relatorio/no-show" replace />
             </ProtectedRoute>
           }
         />

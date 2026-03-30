@@ -37,6 +37,7 @@ import type { CurrentMenuPermissionItem } from "@/types/menu-permissions";
 
 const MENU_REGISTRY = {
   "/dashboard": { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+  "/relatorio": { icon: BarChart3, label: "Relatorio", path: "/relatorio" },
   "/notificacoes": { icon: Bell, label: "Notificacoes", path: "/notificacoes" },
   "/agenda": { icon: Calendar, label: "Agenda", path: "/agenda" },
   "/servicos": { icon: Scissors, label: "Servicos", path: "/servicos" },
@@ -80,6 +81,7 @@ const MAIN_MENU_ORDER = [
   "/dashboard",
   "/notificacoes",
   "/agenda",
+  "/relatorio",
   "/servicos",
   "/especialidades",
   "/profissionais",
@@ -139,6 +141,7 @@ type DynamicMenuNode = {
 };
 
 const DYNAMIC_BOTTOM_ROUTES = new Set(["/perfil-salao", "/configuracoes"]);
+const GROUP_ONLY_ROUTES = new Set(["/relatorio"]);
 const HIDDEN_MENU_ROUTES = new Set([
   "/unauthorized",
   "/estoque/visao-geral",
@@ -397,7 +400,8 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
                     )
                     .sort((left, right) => right.path.length - left.path.length)[0]?.path ?? null;
                 const isGroupActive = Boolean(activeChildPath);
-                const parentIsAccessible = allowedSet.has(entry.path);
+                const parentIsAccessible =
+                  allowedSet.has(entry.path) && !GROUP_ONLY_ROUTES.has(entry.path);
 
                 return (
                   <div key={entry.id} className="space-y-0.5">

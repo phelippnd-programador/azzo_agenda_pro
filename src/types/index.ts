@@ -153,6 +153,34 @@ export interface AppointmentDetailResponse {
   timeline: AppointmentTimelineEvent[];
 }
 
+export interface NoShowReportItem {
+  appointmentId: string;
+  clientId?: string;
+  clientName?: string;
+  clientPhone?: string;
+  clientEmail?: string;
+  professionalId?: string;
+  professionalName?: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  status: AppointmentStatus;
+  notes?: string;
+  totalPrice: number;
+  totalServices: number;
+  serviceNames: string[];
+  createdAt?: string;
+}
+
+export interface NoShowReportPageResponse {
+  limit: number;
+  afterId?: string | null;
+  nextAfterId?: string | null;
+  hasMore: boolean;
+  totalItems: number;
+  items: NoShowReportItem[];
+}
+
 export interface ClientAppointmentHistoryItem {
   appointmentId: string;
   date: string;
@@ -251,6 +279,32 @@ export interface DashboardWhatsAppReactivationQueueResponse {
   limit: number;
   items: DashboardWhatsAppReactivationQueueItem[];
   exceptionItems: DashboardWhatsAppReactivationQueueItem[];
+}
+
+export interface DashboardNoShowInsightItem {
+  appointmentId: string;
+  clientId?: string;
+  clientName?: string;
+  professionalId?: string;
+  professionalName?: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  totalPrice: number;
+  status: string;
+  serviceNames: string[];
+}
+
+export interface DashboardNoShowInsightsResponse {
+  startDate: string;
+  endDate: string;
+  lastUpdatedAt?: string | null;
+  totalNoShows: number;
+  previousPeriodNoShows?: number | null;
+  noShowRate: number;
+  lastSevenDaysNoShows: number;
+  revenueAtRisk: number;
+  recentItems: DashboardNoShowInsightItem[];
 }
 
 export interface Appointment {

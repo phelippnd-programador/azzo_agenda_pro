@@ -8,8 +8,10 @@ import type {
   ClientAppointmentHistoryResponse,
   DashboardCustomerRankingResponse,
   DashboardMetrics,
+  DashboardNoShowInsightsResponse,
   DashboardWhatsAppReactivationQueueResponse,
   DashboardWhatsAppReactivationResponse,
+  NoShowReportPageResponse,
   Professional,
   Specialty,
   Service,
@@ -178,8 +180,10 @@ export type {
   ClientAppointmentHistoryResponse,
   DashboardCustomerRankingResponse,
   DashboardMetrics,
+  DashboardNoShowInsightsResponse,
   DashboardWhatsAppReactivationQueueResponse,
   DashboardWhatsAppReactivationResponse,
+  NoShowReportPageResponse,
   Professional,
   Specialty,
   Service,
@@ -231,6 +235,16 @@ export type AppointmentMonthlyMetric = {
   dia: number;
   mes: number;
   quantidadeAgendamentos: number;
+};
+
+export type NoShowReportParams = {
+  afterId?: string;
+  limit?: number;
+  from?: string;
+  to?: string;
+  professionalId?: string;
+  serviceId?: string;
+  clientQuery?: string;
 };
 
 export type ListResponse<T> =
@@ -789,6 +803,8 @@ export const dashboardApi = {
     request<DashboardCustomerRankingResponse>(
       `/dashboard/metrics/customers?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=${encodeURIComponent(String(limit))}`
     ),
+  getNoShowInsights: () =>
+    request<DashboardNoShowInsightsResponse>("/dashboard/metrics/no-show"),
   getWhatsAppReactivationMetrics: (days = 30) =>
     request<DashboardWhatsAppReactivationResponse>(
       `/dashboard/metrics/whatsapp-reactivation?days=${encodeURIComponent(String(days))}`
@@ -1075,6 +1091,40 @@ export const appointmentsApi = {
     }),
   getMonthlyMetric: (mes: number, ano: number) =>
     request<AppointmentMonthlyMetric[]>(`/appointments/metric?mes=${mes}&ano=${ano}`),
+  getNoShowReport: (params?: NoShowReportParams) => {
+    const query = new URLSearchParams();
+    if (params?.afterId) query.set("afterId", params.afterId);
+    if (params?.limit) query.set("limit", String(params.limit));
+    if (params?.from) query.set("from", params.from);
+    if (params?.to) query.set("to", params.to);
+    if (params?.professionalId && params.professionalId !== "all") {
+      query.set("professionalId", params.professionalId);
+    }
+    if (params?.serviceId && params.serviceId !== "all") {
+      query.set("serviceId", params.serviceId);
+    }
+    if (params?.clientQuery?.trim()) {
+      query.set("clientQuery", params.clientQuery.trim());
+    }
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<NoShowReportPageResponse>(`/appointments/no-show${suffix}`);
+  },
+  exportNoShowReport: (params?: Omit<NoShowReportParams, "afterId" | "limit">) => {
+    const query = new URLSearchParams();
+    if (params?.from) query.set("from", params.from);
+    if (params?.to) query.set("to", params.to);
+    if (params?.professionalId && params.professionalId !== "all") {
+      query.set("professionalId", params.professionalId);
+    }
+    if (params?.serviceId && params.serviceId !== "all") {
+      query.set("serviceId", params.serviceId);
+    }
+    if (params?.clientQuery?.trim()) {
+      query.set("clientQuery", params.clientQuery.trim());
+    }
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return requestBlob(`/appointments/no-show/export${suffix}`);
+  },
   updateStatus: (id: string, status: string) =>
     request<Appointment>(`/appointments/${id}/status?value=${status}`, {
       method: "PATCH",
