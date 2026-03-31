@@ -1,15 +1,17 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import NoShowReport from "@/pages/NoShowReport";
+import NoShowReport from "@/pages/report/NoShowReport";
 
 const {
   getNoShowReportMock,
   exportNoShowReportMock,
+  getClientsMock,
   getProfessionalsMock,
   getServicesMock,
 } = vi.hoisted(() => ({
   getNoShowReportMock: vi.fn(),
   exportNoShowReportMock: vi.fn(),
+  getClientsMock: vi.fn(),
   getProfessionalsMock: vi.fn(),
   getServicesMock: vi.fn(),
 }));
@@ -36,6 +38,10 @@ vi.mock("@/lib/api", async () => {
       getNoShowReport: getNoShowReportMock,
       exportNoShowReport: exportNoShowReportMock,
     },
+    clientsApi: {
+      ...actual.clientsApi,
+      getAll: getClientsMock,
+    },
     professionalsApi: {
       ...actual.professionalsApi,
       getAll: getProfessionalsMock,
@@ -52,6 +58,9 @@ describe("NoShowReport", () => {
   const revokeObjectUrlSpy = vi.spyOn(URL, "revokeObjectURL");
 
   beforeEach(() => {
+    getClientsMock.mockResolvedValue({
+      items: [{ id: "client-1", name: "Ana Souza", isActive: true }],
+    });
     getProfessionalsMock.mockResolvedValue({
       items: [{ id: "prof-1", name: "Maria", isActive: true }],
     });
@@ -59,27 +68,46 @@ describe("NoShowReport", () => {
       items: [{ id: "service-1", name: "Corte", isActive: true }],
     });
     getNoShowReportMock.mockResolvedValue({
+      startDate: "2026-03-01",
+      endDate: "2026-03-30",
+      lastUpdatedAt: "2026-03-30T10:00:00Z",
+      groupBy: "DAY",
+      totalNoShows: 2,
+      previousPeriodNoShows: 1,
+      lastSevenDaysNoShows: 2,
+      completedAppointments: 8,
+      noShowRate: 20,
+      revenueAtRisk: 200,
       limit: 20,
       afterId: null,
-      nextAfterId: "next-id",
-      hasMore: true,
+      nextAfterId: null,
+      hasMore: false,
       totalItems: 2,
-      items: [
+      items: [],
+      points: [
         {
-          appointmentId: "app-1",
-          clientName: "Ana Souza",
-          clientPhone: "21999999999",
-          clientEmail: "ana@example.com",
-          professionalName: "Maria",
-          serviceNames: ["Corte"],
-          totalServices: 1,
-          totalPrice: 100,
-          status: "NO_SHOW",
           date: "2026-03-25",
-          startTime: "09:00",
-          endTime: "10:00",
-          notes: "Cliente nao compareceu",
-          createdAt: "2026-03-25T08:00:00Z",
+          totalNoShows: 1,
+          revenueAtRisk: 100,
+        },
+        {
+          date: "2026-03-26",
+          totalNoShows: 1,
+          revenueAtRisk: 100,
+        },
+      ],
+      groups: [
+        {
+          key: "2026-03-25",
+          label: "2026-03-25",
+          totalNoShows: 1,
+          revenueAtRisk: 100,
+        },
+        {
+          key: "2026-03-26",
+          label: "2026-03-26",
+          totalNoShows: 1,
+          revenueAtRisk: 100,
         },
       ],
     });
@@ -92,7 +120,7 @@ describe("NoShowReport", () => {
     vi.clearAllMocks();
   });
 
-  it("should render report page and paginate by afterId", async () => {
+  it("should render quantitative report page", async () => {
     render(
       <MemoryRouter initialEntries={["/relatorio/no-show"]}>
         <NoShowReport />
@@ -100,24 +128,15 @@ describe("NoShowReport", () => {
     );
 
     expect(await screen.findByText("Relatorio de no-show")).toBeInTheDocument();
-    expect(await screen.findByText("Ana Souza")).toBeInTheDocument();
+    expect(await screen.findByText("2 no-show(s) no periodo")).toBeInTheDocument();
+    expect(await screen.findByText("25/03/2026")).toBeInTheDocument();
     expect(getNoShowReportMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        afterId: undefined,
         from: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
         to: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+        groupBy: "DAY",
       })
     );
-
-    fireEvent.click(screen.getByRole("button", { name: "Proxima" }));
-
-    await waitFor(() => {
-      expect(getNoShowReportMock).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          afterId: "next-id",
-        })
-      );
-    });
   });
 
   it("should export filtered data", async () => {
@@ -127,11 +146,15 @@ describe("NoShowReport", () => {
       </MemoryRouter>
     );
 
-    await screen.findByText("Ana Souza");
+    await screen.findByText("2 no-show(s) no periodo");
     fireEvent.click(screen.getByRole("button", { name: /Baixar dados/i }));
 
     await waitFor(() => {
-      expect(exportNoShowReportMock).toHaveBeenCalled();
+      expect(exportNoShowReportMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          groupBy: "DAY",
+        })
+      );
       expect(createObjectUrlSpy).toHaveBeenCalled();
       expect(revokeObjectUrlSpy).toHaveBeenCalledWith("blob:test");
     });

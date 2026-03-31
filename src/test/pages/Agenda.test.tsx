@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import Agenda from "@/pages/Agenda";
+import Agenda from "@/pages/appointments/Agenda";
 
 const { getMonthlyMetricMock } = vi.hoisted(() => ({
   getMonthlyMetricMock: vi.fn(),

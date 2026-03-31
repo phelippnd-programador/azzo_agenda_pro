@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Download, Filter, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { StatusBadge } from "@/components/common/StatusBadge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { MultiSelect } from "@/components/ui/multi-select";
 import {
   Select,
   SelectContent,
@@ -14,11 +14,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { appointmentStatusBadgeToneMap, appointmentStatusLabelMap } from "@/lib/appointment-status";
 import {
   appointmentsApi,
+  clientsApi,
   professionalsApi,
   servicesApi,
+  type Client,
+  type NoShowGroupBy,
   type NoShowReportPageResponse,
   type Professional,
   type Service,
@@ -33,7 +35,20 @@ const toInputDate = (value: Date) => value.toISOString().split("T")[0];
 const getListItems = <T,>(response: T[] | { items?: T[] } | null | undefined) =>
   Array.isArray(response) ? response : response?.items ?? [];
 
+const groupByOptions: Array<{ value: NoShowGroupBy; label: string }> = [
+  { value: "DAY", label: "Dia" },
+  { value: "PROFESSIONAL", label: "Profissional" },
+  { value: "CLIENT", label: "Cliente" },
+  { value: "SERVICE", label: "Servico" },
+];
+
+const formatGroupLabel = (groupBy: NoShowGroupBy, value?: string) => {
+  if (!value) return "-";
+  return groupBy === "DAY" ? formatDateOnly(value) : value;
+};
+
 export default function NoShowReport() {
+  const [clients, setClients] = useState<Client[]>([]);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [isLoadingFilters, setIsLoadingFilters] = useState(true);
@@ -42,17 +57,17 @@ export default function NoShowReport() {
   const [toInput, setToInput] = useState(toInputDate(today));
   const [professionalIdInput, setProfessionalIdInput] = useState("all");
   const [serviceIdInput, setServiceIdInput] = useState("all");
-  const [clientQueryInput, setClientQueryInput] = useState("");
+  const [clientIdsInput, setClientIdsInput] = useState<string[]>([]);
+  const [groupByInput, setGroupByInput] = useState<NoShowGroupBy>("DAY");
 
   const [activeFilters, setActiveFilters] = useState({
     from: toInputDate(firstDayOfMonth),
     to: toInputDate(today),
     professionalId: "all",
     serviceId: "all",
-    clientQuery: "",
+    clientIds: [] as string[],
+    groupBy: "DAY" as NoShowGroupBy,
   });
-  const [currentAfterId, setCurrentAfterId] = useState<string | undefined>(undefined);
-  const [cursorHistory, setCursorHistory] = useState<string[]>([]);
 
   const [report, setReport] = useState<NoShowReportPageResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,15 +80,18 @@ export default function NoShowReport() {
     const loadFilters = async () => {
       try {
         setIsLoadingFilters(true);
-        const [professionalsResponse, servicesResponse] = await Promise.all([
+        const [clientsResponse, professionalsResponse, servicesResponse] = await Promise.all([
+          clientsApi.getAll({ limit: 500 }),
           professionalsApi.getAll({ limit: 200 }),
           servicesApi.getAll({ limit: 200 }),
         ]);
         if (cancelled) return;
+        setClients(getListItems(clientsResponse));
         setProfessionals(getListItems(professionalsResponse).filter((item) => item.isActive));
         setServices(getListItems(servicesResponse).filter((item) => item.isActive));
       } catch {
         if (!cancelled) {
+          setClients([]);
           setProfessionals([]);
           setServices([]);
         }
@@ -94,13 +112,12 @@ export default function NoShowReport() {
         setIsLoading(true);
         setErrorMessage(null);
         const response = await appointmentsApi.getNoShowReport({
-          afterId: currentAfterId,
-          limit: 20,
           from: activeFilters.from || undefined,
           to: activeFilters.to || undefined,
           professionalId: activeFilters.professionalId,
           serviceId: activeFilters.serviceId,
-          clientQuery: activeFilters.clientQuery || undefined,
+          clientIds: activeFilters.clientIds,
+          groupBy: activeFilters.groupBy,
         });
         if (!cancelled) setReport(response);
       } catch (error) {
@@ -116,9 +133,7 @@ export default function NoShowReport() {
     return () => {
       cancelled = true;
     };
-  }, [activeFilters, currentAfterId, reloadToken]);
-
-  const pageNumber = cursorHistory.length + 1;
+  }, [activeFilters, reloadToken]);
 
   const selectedProfessionalLabel = useMemo(() => {
     if (activeFilters.professionalId === "all") return "Todos os profissionais";
@@ -130,15 +145,22 @@ export default function NoShowReport() {
     return services.find((item) => item.id === activeFilters.serviceId)?.name || "Servico filtrado";
   }, [activeFilters.serviceId, services]);
 
+  const selectedGroupingLabel = useMemo(
+    () => groupByOptions.find((option) => option.value === activeFilters.groupBy)?.label || "Dia",
+    [activeFilters.groupBy]
+  );
+
+  const groups = report?.groups ?? [];
+  const noShowRateLabel = `${(report?.noShowRate ?? 0).toFixed(1)}%`;
+
   const applyFilters = () => {
-    setCursorHistory([]);
-    setCurrentAfterId(undefined);
     setActiveFilters({
       from: fromInput,
       to: toInput,
       professionalId: professionalIdInput,
       serviceId: serviceIdInput,
-      clientQuery: clientQueryInput.trim(),
+      clientIds: clientIdsInput,
+      groupBy: groupByInput,
     });
   };
 
@@ -149,34 +171,15 @@ export default function NoShowReport() {
     setToInput(defaultTo);
     setProfessionalIdInput("all");
     setServiceIdInput("all");
-    setClientQueryInput("");
-    setCursorHistory([]);
-    setCurrentAfterId(undefined);
+    setClientIdsInput([]);
+    setGroupByInput("DAY");
     setActiveFilters({
       from: defaultFrom,
       to: defaultTo,
       professionalId: "all",
       serviceId: "all",
-      clientQuery: "",
-    });
-  };
-
-  const handleNextPage = () => {
-    if (!report?.nextAfterId) return;
-    setCursorHistory((prev) => [...prev, currentAfterId ?? ""]);
-    setCurrentAfterId(report.nextAfterId);
-  };
-
-  const handlePreviousPage = () => {
-    setCursorHistory((prev) => {
-      if (prev.length === 0) {
-        setCurrentAfterId(undefined);
-        return prev;
-      }
-      const nextHistory = [...prev];
-      const previousCursor = nextHistory.pop();
-      setCurrentAfterId(previousCursor || undefined);
-      return nextHistory;
+      clientIds: [],
+      groupBy: "DAY",
     });
   };
 
@@ -188,12 +191,13 @@ export default function NoShowReport() {
         to: activeFilters.to || undefined,
         professionalId: activeFilters.professionalId,
         serviceId: activeFilters.serviceId,
-        clientQuery: activeFilters.clientQuery || undefined,
+        clientIds: activeFilters.clientIds,
+        groupBy: activeFilters.groupBy,
       });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `no-show-${activeFilters.from || "inicio"}-${activeFilters.to || "hoje"}.csv`;
+      link.download = `no-show-${activeFilters.groupBy.toLowerCase()}-${activeFilters.from || "inicio"}-${activeFilters.to || "hoje"}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -209,18 +213,18 @@ export default function NoShowReport() {
   return (
     <MainLayout
       title="Relatorio de no-show"
-      subtitle="Lista operacional com filtros, exportacao e paginacao por cursor baseada no ID do ultimo registro."
+      subtitle="Visao quantitativa com totais do periodo e agrupamento por dia, profissional ou cliente."
     >
       <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Filtros</CardTitle>
             <CardDescription>
-              Filtre por periodo, profissional, servico e cliente para localizar faltas rapidamente.
+              Filtre por periodo, profissional, servico, cliente e tipo de agrupamento do relatorio.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Periodo inicial</p>
                 <Input type="date" value={fromInput} onChange={(event) => setFromInput(event.target.value)} />
@@ -262,12 +266,34 @@ export default function NoShowReport() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">Cliente</p>
-                <Input
-                  placeholder="Nome, e-mail ou telefone"
-                  value={clientQueryInput}
-                  onChange={(event) => setClientQueryInput(event.target.value)}
+                <p className="text-xs text-muted-foreground">Clientes</p>
+                <MultiSelect
+                  options={clients.map((client) => ({
+                    value: client.id,
+                    label: client.name,
+                  }))}
+                  value={clientIdsInput}
+                  onValueChange={setClientIdsInput}
+                  placeholder="Todos os clientes"
+                  searchPlaceholder="Buscar cliente..."
+                  emptyText="Nenhum cliente encontrado."
+                  disabled={isLoadingFilters}
                 />
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">Agrupar por</p>
+                <Select value={groupByInput} onValueChange={(value) => setGroupByInput(value as NoShowGroupBy)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Dia" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {groupByOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -291,111 +317,110 @@ export default function NoShowReport() {
           </CardContent>
         </Card>
 
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Total no-show</CardDescription>
+              <CardTitle>{report?.totalNoShows ?? 0}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Taxa de no-show</CardDescription>
+              <CardTitle>{noShowRateLabel}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Receita em risco</CardDescription>
+              <CardTitle>{formatCurrency(report?.revenueAtRisk ?? 0)}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Periodo anterior</CardDescription>
+              <CardTitle>{report?.previousPeriodNoShows ?? 0}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Ultimos 7 dias</CardDescription>
+              <CardTitle>{report?.lastSevenDaysNoShows ?? 0}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Agendamentos concluidos</CardDescription>
+              <CardTitle>{report?.completedAppointments ?? 0}</CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+
         <Card>
           <CardHeader className="gap-3">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <CardTitle>Lista de no-show</CardTitle>
+                <CardTitle>Resumo agrupado</CardTitle>
                 <CardDescription>
-                  {selectedProfessionalLabel} • {selectedServiceLabel}
+                  {selectedGroupingLabel} • {selectedProfessionalLabel} • {selectedServiceLabel}
                 </CardDescription>
               </div>
-              <div className="text-sm text-muted-foreground">
-                {report ? `${report.totalItems} registro(s) encontrado(s)` : "Sem dados carregados"}
+              <div className="text-sm text-muted-foreground text-right">
+                <div>{report ? `${report.totalNoShows ?? 0} no-show(s) no periodo` : "Sem dados carregados"}</div>
+                <div>{report ? `${groups.length} agrupamento(s) retornado(s)` : ""}</div>
+                <div>{report?.lastUpdatedAt ? `Atualizado em ${formatDateTime(report.lastUpdatedAt)}` : ""}</div>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {errorMessage ? (
               <Alert variant="destructive">
-                <AlertTitle>Nao foi possivel carregar a lista</AlertTitle>
+                <AlertTitle>Nao foi possivel carregar o relatorio</AlertTitle>
                 <AlertDescription>{errorMessage}</AlertDescription>
               </Alert>
             ) : null}
 
             <div className="overflow-x-auto rounded-xl border">
-              <table className="min-w-[980px] w-full text-sm">
+              <table className="min-w-[720px] w-full text-sm">
                 <thead className="bg-muted/50 text-left">
                   <tr>
-                    <th className="px-4 py-3 font-medium">Cliente</th>
-                    <th className="px-4 py-3 font-medium">Data e horario</th>
-                    <th className="px-4 py-3 font-medium">Profissional</th>
-                    <th className="px-4 py-3 font-medium">Servicos</th>
-                    <th className="px-4 py-3 font-medium">Valor</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
-                    <th className="px-4 py-3 font-medium">Observacoes</th>
+                    <th className="px-4 py-3 font-medium">Agrupamento</th>
+                    <th className="px-4 py-3 font-medium">Total no-show</th>
+                    <th className="px-4 py-3 font-medium">Receita em risco</th>
+                    <th className="px-4 py-3 font-medium">Participacao</th>
                   </tr>
                 </thead>
                 <tbody>
                   {isLoading ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">
-                        Carregando registros de no-show...
+                      <td colSpan={4} className="px-4 py-10 text-center text-muted-foreground">
+                        Carregando resumo de no-show...
                       </td>
                     </tr>
-                  ) : report?.items.length ? (
-                    report.items.map((item) => (
-                      <tr key={item.appointmentId} className="border-t align-top">
-                        <td className="px-4 py-3">
-                          <div className="space-y-1">
-                            <p className="font-medium text-foreground">{item.clientName || "Cliente nao identificado"}</p>
-                            <p className="text-xs text-muted-foreground">{item.clientPhone || "Telefone nao informado"}</p>
-                            <p className="text-xs text-muted-foreground">{item.clientEmail || "E-mail nao informado"}</p>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="space-y-1">
-                            <p className="font-medium">{formatDateOnly(item.date)}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {item.startTime} - {item.endTime}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Criado em {item.createdAt ? formatDateTime(item.createdAt) : "-"}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">{item.professionalName || "-"}</td>
-                        <td className="px-4 py-3">
-                          <div className="space-y-1">
-                            <p>{item.serviceNames.join(", ") || "Servico nao identificado"}</p>
-                            <p className="text-xs text-muted-foreground">{item.totalServices} item(ns)</p>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">{formatCurrency(item.totalPrice || 0)}</td>
-                        <td className="px-4 py-3">
-                          <StatusBadge
-                            status={item.status}
-                            labelMap={appointmentStatusLabelMap}
-                            toneMap={appointmentStatusBadgeToneMap}
-                            fallbackStatus="NO_SHOW"
-                          />
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">{item.notes || "-"}</td>
-                      </tr>
-                    ))
+                  ) : groups.length ? (
+                    groups.map((group) => {
+                      const percentage =
+                        (report?.totalNoShows ?? 0) > 0 ? (group.totalNoShows / (report?.totalNoShows ?? 1)) * 100 : 0;
+                      return (
+                        <tr key={`${group.key}-${group.label}`} className="border-t align-top">
+                          <td className="px-4 py-3 font-medium">
+                            {formatGroupLabel(activeFilters.groupBy, group.label)}
+                          </td>
+                          <td className="px-4 py-3">{group.totalNoShows}</td>
+                          <td className="px-4 py-3">{formatCurrency(group.revenueAtRisk)}</td>
+                          <td className="px-4 py-3">{percentage.toFixed(1)}%</td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
-                      <td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">
+                      <td colSpan={4} className="px-4 py-10 text-center text-muted-foreground">
                         Nenhum registro de no-show encontrado para os filtros selecionados.
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
-            </div>
-
-            <div className="flex flex-col gap-3 border-t pt-4 md:flex-row md:items-center md:justify-between">
-              <div className="text-sm text-muted-foreground">
-                Pagina {pageNumber} • Cursor atual: {currentAfterId || "inicio"}.
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" onClick={handlePreviousPage} disabled={cursorHistory.length === 0 || isLoading}>
-                  Anterior
-                </Button>
-                <Button variant="outline" onClick={handleNextPage} disabled={!report?.hasMore || isLoading}>
-                  Proxima
-                </Button>
-              </div>
             </div>
           </CardContent>
         </Card>

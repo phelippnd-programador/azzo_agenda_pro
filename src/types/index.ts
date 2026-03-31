@@ -172,13 +172,89 @@ export interface NoShowReportItem {
   createdAt?: string;
 }
 
+export type NoShowGroupBy = "DAY" | "PROFESSIONAL" | "CLIENT" | "SERVICE";
+
+export interface NoShowReportPoint {
+  date: string;
+  totalNoShows: number;
+  revenueAtRisk: number;
+}
+
+export interface NoShowReportGroup {
+  key: string;
+  label: string;
+  totalNoShows: number;
+  revenueAtRisk: number;
+}
+
 export interface NoShowReportPageResponse {
+  startDate?: string;
+  endDate?: string;
+  lastUpdatedAt?: string | null;
+  groupBy?: NoShowGroupBy;
+  totalNoShows?: number;
+  previousPeriodNoShows?: number;
+  lastSevenDaysNoShows?: number;
+  completedAppointments?: number;
+  noShowRate?: number;
+  revenueAtRisk?: number;
   limit: number;
   afterId?: string | null;
   nextAfterId?: string | null;
   hasMore: boolean;
   totalItems: number;
   items: NoShowReportItem[];
+  points?: NoShowReportPoint[];
+  groups?: NoShowReportGroup[];
+}
+
+export interface AppointmentManagementReportItem {
+  appointmentId: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  clientId?: string;
+  clientName?: string;
+  professionalId?: string;
+  professionalName?: string;
+  serviceLabel?: string;
+  status: AppointmentStatus;
+  origin?: string;
+  totalPrice: number;
+  flagHorarioVago: boolean;
+  flagNaoConfirmado: boolean;
+  flagAbandonoFluxo: boolean;
+}
+
+export interface AppointmentManagementReportSignal {
+  code: string;
+  title: string;
+  description: string;
+  severity: "info" | "warning" | "critical" | "opportunity";
+}
+
+export interface AppointmentManagementReportResponse {
+  startDate?: string;
+  endDate?: string;
+  lastUpdatedAt?: string | null;
+  totalAppointments: number;
+  totalConfirmed: number;
+  totalPending: number;
+  totalCancelled: number;
+  totalNoShow: number;
+  totalCompleted: number;
+  totalRevenue: number;
+  totalGapOpportunities: number;
+  totalUnconfirmed: number;
+  totalAbandonmentSignalDays: number;
+  occupancyRate: number;
+  cancellationRate: number;
+  noShowRate: number;
+  limit: number;
+  totalItems: number;
+  alerts: AppointmentManagementReportSignal[];
+  opportunities: AppointmentManagementReportSignal[];
+  items: AppointmentManagementReportItem[];
 }
 
 export interface ClientAppointmentHistoryItem {

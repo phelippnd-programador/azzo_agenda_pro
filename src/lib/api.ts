@@ -1,5 +1,6 @@
 import type {
   Appointment,
+  AppointmentManagementReportResponse,
   AppointmentDetailResponse,
   AppointmentCustomerNote,
   AppointmentCreateItemInput,
@@ -11,6 +12,7 @@ import type {
   DashboardNoShowInsightsResponse,
   DashboardWhatsAppReactivationQueueResponse,
   DashboardWhatsAppReactivationResponse,
+  NoShowGroupBy,
   NoShowReportPageResponse,
   Professional,
   Specialty,
@@ -173,6 +175,7 @@ import { toast } from "sonner";
 
 export type {
   Appointment,
+  AppointmentManagementReportResponse,
   AppointmentDetailResponse,
   AppointmentCustomerNote,
   AppointmentTimelineEvent,
@@ -183,6 +186,7 @@ export type {
   DashboardNoShowInsightsResponse,
   DashboardWhatsAppReactivationQueueResponse,
   DashboardWhatsAppReactivationResponse,
+  NoShowGroupBy,
   NoShowReportPageResponse,
   Professional,
   Specialty,
@@ -244,7 +248,18 @@ export type NoShowReportParams = {
   to?: string;
   professionalId?: string;
   serviceId?: string;
+  clientIds?: string[];
   clientQuery?: string;
+  groupBy?: NoShowGroupBy;
+};
+
+export type AppointmentManagementReportParams = {
+  from?: string;
+  to?: string;
+  professionalId?: string;
+  serviceId?: string;
+  status?: string;
+  limit?: number;
 };
 
 export type ListResponse<T> =
@@ -1091,6 +1106,44 @@ export const appointmentsApi = {
     }),
   getMonthlyMetric: (mes: number, ano: number) =>
     request<AppointmentMonthlyMetric[]>(`/appointments/metric?mes=${mes}&ano=${ano}`),
+  getManagementReport: (params?: AppointmentManagementReportParams) => {
+    const query = new URLSearchParams();
+    if (params?.from) query.set("from", params.from);
+    if (params?.to) query.set("to", params.to);
+    if (params?.professionalId && params.professionalId !== "all") {
+      query.set("professionalId", params.professionalId);
+    }
+    if (params?.serviceId && params.serviceId !== "all") {
+      query.set("serviceId", params.serviceId);
+    }
+    if (params?.status && params.status !== "all") {
+      query.set("status", params.status);
+    }
+    if (params?.limit) {
+      query.set("limit", String(params.limit));
+    }
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<AppointmentManagementReportResponse>(`/appointments/management-report${suffix}`);
+  },
+  exportManagementReport: (params?: AppointmentManagementReportParams) => {
+    const query = new URLSearchParams();
+    if (params?.from) query.set("from", params.from);
+    if (params?.to) query.set("to", params.to);
+    if (params?.professionalId && params.professionalId !== "all") {
+      query.set("professionalId", params.professionalId);
+    }
+    if (params?.serviceId && params.serviceId !== "all") {
+      query.set("serviceId", params.serviceId);
+    }
+    if (params?.status && params.status !== "all") {
+      query.set("status", params.status);
+    }
+    if (params?.limit) {
+      query.set("limit", String(params.limit));
+    }
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return requestBlob(`/appointments/management-report/export${suffix}`);
+  },
   getNoShowReport: (params?: NoShowReportParams) => {
     const query = new URLSearchParams();
     if (params?.afterId) query.set("afterId", params.afterId);
@@ -1103,8 +1156,14 @@ export const appointmentsApi = {
     if (params?.serviceId && params.serviceId !== "all") {
       query.set("serviceId", params.serviceId);
     }
+    if (params?.clientIds?.length) {
+      query.set("clientIds", params.clientIds.join(","));
+    }
     if (params?.clientQuery?.trim()) {
       query.set("clientQuery", params.clientQuery.trim());
+    }
+    if (params?.groupBy) {
+      query.set("groupBy", params.groupBy);
     }
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return request<NoShowReportPageResponse>(`/appointments/no-show${suffix}`);
@@ -1119,8 +1178,14 @@ export const appointmentsApi = {
     if (params?.serviceId && params.serviceId !== "all") {
       query.set("serviceId", params.serviceId);
     }
+    if (params?.clientIds?.length) {
+      query.set("clientIds", params.clientIds.join(","));
+    }
     if (params?.clientQuery?.trim()) {
       query.set("clientQuery", params.clientQuery.trim());
+    }
+    if (params?.groupBy) {
+      query.set("groupBy", params.groupBy);
     }
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return requestBlob(`/appointments/no-show/export${suffix}`);

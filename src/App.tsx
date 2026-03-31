@@ -43,7 +43,7 @@ import StockTransfersPage from "./pages/stock/StockTransfersPage";
 import StockSettingsPage from "./pages/stock/StockSettingsPage";
 import FinancialCommissions from "./pages/FinancialCommissions";
 import ProfessionalFinancial from "./pages/ProfessionalFinancial";
-import ProfessionalCommissionReport from "./pages/ProfessionalCommissionReport";
+import ProfessionalCommissionReport from "./pages/report/ProfessionalCommissionReport";
 import Auditoria from "./pages/Auditoria";
 import LgpdRequests from "./pages/LgpdRequests";
 import Login from "./pages/Login";
@@ -51,21 +51,22 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Register from "./pages/Register";
 import Notifications from "./pages/Notifications";
-import PublicBooking from "./pages/PublicBooking";
+import PublicBooking from "./pages/appointments/PublicBooking";
 import Settings from "./pages/Settings";
 import LicensePage from "./pages/LicensePage";
 import SalonProfile from "./pages/SalonProfile";
-import NoShowReport from "./pages/NoShowReport";
-import TaxConfig from "./pages/TaxConfig";
-import FiscalCertificatesSettings from "./pages/FiscalCertificatesSettings";
-import NfseSettings from "./pages/NfseSettings";
-import NfseInvoices from "./pages/NfseInvoices";
-import NfseInvoiceForm from "./pages/NfseInvoiceForm";
-import NfseInvoiceDetails from "./pages/NfseInvoiceDetails";
-import NfseInvoicePdf from "./pages/NfseInvoicePdf";
-import InvoicePreview from "./pages/InvoicePreview";
-import InvoiceEmission from "./pages/InvoiceEmission";
-import ApuracaoMensal from "./pages/ApuracaoMensal";
+import AppointmentManagementReport from "./pages/report/AppointmentManagementReport";
+import NoShowReport from "./pages/report/NoShowReport";
+import TaxConfig from "./pages/tax/TaxConfig";
+import FiscalCertificatesSettings from "./pages/tax/FiscalCertificatesSettings";
+import NfseSettings from "./pages/tax/NfseSettings";
+import NfseInvoices from "./pages/tax/NfseInvoices";
+import NfseInvoiceForm from "./pages/tax/NfseInvoiceForm";
+import NfseInvoiceDetails from "./pages/tax/NfseInvoiceDetails";
+import NfseInvoicePdf from "./pages/tax/NfseInvoicePdf";
+import InvoicePreview from "./pages/tax/InvoicePreview";
+import InvoiceEmission from "./pages/tax/InvoiceEmission";
+import ApuracaoMensal from "./pages/tax/ApuracaoMensal";
 import WhatsAppIntegration from "./pages/WhatsAppIntegration";
 import Unauthorized from "./pages/Unauthorized";
 import LegalDocument from "./pages/LegalDocument";
@@ -77,7 +78,7 @@ import { isFiscalOwnerPath } from "@/lib/fiscal-paths";
 const SalePage = lazy(() => import("./pages/SalePage"));
 const CheckoutSuccess = lazy(() => import("./pages/CheckoutSuccess"));
 const CheckoutError = lazy(() => import("./pages/CheckoutError"));
-const Agenda = lazy(() => import("./pages/Agenda"));
+const Agenda = lazy(() => import("./pages/appointments/Agenda"));
 const Financial = lazy(() => import("./pages/Financial"));
 const SystemAdminPage = lazy(() => import("./pages/SystemAdmin"));
 
@@ -251,35 +252,59 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/relatorio"
-          element={
-            <ProtectedRoute>
-              <Navigate to="/relatorio/no-show" replace />
+          <Route
+            path="/relatorio"
+            element={
+              <ProtectedRoute>
+                <Navigate to="/relatorio/agendamento" replace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/relatorio/agendamento"
+            element={
+              <ProtectedRoute>
+                <AppointmentManagementReport />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/relatorio/no-show"
+            element={
+              <ProtectedRoute>
+                <NoShowReport />
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/relatorio/no-show"
-          element={
-            <ProtectedRoute>
-              <NoShowReport />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/relatorios"
-          element={
-            <ProtectedRoute>
-              <Navigate to="/relatorio/no-show" replace />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/relatorios/no-show"
-          element={
-            <ProtectedRoute>
-              <Navigate to="/relatorio/no-show" replace />
+          <Route
+            path="/relatorios"
+            element={
+              <ProtectedRoute>
+                <Navigate to="/relatorio/agendamento" replace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/relatorios/agendamento"
+            element={
+              <ProtectedRoute>
+                <Navigate to="/relatorio/agendamento" replace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/relatorios/agendamentos"
+            element={
+              <ProtectedRoute>
+                <Navigate to="/relatorio/agendamento" replace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/relatorios/no-show"
+            element={
+              <ProtectedRoute>
+                <Navigate to="/relatorio/no-show" replace />
             </ProtectedRoute>
           }
         />

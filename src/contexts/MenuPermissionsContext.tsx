@@ -92,9 +92,18 @@ export function MenuPermissionsProvider({ children }: { children: ReactNode }) {
 
   const refreshPermissions = useCallback(async () => {
     const pathname = typeof window !== "undefined" ? window.location.pathname : "";
-    const isPublicBookingRoute = pathname === "/agendar" || pathname.startsWith("/agendar/");
+    const isPublicRoute =
+      pathname === "/agendar" ||
+      pathname.startsWith("/agendar/") ||
+      pathname === "/compras" ||
+      pathname.startsWith("/compras/") ||
+      pathname === "/success" ||
+      pathname === "/error";
 
-    if (isPublicBookingRoute) {
+    if (isPublicRoute) {
+      setRole(null);
+      setAllowedRoutes(null);
+      setMenuItems(null);
       setIsLoading(false);
       setIsEnforced(false);
       return;
