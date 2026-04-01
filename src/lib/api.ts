@@ -1666,6 +1666,8 @@ export type SalonProfile = {
   salonName: string;
   salonSlug: string;
   publicBookingUrl?: string | null;
+  logo?: string | null;
+  logoUrl?: string | null;
   salonDescription?: string | null;
   salonPhone?: string | null;
   salonWhatsapp?: string | null;
@@ -1691,8 +1693,20 @@ export const salonApi = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+  uploadLogo: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return request<SalonProfile>("/salon/profile/logo", {
+      method: "POST",
+      body: formData,
+    });
+  },
+  removeLogo: () =>
+    request<SalonProfile>("/salon/profile/logo", {
+      method: "DELETE",
+    }),
   getPublicBySlug: (slug: string) =>
-    request<Partial<SalonProfile> & { logo?: string | null }>(
+    request<Partial<SalonProfile> & { logo?: string | null; logoUrl?: string | null }>(
       `/public/salons/${slug}`
     ),
 };

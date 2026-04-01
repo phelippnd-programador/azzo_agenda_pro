@@ -5,13 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { FileDropzone } from '@/components/ui/file-dropzone';
 import {
   Building2,
   Phone,
   Globe,
-  Camera,
   Save,
   Loader2,
   Instagram,
@@ -25,6 +24,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { salonApi, utilsApi, type SalonProfile as SalonProfileData } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
+import { prepareImageUpload } from '@/lib/image-upload';
 import { buildPublicBookingUrl } from '@/lib/public-booking-url';
 import { maskCpfCnpj, onlyDigits } from '@/lib/input-masks';
 
@@ -62,6 +62,8 @@ export default function SalonProfile() {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isAddressLoading, setIsAddressLoading] = useState(false);
+  const [isLogoUploading, setIsLogoUploading] = useState(false);
+  const [isLogoRemoving, setIsLogoRemoving] = useState(false);
   const [lastResolvedCep, setLastResolvedCep] = useState('');
   const [lockedAddressFields, setLockedAddressFields] = useState<LockedAddressFields>(emptyLockedFields);
 
@@ -76,6 +78,7 @@ export default function SalonProfile() {
   const [salonWebsite, setSalonWebsite] = useState('');
   const [salonInstagram, setSalonInstagram] = useState('');
   const [salonFacebook, setSalonFacebook] = useState('');
+  const [salonLogoUrl, setSalonLogoUrl] = useState('');
   const [address, setAddress] = useState<AddressValues>(emptyAddress);
   const [businessHours, setBusinessHours] = useState<BusinessHours[]>(defaultBusinessHours);
 
@@ -86,6 +89,39 @@ export default function SalonProfile() {
 
   const unlockAddressFields = () => setLockedAddressFields(emptyLockedFields);
 
+  const applyProfileData = (data: Partial<SalonProfileData>) => {
+    setSalonName(data.salonName || '');
+    const resolvedSlug = data.salonSlug || 'meu-salao';
+    setSalonSlug(resolvedSlug);
+    persistSalonSlug(resolvedSlug);
+    setPublicBookingUrl(data.publicBookingUrl || '');
+    setSalonLogoUrl(data.logoUrl || '');
+    setSalonDescription(data.salonDescription || '');
+    setSalonPhone(data.salonPhone || '');
+    setSalonWhatsapp(data.salonWhatsapp || '');
+    setSalonCpfCnpj(maskCpfCnpj(data.salonCpfCnpj || ''));
+    setSalonEmail(data.salonEmail || '');
+    setSalonWebsite(data.salonWebsite || '');
+    setSalonInstagram(data.salonInstagram || '');
+    setSalonFacebook(data.salonFacebook || '');
+    const loadedZip = data.zipCode || '';
+    setAddress({
+      street: data.street || '',
+      number: data.number || '',
+      complement: data.complement || '',
+      neighborhood: data.neighborhood || '',
+      city: data.city || '',
+      state: data.state || '',
+      zipCode: loadedZip,
+    });
+    setLastResolvedCep(normalizeCep(loadedZip));
+    if (data.businessHours?.length) {
+      setBusinessHours(data.businessHours);
+      return;
+    }
+    setBusinessHours(defaultBusinessHours);
+  };
+
   useEffect(() => {
     setSalonName(user?.salonName || '');
     setSalonEmail(user?.email || '');
@@ -93,36 +129,7 @@ export default function SalonProfile() {
 
     salonApi
       .getProfile()
-      .then((data) => {
-        setSalonName(data.salonName || '');
-        const resolvedSlug = data.salonSlug || 'meu-salao';
-        setSalonSlug(resolvedSlug);
-        persistSalonSlug(resolvedSlug);
-        setPublicBookingUrl(data.publicBookingUrl || '');
-        setSalonDescription(data.salonDescription || '');
-        setSalonPhone(data.salonPhone || '');
-        setSalonWhatsapp(data.salonWhatsapp || '');
-        setSalonCpfCnpj(maskCpfCnpj(data.salonCpfCnpj || ''));
-        setSalonEmail(data.salonEmail || '');
-        setSalonWebsite(data.salonWebsite || '');
-        setSalonInstagram(data.salonInstagram || '');
-        setSalonFacebook(data.salonFacebook || '');
-        const loadedZip = data.zipCode || '';
-        setAddress({
-          street: data.street || '',
-          number: data.number || '',
-          complement: data.complement || '',
-          neighborhood: data.neighborhood || '',
-          city: data.city || '',
-          state: data.state || '',
-          zipCode: loadedZip,
-        });
-        // Mark the loaded zip as already resolved to prevent a re-fetch
-        setLastResolvedCep(normalizeCep(loadedZip));
-        if (data.businessHours?.length) {
-          setBusinessHours(data.businessHours);
-        }
-      })
+      .then((data) => applyProfileData(data))
       .catch(() => undefined);
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -223,6 +230,33 @@ export default function SalonProfile() {
     }
   };
 
+  const handleLogoUpload = async (selectedFile: File) => {
+    setIsLogoUploading(true);
+    try {
+      const preparedFile = await prepareImageUpload(selectedFile);
+      const updatedProfile = await salonApi.uploadLogo(preparedFile);
+      applyProfileData(updatedProfile);
+      toast.success('Imagem do estabelecimento atualizada com sucesso');
+    } catch (error) {
+      toast.error(resolveUiError(error, 'Nao foi possivel enviar a imagem do estabelecimento').message);
+    } finally {
+      setIsLogoUploading(false);
+    }
+  };
+
+  const handleLogoRemove = async () => {
+    setIsLogoRemoving(true);
+    try {
+      const updatedProfile = await salonApi.removeLogo();
+      applyProfileData(updatedProfile);
+      toast.success('Imagem do estabelecimento removida com sucesso');
+    } catch (error) {
+      toast.error(resolveUiError(error, 'Nao foi possivel remover a imagem do estabelecimento').message);
+    } finally {
+      setIsLogoRemoving(false);
+    }
+  };
+
   const updateBusinessHours = (
     index: number,
     field: keyof BusinessHours,
@@ -250,22 +284,26 @@ export default function SalonProfile() {
         {/* Avatar / header card */}
         <Card>
           <CardContent className="p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className="relative">
-                <Avatar className="w-20 h-20 sm:w-24 sm:h-24">
-                  <AvatarImage src="" />
-                  <AvatarFallback className="bg-primary/10 text-primary text-xl sm:text-2xl">
-                    {salonName.slice(0, 2).toUpperCase() || 'SL'}
-                  </AvatarFallback>
-                </Avatar>
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full"
-                >
-                  <Camera className="w-4 h-4" />
-                </Button>
-              </div>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <FileDropzone
+                title="Imagem do estabelecimento"
+                helperText="JPG, PNG ou WEBP"
+                accept={{
+                  'image/jpeg': ['.jpg', '.jpeg'],
+                  'image/png': ['.png'],
+                  'image/webp': ['.webp'],
+                }}
+                maxSizeBytes={10 * 1024 * 1024}
+                currentPreviewUrl={salonLogoUrl || null}
+                previewAlt={salonName || 'Imagem do estabelecimento'}
+                isLoading={isLogoUploading || isLogoRemoving}
+                onFileSelected={handleLogoUpload}
+                onRemove={salonLogoUrl ? handleLogoRemove : undefined}
+                inputTestId="salon-logo-input"
+                variant="avatar"
+                className="shrink-0"
+              />
               <div className="flex-1 min-w-0">
                 <h2 className="text-xl sm:text-2xl font-bold text-foreground truncate">
                   {salonName || 'Nome do Salao'}
@@ -281,6 +319,7 @@ export default function SalonProfile() {
                     {salonSlug || 'meu-salao'}
                   </Badge>
                 </div>
+              </div>
               </div>
             </div>
           </CardContent>
