@@ -4,7 +4,6 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { ChatInboxNotifier } from '@/components/chat/ChatInboxNotifier';
 import { PageErrorState } from '@/components/ui/page-states';
-import { FullScreenLoader } from '@/components/ui/full-screen-loader';
 import { useLicenseAccess } from '@/hooks/useLicenseAccess';
 
 interface MainLayoutProps {
@@ -18,7 +17,6 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
   const location = useLocation();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
-  const [isCheckingLicenseStatus, setIsCheckingLicenseStatus] = useState(true);
   const { status: licenseStatus, isBlocked: isPlanExpired, refreshStatus } = useLicenseAccess();
 
   const isLicenseRoute = location.pathname === '/financeiro/licenca';
@@ -35,33 +33,17 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
   }, []);
 
   useEffect(() => {
-    if (isLicenseRoute) {
-      setIsCheckingLicenseStatus(false);
-      return;
-    }
-    if (licenseStatus === 'BLOCKED' || licenseStatus === 'ACTIVE') {
-      setIsCheckingLicenseStatus(false);
-      return;
-    }
-
-    let cancelled = false;
+    if (isLicenseRoute || licenseStatus === 'BLOCKED' || licenseStatus === 'ACTIVE') return;
 
     const checkSubscription = async () => {
-      setIsCheckingLicenseStatus(true);
       try {
         await refreshStatus();
       } catch {
         // se falhar, mantemos o estado atual em memoria/cache
-      } finally {
-        if (!cancelled) setIsCheckingLicenseStatus(false);
       }
     };
 
     void checkSubscription();
-
-    return () => {
-      cancelled = true;
-    };
   }, [isLicenseRoute, licenseStatus, location.pathname, refreshStatus]);
 
   const toggleDesktopSidebar = () => {
@@ -95,9 +77,7 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
 
         <main className="p-4 sm:p-6 lg:p-8 overflow-x-hidden">
           <div className="mx-auto max-w-screen-2xl">
-          {!isLicenseRoute && isCheckingLicenseStatus ? (
-            <FullScreenLoader />
-          ) : !isLicenseRoute && isPlanExpired ? (
+          {!isLicenseRoute && isPlanExpired ? (
             <PageErrorState
               title="Plano vencido"
               description="Seu plano esta vencido. Regularize o pagamento para continuar usando o sistema."

@@ -28,6 +28,7 @@ import {
   ShieldCheck,
   FileSearch,
   Boxes,
+  User,
   ChevronDown,
   MessageCircleMore,
   Lightbulb,
@@ -37,6 +38,7 @@ import type { CurrentMenuPermissionItem } from "@/types/menu-permissions";
 
 const MENU_REGISTRY = {
   "/dashboard": { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+  "/relatorio": { icon: BarChart3, label: "Relatorio", path: "/relatorio" },
   "/notificacoes": { icon: Bell, label: "Notificacoes", path: "/notificacoes" },
   "/agenda": { icon: Calendar, label: "Agenda", path: "/agenda" },
   "/servicos": { icon: Scissors, label: "Servicos", path: "/servicos" },
@@ -73,6 +75,7 @@ const MENU_REGISTRY = {
   "/nota-fiscal": { icon: Eye, label: "Pre-visualizacao de NF", path: "/nota-fiscal" },
   "/apuracao-mensal": { icon: Calculator, label: "Apuracao Mensal", path: "/apuracao-mensal" },
   "/configuracoes": { icon: Settings, label: "Configuracoes", path: "/configuracoes" },
+  "/perfil-usuario": { icon: User, label: "Perfil", path: "/perfil-usuario" },
   "/perfil-salao": { icon: Building2, label: "Perfil do Salao", path: "/perfil-salao" },
 } as const;
 
@@ -80,6 +83,7 @@ const MAIN_MENU_ORDER = [
   "/dashboard",
   "/notificacoes",
   "/agenda",
+  "/relatorio",
   "/servicos",
   "/especialidades",
   "/profissionais",
@@ -119,6 +123,7 @@ const ICON_REGISTRY: Record<string, LucideIcon> = {
   ShieldCheck,
   FileSearch,
   Boxes,
+  User,
   MessageCircleMore,
   Lightbulb,
 };
@@ -139,6 +144,7 @@ type DynamicMenuNode = {
 };
 
 const DYNAMIC_BOTTOM_ROUTES = new Set(["/perfil-salao", "/configuracoes"]);
+const GROUP_ONLY_ROUTES = new Set(["/relatorio"]);
 const HIDDEN_MENU_ROUTES = new Set([
   "/unauthorized",
   "/estoque/visao-geral",
@@ -153,6 +159,7 @@ const HIDDEN_MENU_ROUTES = new Set([
   "/clientes/importacoes/:jobId",
   "/servicos/importacoes",
   "/servicos/importacoes/:jobId",
+  "/perfil-usuario",
 ]);
 
 function sortMenuNodes<T extends { displayOrder?: number; label?: string }>(items: T[]) {
@@ -171,7 +178,7 @@ function resolveMenuIcon(item: CurrentMenuPermissionItem): LucideIcon {
 export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const { allowedRoutes, menuItems } = useMenuPermissions();
   const allowedSet = useMemo(() => new Set(allowedRoutes ?? []), [allowedRoutes]);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
@@ -397,7 +404,8 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
                     )
                     .sort((left, right) => right.path.length - left.path.length)[0]?.path ?? null;
                 const isGroupActive = Boolean(activeChildPath);
-                const parentIsAccessible = allowedSet.has(entry.path);
+                const parentIsAccessible =
+                  allowedSet.has(entry.path) && !GROUP_ONLY_ROUTES.has(entry.path);
 
                 return (
                   <div key={entry.id} className="space-y-0.5">
@@ -489,7 +497,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
 
           {/* Bottom nav */}
           <div className="px-2 pb-3 pt-2 border-t border-sidebar-border space-y-0.5">
-            {allowedSet.has("/perfil-salao") && (
+            {user?.role === "OWNER" && allowedSet.has("/perfil-salao") && (
               <Link
                 to="/perfil-salao"
                 onClick={() => {

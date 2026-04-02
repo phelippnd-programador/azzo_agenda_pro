@@ -1,5 +1,6 @@
 import type {
   Appointment,
+  AppointmentManagementReportResponse,
   AppointmentDetailResponse,
   AppointmentCustomerNote,
   AppointmentCreateItemInput,
@@ -8,6 +9,11 @@ import type {
   ClientAppointmentHistoryResponse,
   DashboardCustomerRankingResponse,
   DashboardMetrics,
+  DashboardNoShowInsightsResponse,
+  DashboardWhatsAppReactivationQueueResponse,
+  DashboardWhatsAppReactivationResponse,
+  NoShowGroupBy,
+  NoShowReportPageResponse,
   Professional,
   Specialty,
   Service,
@@ -62,7 +68,13 @@ import type {
   NotificationsFilters,
   NotificationsListResponse,
 } from "@/types/notification";
-import type { AvailableSlotsParams, TimeSlotResponse } from "@/types/available-slots";
+import type {
+  AppointmentConflictDetails,
+  AppointmentSchedulingSettings,
+  AvailableSlotsParams,
+  ManualTimeSlotResponse,
+  TimeSlotResponse,
+} from "@/types/available-slots";
 import type {
   CheckoutConfirmResponse,
   CheckoutIntentRequest,
@@ -163,6 +175,7 @@ import { toast } from "sonner";
 
 export type {
   Appointment,
+  AppointmentManagementReportResponse,
   AppointmentDetailResponse,
   AppointmentCustomerNote,
   AppointmentTimelineEvent,
@@ -170,6 +183,11 @@ export type {
   ClientAppointmentHistoryResponse,
   DashboardCustomerRankingResponse,
   DashboardMetrics,
+  DashboardNoShowInsightsResponse,
+  DashboardWhatsAppReactivationQueueResponse,
+  DashboardWhatsAppReactivationResponse,
+  NoShowGroupBy,
+  NoShowReportPageResponse,
   Professional,
   Specialty,
   Service,
@@ -188,6 +206,9 @@ export type AppointmentCreateRequest = {
   serviceId?: string;
   totalPrice?: number;
   items?: AppointmentCreateItemInput[];
+  origin?: string;
+  allowConflict?: boolean;
+  conflictAcknowledged?: boolean;
 };
 
 export type AppointmentCustomerNoteRequest = {
@@ -218,6 +239,27 @@ export type AppointmentMonthlyMetric = {
   dia: number;
   mes: number;
   quantidadeAgendamentos: number;
+};
+
+export type NoShowReportParams = {
+  afterId?: string;
+  limit?: number;
+  from?: string;
+  to?: string;
+  professionalId?: string;
+  serviceId?: string;
+  clientIds?: string[];
+  clientQuery?: string;
+  groupBy?: NoShowGroupBy;
+};
+
+export type AppointmentManagementReportParams = {
+  from?: string;
+  to?: string;
+  professionalId?: string;
+  serviceId?: string;
+  status?: string;
+  limit?: number;
 };
 
 export type ListResponse<T> =
@@ -776,6 +818,22 @@ export const dashboardApi = {
     request<DashboardCustomerRankingResponse>(
       `/dashboard/metrics/customers?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=${encodeURIComponent(String(limit))}`
     ),
+  getNoShowInsights: () =>
+    request<DashboardNoShowInsightsResponse>("/dashboard/metrics/no-show"),
+  getWhatsAppReactivationMetrics: (days = 30) =>
+    request<DashboardWhatsAppReactivationResponse>(
+      `/dashboard/metrics/whatsapp-reactivation?days=${encodeURIComponent(String(days))}`
+    ),
+  getWhatsAppReactivationQueue: (params?: { days?: number; status?: string; limit?: number }) => {
+    const query = new URLSearchParams();
+    if (params?.days) query.set("days", String(params.days));
+    if (params?.status) query.set("status", params.status);
+    if (params?.limit) query.set("limit", String(params.limit));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<DashboardWhatsAppReactivationQueueResponse>(
+      `/dashboard/metrics/whatsapp-reactivation/queue${suffix}`
+    );
+  },
 };
 
 /* ================= CHAT ================= */
@@ -1027,8 +1085,111 @@ export const appointmentsApi = {
     }
     return request<TimeSlotResponse[]>(`/appointments/available-slots?${query.toString()}`);
   },
+  getManualSlots: (params: AvailableSlotsParams) => {
+    const query = new URLSearchParams({
+      professionalId: params.professionalId,
+      date: params.date,
+      bufferMinutes: String(params.bufferMinutes ?? 0),
+    });
+    if (params.serviceIds?.length) {
+      query.set("serviceIds", params.serviceIds.join(","));
+    } else if (params.serviceDurationMinutes && params.serviceDurationMinutes > 0) {
+      query.set("serviceDurationMinutes", String(params.serviceDurationMinutes));
+    }
+    return request<ManualTimeSlotResponse[]>(`/appointments/manual-slots?${query.toString()}`);
+  },
+  getSettings: () => request<AppointmentSchedulingSettings>("/appointments/settings"),
+  updateSettings: (payload: Partial<AppointmentSchedulingSettings>) =>
+    request<AppointmentSchedulingSettings>("/appointments/settings", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
   getMonthlyMetric: (mes: number, ano: number) =>
     request<AppointmentMonthlyMetric[]>(`/appointments/metric?mes=${mes}&ano=${ano}`),
+  getManagementReport: (params?: AppointmentManagementReportParams) => {
+    const query = new URLSearchParams();
+    if (params?.from) query.set("from", params.from);
+    if (params?.to) query.set("to", params.to);
+    if (params?.professionalId && params.professionalId !== "all") {
+      query.set("professionalId", params.professionalId);
+    }
+    if (params?.serviceId && params.serviceId !== "all") {
+      query.set("serviceId", params.serviceId);
+    }
+    if (params?.status && params.status !== "all") {
+      query.set("status", params.status);
+    }
+    if (params?.limit) {
+      query.set("limit", String(params.limit));
+    }
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<AppointmentManagementReportResponse>(`/appointments/management-report${suffix}`);
+  },
+  exportManagementReport: (params?: AppointmentManagementReportParams) => {
+    const query = new URLSearchParams();
+    if (params?.from) query.set("from", params.from);
+    if (params?.to) query.set("to", params.to);
+    if (params?.professionalId && params.professionalId !== "all") {
+      query.set("professionalId", params.professionalId);
+    }
+    if (params?.serviceId && params.serviceId !== "all") {
+      query.set("serviceId", params.serviceId);
+    }
+    if (params?.status && params.status !== "all") {
+      query.set("status", params.status);
+    }
+    if (params?.limit) {
+      query.set("limit", String(params.limit));
+    }
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return requestBlob(`/appointments/management-report/export${suffix}`);
+  },
+  getNoShowReport: (params?: NoShowReportParams) => {
+    const query = new URLSearchParams();
+    if (params?.afterId) query.set("afterId", params.afterId);
+    if (params?.limit) query.set("limit", String(params.limit));
+    if (params?.from) query.set("from", params.from);
+    if (params?.to) query.set("to", params.to);
+    if (params?.professionalId && params.professionalId !== "all") {
+      query.set("professionalId", params.professionalId);
+    }
+    if (params?.serviceId && params.serviceId !== "all") {
+      query.set("serviceId", params.serviceId);
+    }
+    if (params?.clientIds?.length) {
+      query.set("clientIds", params.clientIds.join(","));
+    }
+    if (params?.clientQuery?.trim()) {
+      query.set("clientQuery", params.clientQuery.trim());
+    }
+    if (params?.groupBy) {
+      query.set("groupBy", params.groupBy);
+    }
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<NoShowReportPageResponse>(`/appointments/no-show${suffix}`);
+  },
+  exportNoShowReport: (params?: Omit<NoShowReportParams, "afterId" | "limit">) => {
+    const query = new URLSearchParams();
+    if (params?.from) query.set("from", params.from);
+    if (params?.to) query.set("to", params.to);
+    if (params?.professionalId && params.professionalId !== "all") {
+      query.set("professionalId", params.professionalId);
+    }
+    if (params?.serviceId && params.serviceId !== "all") {
+      query.set("serviceId", params.serviceId);
+    }
+    if (params?.clientIds?.length) {
+      query.set("clientIds", params.clientIds.join(","));
+    }
+    if (params?.clientQuery?.trim()) {
+      query.set("clientQuery", params.clientQuery.trim());
+    }
+    if (params?.groupBy) {
+      query.set("groupBy", params.groupBy);
+    }
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return requestBlob(`/appointments/no-show/export${suffix}`);
+  },
   updateStatus: (id: string, status: string) =>
     request<Appointment>(`/appointments/${id}/status?value=${status}`, {
       method: "PATCH",
@@ -1505,6 +1666,8 @@ export type SalonProfile = {
   salonName: string;
   salonSlug: string;
   publicBookingUrl?: string | null;
+  logo?: string | null;
+  logoUrl?: string | null;
   salonDescription?: string | null;
   salonPhone?: string | null;
   salonWhatsapp?: string | null;
@@ -1530,8 +1693,20 @@ export const salonApi = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+  uploadLogo: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return request<SalonProfile>("/salon/profile/logo", {
+      method: "POST",
+      body: formData,
+    });
+  },
+  removeLogo: () =>
+    request<SalonProfile>("/salon/profile/logo", {
+      method: "DELETE",
+    }),
   getPublicBySlug: (slug: string) =>
-    request<Partial<SalonProfile> & { logo?: string | null }>(
+    request<Partial<SalonProfile> & { logo?: string | null; logoUrl?: string | null }>(
       `/public/salons/${slug}`
     ),
 };
@@ -1558,6 +1733,13 @@ export type AppSettings = {
     whatsappNotifications: boolean;
     reminderHours: number;
   };
+  reactivation: {
+    enabled: boolean;
+    respectBusinessHours: boolean;
+    sendWindowStart: string;
+    sendWindowEnd: string;
+    maxAttemptsEnabled: number;
+  };
   businessHours: Record<
     string,
     {
@@ -1580,6 +1762,11 @@ export const settingsApi = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+  updateReactivation: (data: AppSettings["reactivation"]) =>
+    request<AppSettings["reactivation"]>("/settings/reactivation", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
   updateBusinessHours: (data: AppSettings["businessHours"]) =>
     request<AppSettings["businessHours"]>("/settings/business-hours", {
       method: "PUT",
@@ -1588,10 +1775,23 @@ export const settingsApi = {
 };
 
 export const usersApi = {
+  getCurrent: () => request<User>("/users/me"),
   updateMe: (data: Partial<Pick<User, "name" | "email" | "phone">>) =>
     request<User>("/users/me", {
       method: "PUT",
       body: JSON.stringify(data),
+    }),
+  uploadAvatar: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return request<User>("/users/me/avatar", {
+      method: "POST",
+      body: formData,
+    });
+  },
+  removeAvatar: () =>
+    request<User>("/users/me/avatar", {
+      method: "DELETE",
     }),
   updatePassword: (data: {
     currentPassword: string;

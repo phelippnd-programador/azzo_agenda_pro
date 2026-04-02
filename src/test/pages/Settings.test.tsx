@@ -3,11 +3,25 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import Settings from "@/pages/Settings";
 
-const { updateNotificationsMock, updateMeMock, getMfaStatusMock, getSettingsMock, setupMfaMock, toastSuccessMock, toastErrorMock } = vi.hoisted(() => ({
+const {
+  updateNotificationsMock,
+  updateMeMock,
+  getMfaStatusMock,
+  getSettingsMock,
+  updateReactivationMock,
+  getAppointmentSettingsMock,
+  updateAppointmentSettingsMock,
+  setupMfaMock,
+  toastSuccessMock,
+  toastErrorMock,
+} = vi.hoisted(() => ({
   updateNotificationsMock: vi.fn(),
   updateMeMock: vi.fn(),
   getMfaStatusMock: vi.fn(),
   getSettingsMock: vi.fn(),
+  updateReactivationMock: vi.fn(),
+  getAppointmentSettingsMock: vi.fn(),
+  updateAppointmentSettingsMock: vi.fn(),
   setupMfaMock: vi.fn(),
   toastSuccessMock: vi.fn(),
   toastErrorMock: vi.fn(),
@@ -56,6 +70,12 @@ vi.mock("@/lib/api", async () => {
       ...actual.settingsApi,
       get: getSettingsMock,
       updateNotifications: updateNotificationsMock,
+      updateReactivation: updateReactivationMock,
+    },
+    appointmentsApi: {
+      ...actual.appointmentsApi,
+      getSettings: getAppointmentSettingsMock,
+      updateSettings: updateAppointmentSettingsMock,
     },
     usersApi: {
       ...actual.usersApi,
@@ -76,9 +96,16 @@ vi.mock("sonner", () => ({
 describe("Settings", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    getSettingsMock.mockResolvedValue({ notifications: { emailNotifications: true, smsNotifications: true, whatsappNotifications: true, reminderHours: 24 } });
+    getSettingsMock.mockResolvedValue({
+      notifications: { emailNotifications: true, smsNotifications: true, whatsappNotifications: true, reminderHours: 24 },
+      reactivation: { enabled: true, respectBusinessHours: true, sendWindowStart: "09:00", sendWindowEnd: "19:00", maxAttemptsEnabled: 3 },
+      businessHours: {},
+    });
+    getAppointmentSettingsMock.mockResolvedValue({ allowConflictingAppointmentsOnManualScheduling: false });
+    updateAppointmentSettingsMock.mockResolvedValue({ allowConflictingAppointmentsOnManualScheduling: false });
     getMfaStatusMock.mockResolvedValue({ enabled: false, enrolled: false });
     updateNotificationsMock.mockResolvedValue(undefined);
+    updateReactivationMock.mockResolvedValue(undefined);
     updateMeMock.mockResolvedValue(undefined);
     setupMfaMock.mockResolvedValue({ secret: "SECRET123", otpauthUri: "otpauth://totp/Azzo" });
   });
@@ -108,6 +135,27 @@ describe("Settings", () => {
     await user.click(await screen.findByRole("button", { name: /^Salvar$/i }));
 
     expect(updateNotificationsMock).toHaveBeenCalled();
+    expect(toastSuccessMock).toHaveBeenCalled();
+  });
+
+  it("should save reactivation settings", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/configuracoes?tab=notifications"]}>
+        <Settings />
+      </MemoryRouter>
+    );
+
+    await user.click(await screen.findByRole("button", { name: /Salvar reativacao/i }));
+
+    expect(updateReactivationMock).toHaveBeenCalledWith({
+      enabled: true,
+      respectBusinessHours: true,
+      sendWindowStart: "09:00",
+      sendWindowEnd: "19:00",
+      maxAttemptsEnabled: 3,
+    });
     expect(toastSuccessMock).toHaveBeenCalled();
   });
 });

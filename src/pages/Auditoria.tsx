@@ -1,188 +1,34 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { formatDateTime } from "@/lib/format";
 import { Download, Eye, RefreshCw, Search } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { auditoriaApi } from "@/lib/api";
 import { useAuditEventDetail } from "@/hooks/useAuditEventDetail";
 import { useAuditEvents } from "@/hooks/useAuditEvents";
 import { useAuditExport } from "@/hooks/useAuditExport";
+import {
+  actionMeta,
+  buildDiffEntries,
+  entityMeta,
+  moduleLabel,
+  statusBadgeClass,
+  statusLabel,
+  toDateTimeLocal,
+} from "@/lib/audit-helpers";
+import { AuditEventDetailDialog } from "@/components/auditoria/AuditEventDetailDialog";
 import type {
-  AuditEventDetailDto,
   AuditFiltersOptionsDto,
   AuditRetentionEventDto,
   AuditSearchQueryDto,
   AuditStatus,
 } from "@/types/auditoria";
-
-const formatDateTime = (value: string) =>
-  new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(value));
-
-const toDateTimeLocal = (value: string) => {
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "";
-  const year = parsed.getFullYear();
-  const month = String(parsed.getMonth() + 1).padStart(2, "0");
-  const day = String(parsed.getDate()).padStart(2, "0");
-  const hour = String(parsed.getHours()).padStart(2, "0");
-  const minute = String(parsed.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hour}:${minute}`;
-};
-
-const statusBadgeClass: Record<AuditStatus, string> = {
-  SUCCESS: "bg-primary/10 text-primary border-primary/30",
-  ERROR: "bg-destructive/10 text-destructive border-destructive/30",
-  DENIED: "bg-muted text-muted-foreground border-border",
-};
-
-const maskIpAddress = (ipAddress: string | null) => {
-  if (!ipAddress) return "-";
-  const chunks = ipAddress.split(".");
-  if (chunks.length !== 4) return ipAddress;
-  return `${chunks[0]}.${chunks[1]}.***.***`;
-};
-
-const toComparableString = (value: unknown) => JSON.stringify(value ?? null);
-
-type AuditUiMeta = {
-  label: string;
-  description: string;
-};
-
-const ACTION_META: Record<string, AuditUiMeta> = {
-  RBAC_PERMISSION_UPDATE: {
-    label: "Permissao de acesso atualizada",
-    description: "Uma permissao de acesso do sistema foi alterada.",
-  },
-  AUTH_LOGIN: { label: "Login", description: "Autenticacao de usuario no sistema." },
-  AUTH_REFRESH: { label: "Renovacao de sessao", description: "Renovacao do token de acesso." },
-  AUTH_LOGIN_MFA_REQUIRED: { label: "MFA obrigatorio", description: "Login bloqueado aguardando codigo MFA." },
-  AUTH_LOGIN_MFA_DENIED: { label: "MFA recusado", description: "Codigo MFA invalido no login." },
-  AUTH_MFA_ENABLE: { label: "MFA ativado", description: "Ativacao de autenticacao multifator." },
-  AUTH_MFA_DISABLE: { label: "MFA desativado", description: "Desativacao de autenticacao multifator." },
-  PROFESSIONAL_CREATE: { label: "Criacao de profissional", description: "Cadastro de novo profissional." },
-  PROFESSIONAL_UPDATE: { label: "Atualizacao de profissional", description: "Edicao de dados do profissional." },
-  PROFESSIONAL_DELETE: { label: "Remocao de profissional", description: "Exclusao de profissional." },
-  PROFESSIONAL_PASSWORD_RESET: { label: "Reset de senha", description: "Geracao de senha temporaria para profissional." },
-  CLIENT_CREATE: { label: "Criacao de cliente", description: "Cadastro de novo cliente." },
-  CLIENT_UPDATE: { label: "Atualizacao de cliente", description: "Edicao de dados do cliente." },
-  CLIENT_DELETE: { label: "Remocao de cliente", description: "Exclusao de cliente." },
-  FINANCE_TRANSACTION_CREATE: {
-    label: "Lancamento financeiro criado",
-    description: "Um novo lancamento financeiro foi registrado.",
-  },
-  FINANCE_TRANSACTION_UPDATE: {
-    label: "Lancamento financeiro atualizado",
-    description: "Um lancamento financeiro foi alterado.",
-  },
-  FINANCE_TRANSACTION_DELETE: {
-    label: "Lancamento financeiro removido",
-    description: "Um lancamento financeiro foi removido.",
-  },
-  FISCAL_INVOICE_AUTHORIZE: {
-    label: "Nota fiscal autorizada",
-    description: "A nota fiscal foi enviada e autorizada pelo provedor fiscal.",
-  },
-  APPOINTMENT_CREATE: {
-    label: "Agendamento criado",
-    description: "Um novo agendamento foi criado.",
-  },
-  APPOINTMENT_UPDATE: {
-    label: "Agendamento atualizado",
-    description: "Um agendamento foi alterado.",
-  },
-  APPOINTMENT_CANCEL: {
-    label: "Agendamento cancelado",
-    description: "Um agendamento foi cancelado.",
-  },
-  APPOINTMENT_DELETE: {
-    label: "Agendamento removido",
-    description: "Um agendamento foi removido.",
-  },
-  LGPD_REQUEST_CREATE: { label: "Solicitacao LGPD criada", description: "Nova solicitacao de titular registrada." },
-  LGPD_REQUEST_STATUS_UPDATE: { label: "Status LGPD atualizado", description: "Atualizacao de status de solicitacao LGPD." },
-};
-
-const MODULE_META: Record<string, string> = {
-  RBAC: "Permissoes de acesso",
-};
-
-const ENTITY_META: Record<string, AuditUiMeta> = {
-  ENTITY: { label: "Permissao/Menu", description: "Alteracao de permissao, menu ou configuracao de acesso." },
-  USER_AUTH: { label: "Autenticacao", description: "Eventos de autenticacao de usuario." },
-  PROFESSIONAL: { label: "Profissional", description: "Dados e operacoes de profissionais." },
-  CLIENT: { label: "Cliente", description: "Dados e operacoes de clientes." },
-  LGPD_REQUEST: { label: "Solicitacao LGPD", description: "Atendimento de requisicoes LGPD." },
-  AUDIT_READ: { label: "Consulta de auditoria", description: "Acesso aos eventos e filtros da auditoria." },
-  FINANCE_TRANSACTION: { label: "Lancamento financeiro", description: "Dados e operacoes de lancamentos financeiros." },
-  APPOINTMENT: { label: "Agendamento", description: "Dados e operacoes de agendamentos." },
-};
-
-const humanizeToken = (value: string) =>
-  value
-    .toLowerCase()
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-
-const actionMeta = (action: string): AuditUiMeta =>
-  ACTION_META[action] || {
-    label: humanizeToken(action),
-    description: "Evento registrado pelo sistema para controle e rastreabilidade.",
-  };
-
-const entityMeta = (entityType: string | null): AuditUiMeta => {
-  if (!entityType) {
-    return { label: "-", description: "Evento sem entidade vinculada." };
-  }
-  return ENTITY_META[entityType] || {
-    label: humanizeToken(entityType),
-    description: "Tipo de registro impactado por este evento.",
-  };
-};
-
-const moduleLabel = (module: string) => MODULE_META[module] || humanizeToken(module);
-const statusLabel = (status: string) =>
-  ({
-    SUCCESS: "Sucesso",
-    ERROR: "Erro",
-    DENIED: "Negado",
-  }[status] || humanizeToken(status));
-
-const buildDiffEntries = (detail: AuditEventDetailDto | null) => {
-  if (!detail) return [];
-  const before = detail.before ?? {};
-  const after = detail.after ?? {};
-  const allKeys = Array.from(new Set([...Object.keys(before), ...Object.keys(after)])).sort();
-
-  return allKeys
-    .map((key) => {
-      const previous = before[key];
-      const current = after[key];
-      const changed = toComparableString(previous) !== toComparableString(current);
-      return {
-        key,
-        previous,
-        current,
-        changed,
-      };
-    })
-    .filter((entry) => entry.changed);
-};
 
 export default function Auditoria() {
   const {
@@ -268,7 +114,7 @@ export default function Auditoria() {
         formatLabel: (key: string) => actionMeta(key).label,
       },
     ],
-    [aggregations]
+    [aggregations],
   );
 
   const diffEntries = useMemo(() => buildDiffEntries(eventDetail), [eventDetail]);
@@ -281,10 +127,7 @@ export default function Auditoria() {
   const onApplyFilters = () => {
     const fromDate = new Date(fromInput);
     const toDate = new Date(toInput);
-    if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
-      return;
-    }
-
+    if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) return;
     const nextFilters: AuditSearchQueryDto = {
       ...filters,
       from: fromDate.toISOString(),
@@ -301,10 +144,7 @@ export default function Auditoria() {
   };
 
   const onExport = async (format: "CSV" | "JSON") => {
-    await exportEvents({
-      ...filters,
-      format,
-    });
+    await exportEvents({ ...filters, format });
   };
 
   return (
@@ -316,6 +156,7 @@ export default function Auditoria() {
           </Button>
         </div>
 
+        {/* Filter card */}
         <Card>
           <CardHeader>
             <CardTitle>Filtros de consulta</CardTitle>
@@ -324,11 +165,19 @@ export default function Auditoria() {
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Periodo inicial</p>
-                <Input type="datetime-local" value={fromInput} onChange={(e) => setFromInput(e.target.value)} />
+                <Input
+                  type="datetime-local"
+                  value={fromInput}
+                  onChange={(e) => setFromInput(e.target.value)}
+                />
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Periodo final</p>
-                <Input type="datetime-local" value={toInput} onChange={(e) => setToInput(e.target.value)} />
+                <Input
+                  type="datetime-local"
+                  value={toInput}
+                  onChange={(e) => setToInput(e.target.value)}
+                />
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Modulo</p>
@@ -434,6 +283,7 @@ export default function Auditoria() {
           </CardContent>
         </Card>
 
+        {/* Aggregation cards */}
         <div className="grid gap-3 xl:grid-cols-3">
           {aggregationCards.map((card) => (
             <Card key={card.title}>
@@ -463,6 +313,7 @@ export default function Auditoria() {
           </Alert>
         ) : null}
 
+        {/* Events table */}
         <Card>
           <CardHeader>
             <CardTitle>Eventos</CardTitle>
@@ -471,7 +322,9 @@ export default function Auditoria() {
             {isLoading ? (
               <p className="text-sm text-muted-foreground">Carregando eventos...</p>
             ) : !items.length ? (
-              <p className="text-sm text-muted-foreground">Nenhum evento encontrado no periodo informado.</p>
+              <p className="text-sm text-muted-foreground">
+                Nenhum evento encontrado no periodo informado.
+              </p>
             ) : (
               <TooltipProvider delayDuration={150}>
                 <div className="overflow-x-auto">
@@ -514,7 +367,9 @@ export default function Auditoria() {
                             </Tooltip>
                           </td>
                           <td className="py-2">
-                            <Badge className={statusBadgeClass[item.status]}>{statusLabel(item.status)}</Badge>
+                            <Badge className={statusBadgeClass[item.status]}>
+                              {statusLabel(item.status)}
+                            </Badge>
                           </td>
                           <td className="py-2">{item.actorName || item.actorUserId || "-"}</td>
                           <td className="py-2 font-mono text-xs">{item.requestId}</td>
@@ -525,7 +380,6 @@ export default function Auditoria() {
                               className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                               onClick={() => openEventDetail(item.id)}
                               aria-label="Ver detalhe do evento"
-                              title="Ver detalhe"
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -543,7 +397,11 @@ export default function Auditoria() {
                     cursor: {nextCursor || "-"}
                   </p>
                   {hasNext ? (
-                    <Button variant="outline" onClick={() => void fetchNextPage()} disabled={isLoadingMore}>
+                    <Button
+                      variant="outline"
+                      onClick={() => void fetchNextPage()}
+                      disabled={isLoadingMore}
+                    >
                       {isLoadingMore ? "Carregando..." : "Carregar mais"}
                     </Button>
                   ) : null}
@@ -553,22 +411,39 @@ export default function Auditoria() {
           </CardContent>
         </Card>
 
+        {/* Retention events */}
         <Card>
           <CardHeader>
             <CardTitle>Eventos de retencao e expurgo</CardTitle>
           </CardHeader>
           <CardContent>
             {!retentionEvents.length ? (
-              <p className="text-sm text-muted-foreground">Nenhum evento de retencao no periodo.</p>
+              <p className="text-sm text-muted-foreground">
+                Nenhum evento de retencao no periodo.
+              </p>
             ) : (
               <div className="space-y-2">
                 {retentionEvents.map((event) => (
                   <div key={event.id} className="rounded-md border p-3 text-sm">
-                    <p><span className="font-medium">Versao da politica:</span> {event.policyVersion}</p>
-                    <p><span className="font-medium">Janela:</span> {formatDateTime(event.windowStart)} ate {formatDateTime(event.windowEnd)}</p>
-                    <p><span className="font-medium">Linhas afetadas:</span> {event.affectedRows}</p>
-                    <p><span className="font-medium">ID da execucao:</span> <span className="font-mono text-xs">{event.executionId}</span></p>
-                    <p><span className="font-medium">Hash da evidencia:</span> <span className="font-mono text-xs">{event.evidenceHash}</span></p>
+                    <p>
+                      <span className="font-medium">Versao da politica:</span>{" "}
+                      {event.policyVersion}
+                    </p>
+                    <p>
+                      <span className="font-medium">Janela:</span>{" "}
+                      {formatDateTime(event.windowStart)} ate {formatDateTime(event.windowEnd)}
+                    </p>
+                    <p>
+                      <span className="font-medium">Linhas afetadas:</span> {event.affectedRows}
+                    </p>
+                    <p>
+                      <span className="font-medium">ID da execucao:</span>{" "}
+                      <span className="font-mono text-xs">{event.executionId}</span>
+                    </p>
+                    <p>
+                      <span className="font-medium">Hash da evidencia:</span>{" "}
+                      <span className="font-mono text-xs">{event.evidenceHash}</span>
+                    </p>
                   </div>
                 ))}
               </div>
@@ -577,90 +452,14 @@ export default function Auditoria() {
         </Card>
       </div>
 
-      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Detalhe do evento</DialogTitle>
-            <DialogDescription>
-              Dados completos, metadados tecnicos e diff de alteracao.
-            </DialogDescription>
-          </DialogHeader>
-
-          {isLoadingDetail ? (
-            <p className="text-sm text-muted-foreground">Carregando detalhe...</p>
-          ) : detailError ? (
-            <Alert variant="destructive">
-              <AlertTitle>Erro ao carregar detalhe</AlertTitle>
-              <AlertDescription>{detailError}</AlertDescription>
-            </Alert>
-          ) : !eventDetail ? (
-            <p className="text-sm text-muted-foreground">Nenhum evento selecionado.</p>
-          ) : (
-            <div className="space-y-4 text-sm">
-              <div className="grid gap-2 md:grid-cols-2">
-                <p><span className="font-medium">Data/hora do evento:</span> {formatDateTime(eventDetail.createdAt)}</p>
-                <p><span className="font-medium">Modulo:</span> {moduleLabel(eventDetail.module)}</p>
-                <p><span className="font-medium">Acao:</span> {actionMeta(eventDetail.action).label}</p>
-                <p><span className="font-medium">Registro afetado:</span> {entityMeta(eventDetail.entityType).label}</p>
-                <p><span className="font-medium">Request ID:</span> <span className="font-mono">{eventDetail.requestId}</span></p>
-                <p><span className="font-medium">Canal:</span> {eventDetail.sourceChannel}</p>
-                <p><span className="font-medium">IP:</span> {maskIpAddress(eventDetail.ipAddress)}</p>
-                <p><span className="font-medium">Hash:</span> <span className="font-mono text-xs">{eventDetail.eventHash}</span></p>
-                <p><span className="font-medium">Hash anterior:</span> <span className="font-mono text-xs">{eventDetail.prevEventHash || "-"}</span></p>
-                <p><span className="font-medium">Cadeia valida:</span> {eventDetail.chainValid ? "Sim" : "Nao"}</p>
-              </div>
-
-              {eventDetail.errorCode || eventDetail.errorMessage ? (
-                <Alert variant="destructive">
-                  <AlertTitle>Erro tecnico</AlertTitle>
-                  <AlertDescription className="space-y-1">
-                    <p>Codigo: {eventDetail.errorCode || "-"}</p>
-                    <p>Mensagem: {eventDetail.errorMessage || "-"}</p>
-                  </AlertDescription>
-                </Alert>
-              ) : null}
-
-              <div>
-                <p className="font-medium mb-2">Diff de alteracoes</p>
-                {!diffEntries.length ? (
-                  <p className="text-muted-foreground">Sem diferencas entre before e after.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {diffEntries.map((entry) => (
-                      <div key={entry.key} className="rounded-md border p-2">
-                        <p className="font-medium">{entry.key}</p>
-                        <p className="text-xs text-muted-foreground">Antes: {JSON.stringify(entry.previous)}</p>
-                        <p className="text-xs text-muted-foreground">Depois: {JSON.stringify(entry.current)}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="grid gap-3 lg:grid-cols-3">
-                <div>
-                  <p className="font-medium mb-1">Before</p>
-                  <pre className="rounded-md bg-muted p-2 text-xs overflow-auto">
-                    {JSON.stringify(eventDetail.before, null, 2)}
-                  </pre>
-                </div>
-                <div>
-                  <p className="font-medium mb-1">After</p>
-                  <pre className="rounded-md bg-muted p-2 text-xs overflow-auto">
-                    {JSON.stringify(eventDetail.after, null, 2)}
-                  </pre>
-                </div>
-                <div>
-                  <p className="font-medium mb-1">Metadata</p>
-                  <pre className="rounded-md bg-muted p-2 text-xs overflow-auto">
-                    {JSON.stringify(eventDetail.metadata, null, 2)}
-                  </pre>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <AuditEventDetailDialog
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        eventDetail={eventDetail}
+        isLoadingDetail={isLoadingDetail}
+        detailError={detailError}
+        diffEntries={diffEntries}
+      />
     </MainLayout>
   );
 }

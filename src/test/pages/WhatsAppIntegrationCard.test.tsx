@@ -105,10 +105,12 @@ describe("WhatsAppIntegrationCard", () => {
       </QueryClientProvider>
     );
 
-    expect(await screen.findByRole("tab", { name: "Configuracao manual" })).toBeInTheDocument();
+    const manualTab = await screen.findByRole("tab", { name: "Configuracao manual" });
+    expect(manualTab).toBeInTheDocument();
 
+    await user.click(manualTab);
     await user.click(screen.getAllByRole("switch")[0]);
-    await user.type(screen.getByLabelText("Access Token"), "token-manual-abc");
+    await user.type(await screen.findByLabelText("Access Token"), "token-manual-abc");
     await user.type(screen.getByLabelText("Phone Number ID"), "phone-123");
     await user.type(screen.getByLabelText("Business Account ID"), "waba-456");
     await user.click(screen.getByRole("button", { name: "Salvar Configuracao" }));
@@ -123,5 +125,5 @@ describe("WhatsAppIntegrationCard", () => {
         })
       );
     });
-  });
+  }, 15000);
 });

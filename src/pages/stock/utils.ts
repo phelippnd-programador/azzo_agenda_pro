@@ -1,14 +1,7 @@
 import type { StockItem, StockMovement } from "@/types/stock";
 
-export const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-
-export const formatDateTime = (value?: string) => {
-  if (!value) return "-";
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "-";
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(parsed);
-};
+// Re-exportado de @/lib/format para manter compatibilidade com imports existentes no módulo stock
+export { formatCurrency, formatDateTime } from "@/lib/format";
 
 export const getListItems = <T,>(response: T[] | { items?: T[] } | null | undefined) =>
   Array.isArray(response) ? response : response?.items || [];

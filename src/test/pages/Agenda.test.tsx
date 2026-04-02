@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import Agenda from "@/pages/Agenda";
+import Agenda from "@/pages/appointments/Agenda";
 
 const { getMonthlyMetricMock } = vi.hoisted(() => ({
   getMonthlyMetricMock: vi.fn(),
@@ -46,8 +46,8 @@ vi.mock("@/hooks/useAvailableSlots", () => ({
   useAvailableSlots: () => ({
     slots: [],
     isLoading: false,
-    loadSlots: vi.fn(),
-    clearSlots: vi.fn(),
+    error: null,
+    canFetch: false,
   }),
 }));
 

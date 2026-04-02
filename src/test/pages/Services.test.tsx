@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import Services from "@/pages/Services";
+import ServicesOverviewPage from "@/pages/services/ServicesOverviewPage";
 
 vi.mock("@/hooks/useServices", () => ({
   useServices: () => ({
@@ -65,7 +66,11 @@ describe("Services", () => {
   it("should render services list and category filters", async () => {
     render(
       <MemoryRouter initialEntries={["/servicos"]}>
-        <Services />
+        <Routes>
+          <Route path="/servicos" element={<Services />}>
+            <Route index element={<ServicesOverviewPage />} />
+          </Route>
+        </Routes>
       </MemoryRouter>
     );
 

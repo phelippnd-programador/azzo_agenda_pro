@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { formatDateTime } from "@/lib/format";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,18 +31,6 @@ const MESSAGE_STATUS_LABELS: Record<ChatMessage["status"], string> = {
   FAILED: "Falhou",
 };
 
-const formatDateTime = (value?: string | null) => {
-  if (!value) return "-";
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "-";
-  return parsed.toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
 const EMOJI_OPTIONS = [
   "\u{1F600}",
   "\u{1F601}",
@@ -66,8 +55,11 @@ export default function ChatPage() {
   const { conversationId } = useParams<{ conversationId?: string }>();
   const [error, setError] = useState<string | null>(null);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const activeConversationIdRef = useRef<string | undefined>(conversationId);
+  const renderedConversationIdRef = useRef<string | undefined>(conversationId);
+  const lastVisibleMessageIdRef = useRef<string | null>(null);
+  const shouldAutoScrollRef = useRef(true);
   const form = useForm<ChatMessageForm>({
     resolver: zodResolver(chatMessageSchema),
     defaultValues: {
@@ -161,11 +153,22 @@ export default function ChatPage() {
     };
   }, [loadConversations, loadMessages]);
 
-  useEffect(() => {
-    if (!isLoadingMessages) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  useLayoutEffect(() => {
+    if (isLoadingMessages) return;
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const latestMessageId = messages.at(-1)?.id ?? null;
+    const conversationChanged = renderedConversationIdRef.current !== conversationId;
+    const latestMessageChanged = latestMessageId !== lastVisibleMessageIdRef.current;
+
+    if (conversationChanged || (latestMessageChanged && shouldAutoScrollRef.current)) {
+      container.scrollTop = container.scrollHeight;
     }
-  }, [messages, isLoadingMessages]);
+
+    renderedConversationIdRef.current = conversationId;
+    lastVisibleMessageIdRef.current = latestMessageId;
+  }, [conversationId, isLoadingMessages, messages]);
 
   const watchedMessage = form.watch("message");
 
@@ -189,6 +192,14 @@ export default function ChatPage() {
       setError("Nao foi possivel enviar a mensagem.");
     }
   });
+
+  const handleMessagesScroll = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    const distanceToBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight;
+    shouldAutoScrollRef.current = distanceToBottom <= 48;
+  };
 
   if (error) {
     return (
@@ -276,7 +287,11 @@ export default function ChatPage() {
                 </div>
               </CardHeader>
               <CardContent className="h-[calc(100%-9rem)] flex flex-col">
-                <div className="flex-1 overflow-y-auto pr-1 space-y-3 py-3">
+                <div
+                  ref={messagesContainerRef}
+                  onScroll={handleMessagesScroll}
+                  className="flex-1 overflow-y-auto pr-1 space-y-3 py-3"
+                >
                   {isLoadingMessages ? (
                     <>
                       <Skeleton className="h-14 w-2/3" />
@@ -314,7 +329,6 @@ export default function ChatPage() {
                           </div>
                         );
                       })}
-                      <div ref={messagesEndRef} />
                     </>
                   )}
                 </div>

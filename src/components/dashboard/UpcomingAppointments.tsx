@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { StatusBadge } from '@/components/common/StatusBadge';
 import { Clock, MoreVertical } from 'lucide-react';
 import { Appointment } from '@/types';
-import { getStatusColor, getStatusLabel, formatCurrency } from '@/lib/mockData';
+import { formatCurrency } from '@/lib/mockData';
+import { appointmentStatusBadgeToneMap, appointmentStatusLabelMap } from '@/lib/appointment-status';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,9 +65,12 @@ export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingA
                   <p className="font-medium text-foreground text-sm sm:text-base truncate max-w-[120px] sm:max-w-none">
                     {appointment.client?.name}
                   </p>
-                  <Badge className={`${getStatusColor(appointment.status)} text-[10px] sm:text-xs`}>
-                    {getStatusLabel(appointment.status)}
-                  </Badge>
+                  <StatusBadge
+                    status={appointment.status}
+                    labelMap={appointmentStatusLabelMap}
+                    toneMap={appointmentStatusBadgeToneMap}
+                    className="text-[10px] sm:text-xs"
+                  />
                 </div>
                 <p className="text-xs sm:text-sm text-muted-foreground truncate">
                   {getServiceLabel(appointment)}

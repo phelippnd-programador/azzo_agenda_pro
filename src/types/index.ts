@@ -17,6 +17,7 @@ export interface User {
   phone: string;
   role: 'ADMIN' | 'OWNER' | 'PROFESSIONAL' | 'CLIENT';
   avatar?: string;
+  avatarUrl?: string | null;
   salonName?: string | null;
   mfaEnabled?: boolean;
   createdAt: Date;
@@ -153,6 +154,110 @@ export interface AppointmentDetailResponse {
   timeline: AppointmentTimelineEvent[];
 }
 
+export interface NoShowReportItem {
+  appointmentId: string;
+  clientId?: string;
+  clientName?: string;
+  clientPhone?: string;
+  clientEmail?: string;
+  professionalId?: string;
+  professionalName?: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  status: AppointmentStatus;
+  notes?: string;
+  totalPrice: number;
+  totalServices: number;
+  serviceNames: string[];
+  createdAt?: string;
+}
+
+export type NoShowGroupBy = "DAY" | "PROFESSIONAL" | "CLIENT" | "SERVICE";
+
+export interface NoShowReportPoint {
+  date: string;
+  totalNoShows: number;
+  revenueAtRisk: number;
+}
+
+export interface NoShowReportGroup {
+  key: string;
+  label: string;
+  totalNoShows: number;
+  revenueAtRisk: number;
+}
+
+export interface NoShowReportPageResponse {
+  startDate?: string;
+  endDate?: string;
+  lastUpdatedAt?: string | null;
+  groupBy?: NoShowGroupBy;
+  totalNoShows?: number;
+  previousPeriodNoShows?: number;
+  lastSevenDaysNoShows?: number;
+  completedAppointments?: number;
+  noShowRate?: number;
+  revenueAtRisk?: number;
+  limit: number;
+  afterId?: string | null;
+  nextAfterId?: string | null;
+  hasMore: boolean;
+  totalItems: number;
+  items: NoShowReportItem[];
+  points?: NoShowReportPoint[];
+  groups?: NoShowReportGroup[];
+}
+
+export interface AppointmentManagementReportItem {
+  appointmentId: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  clientId?: string;
+  clientName?: string;
+  professionalId?: string;
+  professionalName?: string;
+  serviceLabel?: string;
+  status: AppointmentStatus;
+  origin?: string;
+  totalPrice: number;
+  flagHorarioVago: boolean;
+  flagNaoConfirmado: boolean;
+  flagAbandonoFluxo: boolean;
+}
+
+export interface AppointmentManagementReportSignal {
+  code: string;
+  title: string;
+  description: string;
+  severity: "info" | "warning" | "critical" | "opportunity";
+}
+
+export interface AppointmentManagementReportResponse {
+  startDate?: string;
+  endDate?: string;
+  lastUpdatedAt?: string | null;
+  totalAppointments: number;
+  totalConfirmed: number;
+  totalPending: number;
+  totalCancelled: number;
+  totalNoShow: number;
+  totalCompleted: number;
+  totalRevenue: number;
+  totalGapOpportunities: number;
+  totalUnconfirmed: number;
+  totalAbandonmentSignalDays: number;
+  occupancyRate: number;
+  cancellationRate: number;
+  noShowRate: number;
+  limit: number;
+  totalItems: number;
+  alerts: AppointmentManagementReportSignal[];
+  opportunities: AppointmentManagementReportSignal[];
+  items: AppointmentManagementReportItem[];
+}
+
 export interface ClientAppointmentHistoryItem {
   appointmentId: string;
   date: string;
@@ -187,6 +292,96 @@ export interface DashboardCustomerRankingResponse {
   endDate: string;
   lastUpdatedAt?: string;
   items: DashboardCustomerRankingItem[];
+}
+
+export interface DashboardWhatsAppReactivationPoint {
+  metricDate: string;
+  abandonedCount: number;
+  reactivatedCount: number;
+  convertedCount: number;
+}
+
+export interface DashboardWhatsAppReactivationResponse {
+  startDate: string;
+  endDate: string;
+  totalAbandoned: number;
+  totalReactivated: number;
+  totalConverted: number;
+  reactivationRate: number;
+  stoppedAtServiceSelection: number;
+  stoppedAtProfessionalSelection: number;
+  stoppedAtTimeSelection: number;
+  stoppedAtFinalReview: number;
+  points: DashboardWhatsAppReactivationPoint[];
+}
+
+export interface DashboardWhatsAppReactivationQueueItem {
+  cycleId: string;
+  clientId?: string | null;
+  conversationId?: string | null;
+  appointmentIdCreatedAfterAbandonment?: string | null;
+  customerName?: string | null;
+  userIdentifier?: string | null;
+  abandonedAt?: string | null;
+  status?: string | null;
+  statusLabel?: string | null;
+  lastStage?: string | null;
+  lastStageLabel?: string | null;
+  lastServiceName?: string | null;
+  lastProfessionalName?: string | null;
+  lastRequestedDate?: string | null;
+  lastRequestedTime?: string | null;
+  assistantLastPrompt?: string | null;
+  customerLastMessage?: string | null;
+  nextAttemptNumber?: number | null;
+  nextAttemptAt?: string | null;
+  reactivatedAt?: string | null;
+  convertedAt?: string | null;
+  respondedAt?: string | null;
+  cancelReason?: string | null;
+  latestAttemptNumber?: number | null;
+  latestAttemptStatus?: string | null;
+  latestAttemptStatusLabel?: string | null;
+  latestAttemptAt?: string | null;
+  latestAttemptError?: string | null;
+  manualInterventionSuggested?: boolean | null;
+  manualInterventionReason?: string | null;
+  manualInterventionAttempts?: number | null;
+}
+
+export interface DashboardWhatsAppReactivationQueueResponse {
+  startDate: string;
+  endDate: string;
+  statusFilter: string;
+  limit: number;
+  items: DashboardWhatsAppReactivationQueueItem[];
+  exceptionItems: DashboardWhatsAppReactivationQueueItem[];
+}
+
+export interface DashboardNoShowInsightItem {
+  appointmentId: string;
+  clientId?: string;
+  clientName?: string;
+  professionalId?: string;
+  professionalName?: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  totalPrice: number;
+  status: string;
+  serviceNames: string[];
+}
+
+export interface DashboardNoShowInsightsResponse {
+  startDate: string;
+  endDate: string;
+  lastUpdatedAt?: string | null;
+  totalNoShows: number;
+  previousPeriodNoShows?: number | null;
+  noShowRate: number;
+  lastSevenDaysNoShows: number;
+  revenueAtRisk: number;
+  recentItems: DashboardNoShowInsightItem[];
 }
 
 export interface Appointment {

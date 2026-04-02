@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Invoice, InvoiceStatus } from '@/types/invoice';
+import { formatCurrency, formatDateOnly as formatDate } from '@/lib/format';
 import { FileText, User, Calendar, DollarSign, Hash } from 'lucide-react';
 
 interface InvoiceViewerProps {
@@ -49,23 +50,6 @@ export function InvoiceViewer({ invoice }: InvoiceViewerProps) {
   const fiscalSeries = invoice.status === 'DRAFT' || !(invoice.series || '').trim()
     ? '—'
     : invoice.series;
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
 
   return (
     <div className="space-y-6">

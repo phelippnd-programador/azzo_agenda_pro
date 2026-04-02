@@ -3,15 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Loader2, Scissors } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import ReactMarkdown from "react-markdown";
-import rehypeSanitize from "rehype-sanitize";
-import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LegalDocumentDialog } from "@/components/register/LegalDocumentDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError, publicLegalApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
@@ -27,7 +24,6 @@ const getPasswordStrengthStatus = (value: string) => {
   if (/[A-Z]/.test(value)) score += 1;
   if (/\d/.test(value)) score += 1;
   if (/[^A-Za-z0-9]/.test(value)) score += 1;
-
   if (score <= 2) {
     return { label: "Fraca", width: "33%", barClassName: "bg-red-500", textClassName: "text-red-600" };
   }
@@ -50,6 +46,7 @@ export default function Register() {
   const [legalDocument, setLegalDocument] = useState<LegalDocumentResponse | null>(null);
   const [isLoadingLegal, setIsLoadingLegal] = useState(false);
   const [legalError, setLegalError] = useState<string | null>(null);
+
   const form = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -85,57 +82,59 @@ export default function Register() {
   }, []);
 
   const handleNextStep = async () => {
-    const isValid = await form.trigger(["name", "email", "password", "confirmPassword", "acceptedLegalTerms"]);
+    const isValid = await form.trigger([
+      "name",
+      "email",
+      "password",
+      "confirmPassword",
+      "acceptedLegalTerms",
+    ]);
     if (!isValid) {
       const firstError = Object.values(form.formState.errors)[0];
-      if (firstError?.message) {
-        toast.error(firstError.message);
-      }
+      if (firstError?.message) toast.error(firstError.message);
       return;
     }
     setStep(2);
   };
 
-  const onSubmit = form.handleSubmit(async (values) => {
-    const cpfCnpjDigits = values.cpfCnpj.replace(/\D/g, "");
-    if (!termsOfUseVersion || !privacyPolicyVersion) {
-      toast.error("Nao foi possivel carregar a versao dos termos legais.");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await register({
-        name: values.name,
-        email: values.email,
-        password: values.password,
-        salonName: values.salonName,
-        phone: values.phone,
-        cpfCnpj: cpfCnpjDigits,
-        acceptedTermsOfUse: true,
-        acceptedPrivacyPolicy: true,
-        termsOfUseVersion,
-        privacyPolicyVersion,
-      });
-
-      toast.success("Conta criada com sucesso!");
-      navigate("/", { replace: true });
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 429) {
-        toast.error("Muitas tentativas. Aguarde um momento e tente novamente.");
-      } else {
-        const uiError = resolveUiError(error, "Erro ao criar conta. Tente novamente.");
-        toast.error(uiError.message);
+  const onSubmit = form.handleSubmit(
+    async (values) => {
+      const cpfCnpjDigits = values.cpfCnpj.replace(/\D/g, "");
+      if (!termsOfUseVersion || !privacyPolicyVersion) {
+        toast.error("Nao foi possivel carregar a versao dos termos legais.");
+        return;
       }
-    } finally {
-      setIsLoading(false);
-    }
-  }, (errors) => {
-    const firstError = Object.values(errors)[0];
-    if (firstError?.message) {
-      toast.error(firstError.message);
-    }
-  });
+      setIsLoading(true);
+      try {
+        await register({
+          name: values.name,
+          email: values.email,
+          password: values.password,
+          salonName: values.salonName,
+          phone: values.phone,
+          cpfCnpj: cpfCnpjDigits,
+          acceptedTermsOfUse: true,
+          acceptedPrivacyPolicy: true,
+          termsOfUseVersion,
+          privacyPolicyVersion,
+        });
+        toast.success("Conta criada com sucesso!");
+        navigate("/", { replace: true });
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 429) {
+          toast.error("Muitas tentativas. Aguarde um momento e tente novamente.");
+        } else {
+          toast.error(resolveUiError(error, "Erro ao criar conta. Tente novamente.").message);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    (errors) => {
+      const firstError = Object.values(errors)[0];
+      if (firstError?.message) toast.error(firstError.message);
+    },
+  );
 
   const openLegalDialog = async (type: TermsDocumentType) => {
     try {
@@ -149,8 +148,7 @@ export default function Register() {
           : await publicLegalApi.getTermsOfUse();
       setLegalDocument(data);
     } catch (error) {
-      const uiError = resolveUiError(error, "Nao foi possivel carregar o documento.");
-      setLegalError(uiError.message);
+      setLegalError(resolveUiError(error, "Nao foi possivel carregar o documento.").message);
       setLegalDocument(null);
     } finally {
       setIsLoadingLegal(false);
@@ -176,10 +174,13 @@ export default function Register() {
             <CardDescription className="text-sm">
               {step === 1 ? "Seus dados pessoais" : "Dados do seu salao"}
             </CardDescription>
+            {/* Step indicator */}
             <div className="flex items-center justify-center gap-2 mt-4">
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  step >= 1 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  step >= 1
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
                 }`}
               >
                 {step > 1 ? <Check className="w-4 h-4" /> : "1"}
@@ -187,18 +188,23 @@ export default function Register() {
               <div className={`w-12 h-1 rounded ${step >= 2 ? "bg-primary" : "bg-muted"}`} />
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  step >= 2 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  step >= 2
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
                 }`}
               >
                 2
               </div>
             </div>
           </CardHeader>
+
           <CardContent>
             {step === 1 ? (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-sm">Nome completo</Label>
+                  <Label htmlFor="name" className="text-sm">
+                    Nome completo
+                  </Label>
                   <Input
                     id="name"
                     placeholder="Seu nome"
@@ -208,7 +214,9 @@ export default function Register() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm">E-mail</Label>
+                  <Label htmlFor="email" className="text-sm">
+                    E-mail
+                  </Label>
                   <Input
                     id="email"
                     type="email"
@@ -219,7 +227,9 @@ export default function Register() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm">Senha</Label>
+                  <Label htmlFor="password" className="text-sm">
+                    Senha
+                  </Label>
                   <div className="relative">
                     <Input
                       id="password"
@@ -246,19 +256,30 @@ export default function Register() {
                     <div className="h-1.5 w-full rounded bg-muted">
                       <div
                         className={`h-full rounded transition-all ${
-                          watchedPassword ? passwordStrength.barClassName : "bg-muted-foreground/40"
+                          watchedPassword
+                            ? passwordStrength.barClassName
+                            : "bg-muted-foreground/40"
                         }`}
                         style={{ width: watchedPassword ? passwordStrength.width : "0%" }}
                       />
                     </div>
-                    <p className={`text-xs ${watchedPassword ? passwordStrength.textClassName : "text-muted-foreground"}`}>
-                      Seguranca da senha: {watchedPassword ? passwordStrength.label : "Nao definida"}
+                    <p
+                      className={`text-xs ${
+                        watchedPassword
+                          ? passwordStrength.textClassName
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      Seguranca da senha:{" "}
+                      {watchedPassword ? passwordStrength.label : "Nao definida"}
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-sm">Confirmar senha</Label>
+                  <Label htmlFor="confirmPassword" className="text-sm">
+                    Confirmar senha
+                  </Label>
                   <Input
                     id="confirmPassword"
                     type={showPassword ? "text" : "password"}
@@ -273,10 +294,15 @@ export default function Register() {
                     id="acceptLegalTerms"
                     checked={watchedAcceptedLegalTerms}
                     onCheckedChange={(checked) =>
-                      form.setValue("acceptedLegalTerms", Boolean(checked), { shouldValidate: true })
+                      form.setValue("acceptedLegalTerms", Boolean(checked), {
+                        shouldValidate: true,
+                      })
                     }
                   />
-                  <Label htmlFor="acceptLegalTerms" className="text-xs leading-relaxed text-muted-foreground">
+                  <Label
+                    htmlFor="acceptLegalTerms"
+                    className="text-xs leading-relaxed text-muted-foreground"
+                  >
                     Li e aceito os{" "}
                     <button
                       type="button"
@@ -297,7 +323,11 @@ export default function Register() {
                   </Label>
                 </div>
 
-                <Button type="button" className="w-full h-10 sm:h-11" onClick={handleNextStep}>
+                <Button
+                  type="button"
+                  className="w-full h-10 sm:h-11"
+                  onClick={() => void handleNextStep()}
+                >
                   Continuar
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -305,7 +335,9 @@ export default function Register() {
             ) : (
               <form onSubmit={onSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="salonName" className="text-sm">Nome do Salao</Label>
+                  <Label htmlFor="salonName" className="text-sm">
+                    Nome do Salao
+                  </Label>
                   <Input
                     id="salonName"
                     placeholder="Ex: Bella Studio"
@@ -316,13 +348,17 @@ export default function Register() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-sm">Telefone / WhatsApp</Label>
+                  <Label htmlFor="phone" className="text-sm">
+                    Telefone / WhatsApp
+                  </Label>
                   <Input
                     id="phone"
                     placeholder="(11) 99999-0000"
                     value={watchedPhone}
                     onChange={(e) =>
-                      form.setValue("phone", maskPhoneBr(e.target.value), { shouldValidate: true })
+                      form.setValue("phone", maskPhoneBr(e.target.value), {
+                        shouldValidate: true,
+                      })
                     }
                     disabled={isLoading}
                     className="h-10 sm:h-11"
@@ -330,13 +366,17 @@ export default function Register() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="cpfCnpj" className="text-sm">CPF/CNPJ</Label>
+                  <Label htmlFor="cpfCnpj" className="text-sm">
+                    CPF/CNPJ
+                  </Label>
                   <Input
                     id="cpfCnpj"
                     placeholder="000.000.000-00 ou 00.000.000/0000-00"
                     value={watchedCpfCnpj}
                     onChange={(e) =>
-                      form.setValue("cpfCnpj", maskCpfCnpj(e.target.value), { shouldValidate: true })
+                      form.setValue("cpfCnpj", maskCpfCnpj(e.target.value), {
+                        shouldValidate: true,
+                      })
                     }
                     disabled={isLoading}
                     className="h-10 sm:h-11"
@@ -354,7 +394,11 @@ export default function Register() {
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Voltar
                   </Button>
-                  <Button type="submit" className="flex-1 h-10 sm:h-11" disabled={isLoading}>
+                  <Button
+                    type="submit"
+                    className="flex-1 h-10 sm:h-11"
+                    disabled={isLoading}
+                  >
                     {isLoading ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -385,8 +429,8 @@ export default function Register() {
             onClick={() => void openLegalDialog("TERMS_OF_USE")}
           >
             Termos de Uso
-          </button>
-          {" "}e{" "}
+          </button>{" "}
+          e{" "}
           <button
             type="button"
             className="text-primary hover:underline"
@@ -397,38 +441,14 @@ export default function Register() {
         </p>
       </div>
 
-      <Dialog open={isLegalOpen} onOpenChange={setIsLegalOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {legalDocument?.title ||
-                (legalType === "PRIVACY_POLICY" ? "Politica de Privacidade" : "Termos de Uso")}
-            </DialogTitle>
-          </DialogHeader>
-          {isLoadingLegal ? (
-            <p className="text-sm text-muted-foreground">Carregando documento...</p>
-          ) : legalError ? (
-            <p className="text-sm text-destructive">{legalError}</p>
-          ) : (
-            <div className="space-y-3">
-              <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
-                <p>Versao: {legalDocument?.version || "-"}</p>
-                <p>
-                  Publicado em:{" "}
-                  {legalDocument?.createdAt
-                    ? new Date(legalDocument.createdAt).toLocaleString("pt-BR")
-                    : "-"}
-                </p>
-              </div>
-              <div className="prose prose-sm max-w-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
-                  {legalDocument?.content || "Documento indisponivel no momento."}
-                </ReactMarkdown>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <LegalDocumentDialog
+        open={isLegalOpen}
+        onOpenChange={setIsLegalOpen}
+        legalType={legalType}
+        legalDocument={legalDocument}
+        isLoadingLegal={isLoadingLegal}
+        legalError={legalError}
+      />
     </div>
   );
 }

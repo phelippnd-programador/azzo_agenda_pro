@@ -5,16 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { FileDropzone } from '@/components/ui/file-dropzone';
 import {
   Building2,
-  MapPin,
   Phone,
   Globe,
-  Clock,
-  Camera,
   Save,
   Loader2,
   Instagram,
@@ -22,19 +18,15 @@ import {
   Copy,
   ExternalLink,
 } from 'lucide-react';
+import { SalonAddressCard, type AddressValues, type LockedAddressFields } from '@/components/salon/SalonAddressCard';
+import { SalonBusinessHoursCard, type BusinessHours } from '@/components/salon/SalonBusinessHoursCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { salonApi, utilsApi, type SalonProfile as SalonProfileData } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
+import { prepareImageUpload } from '@/lib/image-upload';
 import { buildPublicBookingUrl } from '@/lib/public-booking-url';
 import { maskCpfCnpj, onlyDigits } from '@/lib/input-masks';
-
-interface BusinessHours {
-  day: string;
-  enabled: boolean;
-  open: string;
-  close: string;
-}
 
 const defaultBusinessHours: BusinessHours[] = [
   { day: 'Segunda-feira', enabled: true, open: '09:00', close: '19:00' },
@@ -46,18 +38,34 @@ const defaultBusinessHours: BusinessHours[] = [
   { day: 'Domingo', enabled: false, open: '09:00', close: '17:00' },
 ];
 
+const emptyAddress: AddressValues = {
+  street: '',
+  number: '',
+  complement: '',
+  neighborhood: '',
+  city: '',
+  state: '',
+  zipCode: '',
+};
+
+const emptyLockedFields: LockedAddressFields = {
+  street: false,
+  complement: false,
+  neighborhood: false,
+  city: false,
+  state: false,
+};
+
+const normalizeCep = (value: string) => value.replace(/\D/g, '').slice(0, 8);
+
 export default function SalonProfile() {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isAddressLoading, setIsAddressLoading] = useState(false);
+  const [isLogoUploading, setIsLogoUploading] = useState(false);
+  const [isLogoRemoving, setIsLogoRemoving] = useState(false);
   const [lastResolvedCep, setLastResolvedCep] = useState('');
-  const [lockedAddressFields, setLockedAddressFields] = useState({
-    street: false,
-    complement: false,
-    neighborhood: false,
-    city: false,
-    state: false,
-  });
+  const [lockedAddressFields, setLockedAddressFields] = useState<LockedAddressFields>(emptyLockedFields);
 
   const [salonName, setSalonName] = useState('');
   const [salonSlug, setSalonSlug] = useState('');
@@ -70,36 +78,48 @@ export default function SalonProfile() {
   const [salonWebsite, setSalonWebsite] = useState('');
   const [salonInstagram, setSalonInstagram] = useState('');
   const [salonFacebook, setSalonFacebook] = useState('');
-
-  const [street, setStreet] = useState('');
-  const [number, setNumber] = useState('');
-  const [complement, setComplement] = useState('');
-  const [neighborhood, setNeighborhood] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [zipCode, setZipCode] = useState('');
-
+  const [salonLogoUrl, setSalonLogoUrl] = useState('');
+  const [address, setAddress] = useState<AddressValues>(emptyAddress);
   const [businessHours, setBusinessHours] = useState<BusinessHours[]>(defaultBusinessHours);
+
   const persistSalonSlug = (value: string) => {
     if (!value?.trim()) return;
-    localStorage.setItem("salon_public_slug", value.trim());
+    localStorage.setItem('salon_public_slug', value.trim());
   };
 
-  const normalizeCep = (value: string) => value.replace(/\D/g, '').slice(0, 8);
-  const formatCep = (value: string) => {
-    const cep = normalizeCep(value);
-    if (cep.length <= 5) return cep;
-    return `${cep.slice(0, 5)}-${cep.slice(5)}`;
-  };
+  const unlockAddressFields = () => setLockedAddressFields(emptyLockedFields);
 
-  const unlockAddressFields = () => {
-    setLockedAddressFields({
-      street: false,
-      complement: false,
-      neighborhood: false,
-      city: false,
-      state: false,
+  const applyProfileData = (data: Partial<SalonProfileData>) => {
+    setSalonName(data.salonName || '');
+    const resolvedSlug = data.salonSlug || 'meu-salao';
+    setSalonSlug(resolvedSlug);
+    persistSalonSlug(resolvedSlug);
+    setPublicBookingUrl(data.publicBookingUrl || '');
+    setSalonLogoUrl(data.logoUrl || '');
+    setSalonDescription(data.salonDescription || '');
+    setSalonPhone(data.salonPhone || '');
+    setSalonWhatsapp(data.salonWhatsapp || '');
+    setSalonCpfCnpj(maskCpfCnpj(data.salonCpfCnpj || ''));
+    setSalonEmail(data.salonEmail || '');
+    setSalonWebsite(data.salonWebsite || '');
+    setSalonInstagram(data.salonInstagram || '');
+    setSalonFacebook(data.salonFacebook || '');
+    const loadedZip = data.zipCode || '';
+    setAddress({
+      street: data.street || '',
+      number: data.number || '',
+      complement: data.complement || '',
+      neighborhood: data.neighborhood || '',
+      city: data.city || '',
+      state: data.state || '',
+      zipCode: loadedZip,
     });
+    setLastResolvedCep(normalizeCep(loadedZip));
+    if (data.businessHours?.length) {
+      setBusinessHours(data.businessHours);
+      return;
+    }
+    setBusinessHours(defaultBusinessHours);
   };
 
   useEffect(() => {
@@ -109,36 +129,12 @@ export default function SalonProfile() {
 
     salonApi
       .getProfile()
-      .then((data) => {
-        setSalonName(data.salonName || '');
-        const resolvedSlug = data.salonSlug || "meu-salao";
-        setSalonSlug(resolvedSlug);
-        persistSalonSlug(resolvedSlug);
-        setPublicBookingUrl(data.publicBookingUrl || '');
-        setSalonDescription(data.salonDescription || '');
-        setSalonPhone(data.salonPhone || '');
-        setSalonWhatsapp(data.salonWhatsapp || '');
-        setSalonCpfCnpj(maskCpfCnpj(data.salonCpfCnpj || ''));
-        setSalonEmail(data.salonEmail || '');
-        setSalonWebsite(data.salonWebsite || '');
-        setSalonInstagram(data.salonInstagram || '');
-        setSalonFacebook(data.salonFacebook || '');
-        setStreet(data.street || '');
-        setNumber(data.number || '');
-        setComplement(data.complement || '');
-        setNeighborhood(data.neighborhood || '');
-        setCity(data.city || '');
-        setState(data.state || '');
-        setZipCode(data.zipCode || '');
-        if (data.businessHours?.length) {
-          setBusinessHours(data.businessHours);
-        }
-      })
+      .then((data) => applyProfileData(data))
       .catch(() => undefined);
-  }, [user]);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    const cep = normalizeCep(zipCode);
+    const cep = normalizeCep(address.zipCode);
 
     if (cep.length < 8) {
       if (lastResolvedCep) setLastResolvedCep('');
@@ -159,14 +155,17 @@ export default function SalonProfile() {
         const resolvedState = (data.state || '').trim().toUpperCase();
 
         const hasAnyResolvedField = Boolean(
-          resolvedStreet || resolvedComplement || resolvedNeighborhood || resolvedCity || resolvedState
+          resolvedStreet || resolvedComplement || resolvedNeighborhood || resolvedCity || resolvedState,
         );
 
-        setStreet(resolvedStreet);
-        setComplement(resolvedComplement);
-        setNeighborhood(resolvedNeighborhood);
-        setCity(resolvedCity);
-        setState(resolvedState);
+        setAddress((prev) => ({
+          ...prev,
+          street: resolvedStreet,
+          complement: resolvedComplement,
+          neighborhood: resolvedNeighborhood,
+          city: resolvedCity,
+          state: resolvedState,
+        }));
 
         if (hasAnyResolvedField) {
           setLockedAddressFields({
@@ -190,7 +189,11 @@ export default function SalonProfile() {
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [zipCode, lastResolvedCep]);
+  }, [address.zipCode, lastResolvedCep]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleAddressChange = (field: keyof AddressValues, value: string) => {
+    setAddress((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleSave = async () => {
     setIsLoading(true);
@@ -206,13 +209,13 @@ export default function SalonProfile() {
         salonWebsite,
         salonInstagram,
         salonFacebook,
-        street,
-        number,
-        complement,
-        neighborhood,
-        city,
-        state,
-        zipCode,
+        street: address.street,
+        number: address.number,
+        complement: address.complement,
+        neighborhood: address.neighborhood,
+        city: address.city,
+        state: address.state,
+        zipCode: address.zipCode,
         businessHours,
       };
 
@@ -227,7 +230,38 @@ export default function SalonProfile() {
     }
   };
 
-  const updateBusinessHours = (index: number, field: keyof BusinessHours, value: string | boolean) => {
+  const handleLogoUpload = async (selectedFile: File) => {
+    setIsLogoUploading(true);
+    try {
+      const preparedFile = await prepareImageUpload(selectedFile);
+      const updatedProfile = await salonApi.uploadLogo(preparedFile);
+      applyProfileData(updatedProfile);
+      toast.success('Imagem do estabelecimento atualizada com sucesso');
+    } catch (error) {
+      toast.error(resolveUiError(error, 'Nao foi possivel enviar a imagem do estabelecimento').message);
+    } finally {
+      setIsLogoUploading(false);
+    }
+  };
+
+  const handleLogoRemove = async () => {
+    setIsLogoRemoving(true);
+    try {
+      const updatedProfile = await salonApi.removeLogo();
+      applyProfileData(updatedProfile);
+      toast.success('Imagem do estabelecimento removida com sucesso');
+    } catch (error) {
+      toast.error(resolveUiError(error, 'Nao foi possivel remover a imagem do estabelecimento').message);
+    } finally {
+      setIsLogoRemoving(false);
+    }
+  };
+
+  const updateBusinessHours = (
+    index: number,
+    field: keyof BusinessHours,
+    value: string | boolean,
+  ) => {
     const updated = [...businessHours];
     updated[index] = { ...updated[index], [field]: value };
     setBusinessHours(updated);
@@ -235,39 +269,49 @@ export default function SalonProfile() {
 
   const copyBookingLink = () => {
     const link = buildPublicBookingUrl(salonSlug, publicBookingUrl || undefined);
-    navigator.clipboard.writeText(link);
+    void navigator.clipboard.writeText(link);
     toast.success('Link copiado para a area de transferencia');
   };
 
   const bookingAbsoluteUrl = buildPublicBookingUrl(salonSlug, publicBookingUrl || undefined);
 
   return (
-    <MainLayout title="Perfil do Salao" subtitle="Gerencie as informacoes do seu estabelecimento">
+    <MainLayout
+      title="Perfil do Salao"
+      subtitle="Gerencie as informacoes do seu estabelecimento"
+    >
       <div className="space-y-4 sm:space-y-6 max-w-4xl">
+        {/* Avatar / header card */}
         <Card>
           <CardContent className="p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className="relative">
-                <Avatar className="w-20 h-20 sm:w-24 sm:h-24">
-                  <AvatarImage src="" />
-                  <AvatarFallback className="bg-primary/10 text-primary text-xl sm:text-2xl">
-                    {salonName.slice(0, 2).toUpperCase() || 'SL'}
-                  </AvatarFallback>
-                </Avatar>
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full"
-                >
-                  <Camera className="w-4 h-4" />
-                </Button>
-              </div>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <FileDropzone
+                title="Imagem do estabelecimento"
+                helperText="JPG, PNG ou WEBP"
+                accept={{
+                  'image/jpeg': ['.jpg', '.jpeg'],
+                  'image/png': ['.png'],
+                  'image/webp': ['.webp'],
+                }}
+                maxSizeBytes={10 * 1024 * 1024}
+                currentPreviewUrl={salonLogoUrl || null}
+                previewAlt={salonName || 'Imagem do estabelecimento'}
+                isLoading={isLogoUploading || isLogoRemoving}
+                onFileSelected={handleLogoUpload}
+                onRemove={salonLogoUrl ? handleLogoRemove : undefined}
+                inputTestId="salon-logo-input"
+                variant="avatar"
+                className="shrink-0"
+              />
               <div className="flex-1 min-w-0">
                 <h2 className="text-xl sm:text-2xl font-bold text-foreground truncate">
                   {salonName || 'Nome do Salao'}
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {city && state ? `${city}, ${state}` : 'Localizacao nao definida'}
+                  {address.city && address.state
+                    ? `${address.city}, ${address.state}`
+                    : 'Localizacao nao definida'}
                 </p>
                 <div className="flex flex-wrap gap-2 mt-3">
                   <Badge variant="secondary" className="gap-1">
@@ -276,10 +320,12 @@ export default function SalonProfile() {
                   </Badge>
                 </div>
               </div>
+              </div>
             </div>
           </CardContent>
         </Card>
 
+        {/* Booking URL card */}
         <Card className="bg-gradient-to-br from-primary/10 to-accent border-primary/20">
           <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -308,6 +354,7 @@ export default function SalonProfile() {
           </CardContent>
         </Card>
 
+        {/* Basic info card */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
@@ -335,13 +382,14 @@ export default function SalonProfile() {
                   <Input
                     placeholder="meu-salao"
                     value={salonSlug}
-                    onChange={(e) => setSalonSlug(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
+                    onChange={(e) =>
+                      setSalonSlug(e.target.value.toLowerCase().replace(/\s+/g, '-'))
+                    }
                     className="rounded-l-none"
                   />
                 </div>
               </div>
             </div>
-
             <div className="space-y-2">
               <Label>Descricao</Label>
               <Textarea
@@ -354,6 +402,7 @@ export default function SalonProfile() {
           </CardContent>
         </Card>
 
+        {/* Contact card */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
@@ -381,7 +430,6 @@ export default function SalonProfile() {
                 />
               </div>
             </div>
-
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>E-mail</Label>
@@ -401,7 +449,6 @@ export default function SalonProfile() {
                 />
               </div>
             </div>
-
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>CPF/CNPJ</Label>
@@ -412,7 +459,6 @@ export default function SalonProfile() {
                 />
               </div>
             </div>
-
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
@@ -440,136 +486,22 @@ export default function SalonProfile() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <MapPin className="w-5 h-5 text-primary" />
-              Endereco
-            </CardTitle>
-            <CardDescription>Localizacao do seu estabelecimento</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid sm:grid-cols-3 gap-4">
-              <div className="sm:col-span-2 space-y-2">
-                <Label>Rua</Label>
-                <Input
-                  placeholder="Av. Paulista"
-                  value={street}
-                  onChange={(e) => setStreet(e.target.value)}
-                  disabled={lockedAddressFields.street}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Numero</Label>
-                <Input placeholder="1000" value={number} onChange={(e) => setNumber(e.target.value)} />
-              </div>
-            </div>
+        {/* Address card */}
+        <SalonAddressCard
+          values={address}
+          onChange={handleAddressChange}
+          isAddressLoading={isAddressLoading}
+          lockedFields={lockedAddressFields}
+        />
 
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Complemento</Label>
-                <Input
-                  placeholder="Sala 101"
-                  value={complement}
-                  onChange={(e) => setComplement(e.target.value)}
-                  disabled={lockedAddressFields.complement}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Bairro</Label>
-                <Input
-                  placeholder="Bela Vista"
-                  value={neighborhood}
-                  onChange={(e) => setNeighborhood(e.target.value)}
-                  disabled={lockedAddressFields.neighborhood}
-                />
-              </div>
-            </div>
-
-            <div className="grid sm:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Cidade</Label>
-                <Input
-                  placeholder="Sao Paulo"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  disabled={lockedAddressFields.city}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Estado</Label>
-                <Input
-                  placeholder="SP"
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  maxLength={2}
-                  disabled={lockedAddressFields.state}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>CEP</Label>
-                <Input
-                  placeholder="01310-100"
-                  value={zipCode}
-                  onChange={(e) => setZipCode(formatCep(e.target.value))}
-                  maxLength={9}
-                />
-                {isAddressLoading && <p className="text-xs text-muted-foreground">Buscando endereco pelo CEP...</p>}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Clock className="w-5 h-5 text-primary" />
-              Horario de Funcionamento
-            </CardTitle>
-            <CardDescription>Defina os horarios de atendimento</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {businessHours.map((hours, index) => (
-                <div
-                  key={hours.day}
-                  className={`flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg ${
-                    hours.enabled ? 'bg-muted/50' : 'bg-muted/30 opacity-60'
-                  }`}
-                >
-                  <div className="flex items-center gap-3 min-w-[140px]">
-                    <Switch
-                      checked={hours.enabled}
-                      onCheckedChange={(checked) => updateBusinessHours(index, 'enabled', checked)}
-                    />
-                    <span className="font-medium text-sm">{hours.day}</span>
-                  </div>
-                  {hours.enabled && (
-                    <div className="flex items-center gap-2 ml-auto">
-                      <Input
-                        type="time"
-                        value={hours.open}
-                        onChange={(e) => updateBusinessHours(index, 'open', e.target.value)}
-                        className="w-28"
-                      />
-                      <span className="text-muted-foreground">ate</span>
-                      <Input
-                        type="time"
-                        value={hours.close}
-                        onChange={(e) => updateBusinessHours(index, 'close', e.target.value)}
-                        className="w-28"
-                      />
-                    </div>
-                  )}
-                  {!hours.enabled && <span className="text-sm text-muted-foreground ml-auto">Fechado</span>}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Business hours card */}
+        <SalonBusinessHoursCard
+          businessHours={businessHours}
+          onUpdate={updateBusinessHours}
+        />
 
         <div className="flex justify-end pb-6">
-          <Button onClick={handleSave} disabled={isLoading} className="gap-2" size="lg">
+          <Button onClick={() => void handleSave()} disabled={isLoading} className="gap-2" size="lg">
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />

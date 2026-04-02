@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { maskPhoneBr } from "@/lib/input-masks";
+import { formatCurrency } from "@/lib/format";
 import { Calendar, DollarSign, Mail, MoreVertical, Phone } from "lucide-react";
 import type { Client } from "@/lib/api";
 
@@ -17,12 +18,6 @@ type ClientCardProps = {
   onEdit: (client: Client) => void;
   onDelete: (clientId: string) => void;
 };
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
 
 export function ClientCard({ client, onOpenProfile, onEdit, onDelete }: ClientCardProps) {
   return (

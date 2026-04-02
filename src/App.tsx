@@ -15,7 +15,6 @@ import {
   useMenuPermissions,
 } from "@/contexts/MenuPermissionsContext";
 import Index from "./pages/Index";
-import Agenda from "./pages/Agenda";
 import Services from "./pages/Services";
 import ServicesOverviewPage from "./pages/services/ServicesOverviewPage";
 import ServiceImportsPage from "./pages/services/ServiceImportsPage";
@@ -42,10 +41,9 @@ import StockSuppliersPage from "./pages/stock/StockSuppliersPage";
 import StockPurchaseOrdersPage from "./pages/stock/StockPurchaseOrdersPage";
 import StockTransfersPage from "./pages/stock/StockTransfersPage";
 import StockSettingsPage from "./pages/stock/StockSettingsPage";
-import Financial from "./pages/Financial";
 import FinancialCommissions from "./pages/FinancialCommissions";
 import ProfessionalFinancial from "./pages/ProfessionalFinancial";
-import ProfessionalCommissionReport from "./pages/ProfessionalCommissionReport";
+import ProfessionalCommissionReport from "./pages/report/ProfessionalCommissionReport";
 import Auditoria from "./pages/Auditoria";
 import LgpdRequests from "./pages/LgpdRequests";
 import Login from "./pages/Login";
@@ -53,38 +51,58 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Register from "./pages/Register";
 import Notifications from "./pages/Notifications";
-import PublicBooking from "./pages/PublicBooking";
+import PublicBooking from "./pages/appointments/PublicBooking";
 import Settings from "./pages/Settings";
 import LicensePage from "./pages/LicensePage";
 import SalonProfile from "./pages/SalonProfile";
-import TaxConfig from "./pages/TaxConfig";
-import FiscalCertificatesSettings from "./pages/FiscalCertificatesSettings";
-import NfseSettings from "./pages/NfseSettings";
-import NfseInvoices from "./pages/NfseInvoices";
-import NfseInvoiceForm from "./pages/NfseInvoiceForm";
-import NfseInvoiceDetails from "./pages/NfseInvoiceDetails";
-import NfseInvoicePdf from "./pages/NfseInvoicePdf";
-import SystemAdminPage from "./pages/SystemAdmin";
-import InvoicePreview from "./pages/InvoicePreview";
-import InvoiceEmission from "./pages/InvoiceEmission";
-import ApuracaoMensal from "./pages/ApuracaoMensal";
+import UserProfile from "./pages/UserProfile";
+import AppointmentManagementReport from "./pages/report/AppointmentManagementReport";
+import NoShowReport from "./pages/report/NoShowReport";
+import TaxConfig from "./pages/tax/TaxConfig";
+import FiscalCertificatesSettings from "./pages/tax/FiscalCertificatesSettings";
+import NfseSettings from "./pages/tax/NfseSettings";
+import NfseInvoices from "./pages/tax/NfseInvoices";
+import NfseInvoiceForm from "./pages/tax/NfseInvoiceForm";
+import NfseInvoiceDetails from "./pages/tax/NfseInvoiceDetails";
+import NfseInvoicePdf from "./pages/tax/NfseInvoicePdf";
+import InvoicePreview from "./pages/tax/InvoicePreview";
+import InvoiceEmission from "./pages/tax/InvoiceEmission";
+import ApuracaoMensal from "./pages/tax/ApuracaoMensal";
 import WhatsAppIntegration from "./pages/WhatsAppIntegration";
 import Unauthorized from "./pages/Unauthorized";
 import LegalDocument from "./pages/LegalDocument";
 import { NotificationsProvider } from "@/providers/NotificationsProvider";
 import { FullScreenLoader } from "@/components/ui/full-screen-loader";
 import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
+import { isFiscalOwnerPath } from "@/lib/fiscal-paths";
 
 const SalePage = lazy(() => import("./pages/SalePage"));
 const CheckoutSuccess = lazy(() => import("./pages/CheckoutSuccess"));
 const CheckoutError = lazy(() => import("./pages/CheckoutError"));
+const Agenda = lazy(() => import("./pages/appointments/Agenda"));
+const Financial = lazy(() => import("./pages/Financial"));
+const SystemAdminPage = lazy(() => import("./pages/SystemAdmin"));
 
 const queryClient = new QueryClient();
 
-const getFirstAllowedRoute = (allowedRoutes: string[] | null) => {
-  if (!allowedRoutes?.length) return "/dashboard";
+const getFirstAllowedRoute = (
+  allowedRoutes: string[] | null,
+  role?: string | null
+) => {
+  if (!allowedRoutes?.length) {
+    return role === "PROFESSIONAL" ? "/agenda" : "/dashboard";
+  }
+
+  const preferredRoutes =
+    role === "PROFESSIONAL"
+      ? ["/agenda", "/clientes", "/chat", "/sugestoes", "/notificacoes"]
+      : ["/dashboard"];
+
+  const preferredRoute = preferredRoutes.find((route) => allowedRoutes.includes(route));
+  if (preferredRoute) return preferredRoute;
+
   const firstBusinessRoute = allowedRoutes.find((route) => route !== "/unauthorized");
-  return firstBusinessRoute || "/dashboard";
+  return firstBusinessRoute || (role === "PROFESSIONAL" ? "/agenda" : "/dashboard");
 };
 
 // Protected Route Component
@@ -92,15 +110,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
   const { canAccess, isLoading: isPermissionsLoading, isEnforced } = useMenuPermissions();
-  const isFiscalOwnerOnlyPath =
-    location.pathname.startsWith("/emitir-nota")
-    || location.pathname.startsWith("/nota-fiscal")
-    || location.pathname.startsWith("/apuracao-mensal")
-    || location.pathname.startsWith("/configuracoes/fiscal")
-    || location.pathname.startsWith("/fiscal/nfse")
-    || location.pathname.startsWith("/config-impostos");
-  const isSystemAdminPath = location.pathname.startsWith("/configuracoes/admin-sistema");
-
   if (isLoading || isPermissionsLoading || (isAuthenticated && !isEnforced)) {
     return <FullScreenLoader />;
   }
@@ -109,11 +118,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (isFiscalOwnerOnlyPath && user?.role !== "OWNER") {
+  if (isFiscalOwnerPath(location.pathname) && user?.role !== "OWNER") {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  if (isSystemAdminPath && user?.role !== "ADMIN") {
+  if (location.pathname.startsWith("/configuracoes/admin-sistema") && user?.role !== "ADMIN") {
     return <Navigate to="/unauthorized" replace />;
   }
 
@@ -126,7 +135,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 // Public Route Component (redirects to dashboard if authenticated)
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const { allowedRoutes, isLoading: isPermissionsLoading, isEnforced } = useMenuPermissions();
 
   if (isLoading || (isAuthenticated && (isPermissionsLoading || !isEnforced))) {
@@ -134,14 +143,14 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (isAuthenticated) {
-    return <Navigate to={getFirstAllowedRoute(allowedRoutes)} replace />;
+    return <Navigate to={getFirstAllowedRoute(allowedRoutes, user?.role)} replace />;
   }
 
   return <>{children}</>;
 }
 
 function RootRoute() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const { allowedRoutes, isLoading: isPermissionsLoading, isEnforced } = useMenuPermissions();
 
   if (isLoading || (isAuthenticated && (isPermissionsLoading || !isEnforced))) {
@@ -150,7 +159,7 @@ function RootRoute() {
 
   return (
     <Navigate
-      to={isAuthenticated ? getFirstAllowedRoute(allowedRoutes) : "/compras"}
+      to={isAuthenticated ? getFirstAllowedRoute(allowedRoutes, user?.role) : "/compras"}
       replace
     />
   );
@@ -241,6 +250,78 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Agenda />
+            </ProtectedRoute>
+          }
+        />
+          <Route
+            path="/relatorio"
+            element={
+              <ProtectedRoute>
+                <Navigate to="/relatorio/agendamento" replace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/relatorio/agendamento"
+            element={
+              <ProtectedRoute>
+                <AppointmentManagementReport />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/relatorio/no-show"
+            element={
+              <ProtectedRoute>
+                <NoShowReport />
+            </ProtectedRoute>
+          }
+        />
+          <Route
+            path="/relatorios"
+            element={
+              <ProtectedRoute>
+                <Navigate to="/relatorio/agendamento" replace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/relatorios/agendamento"
+            element={
+              <ProtectedRoute>
+                <Navigate to="/relatorio/agendamento" replace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/relatorios/agendamentos"
+            element={
+              <ProtectedRoute>
+                <Navigate to="/relatorio/agendamento" replace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/relatorios/no-show"
+            element={
+              <ProtectedRoute>
+                <Navigate to="/relatorio/no-show" replace />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/agenda/no-show"
+          element={
+            <ProtectedRoute>
+              <Navigate to="/relatorio/no-show" replace />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/agenda/no-show/*"
+          element={
+            <ProtectedRoute>
+              <Navigate to="/relatorio/no-show" replace />
             </ProtectedRoute>
           }
         />
@@ -426,6 +507,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <StockSettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/perfil-usuario"
+          element={
+            <ProtectedRoute>
+              <UserProfile />
             </ProtectedRoute>
           }
         />

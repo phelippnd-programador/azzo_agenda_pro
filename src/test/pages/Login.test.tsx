@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
     licenseStatus: "ACTIVE",
     currentPaymentStatus: "PAID",
   }),
+  navigate: vi.fn(),
 }));
 
 vi.mock("@/contexts/AuthContext", () => ({
@@ -18,6 +19,14 @@ vi.mock("@/contexts/AuthContext", () => ({
     login: mocks.login,
   }),
 }));
+
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
+  return {
+    ...actual,
+    useNavigate: () => mocks.navigate,
+  };
+});
 
 vi.mock("@/services/billingService", () => ({
   getCurrentBillingSubscription: mocks.getCurrentBillingSubscription,
@@ -45,6 +54,12 @@ describe("Login", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    mocks.me.mockResolvedValue({ id: "owner-1", role: "OWNER" });
+    mocks.getCurrentBillingSubscription.mockResolvedValue({
+      status: "ACTIVE",
+      licenseStatus: "ACTIVE",
+      currentPaymentStatus: "PAID",
+    });
   });
 
   it("should render login form and submit valid credentials", async () => {
@@ -61,6 +76,7 @@ describe("Login", () => {
     await user.click(screen.getByRole("button", { name: "Entrar" }));
 
     expect(mocks.login).toHaveBeenCalledWith("owner@qa.local", "Pr14052019!", undefined);
+    expect(mocks.navigate).toHaveBeenCalledWith("/dashboard");
     expect(await screen.findByText("Bem-vindo de volta!")).toBeInTheDocument();
   });
 
@@ -82,5 +98,23 @@ describe("Login", () => {
       email: "owner@qa.local",
       password: "Pr14052019!",
     });
+  });
+
+  it("should redirect professional user to agenda after login", async () => {
+    const user = userEvent.setup();
+    mocks.me.mockResolvedValue({ id: "prof-1", role: "PROFESSIONAL" });
+
+    render(
+      <MemoryRouter initialEntries={["/login"]}>
+        <Login />
+      </MemoryRouter>
+    );
+
+    await user.type(screen.getByLabelText("E-mail"), "prof@qa.local");
+    await user.type(screen.getByLabelText("Senha"), "Pr14052019!");
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
+
+    expect(mocks.login).toHaveBeenCalledWith("prof@qa.local", "Pr14052019!", undefined);
+    expect(mocks.navigate).toHaveBeenCalledWith("/agenda");
   });
 });

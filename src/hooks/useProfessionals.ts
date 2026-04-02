@@ -1,22 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
-import {
-  professionalsApi,
-  type Professional,
-  type ProfessionalLimits,
-  isPlanExpiredApiError,
-} from "@/lib/api";
+import { useState, useCallback, useEffect } from "react";
+import { professionalsApi, isPlanExpiredApiError, type Professional, type ProfessionalLimits } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
+import { useResourceList } from "@/hooks/useResourceList";
 import { toast } from "sonner";
-
-const DEFAULT_PAGE = 1;
-const DEFAULT_LIMIT = 20;
-
-type PaginationState = {
-  page: number;
-  limit: number;
-  total: number;
-  hasMore: boolean;
-};
 
 type UseProfessionalsOptions = {
   fetchLimits?: boolean;
@@ -24,111 +10,65 @@ type UseProfessionalsOptions = {
 
 export function useProfessionals(options?: UseProfessionalsOptions) {
   const shouldFetchLimits = options?.fetchLimits ?? false;
-  const [professionals, setProfessionals] = useState<Professional[]>([]);
-  const [professionalLimits, setProfessionalLimits] = useState<ProfessionalLimits | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLimitsLoading, setIsLimitsLoading] = useState(shouldFetchLimits);
-  const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState<PaginationState>({
-    page: DEFAULT_PAGE,
-    limit: DEFAULT_LIMIT,
-    total: 0,
-    hasMore: false,
-  });
 
-  const fetchProfessionals = useCallback(async (options?: { page?: number; limit?: number }) => {
-    const page = options?.page ?? DEFAULT_PAGE;
-    const limit = options?.limit ?? DEFAULT_LIMIT;
-    try {
-      setIsLoading(true);
-      const data = await professionalsApi.getAll({ page, limit });
-      if (Array.isArray(data)) {
-        setProfessionals(data);
-        setPagination({
-          page,
-          limit,
-          total: data.length,
-          hasMore: false,
-        });
-      } else {
-        const items = data.items || [];
-        const total = data.total ?? items.length;
-        const hasMore = data.hasMore ?? page * limit < total;
-        setProfessionals(items);
-        setPagination({
-          page: data.page ?? page,
-          limit: data.pageSize ?? limit,
-          total,
-          hasMore,
-        });
-      }
-      setError(null);
-    } catch (err) {
-      if (isPlanExpiredApiError(err)) {
-        setError(null);
-        return;
-      }
-      const uiError = resolveUiError(err, "Erro ao carregar profissionais");
-      setError(uiError.message);
-      toast.error(uiError.message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const fetchFn = useCallback(
+    (params: { page: number; limit: number }) => professionalsApi.getAll(params),
+    [],
+  );
+
+  const { items: professionals, pagination, isLoading, error, refetch, goToPage, _fetch } =
+    useResourceList<Professional>(fetchFn, "Erro ao carregar profissionais");
+
+  // ─── Limits (feature separada da lista) ──────────────────────────────────────
+  const [professionalLimits, setProfessionalLimits] = useState<ProfessionalLimits | null>(null);
+  const [isLimitsLoading, setIsLimitsLoading] = useState(shouldFetchLimits);
 
   const fetchProfessionalLimits = useCallback(async () => {
     if (!shouldFetchLimits) {
       setIsLimitsLoading(false);
       return;
     }
-
     try {
       setIsLimitsLoading(true);
       const data = await professionalsApi.getLimits();
       setProfessionalLimits(data);
     } catch (err) {
-      if (!isPlanExpiredApiError(err)) {
-        setProfessionalLimits(null);
-      }
+      if (!isPlanExpiredApiError(err)) setProfessionalLimits(null);
     } finally {
       setIsLimitsLoading(false);
     }
   }, [shouldFetchLimits]);
 
   useEffect(() => {
-    fetchProfessionals({ page: DEFAULT_PAGE, limit: DEFAULT_LIMIT });
-    if (shouldFetchLimits) {
-      fetchProfessionalLimits();
-    } else {
-      setIsLimitsLoading(false);
-    }
-  }, [fetchProfessionals, fetchProfessionalLimits, shouldFetchLimits]);
+    if (shouldFetchLimits) fetchProfessionalLimits();
+    else setIsLimitsLoading(false);
+  }, [shouldFetchLimits, fetchProfessionalLimits]);
+
+  // ─── Mutações ─────────────────────────────────────────────────────────────────
 
   const createProfessional = async (data: Partial<Professional>) => {
     try {
-      const newProfessional = await professionalsApi.create(data);
-      await fetchProfessionals({ page: pagination.page, limit: pagination.limit });
+      const result = await professionalsApi.create(data);
+      await _fetch({ page: pagination.page, limit: pagination.limit });
       await fetchProfessionalLimits();
       toast.success("Profissional adicionado com sucesso!");
-      return newProfessional;
+      return result;
     } catch (err) {
-      if (!isPlanExpiredApiError(err)) {
+      if (!isPlanExpiredApiError(err))
         toast.error(resolveUiError(err, "Erro ao adicionar profissional").message);
-      }
       throw err;
     }
   };
 
   const updateProfessional = async (id: string, data: Partial<Professional>) => {
     try {
-      const updated = await professionalsApi.update(id, data);
-      await fetchProfessionals({ page: pagination.page, limit: pagination.limit });
+      const result = await professionalsApi.update(id, data);
+      await _fetch({ page: pagination.page, limit: pagination.limit });
       toast.success("Profissional atualizado com sucesso!");
-      return updated;
+      return result;
     } catch (err) {
-      if (!isPlanExpiredApiError(err)) {
+      if (!isPlanExpiredApiError(err))
         toast.error(resolveUiError(err, "Erro ao atualizar profissional").message);
-      }
       throw err;
     }
   };
@@ -136,13 +76,12 @@ export function useProfessionals(options?: UseProfessionalsOptions) {
   const deleteProfessional = async (id: string) => {
     try {
       await professionalsApi.delete(id);
-      await fetchProfessionals({ page: pagination.page, limit: pagination.limit });
+      await _fetch({ page: pagination.page, limit: pagination.limit });
       await fetchProfessionalLimits();
       toast.success("Profissional removido com sucesso!");
     } catch (err) {
-      if (!isPlanExpiredApiError(err)) {
+      if (!isPlanExpiredApiError(err))
         toast.error(resolveUiError(err, "Erro ao remover profissional").message);
-      }
       throw err;
     }
   };
@@ -150,19 +89,13 @@ export function useProfessionals(options?: UseProfessionalsOptions) {
   const resetProfessionalPassword = async (id: string) => {
     try {
       const response = await professionalsApi.resetPassword(id);
-      toast.success(response.message || "Senha temporaria gerada e enviada");
+      toast.success(response.message || "Senha temporária gerada e enviada");
       return response;
     } catch (err) {
-      if (!isPlanExpiredApiError(err)) {
+      if (!isPlanExpiredApiError(err))
         toast.error(resolveUiError(err, "Erro ao resetar senha do profissional").message);
-      }
       throw err;
     }
-  };
-
-  const goToPage = async (page: number) => {
-    if (page < 1) return;
-    await fetchProfessionals({ page, limit: pagination.limit });
   };
 
   return {
@@ -172,7 +105,7 @@ export function useProfessionals(options?: UseProfessionalsOptions) {
     isLoading,
     isLimitsLoading,
     error,
-    refetch: () => fetchProfessionals({ page: pagination.page, limit: pagination.limit }),
+    refetch,
     goToPage,
     refetchProfessionalLimits: fetchProfessionalLimits,
     createProfessional,

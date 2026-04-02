@@ -3,6 +3,11 @@ const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1"]);
 const isLocalHost = (host: string) => LOCAL_HOSTS.has(host.toLowerCase());
 
 const normalizeBaseUrl = (value: string) => value.trim().replace(/\/+$/, "");
+const normalizePath = (value: string) => value.trim().replace(/^\/+|\/+$/g, "");
+const buildPath = (basePath: string, slug: string) => {
+  const normalizedBasePath = normalizePath(basePath);
+  return normalizedBasePath ? `/${normalizedBasePath}/agendar/${slug}` : `/agendar/${slug}`;
+};
 
 export const resolvePublicAppBaseUrl = () => {
   const raw =
@@ -30,8 +35,22 @@ export const resolvePublicAppBaseUrl = () => {
 };
 
 export const buildPublicBookingUrl = (salonSlug: string, absoluteBaseUrl?: string) => {
-  const slug = (salonSlug || "").trim();
-  if (!slug) return "";
-  const base = absoluteBaseUrl ? normalizeBaseUrl(absoluteBaseUrl) : resolvePublicAppBaseUrl();
-  return `${base}/agendar/${slug}`;
+  const normalizedSlug = normalizePath(salonSlug || "");
+  if (!normalizedSlug) return "";
+
+  if (absoluteBaseUrl) {
+    try {
+      const parsedUrl = new URL(normalizeBaseUrl(absoluteBaseUrl));
+      const pathSegments = normalizePath(parsedUrl.pathname)
+        .split("/")
+        .filter(Boolean);
+      const agendarIndex = pathSegments.lastIndexOf("agendar");
+      const baseSegments = agendarIndex >= 0 ? pathSegments.slice(0, agendarIndex) : pathSegments;
+      return `${parsedUrl.origin}${buildPath(baseSegments.join("/"), normalizedSlug)}`;
+    } catch {
+      // fallback below
+    }
+  }
+
+  return `${resolvePublicAppBaseUrl()}/agendar/${normalizedSlug}`;
 };

@@ -19,6 +19,7 @@ interface AuthContextType {
     privacyPolicyVersion: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<User | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,9 +30,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const pathname = typeof window !== "undefined" ? window.location.pathname : "";
-    const isPublicBookingRoute = pathname === "/agendar" || pathname.startsWith("/agendar/");
+    const isPublicRoute =
+      pathname === "/agendar" ||
+      pathname.startsWith("/agendar/") ||
+      pathname === "/compras" ||
+      pathname.startsWith("/compras/") ||
+      pathname === "/success" ||
+      pathname === "/error";
 
-    if (isPublicBookingRoute) {
+    if (isPublicRoute) {
       setIsLoading(false);
       return;
     }
@@ -44,14 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string, mfaCode?: string) => {
-    const response = await authApi.login(email, password, mfaCode);
-    if (response.user) {
-      setUser(response.user);
-      return;
-    }
-
-    const currentUser = await authApi.me();
-    setUser(currentUser);
+    await authApi.login(email, password, mfaCode);
+    await refreshUser();
   };
 
   const register = async (data: {
@@ -66,19 +67,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     termsOfUseVersion: string;
     privacyPolicyVersion: string;
   }) => {
-    const response = await authApi.register(data);
-    if (response.user) {
-      setUser(response.user);
-      return;
-    }
-
-    const currentUser = await authApi.me();
-    setUser(currentUser);
+    await authApi.register(data);
+    await refreshUser();
   };
 
   const logout = async () => {
     await authApi.logout();
     setUser(null);
+  };
+
+  const refreshUser = async () => {
+    try {
+      const currentUser = await authApi.me();
+      setUser(currentUser);
+      return currentUser;
+    } catch {
+      setUser(null);
+      return null;
+    }
   };
 
   return (
@@ -90,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         logout,
+        refreshUser,
       }}
     >
       {children}
