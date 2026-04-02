@@ -23,7 +23,9 @@ export async function prepareImageUpload(
   const targetSizeBytes = options.targetSizeBytes ?? DEFAULT_TARGET_SIZE_BYTES;
   const maxFileSizeBytes = options.maxFileSizeBytes ?? DEFAULT_MAX_FILE_SIZE_BYTES;
 
-  if (!SUPPORTED_IMAGE_TYPES.has(file.type)) {
+  const normalizedFileType = normalizeImageType(file);
+
+  if (!SUPPORTED_IMAGE_TYPES.has(normalizedFileType)) {
     throw new Error("Formato de imagem nao suportado. Use JPG, PNG ou WEBP.");
   }
   if (file.size > maxFileSizeBytes) {
@@ -36,7 +38,12 @@ export async function prepareImageUpload(
   const needsCompression = file.size > targetSizeBytes;
 
   if (!needsResize && !needsCompression) {
-    return file;
+    return normalizedFileType === file.type
+      ? file
+      : new File([file], file.name, {
+          type: normalizedFileType,
+          lastModified: file.lastModified,
+        });
   }
 
   const canvas = document.createElement("canvas");
@@ -58,7 +65,12 @@ export async function prepareImageUpload(
   }
 
   if (blob.size >= file.size && !needsResize) {
-    return file;
+    return normalizedFileType === file.type
+      ? file
+      : new File([file], file.name, {
+          type: normalizedFileType,
+          lastModified: file.lastModified,
+        });
   }
 
   return new File([blob], replaceFileExtension(file.name, "webp"), {
@@ -126,4 +138,23 @@ function replaceFileExtension(fileName: string, extension: string) {
   const normalized = fileName || "imagem-estabelecimento";
   const baseName = normalized.replace(/\.[^/.]+$/, "");
   return `${baseName}.${extension}`;
+}
+
+function normalizeImageType(file: File) {
+  if (SUPPORTED_IMAGE_TYPES.has(file.type)) {
+    return file.type;
+  }
+
+  const fileName = file.name.toLowerCase();
+  if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
+    return "image/jpeg";
+  }
+  if (fileName.endsWith(".png")) {
+    return "image/png";
+  }
+  if (fileName.endsWith(".webp")) {
+    return "image/webp";
+  }
+
+  return file.type;
 }

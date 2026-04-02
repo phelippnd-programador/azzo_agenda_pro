@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent, type RefCallback } from "react";
 import { useDropzone, type Accept, type FileRejection } from "react-dropzone";
 import { Camera, ImagePlus, Loader2, Trash2, UploadCloud } from "lucide-react";
 
@@ -69,6 +69,28 @@ export function FileDropzone({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  const attachStreamToVideo = async (videoElement: HTMLVideoElement | null, stream: MediaStream | null) => {
+    if (!videoElement || !stream) return;
+
+    if (videoElement.srcObject !== stream) {
+      videoElement.srcObject = stream;
+    }
+
+    if (videoElement.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA || videoElement.videoWidth > 0) {
+      setIsCameraReady(true);
+      return;
+    }
+
+    await videoElement.play().catch(() => undefined);
+  };
+
+  const setVideoElement: RefCallback<HTMLVideoElement> = (node) => {
+    videoRef.current = node;
+    if (node && streamRef.current) {
+      void attachStreamToVideo(node, streamRef.current);
+    }
+  };
+
   const helper = useMemo(() => {
     const sizeLabel = maxSizeBytes ? `Tamanho maximo: ${formatBytes(maxSizeBytes)}.` : "";
     return [helperText, sizeLabel].filter(Boolean).join(" ");
@@ -112,10 +134,7 @@ export function FileDropzone({
         }
 
         streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play().catch(() => undefined);
-        }
+        await attachStreamToVideo(videoRef.current, stream);
       })
       .catch(() => {
         if (isActive) {
@@ -202,13 +221,16 @@ export function FileDropzone({
             }
             resolve(capturedBlob);
           },
-          "image/webp",
+          "image/jpeg",
           0.92
         );
       });
 
-      const file = new File([blob], `camera-${Date.now()}.webp`, {
-        type: "image/webp",
+      const normalizedType = blob.type && blob.type.startsWith("image/") ? blob.type : "image/jpeg";
+      const extension = normalizedType === "image/png" ? "png" : normalizedType === "image/webp" ? "webp" : "jpg";
+
+      const file = new File([blob], `camera-${Date.now()}.${extension}`, {
+        type: normalizedType,
         lastModified: Date.now(),
       });
 
@@ -317,7 +339,7 @@ export function FileDropzone({
           errorMessage={cameraError}
           isReady={isCameraReady}
           previewAlt={previewAlt || title}
-          videoRef={videoRef}
+          videoRef={setVideoElement}
           onVideoReady={() => setIsCameraReady(true)}
           onOpenChange={closeCamera}
           onCapture={captureFromCamera}
@@ -412,7 +434,7 @@ export function FileDropzone({
         errorMessage={cameraError}
         isReady={isCameraReady}
         previewAlt={previewAlt || title}
-        videoRef={videoRef}
+        videoRef={setVideoElement}
         onVideoReady={() => setIsCameraReady(true)}
         onOpenChange={closeCamera}
         onCapture={captureFromCamera}
@@ -428,7 +450,7 @@ type CameraDialogProps = {
   errorMessage?: string | null;
   isReady: boolean;
   previewAlt: string;
-  videoRef: RefObject<HTMLVideoElement | null>;
+  videoRef: RefCallback<HTMLVideoElement>;
   onVideoReady: () => void;
   onOpenChange: (open: boolean) => void;
   onCapture: () => Promise<void> | void;

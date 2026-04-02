@@ -55,10 +55,13 @@ export default function PublicBooking() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const servicesData = slug
+        const servicesResponse = slug
           ? await publicBookingApi.getServices(slug)
           : await servicesApi.getAll();
-        setServices(servicesData.filter(s => s.isActive));
+        const availableServices = Array.isArray(servicesResponse)
+          ? servicesResponse
+          : servicesResponse.items || [];
+        setServices(availableServices.filter((service) => service.isActive));
         setProfessionals([]);
       } catch (error) {
         toast.error(resolveUiError(error, 'Erro ao carregar dados').message);
@@ -130,8 +133,11 @@ export default function PublicBooking() {
         return;
       }
 
-      const data = await professionalsApi.getAll();
-      const active = data.filter((professional) => professional.isActive);
+      const professionalsResponse = await professionalsApi.getAll();
+      const availableProfessionals = Array.isArray(professionalsResponse)
+        ? professionalsResponse
+        : professionalsResponse.items || [];
+      const active = availableProfessionals.filter((professional) => professional.isActive);
       const selectedServices = services.filter((service) => serviceIds.includes(service.id));
       const restrictedGroups = selectedServices
         .map((service) => service.professionalIds || [])
