@@ -17,6 +17,7 @@ export interface User {
   phone: string;
   role: 'ADMIN' | 'OWNER' | 'PROFESSIONAL' | 'CLIENT';
   avatar?: string;
+  avatarUrl?: string | null;
   salonName?: string | null;
   mfaEnabled?: boolean;
   createdAt: Date;

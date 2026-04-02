@@ -28,6 +28,7 @@ import {
   ShieldCheck,
   FileSearch,
   Boxes,
+  User,
   ChevronDown,
   MessageCircleMore,
   Lightbulb,
@@ -74,6 +75,7 @@ const MENU_REGISTRY = {
   "/nota-fiscal": { icon: Eye, label: "Pre-visualizacao de NF", path: "/nota-fiscal" },
   "/apuracao-mensal": { icon: Calculator, label: "Apuracao Mensal", path: "/apuracao-mensal" },
   "/configuracoes": { icon: Settings, label: "Configuracoes", path: "/configuracoes" },
+  "/perfil-usuario": { icon: User, label: "Perfil", path: "/perfil-usuario" },
   "/perfil-salao": { icon: Building2, label: "Perfil do Salao", path: "/perfil-salao" },
 } as const;
 
@@ -121,6 +123,7 @@ const ICON_REGISTRY: Record<string, LucideIcon> = {
   ShieldCheck,
   FileSearch,
   Boxes,
+  User,
   MessageCircleMore,
   Lightbulb,
 };
@@ -156,6 +159,7 @@ const HIDDEN_MENU_ROUTES = new Set([
   "/clientes/importacoes/:jobId",
   "/servicos/importacoes",
   "/servicos/importacoes/:jobId",
+  "/perfil-usuario",
 ]);
 
 function sortMenuNodes<T extends { displayOrder?: number; label?: string }>(items: T[]) {
@@ -174,7 +178,7 @@ function resolveMenuIcon(item: CurrentMenuPermissionItem): LucideIcon {
 export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const { allowedRoutes, menuItems } = useMenuPermissions();
   const allowedSet = useMemo(() => new Set(allowedRoutes ?? []), [allowedRoutes]);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
@@ -493,7 +497,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
 
           {/* Bottom nav */}
           <div className="px-2 pb-3 pt-2 border-t border-sidebar-border space-y-0.5">
-            {allowedSet.has("/perfil-salao") && (
+            {user?.role === "OWNER" && allowedSet.has("/perfil-salao") && (
               <Link
                 to="/perfil-salao"
                 onClick={() => {

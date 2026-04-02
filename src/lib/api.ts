@@ -1775,10 +1775,23 @@ export const settingsApi = {
 };
 
 export const usersApi = {
+  getCurrent: () => request<User>("/users/me"),
   updateMe: (data: Partial<Pick<User, "name" | "email" | "phone">>) =>
     request<User>("/users/me", {
       method: "PUT",
       body: JSON.stringify(data),
+    }),
+  uploadAvatar: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return request<User>("/users/me/avatar", {
+      method: "POST",
+      body: formData,
+    });
+  },
+  removeAvatar: () =>
+    request<User>("/users/me/avatar", {
+      method: "DELETE",
     }),
   updatePassword: (data: {
     currentPassword: string;

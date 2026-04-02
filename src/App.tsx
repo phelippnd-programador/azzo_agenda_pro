@@ -55,6 +55,7 @@ import PublicBooking from "./pages/appointments/PublicBooking";
 import Settings from "./pages/Settings";
 import LicensePage from "./pages/LicensePage";
 import SalonProfile from "./pages/SalonProfile";
+import UserProfile from "./pages/UserProfile";
 import AppointmentManagementReport from "./pages/report/AppointmentManagementReport";
 import NoShowReport from "./pages/report/NoShowReport";
 import TaxConfig from "./pages/tax/TaxConfig";
@@ -506,6 +507,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <StockSettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/perfil-usuario"
+          element={
+            <ProtectedRoute>
+              <UserProfile />
             </ProtectedRoute>
           }
         />
