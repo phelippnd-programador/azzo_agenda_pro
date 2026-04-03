@@ -30,6 +30,10 @@ import type {
   WhatsAppEmbeddedSignupCompleteRequest,
   WhatsAppEmbeddedSignupStatusResponse,
   WhatsAppTestResponse,
+  WhatsAppTestMessageRequest,
+  WhatsAppTestMessageResponse,
+  WhatsAppValidateConnectionRequest,
+  WhatsAppValidateConnectionResponse,
 } from "@/types/whatsapp";
 import type { CurrentMenuPermissionsResponse } from "@/types/menu-permissions";
 import type {
@@ -1844,6 +1848,16 @@ export const tenantApi = {
   testWhatsAppConnection: () =>
     request<WhatsAppTestResponse>("/tenant/whatsapp/test", {
       method: "POST",
+    }),
+  validateWhatsAppConnection: (data: WhatsAppValidateConnectionRequest) =>
+    request<WhatsAppValidateConnectionResponse>("/tenant/whatsapp/validate", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  sendWhatsAppTestMessage: (data: WhatsAppTestMessageRequest) =>
+    request<WhatsAppTestMessageResponse>("/tenant/whatsapp/test-message", {
+      method: "POST",
+      body: JSON.stringify(data),
     }),
   getWhatsAppEmbeddedSignupStatus: () =>
     request<WhatsAppEmbeddedSignupStatusResponse>("/tenant/whatsapp/embedded-signup/status"),
