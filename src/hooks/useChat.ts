@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { chatApi } from "@/lib/api";
 import type {
   ChatAppointmentMarker,
@@ -23,12 +23,16 @@ export function useChat(options: UseChatOptions = {}) {
   const [isSending, setIsSending] = useState(false);
   const [isUpdatingMarker, setIsUpdatingMarker] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const hasLoadedConversationsRef = useRef(false);
 
   const loadConversations = useCallback(async () => {
     try {
-      setIsLoadingConversations(true);
+      if (!hasLoadedConversationsRef.current) {
+        setIsLoadingConversations(true);
+      }
       const response = await chatApi.listConversations({ page: 1, pageSize, todayOnly });
       setConversations(response.items || []);
+      hasLoadedConversationsRef.current = true;
     } catch (err) {
       const uiError = resolveUiError(err, "Erro ao carregar conversas do chat");
       toast.error(uiError.message);
