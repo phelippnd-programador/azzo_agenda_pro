@@ -5,6 +5,10 @@ import type {
   WhatsAppEmbeddedSignupCompleteRequest,
   WhatsAppEmbeddedSignupStatusResponse,
   WhatsAppTestResponse,
+  WhatsAppTestMessageRequest,
+  WhatsAppTestMessageResponse,
+  WhatsAppValidateConnectionRequest,
+  WhatsAppValidateConnectionResponse,
 } from "@/types/whatsapp";
 
 export async function saveWhatsAppConfig(
@@ -19,6 +23,18 @@ export async function getWhatsAppConfig(): Promise<WhatsAppConfigResponse> {
 
 export async function testWhatsAppConnection(): Promise<WhatsAppTestResponse> {
   return tenantApi.testWhatsAppConnection();
+}
+
+export async function validateWhatsAppConnection(
+  data: WhatsAppValidateConnectionRequest
+): Promise<WhatsAppValidateConnectionResponse> {
+  return tenantApi.validateWhatsAppConnection(data);
+}
+
+export async function sendWhatsAppTestMessage(
+  data: WhatsAppTestMessageRequest
+): Promise<WhatsAppTestMessageResponse> {
+  return tenantApi.sendWhatsAppTestMessage(data);
 }
 
 export async function getWhatsAppEmbeddedSignupStatus(): Promise<WhatsAppEmbeddedSignupStatusResponse> {

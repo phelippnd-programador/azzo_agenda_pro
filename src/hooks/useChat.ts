@@ -22,6 +22,7 @@ export function useChat(options: UseChatOptions = {}) {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isUpdatingMarker, setIsUpdatingMarker] = useState(false);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
 
   const loadConversations = useCallback(async () => {
     try {
@@ -39,12 +40,17 @@ export function useChat(options: UseChatOptions = {}) {
 
   const loadMessages = useCallback(async (conversationId: string) => {
     if (!conversationId) {
+      setActiveConversationId(null);
       setMessages([]);
       return;
     }
     try {
+      const isConversationChanged = activeConversationId !== conversationId;
+      setActiveConversationId(conversationId);
       setIsLoadingMessages(true);
-      setMessages([]);
+      if (isConversationChanged) {
+        setMessages([]);
+      }
       const response = await chatApi.listMessages(conversationId, { page: 1, pageSize: 200 });
       setMessages(response.items || []);
     } catch (err) {
@@ -54,7 +60,7 @@ export function useChat(options: UseChatOptions = {}) {
     } finally {
       setIsLoadingMessages(false);
     }
-  }, []);
+  }, [activeConversationId]);
 
   const sendMessage = useCallback(
     async (clientId: string, content: string) => {

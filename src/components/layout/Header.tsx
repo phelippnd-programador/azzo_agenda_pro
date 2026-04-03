@@ -39,6 +39,9 @@ export function Header({
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase())
       .join("") || "AZ";
+  const avatarSrc =
+    user?.avatarUrl ||
+    (user?.avatar?.startsWith("http://") || user?.avatar?.startsWith("https://") ? user.avatar : undefined);
 
   const handleLogout = async () => {
     await logout();
@@ -119,7 +122,7 @@ export function Header({
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 gap-2 px-1.5 text-muted-foreground hover:text-foreground">
                 <Avatar className="h-6 w-6">
-                  <AvatarImage src={user?.avatarUrl || user?.avatar || undefined} />
+                  <AvatarImage src={avatarSrc} />
                   <AvatarFallback className="bg-primary/10 text-xs text-primary">{initials}</AvatarFallback>
                 </Avatar>
                 <span className="hidden max-w-[80px] truncate text-xs font-medium md:inline lg:max-w-[120px]">{displayName}</span>
