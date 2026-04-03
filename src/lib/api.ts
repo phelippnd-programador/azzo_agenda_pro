@@ -1776,6 +1776,7 @@ export const settingsApi = {
 
 export const usersApi = {
   getCurrent: () => request<User>("/users/me"),
+  getAvatarBlob: () => requestBlob("/users/me/avatar"),
   updateMe: (data: Partial<Pick<User, "name" | "email" | "phone">>) =>
     request<User>("/users/me", {
       method: "PUT",

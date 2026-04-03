@@ -13,6 +13,14 @@ import { prepareImageUpload } from "@/lib/image-upload";
 import { Building2, CalendarDays, Loader2, Mail, Phone, Save, ShieldCheck, User } from "lucide-react";
 import { toast } from "sonner";
 
+function resolveAvatarPreview(user?: { avatarUrl?: string | null; avatar?: string | null } | null) {
+  if (user?.avatarUrl) return user.avatarUrl;
+  if (user?.avatar?.startsWith("http://") || user?.avatar?.startsWith("https://")) {
+    return user.avatar;
+  }
+  return null;
+}
+
 function formatCreatedAt(value?: string | Date | null) {
   if (!value) return "-";
   const date = value instanceof Date ? value : new Date(value);
@@ -29,7 +37,7 @@ export function UserProfileContent() {
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
   const [phone, setPhone] = useState(user?.phone || "");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.avatarUrl || user?.avatar || null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(resolveAvatarPreview(user));
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -54,7 +62,7 @@ export function UserProfileContent() {
     setName(user?.name || "");
     setEmail(user?.email || "");
     setPhone(user?.phone || "");
-    setAvatarUrl(user?.avatarUrl || user?.avatar || null);
+    setAvatarUrl(resolveAvatarPreview(user));
   }, [user]);
 
   useEffect(() => {
@@ -104,7 +112,7 @@ export function UserProfileContent() {
       setName(updatedUser.name || "");
       setEmail(updatedUser.email || "");
       setPhone(updatedUser.phone || "");
-      setAvatarUrl(updatedUser.avatarUrl || updatedUser.avatar || null);
+      setAvatarUrl(resolveAvatarPreview(updatedUser));
       await refreshUser();
       toast.success("Perfil atualizado com sucesso");
     } catch (error) {
@@ -138,9 +146,9 @@ export function UserProfileContent() {
     setIsAvatarUploading(true);
     try {
       const preparedFile = await prepareImageUpload(selectedFile);
-      const updatedUser = await usersApi.uploadAvatar(preparedFile);
-      setAvatarUrl(updatedUser.avatarUrl || updatedUser.avatar || null);
-      await refreshUser();
+      await usersApi.uploadAvatar(preparedFile);
+      const refreshedUser = await refreshUser();
+      setAvatarUrl(resolveAvatarPreview(refreshedUser));
       toast.success("Foto de perfil atualizada com sucesso");
     } catch (error) {
       toast.error(resolveUiError(error, "Nao foi possivel enviar a foto de perfil").message);
@@ -152,9 +160,9 @@ export function UserProfileContent() {
   const handleAvatarRemove = async () => {
     setIsAvatarRemoving(true);
     try {
-      const updatedUser = await usersApi.removeAvatar();
-      setAvatarUrl(updatedUser.avatarUrl || updatedUser.avatar || null);
-      await refreshUser();
+      await usersApi.removeAvatar();
+      const refreshedUser = await refreshUser();
+      setAvatarUrl(resolveAvatarPreview(refreshedUser));
       toast.success("Foto de perfil removida com sucesso");
     } catch (error) {
       toast.error(resolveUiError(error, "Nao foi possivel remover a foto de perfil").message);
