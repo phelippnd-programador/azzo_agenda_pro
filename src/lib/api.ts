@@ -1666,6 +1666,11 @@ export type SalonBusinessHours = {
   close: string;
 };
 
+export type SalonSpecialClosureDate = {
+  date: string;
+  reason?: string | null;
+};
+
 export type SalonProfile = {
   salonName: string;
   salonSlug: string;
@@ -1688,6 +1693,7 @@ export type SalonProfile = {
   state?: string | null;
   zipCode?: string | null;
   businessHours: SalonBusinessHours[];
+  specialClosureDates: SalonSpecialClosureDate[];
 };
 
 export const salonApi = {
