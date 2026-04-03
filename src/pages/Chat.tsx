@@ -91,12 +91,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (isLoadingConversations) return;
     if (!conversations.length) return;
-    if (conversationId && selectedConversation) {
-      loadMessages(conversationId).catch(() => {
-        setError("Nao foi possivel carregar a conversa selecionada.");
-      });
-      return;
-    }
+    if (conversationId && selectedConversation) return;
     const firstConversation = conversations[0];
     if (!firstConversation) return;
     navigate(`/chat/${firstConversation.id}`, { replace: true });
@@ -108,6 +103,13 @@ export default function ChatPage() {
     navigate,
     selectedConversation,
   ]);
+
+  useEffect(() => {
+    if (!conversationId || !selectedConversation) return;
+    loadMessages(conversationId).catch(() => {
+      setError("Nao foi possivel carregar a conversa selecionada.");
+    });
+  }, [conversationId, loadMessages, selectedConversation]);
 
   useEffect(() => {
     activeConversationIdRef.current = conversationId;
@@ -292,7 +294,7 @@ export default function ChatPage() {
                   onScroll={handleMessagesScroll}
                   className="flex-1 overflow-y-auto pr-1 space-y-3 py-3"
                 >
-                  {isLoadingMessages ? (
+                  {isLoadingMessages && messages.length === 0 ? (
                     <>
                       <Skeleton className="h-14 w-2/3" />
                       <Skeleton className="h-14 w-2/3 ml-auto" />
