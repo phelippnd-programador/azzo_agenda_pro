@@ -89,6 +89,8 @@ export interface Client {
   name: string;
   email: string;
   phone: string;
+  avatar?: string | null;
+  avatarUrl?: string | null;
   birthDate?: Date | string;
   notes?: string;
   address?: ClientAddress;

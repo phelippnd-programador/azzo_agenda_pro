@@ -2,6 +2,7 @@ import { Calendar, Clock3, FileText, History, Mail, Phone, Scissors, User } from
 import { AppointmentTimelineCard, appointmentStatusLabels, formatStatusLabel } from "./AppointmentTimelineCard";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { Separator } from "@/components/ui/separator";
 import {

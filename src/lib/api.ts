@@ -1049,6 +1049,18 @@ export const clientsApi = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+  uploadAvatar: (id: string, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return request<Client>(`/clients/${id}/avatar`, {
+      method: "POST",
+      body: formData,
+    });
+  },
+  removeAvatar: (id: string) =>
+    request<Client>(`/clients/${id}/avatar`, {
+      method: "DELETE",
+    }),
   delete: (id: string) =>
     request<void>(`/clients/${id}`, {
       method: "DELETE",
@@ -2733,3 +2745,15 @@ export const publicBookingApi = {
 };
 
 
+export const resolveApiMediaUrl = (value?: string | null) => {
+  if (!value) return null;
+  if (value.startsWith("http://") || value.startsWith("https://")) return value;
+  if (!value.startsWith("/")) return value;
+
+  const apiOrigin = API_URL.replace(/\/api\/v1$/, "");
+  try {
+    return new URL(value, `${apiOrigin}/`).toString();
+  } catch {
+    return value;
+  }
+};

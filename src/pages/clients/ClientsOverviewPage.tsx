@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageErrorState } from '@/components/ui/page-states';
 import { HighlightMetricCard } from '@/components/ui/highlight-metric-card';
@@ -36,6 +36,7 @@ import { useClients } from '@/hooks/useClients';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { ClientCard } from '@/components/clients/ClientCard';
 import { ClientUpsertDialog } from '@/components/clients/ClientUpsertDialog';
+import { resolveApiMediaUrl } from '@/lib/api';
 import { maskPhoneBr } from '@/lib/input-masks';
 import { formatCurrency } from '@/lib/format';
 
@@ -234,6 +235,7 @@ export default function ClientsOverviewPage() {
                     <TableCell>
                       <div className="flex items-center gap-2 sm:gap-3">
                         <Avatar className="h-8 w-8 flex-shrink-0">
+                          <AvatarImage src={resolveApiMediaUrl(client.avatarUrl) || undefined} />
                           <AvatarFallback className="bg-primary/15 text-xs text-primary">
                             {client.name.slice(0, 2).toUpperCase()}
                           </AvatarFallback>

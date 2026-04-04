@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { resolveApiMediaUrl } from "@/lib/api";
 import { maskPhoneBr } from "@/lib/input-masks";
 import { formatCurrency } from "@/lib/format";
 import { Calendar, DollarSign, Mail, MoreVertical, Phone } from "lucide-react";
@@ -20,6 +21,8 @@ type ClientCardProps = {
 };
 
 export function ClientCard({ client, onOpenProfile, onEdit, onDelete }: ClientCardProps) {
+  const avatarSrc = resolveApiMediaUrl(client.avatarUrl);
+
   return (
     <Card
       role="button"
@@ -37,6 +40,7 @@ export function ClientCard({ client, onOpenProfile, onEdit, onDelete }: ClientCa
         <div className="flex items-start justify-between gap-2 mb-4">
           <div className="flex items-center gap-3 min-w-0">
             <Avatar className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
+              <AvatarImage src={avatarSrc || undefined} />
               <AvatarFallback className="bg-primary/15 text-primary text-sm">
                 {client.name.slice(0, 2).toUpperCase()}
               </AvatarFallback>
