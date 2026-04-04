@@ -446,6 +446,11 @@ export interface DashboardMetrics {
   stoppedAtProfessionalSelection: number;
   stoppedAtTimeSelection: number;
   stoppedAtFinalReview: number;
+  whatsAppOpenFlowsToday: number;
+  whatsAppStoppedAtServiceSelection: number;
+  whatsAppStoppedAtProfessionalSelection: number;
+  whatsAppStoppedAtTimeSelection: number;
+  whatsAppStoppedAtFinalReview: number;
 }
 
 export type AppointmentStatus = Appointment['status'];

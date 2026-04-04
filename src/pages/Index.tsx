@@ -199,6 +199,11 @@ export default function Dashboard() {
     stoppedAtProfessionalSelection: 0,
     stoppedAtTimeSelection: 0,
     stoppedAtFinalReview: 0,
+    whatsAppOpenFlowsToday: 0,
+    whatsAppStoppedAtServiceSelection: 0,
+    whatsAppStoppedAtProfessionalSelection: 0,
+    whatsAppStoppedAtTimeSelection: 0,
+    whatsAppStoppedAtFinalReview: 0,
   };
 
   const resolvedMetrics = isProfessionalUser ? professionalScopedMetrics : metrics;
@@ -412,6 +417,63 @@ export default function Dashboard() {
                 </div>
                 <p className="text-xl font-semibold text-orange-900">
                   {resolvedMetrics.stoppedAtFinalReview ?? 0}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card> : null}
+
+        {!isProfessionalUser ? <Card className="border-sky-200 bg-gradient-to-br from-sky-50 to-cyan-50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base sm:text-lg">
+              Fluxos Pausados Hoje no WhatsApp
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Conversas do WhatsApp ainda em aberto hoje, antes da confirmacao formal de abandono.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-xl bg-white/70 border border-sky-200 px-4 py-3">
+              <p className="text-xs sm:text-sm text-sky-700">Total de fluxos pausados hoje</p>
+              <p className="text-2xl sm:text-3xl font-bold text-sky-900">
+                {resolvedMetrics.whatsAppOpenFlowsToday ?? 0}
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="rounded-xl bg-white/70 border border-sky-100 px-3 py-2">
+                <div className="flex items-center gap-2 text-sky-700">
+                  <Route className="w-4 h-4" />
+                  <span className="text-xs">Servico</span>
+                </div>
+                <p className="text-xl font-semibold text-sky-900">
+                  {resolvedMetrics.whatsAppStoppedAtServiceSelection ?? 0}
+                </p>
+              </div>
+              <div className="rounded-xl bg-white/70 border border-sky-100 px-3 py-2">
+                <div className="flex items-center gap-2 text-sky-700">
+                  <UserCheck className="w-4 h-4" />
+                  <span className="text-xs">Profissional</span>
+                </div>
+                <p className="text-xl font-semibold text-sky-900">
+                  {resolvedMetrics.whatsAppStoppedAtProfessionalSelection ?? 0}
+                </p>
+              </div>
+              <div className="rounded-xl bg-white/70 border border-sky-100 px-3 py-2">
+                <div className="flex items-center gap-2 text-sky-700">
+                  <CalendarClock className="w-4 h-4" />
+                  <span className="text-xs">Horario</span>
+                </div>
+                <p className="text-xl font-semibold text-sky-900">
+                  {resolvedMetrics.whatsAppStoppedAtTimeSelection ?? 0}
+                </p>
+              </div>
+              <div className="rounded-xl bg-white/70 border border-sky-100 px-3 py-2">
+                <div className="flex items-center gap-2 text-sky-700">
+                  <ClipboardCheck className="w-4 h-4" />
+                  <span className="text-xs">Revisao final</span>
+                </div>
+                <p className="text-xl font-semibold text-sky-900">
+                  {resolvedMetrics.whatsAppStoppedAtFinalReview ?? 0}
                 </p>
               </div>
             </div>

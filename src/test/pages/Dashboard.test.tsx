@@ -32,6 +32,11 @@ const {
       stoppedAtProfessionalSelection: 1,
       stoppedAtTimeSelection: 1,
       stoppedAtFinalReview: 0,
+      whatsAppOpenFlowsToday: 2,
+      whatsAppStoppedAtServiceSelection: 0,
+      whatsAppStoppedAtProfessionalSelection: 1,
+      whatsAppStoppedAtTimeSelection: 1,
+      whatsAppStoppedAtFinalReview: 0,
     },
     isLoading: false,
     error: null as string | null,
@@ -166,6 +171,7 @@ describe("Dashboard", () => {
     expect(screen.getByText("Agendamentos Hoje")).toBeInTheDocument();
     expect(screen.getByText("Faturamento Hoje")).toBeInTheDocument();
     expect(screen.getByText("Nao Concluidos Hoje no Agendamento")).toBeInTheDocument();
+    expect(screen.getByText("Fluxos Pausados Hoje no WhatsApp")).toBeInTheDocument();
     expect(screen.getByText("WhatsAppReactivationChartMock")).toBeInTheDocument();
     expect(screen.getByText("WhatsAppReactivationQueueMock")).toBeInTheDocument();
     expect(screen.getByText("No-show no periodo")).toBeInTheDocument();

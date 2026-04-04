@@ -19,6 +19,11 @@ interface DashboardMetrics {
   stoppedAtProfessionalSelection: number;
   stoppedAtTimeSelection: number;
   stoppedAtFinalReview: number;
+  whatsAppOpenFlowsToday: number;
+  whatsAppStoppedAtServiceSelection: number;
+  whatsAppStoppedAtProfessionalSelection: number;
+  whatsAppStoppedAtTimeSelection: number;
+  whatsAppStoppedAtFinalReview: number;
 }
 
 export function useDashboard() {
@@ -38,6 +43,11 @@ export function useDashboard() {
     stoppedAtProfessionalSelection: 0,
     stoppedAtTimeSelection: 0,
     stoppedAtFinalReview: 0,
+    whatsAppOpenFlowsToday: 0,
+    whatsAppStoppedAtServiceSelection: 0,
+    whatsAppStoppedAtProfessionalSelection: 0,
+    whatsAppStoppedAtTimeSelection: 0,
+    whatsAppStoppedAtFinalReview: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -95,6 +105,11 @@ export function useDashboardWithOptions(options: UseDashboardOptions = {}) {
     stoppedAtProfessionalSelection: 0,
     stoppedAtTimeSelection: 0,
     stoppedAtFinalReview: 0,
+    whatsAppOpenFlowsToday: 0,
+    whatsAppStoppedAtServiceSelection: 0,
+    whatsAppStoppedAtProfessionalSelection: 0,
+    whatsAppStoppedAtTimeSelection: 0,
+    whatsAppStoppedAtFinalReview: 0,
   });
   const [isLoading, setIsLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);

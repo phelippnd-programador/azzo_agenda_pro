@@ -451,6 +451,11 @@ export const mockDashboardMetrics: DashboardMetrics = {
   stoppedAtProfessionalSelection: 3,
   stoppedAtTimeSelection: 2,
   stoppedAtFinalReview: 2,
+  whatsAppOpenFlowsToday: 5,
+  whatsAppStoppedAtServiceSelection: 1,
+  whatsAppStoppedAtProfessionalSelection: 1,
+  whatsAppStoppedAtTimeSelection: 2,
+  whatsAppStoppedAtFinalReview: 1,
 };
 
 export const getStatusColor = (status: string) => {
