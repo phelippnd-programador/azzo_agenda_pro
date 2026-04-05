@@ -7,7 +7,6 @@ import { RevenueChart } from '@/components/dashboard/RevenueChart';
 import { MonthlyRevenueLineChart } from '@/components/dashboard/MonthlyRevenueLineChart';
 import { NoShowInsights } from '@/components/dashboard/NoShowInsights';
 import { WhatsAppReactivationChart } from '@/components/dashboard/WhatsAppReactivationChart';
-import { WhatsAppReactivationQueue } from '@/components/dashboard/WhatsAppReactivationQueue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -372,12 +371,15 @@ export default function Dashboard() {
         {!isProfessionalUser ? <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50">
           <CardHeader className="pb-3">
             <CardTitle className="text-base sm:text-lg">
-              Nao Concluidos Hoje no Agendamento
+              Fluxos Gerais Nao Concluidos Hoje
             </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Etapas do funil geral de agendamento que nao chegaram a conclusao hoje, independentemente do canal.
+            </p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-xl bg-white/70 border border-orange-200 px-4 py-3">
-              <p className="text-xs sm:text-sm text-orange-700">Total nao concluido no dia</p>
+              <p className="text-xs sm:text-sm text-orange-700">Total nao concluido no funil geral hoje</p>
               <p className="text-2xl sm:text-3xl font-bold text-orange-900">
                 {resolvedMetrics.notConcludedToday ?? 0}
               </p>
@@ -429,12 +431,12 @@ export default function Dashboard() {
               Fluxos Pausados Hoje no WhatsApp
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Conversas do WhatsApp ainda em aberto hoje, antes da confirmacao formal de abandono.
+              Conversas do canal WhatsApp ainda em aberto hoje, antes da confirmacao formal de abandono.
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-xl bg-white/70 border border-sky-200 px-4 py-3">
-              <p className="text-xs sm:text-sm text-sky-700">Total de fluxos pausados hoje</p>
+              <p className="text-xs sm:text-sm text-sky-700">Total pausado hoje apenas no WhatsApp</p>
               <p className="text-2xl sm:text-3xl font-bold text-sky-900">
                 {resolvedMetrics.whatsAppOpenFlowsToday ?? 0}
               </p>
@@ -481,7 +483,6 @@ export default function Dashboard() {
         </Card> : null}
 
         {!isProfessionalUser ? <WhatsAppReactivationChart /> : null}
-        {!isProfessionalUser ? <WhatsAppReactivationQueue /> : null}
         {!isProfessionalUser ? (
           <NoShowInsights />
         ) : null}

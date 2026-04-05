@@ -1606,6 +1606,28 @@ export const reportsApi = {
     request(
       `/reports/commissions?from=${from}&to=${to}&professionalUserId=${professionalUserId}`
     ),
+  getAbandonment: (params?: {
+    from?: string;
+    to?: string;
+    days?: number;
+    status?: string;
+    stage?: string;
+    search?: string;
+    pageIndex?: number;
+    pageSize?: number;
+  }) => {
+    const query = new URLSearchParams();
+    if (params?.from) query.set("from", params.from);
+    if (params?.to) query.set("to", params.to);
+    if (typeof params?.days === "number") query.set("days", String(params.days));
+    if (params?.status && params.status.trim().length > 0) query.set("status", params.status.trim());
+    if (params?.stage && params.stage.trim().length > 0) query.set("stage", params.stage.trim());
+    if (params?.search && params.search.trim().length > 0) query.set("search", params.search.trim());
+    if (typeof params?.pageIndex === "number") query.set("pageIndex", String(params.pageIndex));
+    if (typeof params?.pageSize === "number") query.set("pageSize", String(params.pageSize));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<DashboardWhatsAppReactivationQueueResponse>(`/reports/abandonment${suffix}`);
+  },
 };
 
 /* ================= NOTIFICATIONS ================= */

@@ -355,7 +355,13 @@ export interface DashboardWhatsAppReactivationQueueResponse {
   startDate: string;
   endDate: string;
   statusFilter: string;
+  stageFilter?: string;
+  searchTerm?: string | null;
   limit: number;
+  pageIndex?: number;
+  pageSize?: number;
+  totalItems?: number;
+  totalPages?: number;
   items: DashboardWhatsAppReactivationQueueItem[];
   exceptionItems: DashboardWhatsAppReactivationQueueItem[];
 }

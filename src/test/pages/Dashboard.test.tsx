@@ -66,10 +66,6 @@ vi.mock("@/components/dashboard/WhatsAppReactivationChart", () => ({
   WhatsAppReactivationChart: () => <div>WhatsAppReactivationChartMock</div>,
 }));
 
-vi.mock("@/components/dashboard/WhatsAppReactivationQueue", () => ({
-  WhatsAppReactivationQueue: () => <div>WhatsAppReactivationQueueMock</div>,
-}));
-
 vi.mock("@/hooks/useDashboard", () => ({
   useDashboardWithOptions: () => dashboardState,
 }));
@@ -170,10 +166,19 @@ describe("Dashboard", () => {
     expect(await screen.findByText("Periodo das metricas")).toBeInTheDocument();
     expect(screen.getByText("Agendamentos Hoje")).toBeInTheDocument();
     expect(screen.getByText("Faturamento Hoje")).toBeInTheDocument();
-    expect(screen.getByText("Nao Concluidos Hoje no Agendamento")).toBeInTheDocument();
+    expect(screen.getByText("Fluxos Gerais Nao Concluidos Hoje")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Etapas do funil geral de agendamento que nao chegaram a conclusao hoje, independentemente do canal."
+      )
+    ).toBeInTheDocument();
     expect(screen.getByText("Fluxos Pausados Hoje no WhatsApp")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Conversas do canal WhatsApp ainda em aberto hoje, antes da confirmacao formal de abandono."
+      )
+    ).toBeInTheDocument();
     expect(screen.getByText("WhatsAppReactivationChartMock")).toBeInTheDocument();
-    expect(screen.getByText("WhatsAppReactivationQueueMock")).toBeInTheDocument();
     expect(screen.getByText("No-show no periodo")).toBeInTheDocument();
     expect(screen.getByText("Top profissionais no dashboard")).toBeInTheDocument();
     expect(screen.getByText("RevenueChartMock")).toBeInTheDocument();
