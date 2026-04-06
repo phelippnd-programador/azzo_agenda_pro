@@ -30,4 +30,4 @@ Disallow: /success
 Disallow: /error
 Disallow: /agendar/
 
-Sitemap: https://app.azzoagenda.com/sitemap.xml
+Sitemap: https://www.azzoholding.com.br/sitemap.xml

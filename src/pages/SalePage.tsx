@@ -21,7 +21,7 @@ const scrollToSection = (id: string) => {
 export default function SalePage() {
   const { products } = useCheckoutProducts();
   const selectedProduct = products[0] ?? null;
-  const appUrl = (import.meta.env.NEXT_PUBLIC_APP_URL as string | undefined)?.replace(/\/$/, '') || 'https://app.azzoagenda.com';
+  const appUrl = (import.meta.env.NEXT_PUBLIC_APP_URL as string | undefined)?.replace(/\/$/, '') || 'https://www.azzoholding.com.br';
   const canonicalUrl = `${appUrl}/compras`;
 
   useEffect(() => {
