@@ -113,10 +113,15 @@ export function SaleRegisterForm() {
     }
   };
 
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void handleCreateAccount();
+  };
+
   return (
     <SalesSection id="cadastro" className="bg-card">
       <div className="mx-auto max-w-2xl">
-        <div className="mb-8 text-center">
+        <header className="mb-8 text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
             <Sparkles className="h-3.5 w-3.5" />
             Comece agora — é grátis para testar
@@ -127,11 +132,12 @@ export function SaleRegisterForm() {
           <p className="mt-2 text-sm text-muted-foreground">
             Após o cadastro, você escolhe o plano e faz o pagamento. Sem cartão agora.
           </p>
-        </div>
+        </header>
 
         <Card className="border-2 border-emerald-200 shadow-lg dark:border-emerald-900">
-          <CardContent className="p-6 space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
+          <CardContent className="p-6">
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="sale-account-name">Nome completo</Label>
                 <Input id="sale-account-name" value={accountName} onChange={(e) => setAccountName(e.target.value)} placeholder="Seu nome" disabled={isCreatingAccount} />
@@ -170,19 +176,19 @@ export function SaleRegisterForm() {
                 <Label htmlFor="sale-account-cpf-cnpj">CPF/CNPJ</Label>
                 <Input id="sale-account-cpf-cnpj" value={accountCpfCnpj} onChange={(e) => setAccountCpfCnpj(maskCpfCnpj(e.target.value))} placeholder="000.000.000-00 ou 00.000.000/0000-00" disabled={isCreatingAccount} />
               </div>
-            </div>
+              </div>
 
-            <Button
-              type="button" size="lg"
+              <Button
+                type="submit" size="lg"
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-base"
-              onClick={handleCreateAccount} disabled={isCreatingAccount}
-            >
-              {isCreatingAccount ? 'Criando sua conta...' : (
-                <>Criar minha conta gratuitamente <ArrowRight className="ml-2 h-4 w-4" /></>
-              )}
-            </Button>
+                disabled={isCreatingAccount}
+              >
+                {isCreatingAccount ? 'Criando sua conta...' : (
+                  <>Criar minha conta gratuitamente <ArrowRight className="ml-2 h-4 w-4" /></>
+                )}
+              </Button>
 
-            <div className="flex items-start gap-2 rounded-md border border-input p-3">
+              <div className="flex items-start gap-2 rounded-md border border-input p-3">
               <Checkbox
                 id="sale-accept-legal-terms"
                 checked={acceptedLegalTerms}
@@ -194,9 +200,9 @@ export function SaleRegisterForm() {
                 e a{' '}
                 <Link to="/politica-privacidade" target="_blank" className="text-primary hover:underline">Politica de Privacidade</Link>.
               </Label>
-            </div>
+              </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 pt-1 text-xs text-muted-foreground">
+              <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 pt-1 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
                 <Lock className="h-3 w-3" />Dados protegidos
               </span>
@@ -206,7 +212,8 @@ export function SaleRegisterForm() {
               <span className="inline-flex items-center gap-1.5">
                 <Shield className="h-3 w-3 text-emerald-500" />7 dias de garantia
               </span>
-            </div>
+              </div>
+            </form>
           </CardContent>
         </Card>
 

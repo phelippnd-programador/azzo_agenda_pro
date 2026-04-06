@@ -6,6 +6,7 @@ interface SalesSectionProps {
   className?: string;
   title?: string;
   subtitle?: string;
+  titleAs?: "h1" | "h2" | "h3";
   children: ReactNode;
 }
 
@@ -14,20 +15,31 @@ export function SalesSection({
   className,
   title,
   subtitle,
+  titleAs = "h2",
   children,
 }: SalesSectionProps) {
+  const headingId = title && id ? `${id}-title` : undefined;
+  const HeadingTag = titleAs;
+
   return (
-    <section id={id} className={cn("py-12 md:py-16", className)}>
+    <section
+      id={id}
+      aria-labelledby={headingId}
+      className={cn("py-12 md:py-16", className)}
+    >
       <div className="mx-auto w-full max-w-6xl px-4 md:px-6">
         {title ? (
-          <div className="mb-8 max-w-2xl">
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+          <header className="mb-8 max-w-2xl">
+            <HeadingTag
+              id={headingId}
+              className="text-2xl md:text-3xl font-bold tracking-tight text-foreground"
+            >
               {title}
-            </h2>
+            </HeadingTag>
             {subtitle ? (
               <p className="mt-3 text-sm md:text-base text-muted-foreground">{subtitle}</p>
             ) : null}
-          </div>
+          </header>
         ) : null}
         {children}
       </div>
