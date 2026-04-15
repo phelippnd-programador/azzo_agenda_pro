@@ -12,10 +12,15 @@
       ]
     }
   ],
+  
   "routes": [
     {
       "src": "^/compras/?$",
-      "dest": "/compras/index.html"
+      "dest": "/index.html"
+    },
+    {
+      "src": "^/compras",
+      "dest": "/index.html"
     },
     {
       "handle": "filesystem"
