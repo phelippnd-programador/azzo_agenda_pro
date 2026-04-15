@@ -30,7 +30,7 @@ import { ClientUpsertDialog } from '@/components/clients/ClientUpsertDialog';
 import { AvailableSlotsList } from '@/components/appointments/AvailableSlotsList';
 import { ConfirmationDialog } from '@/components/common/ConfirmationDialog';
 import { resolveUiError } from '@/lib/error-utils';
-import { formatCurrency, toDateKey } from '@/lib/format';
+import { formatCurrencyCents, toDateKey } from '@/lib/format';
 import { appointmentsApi, type Professional } from '@/lib/api';
 import type { AppointmentConflictDetails, AppointmentConflictSummary, AppointmentSchedulingSettings } from '@/types/available-slots';
 
@@ -557,7 +557,7 @@ export function NewAppointmentDialog({
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-medium">{service.name}</span>
-                        <span className="text-sm text-primary">{formatCurrency(service.price)}</span>
+                        <span className="text-sm text-primary">{formatCurrencyCents(service.price)}</span>
                       </div>
                       <div className="mt-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
                         <span>{service.category}</span>
@@ -579,7 +579,7 @@ export function NewAppointmentDialog({
                   </div>
                   <div className="mt-1 flex items-center justify-between">
                     <span className="text-muted-foreground">Valor</span>
-                    <span className="font-medium text-primary">{formatCurrency(Number(selectedNewService.price))}</span>
+                    <span className="font-medium text-primary">{formatCurrencyCents(Number(selectedNewService.price))}</span>
                   </div>
                 </div>
               )}
@@ -663,7 +663,7 @@ export function NewAppointmentDialog({
                   </div>
                   <div className="mt-1 flex items-center justify-between gap-3">
                     <span className="text-muted-foreground">Valor</span>
-                    <span className="font-medium text-primary">{formatCurrency(Number(selectedNewService?.price || 0))}</span>
+                    <span className="font-medium text-primary">{formatCurrencyCents(Number(selectedNewService?.price || 0))}</span>
                   </div>
                 </div>
               </div>
@@ -775,7 +775,7 @@ export function NewAppointmentDialog({
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Servico</p>
                     <p className="mt-2 font-medium">{selectedNewService?.name || 'Nao selecionado'}</p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {selectedServiceDuration} min • {formatCurrency(Number(selectedNewService?.price || 0))}
+                      {selectedServiceDuration} min • {formatCurrencyCents(Number(selectedNewService?.price || 0))}
                     </p>
                   </div>
                   <div className="rounded-lg border bg-muted/20 p-4">
@@ -879,6 +879,7 @@ export function NewAppointmentDialog({
     </>
   );
 }
+
 
 
 

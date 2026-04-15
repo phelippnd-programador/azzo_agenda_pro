@@ -31,12 +31,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Plus, Clock, DollarSign, MoreVertical, Scissors, Loader2 } from 'lucide-react';
+import { Search, Plus, Clock, MoreVertical, Scissors, Loader2 } from 'lucide-react';
 import { useServices } from '@/hooks/useServices';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { toast } from 'sonner';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrencyCents } from '@/lib/format';
 
 const categories = ['Todos', 'Cabelo', 'Barba', 'Unhas', 'Estetica', 'Maquiagem', 'Outros'];
 
@@ -48,6 +48,11 @@ export default function ServicesOverviewPage() {
   const [editingService, setEditingService] = useState<string | null>(null);
   const [serviceToDelete, setServiceToDelete] = useState<string | null>(null);
   const [isDeletingService, setIsDeletingService] = useState(false);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [isDeletingSelected, setIsDeletingSelected] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const [isRemoveSelectedOpen, setIsRemoveSelectedOpen] = useState(false);
+  const [isRemoveAllOpen, setIsRemoveAllOpen] = useState(false);
 
   const [formName, setFormName] = useState('');
   const [formDescription, setFormDescription] = useState('');
@@ -57,7 +62,19 @@ export default function ServicesOverviewPage() {
   const [formProfessionalIds, setFormProfessionalIds] = useState<string[]>([]);
   const [formIsActive, setFormIsActive] = useState(true);
 
-  const { services, pagination, isLoading, error, refetch, goToPage, createService, updateService, deleteService } = useServices();
+  const {
+    services,
+    pagination,
+    isLoading,
+    error,
+    refetch,
+    goToPage,
+    createService,
+    updateService,
+    deleteService,
+    deleteSelectedServices,
+    deleteAllServices,
+  } = useServices();
   const { professionals, isLoading: isLoadingProfessionals } = useProfessionals();
 
   const filteredServices = services.filter((service) => {
@@ -68,6 +85,17 @@ export default function ServicesOverviewPage() {
     return matchesSearch && matchesCategory;
   });
   const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.limit));
+  const allFilteredSelected =
+    filteredServices.length > 0 &&
+    filteredServices.every((service) => selectedServiceIds.includes(service.id));
+
+  const parsePriceInputToCents = (value: string) => {
+    const normalized = value.trim().replace(',', '.');
+    if (!normalized) return 0;
+    return Math.round(Number(normalized) * 100);
+  };
+
+  const formatPriceCentsToInput = (value: number) => (Number(value || 0) / 100).toFixed(2);
 
   const resetForm = () => {
     setFormName('');
@@ -84,7 +112,7 @@ export default function ServicesOverviewPage() {
     setFormName(service.name);
     setFormDescription(service.description);
     setFormDuration(String(service.duration));
-    setFormPrice(String(service.price));
+    setFormPrice(formatPriceCentsToInput(service.price));
     setFormCategory(service.category);
     setFormProfessionalIds(Array.isArray(service.professionalIds) ? service.professionalIds : []);
     setFormIsActive(service.isActive);
@@ -112,7 +140,7 @@ export default function ServicesOverviewPage() {
         name: formName,
         description: formDescription,
         duration: parseInt(formDuration),
-        price: parseFloat(formPrice),
+        price: parsePriceInputToCents(formPrice),
         category: formCategory,
         professionalIds: formProfessionalIds,
         isActive: formIsActive,
@@ -147,6 +175,49 @@ export default function ServicesOverviewPage() {
       await updateService(id, { isActive });
     } catch {
       // handled in hook
+    }
+  };
+
+  const toggleServiceSelection = (id: string) => {
+    setSelectedServiceIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAllFiltered = (checked: boolean) => {
+    if (checked) {
+      setSelectedServiceIds((prev) => {
+        const next = new Set(prev);
+        filteredServices.forEach((service) => next.add(service.id));
+        return Array.from(next);
+      });
+      return;
+    }
+    setSelectedServiceIds((prev) =>
+      prev.filter((id) => !filteredServices.some((service) => service.id === id))
+    );
+  };
+
+  const handleDeleteSelected = async () => {
+    if (!selectedServiceIds.length) return;
+    setIsDeletingSelected(true);
+    try {
+      await deleteSelectedServices(selectedServiceIds);
+      setSelectedServiceIds([]);
+      setIsRemoveSelectedOpen(false);
+    } finally {
+      setIsDeletingSelected(false);
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    setIsDeletingAll(true);
+    try {
+      await deleteAllServices();
+      setSelectedServiceIds([]);
+      setIsRemoveAllOpen(false);
+    } finally {
+      setIsDeletingAll(false);
     }
   };
 
@@ -341,6 +412,34 @@ export default function ServicesOverviewPage() {
         </Dialog>
       </div>
 
+      <div className="flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Checkbox
+            checked={allFilteredSelected}
+            onCheckedChange={(checked) => toggleSelectAllFiltered(checked === true)}
+          />
+          Selecionar todos da lista
+        </label>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            className="text-destructive hover:text-destructive"
+            disabled={!selectedServiceIds.length}
+            onClick={() => setIsRemoveSelectedOpen(true)}
+          >
+            Remover selecionados ({selectedServiceIds.length})
+          </Button>
+          <Button
+            variant="outline"
+            className="text-destructive hover:text-destructive"
+            disabled={!services.length}
+            onClick={() => setIsRemoveAllOpen(true)}
+          >
+            Remover todos
+          </Button>
+        </div>
+      </div>
+
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
         {categories.map((category) => (
           <Button
@@ -380,20 +479,28 @@ export default function ServicesOverviewPage() {
             >
               <CardContent className="p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-2 mb-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">
-                        {service.name}
-                      </h3>
-                      {!service.isActive && (
-                        <Badge variant="outline" className="text-[10px] sm:text-xs text-muted-foreground">
-                          Inativo
-                        </Badge>
-                      )}
+                  <div className="flex items-start gap-2 min-w-0 flex-1">
+                    <Checkbox
+                      checked={selectedServiceIds.includes(service.id)}
+                      onCheckedChange={() => toggleServiceSelection(service.id)}
+                      aria-label="Selecionar servico"
+                      className="mt-1"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">
+                          {service.name}
+                        </h3>
+                        {!service.isActive && (
+                          <Badge variant="outline" className="text-[10px] sm:text-xs text-muted-foreground">
+                            Inativo
+                          </Badge>
+                        )}
+                      </div>
+                      <Badge variant="secondary" className="text-[10px] sm:text-xs">
+                        {service.category}
+                      </Badge>
                     </div>
-                    <Badge variant="secondary" className="text-[10px] sm:text-xs">
-                      {service.category}
-                    </Badge>
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -428,8 +535,7 @@ export default function ServicesOverviewPage() {
                     <span className="text-xs sm:text-sm">{service.duration} min</span>
                   </div>
                   <div className="flex items-center gap-1 text-primary font-semibold">
-                    <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="text-sm sm:text-base">{formatCurrency(service.price)}</span>
+                    <span className="text-sm sm:text-base">{formatCurrencyCents(service.price)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -474,6 +580,30 @@ export default function ServicesOverviewPage() {
           if (!open) setServiceToDelete(null);
         }}
         onConfirm={handleDelete}
+      />
+
+      <DeleteConfirmationDialog
+        open={isRemoveSelectedOpen}
+        isLoading={isDeletingSelected}
+        title="Remover servicos selecionados?"
+        description={`Tem certeza que deseja remover ${selectedServiceIds.length} servico(s) selecionado(s)? Esta acao nao pode ser desfeita.`}
+        onOpenChange={(open) => {
+          if (isDeletingSelected) return;
+          setIsRemoveSelectedOpen(open);
+        }}
+        onConfirm={handleDeleteSelected}
+      />
+
+      <DeleteConfirmationDialog
+        open={isRemoveAllOpen}
+        isLoading={isDeletingAll}
+        title="Remover todos os servicos?"
+        description="Tem certeza que deseja remover todos os servicos cadastrados? Esta acao nao pode ser desfeita."
+        onOpenChange={(open) => {
+          if (isDeletingAll) return;
+          setIsRemoveAllOpen(open);
+        }}
+        onConfirm={handleDeleteAll}
       />
     </div>
   );

@@ -160,6 +160,8 @@ const HIDDEN_MENU_ROUTES = new Set([
   "/clientes/importacoes/:jobId",
   "/servicos/importacoes",
   "/servicos/importacoes/:jobId",
+  "/especialidades/importacoes",
+  "/especialidades/importacoes/:jobId",
   "/perfil-usuario",
 ]);
 

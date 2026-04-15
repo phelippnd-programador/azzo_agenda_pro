@@ -33,21 +33,21 @@ const heroOverlayImage = '/images/hero_atemporal.png';
 
 const featureCards = [
   {
-    title: 'Experiencia premium para o cliente',
+    title: 'Experiência premium para o cliente',
     description:
-      'Agendamentos claros, confirmacoes e lembretes automaticos para reduzir faltas e passar mais profissionalismo.',
+      'Agendamentos claros, confirmações e lembretes automáticos para reduzir faltas e transmitir mais profissionalismo.',
     image: '/images/card_servico_1_1.png',
   },
   {
     title: 'Ferramentas certas para operar melhor',
     description:
-      'Agenda, clientes, equipe e financeiro no mesmo painel, sem depender de caderno, planilha ou memoria.',
+      'Agenda, clientes, equipe e financeiro no mesmo painel, sem depender de caderno, planilha ou memória.',
     image: '/images/card_ferramentas_1_1.png',
   },
   {
-    title: 'Gestao tranquila e previsivel',
+    title: 'Gestão tranquila e previsível',
     description:
-      'Acompanhe indicadores do salao, organize a rotina da equipe e enxergue o faturamento com mais clareza.',
+      'Acompanhe indicadores do salão, organize a rotina da equipe e enxergue o faturamento com mais clareza.',
     image: '/images/card_gestao_3_2.png',
   },
 ];
@@ -56,46 +56,46 @@ const operationsHighlights = [
   {
     icon: <CalendarClock className="h-5 w-5 text-emerald-600" />,
     title: 'Agenda inteligente',
-    description: 'Bloqueio de horarios ocupados e visao completa do dia para evitar conflitos.',
+    description: 'Bloqueio de horários ocupados e visão completa do dia para evitar conflitos.',
     image: '/images/financeiro_organizado_v2.png',
   },
   {
     icon: <Users className="h-5 w-5 text-emerald-600" />,
-    title: 'Gestao da equipe',
-    description: 'Cada profissional acompanha a propria agenda e voce tem visao geral da operacao.',
+    title: 'Gestão da equipe',
+    description: 'Cada profissional acompanha a própria agenda e você tem visão geral da operação.',
     image: '/images/gestao_equipe.png',
   },
   {
     icon: <CreditCard className="h-5 w-5 text-emerald-600" />,
     title: 'Financeiro organizado',
-    description: 'Entradas, saidas e faturamento em um fluxo mais simples para tomada de decisao.',
+    description: 'Entradas, saídas e faturamento em um fluxo mais simples para a tomada de decisão.',
     image: '/images/detalhe_premium.png',
   },
 ];
 
 const socialStats = [
-  { stat: '200+', label: 'Saloes ativos' },
-  { stat: '15 mil+', label: 'Agendamentos por mes' },
-  { stat: '98%', label: 'Taxa media de satisfacao' },
-  { stat: '< 5 min', label: 'Tempo para comecar' },
+  { stat: '200+', label: 'Salões ativos' },
+  { stat: '15 mil+', label: 'Agendamentos por mês' },
+  { stat: '98%', label: 'Taxa média de satisfação' },
+  { stat: '< 5 min', label: 'Tempo para começar' },
 ];
 
 const faqItems = [
   {
     q: 'Preciso instalar algum programa?',
-    a: 'Nao. O Azzo funciona pelo navegador, no computador, tablet ou celular.',
+    a: 'Não. O Azzo funciona pelo navegador, no computador, tablet ou celular.',
   },
   {
     q: 'Minha equipe consegue usar sem dificuldade?',
-    a: 'Sim. Cada profissional pode ter o proprio acesso e acompanhar a propria agenda.',
+    a: 'Sim. Cada profissional pode ter o próprio acesso e acompanhar a própria agenda.',
   },
   {
     q: 'Posso cancelar quando quiser?',
     a: 'Sim. Sem multa e sem fidelidade. O cancelamento continua simples pelo fluxo atual.',
   },
   {
-    q: 'Tem suporte em caso de duvida?',
-    a: 'Sim. O suporte continua disponivel para orientar implantacao e uso do sistema.',
+    q: 'Tem suporte em caso de dúvida?',
+    a: 'Sim. O suporte continua disponível para orientar a implantação e o uso do sistema.',
   },
 ];
 
@@ -134,18 +134,18 @@ export default function SalePage() {
       tag.href = href;
     };
 
-    document.title = 'Sistema para Salao de Beleza | Azzo Agenda Pro';
+    document.title = 'Sistema para Salão de Beleza | Azzo Agenda Pro';
     setMetaTag(
       'meta[name="description"]',
       'name',
       'description',
-      'Sistema para salao de beleza com agenda online, clientes, equipe e financeiro em um unico painel. Conheca o Azzo Agenda Pro.',
+      'Sistema para salão de beleza com agenda online, clientes, equipe e financeiro em um único painel. Conheça o Azzo Agenda Pro.',
     );
     setMetaTag(
       'meta[name="keywords"]',
       'name',
       'keywords',
-      'sistema para salao de beleza, software para salao, agenda para salao, gestao para salao, sistema para barbearia, sistema para estetica',
+      'sistema para salão de beleza, software para salão, agenda para salão, gestão para salão, sistema para barbearia, sistema para estética',
     );
     setMetaTag(
       'meta[name="robots"]',
@@ -157,13 +157,13 @@ export default function SalePage() {
       'meta[property="og:title"]',
       'property',
       'og:title',
-      'Sistema para Salao de Beleza | Azzo Agenda Pro',
+      'Sistema para Salão de Beleza | Azzo Agenda Pro',
     );
     setMetaTag(
       'meta[property="og:description"]',
       'property',
       'og:description',
-      'Agenda, clientes, equipe e financeiro em um unico sistema para saloes de beleza, barbearias e esteticas.',
+      'Agenda, clientes, equipe e financeiro em um único sistema para salões de beleza, barbearias e estéticas.',
     );
     setMetaTag('meta[property="og:site_name"]', 'property', 'og:site_name', 'Azzo Agenda Pro');
     setMetaTag('meta[property="og:type"]', 'property', 'og:type', 'website');
@@ -173,27 +173,27 @@ export default function SalePage() {
       'meta[property="og:image:alt"]',
       'property',
       'og:image:alt',
-      'Sistema para salao de beleza Azzo Agenda Pro',
+      'Sistema para salão de beleza Azzo Agenda Pro',
     );
     setMetaTag('meta[name="twitter:card"]', 'name', 'twitter:card', 'summary_large_image');
     setMetaTag(
       'meta[name="twitter:title"]',
       'name',
       'twitter:title',
-      'Sistema para Salao de Beleza | Azzo Agenda Pro',
+      'Sistema para Salão de Beleza | Azzo Agenda Pro',
     );
     setMetaTag(
       'meta[name="twitter:description"]',
       'name',
       'twitter:description',
-      'Organize agenda, clientes, equipe e financeiro do seu salao com o Azzo Agenda Pro.',
+      'Organize agenda, clientes, equipe e financeiro do seu salão com o Azzo Agenda Pro.',
     );
     setMetaTag('meta[name="twitter:image"]', 'name', 'twitter:image', ogImageUrl);
     setMetaTag(
       'meta[name="twitter:image:alt"]',
       'name',
       'twitter:image:alt',
-      'Sistema para salao de beleza Azzo Agenda Pro',
+      'Sistema para salão de beleza Azzo Agenda Pro',
     );
     setLinkTag('canonical', canonicalUrl);
   }, [canonicalUrl, ogImageUrl]);
@@ -207,7 +207,7 @@ export default function SalePage() {
     operatingSystem: 'Web',
     image: ogImageUrl,
     description:
-      'Sistema de gestao para saloes de beleza, barbearias e esteticas com agenda, clientes, equipe e financeiro em um unico painel.',
+      'Sistema de gestão para salões de beleza, barbearias e estéticas com agenda, clientes, equipe e financeiro em um único painel.',
     offers: {
       '@type': 'Offer',
       price: selectedProduct?.price ?? undefined,
@@ -235,7 +235,7 @@ export default function SalePage() {
         href="#conteudo-principal"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-foreground focus:shadow-lg"
       >
-        Pular para o conteudo principal
+        Pular para o conteúdo principal
       </a>
       <div className="min-h-screen bg-background text-foreground">
         <script
@@ -255,20 +255,20 @@ export default function SalePage() {
               Azzo Agenda Pro
             </Link>
             <nav
-              aria-label="Navegacao principal da pagina de vendas"
+              aria-label="Navegação principal da página de vendas"
               className="hidden items-center gap-7 text-sm text-muted-foreground md:flex"
             >
               <a href="#funcionalidades" className="transition-colors hover:text-foreground">
                 Funcionalidades
               </a>
               <a href="#experiencia" className="transition-colors hover:text-foreground">
-                Experiencia
+                Experiência
               </a>
               <a href="#gestao" className="transition-colors hover:text-foreground">
-                Gestao
+                Gestão
               </a>
               <a href="#precos" className="transition-colors hover:text-foreground">
-                Precos
+                Preços
               </a>
             </nav>
             <div className="flex items-center gap-3">
@@ -283,7 +283,7 @@ export default function SalePage() {
                 className="bg-emerald-600 text-white hover:bg-emerald-700"
                 onClick={() => scrollToSection('cadastro')}
               >
-                Teste gratis
+                Teste grátis
               </Button>
             </div>
           </div>
@@ -309,20 +309,20 @@ export default function SalePage() {
               <header className="max-w-2xl">
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90">
                   <Star className="h-3.5 w-3.5 fill-white text-white" />
-                  Sistema completo para salao de beleza
+                  Sistema completo para salão de beleza
                 </span>
                 <h1
                   id="sale-hero-title"
                   className="mt-6 text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-6xl"
                 >
-                  Agenda, clientes, equipe e financeiro em um so lugar
+                  Agenda, clientes, equipe e financeiro em um só lugar
                 </h1>
                 <p className="mt-5 max-w-xl text-base text-white/85 md:text-lg">
-                  O Azzo Agenda Pro organiza o dia a dia do seu salao com uma experiencia mais
-                  profissional para o cliente e uma rotina mais simples para a operacao.
+                  O Azzo Agenda Pro organiza o dia a dia do seu salão com uma experiência mais
+                  profissional para o cliente e uma rotina mais simples para a operação.
                 </p>
                 <p className="mt-3 max-w-xl text-sm text-white/70">
-                  Ideal para saloes de beleza, barbearias e esteticas que precisam reduzir faltas,
+                  Ideal para salões de beleza, barbearias e estéticas que precisam reduzir faltas,
                   organizar a equipe e enxergar melhor o faturamento.
                 </p>
 
@@ -332,7 +332,7 @@ export default function SalePage() {
                     className="bg-white px-8 text-base font-semibold text-emerald-700 hover:bg-white/90"
                     onClick={() => scrollToSection('cadastro')}
                   >
-                    Comecar teste gratis
+                    Começar teste grátis
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                   <Button
@@ -346,7 +346,7 @@ export default function SalePage() {
                 </div>
 
                 <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/75">
-                  {['Sem cartao agora', 'Acesso imediato', 'Garantia de 7 dias'].map((text) => (
+                  {['Sem cartão agora', 'Acesso imediato', 'Garantia de 7 dias'].map((text) => (
                     <span key={text} className="inline-flex items-center gap-1.5">
                       <CheckCircle2 className="h-3.5 w-3.5 text-emerald-300" />
                       {text}
@@ -370,39 +370,39 @@ export default function SalePage() {
 
           <SalesSection
             id="software-salao"
-            title="Software para salao de beleza, barbearia e clinica de estetica"
-            subtitle="Conteudo direto para quem esta buscando no Google uma plataforma para organizar agenda, clientes, equipe e financeiro."
+            title="Software para salão de beleza, barbearia e clínica de estética"
+            subtitle="Conteúdo direto para quem está buscando no Google uma plataforma para organizar agenda, clientes, equipe e financeiro."
           >
             <div className="grid gap-6 md:grid-cols-3">
               <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <h3 className="text-lg font-semibold text-foreground">Para saloes de beleza</h3>
+                <h3 className="text-lg font-semibold text-foreground">Para salões de beleza</h3>
                 <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                  Organize escovas, cortes, coloracao, agenda da equipe e retorno de clientes em um
-                  sistema para salao de beleza pensado para operacao diaria.
+                  Organize escovas, cortes, coloração, agenda da equipe e retorno de clientes em um
+                  sistema para salão de beleza pensado para a operação diária.
                 </p>
               </article>
               <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <h3 className="text-lg font-semibold text-foreground">Para barbearias</h3>
                 <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                  Controle barbeiros, horarios, encaixes, confirmacoes e recorrencia com uma agenda
+                  Controle barbeiros, horários, encaixes, confirmações e recorrência com uma agenda
                   online para barbearia mais simples de acompanhar.
                 </p>
               </article>
               <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <h3 className="text-lg font-semibold text-foreground">Para estetica</h3>
+                <h3 className="text-lg font-semibold text-foreground">Para estética</h3>
                 <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                  Centralize atendimentos, historico de clientes, equipe e faturamento em um
-                  software para clinica de estetica com visao operacional e comercial.
+                  Centralize atendimentos, histórico de clientes, equipe e faturamento em um
+                  software para clínica de estética com visão operacional e comercial.
                 </p>
               </article>
             </div>
             <div className="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 dark:border-emerald-900/40 dark:bg-emerald-950/20">
               <p className="text-sm leading-7 text-muted-foreground">
-                Se a busca for por <strong className="text-foreground">agenda para salao</strong>,
+                Se a busca for por <strong className="text-foreground">agenda para salão</strong>,
                 <strong className="text-foreground"> sistema para barbearia</strong>,
-                <strong className="text-foreground"> programa para estetica</strong> ou
-                <strong className="text-foreground"> controle financeiro para salao</strong>, esta
-                pagina descreve exatamente o produto que a pessoa procura e leva para o mesmo fluxo
+                <strong className="text-foreground"> programa para estética</strong> ou
+                <strong className="text-foreground"> controle financeiro para salão</strong>, esta
+                página descreve exatamente o produto que a pessoa procura e leva para o mesmo fluxo
                 real de cadastro e compra.
               </p>
             </div>
@@ -411,7 +411,7 @@ export default function SalePage() {
           <SalesSection
             id="funcionalidades"
             title="Tudo que seu salao precisa"
-            subtitle="Mesmo padrao visual da proposta comercial, mas mantendo a operacao real da pagina."
+            subtitle="Mesmo padrão visual da proposta comercial, mas mantendo a operação real da página."
           >
             <div className="grid gap-6 md:grid-cols-3">
               {featureCards.map((item) => (
@@ -438,31 +438,31 @@ export default function SalePage() {
           <SalesSection
             id="experiencia"
             className="bg-slate-50 dark:bg-slate-900/40"
-            title="Uma experiencia melhor para seus clientes"
-            subtitle="Fluxo mais profissional desde a confirmacao do horario ate o atendimento."
+            title="Uma experiência melhor para seus clientes"
+            subtitle="Fluxo mais profissional desde a confirmação do horário até o atendimento."
           >
             <div className="grid items-center gap-10 md:grid-cols-2">
               <figure className="overflow-hidden rounded-[28px] border border-border bg-card shadow-lg">
                 <img
                   src="/images/experiencia_cliente.png"
-                  alt="Experiencia premium do cliente no Azzo Agenda Pro"
+                  alt="Experiência premium do cliente no Azzo Agenda Pro"
                   loading="lazy"
                   className="h-full w-full object-cover"
                 />
               </figure>
               <div>
                 <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-                  Uma jornada mais clara para quem agenda com voce
+                  Uma jornada mais clara para quem agenda com você
                 </h2>
                 <p className="mt-4 text-base leading-7 text-muted-foreground">
-                  O Azzo ajuda o salao a operar com mais consistencia. O cliente entende melhor o
-                  horario, recebe lembretes e a equipe trabalha com menos ruido.
+                  O Azzo ajuda o salão a operar com mais consistência. O cliente entende melhor o
+                  horário, recebe lembretes e a equipe trabalha com menos ruído.
                 </p>
                 <ul className="mt-6 space-y-3 text-sm text-muted-foreground">
                   {[
-                    'Agendamento organizado e facil de acompanhar',
-                    'Confirmacao automatica para reduzir faltas',
-                    'Historico do cliente centralizado no sistema',
+                    'Agendamento organizado e fácil de acompanhar',
+                    'Confirmação automática para reduzir faltas',
+                    'Histórico do cliente centralizado no sistema',
                     'Menos improviso no dia a dia do atendimento',
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-3">
@@ -477,17 +477,17 @@ export default function SalePage() {
 
           <SalesSection
             id="gestao"
-            title="Gestao inteligente do seu negocio"
+            title="Gestão inteligente do seu negócio"
             subtitle="Dados e rotina operacional organizados no mesmo painel."
           >
             <div className="grid items-center gap-10 md:grid-cols-2">
               <div className="order-2 md:order-1">
                 <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-                  Controle o salao sem depender de caderno e memoria
+                  Controle o salão sem depender de caderno e memória
                 </h2>
                 <p className="mt-4 text-base leading-7 text-muted-foreground">
-                  Com agenda, equipe, financeiro e clientes integrados, fica mais facil enxergar o
-                  que esta funcionando e onde a operacao precisa de ajuste.
+                  Com agenda, equipe, financeiro e clientes integrados, fica mais fácil enxergar o
+                  que está funcionando e onde a operação precisa de ajuste.
                 </p>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   {operationsHighlights.map((item) => (
@@ -508,7 +508,7 @@ export default function SalePage() {
               <figure className="order-1 overflow-hidden rounded-[28px] border border-border bg-card shadow-lg md:order-2">
                 <img
                   src="/images/gestao_tranquila.png"
-                  alt="Gestao do salao com indicadores e operacao organizada"
+                  alt="Gestão do salão com indicadores e operação organizada"
                   loading="lazy"
                   className="h-full w-full object-cover"
                 />
@@ -518,8 +518,8 @@ export default function SalePage() {
 
           <SalesSection
             className="bg-card"
-            title="Visao detalhada das principais areas"
-            subtitle="Os recursos mais usados pelo dono do salao aparecem com mais destaque."
+            title="Visão detalhada das principais áreas"
+            subtitle="Os recursos mais usados pelo dono do salão aparecem com mais destaque."
           >
             <div className="grid gap-6 md:grid-cols-3">
               {operationsHighlights.map((item) => (
@@ -544,19 +544,19 @@ export default function SalePage() {
           <SalesSection
             className="bg-slate-50 dark:bg-slate-900/40"
             title="O jeito antigo custa caro"
-            subtitle="Problemas comuns de salao que o sistema ajuda a reduzir."
+            subtitle="Problemas comuns de salão que o sistema ajuda a reduzir."
           >
             <div className="grid gap-4 md:grid-cols-3">
               {[
                 {
                   icon: <X className="h-4 w-4 text-red-500" />,
-                  title: 'Conflitos de horario',
+                  title: 'Conflitos de horário',
                   description:
-                    'Dois clientes no mesmo horario, retrabalho na recepcao e equipe desorganizada.',
+                    'Dois clientes no mesmo horário, retrabalho na recepção e equipe desorganizada.',
                 },
                 {
                   icon: <BellRing className="h-4 w-4 text-red-500" />,
-                  title: 'Cliente sem confirmacao',
+                  title: 'Cliente sem confirmação',
                   description:
                     'Faltas por esquecimento e perda de receita quando o lembrete depende de mensagem manual.',
                 },
@@ -564,7 +564,7 @@ export default function SalePage() {
                   icon: <CreditCard className="h-4 w-4 text-red-500" />,
                   title: 'Financeiro no escuro',
                   description:
-                    'Dificuldade para saber o que entrou, o que saiu e quanto o salao realmente faturou.',
+                    'Dificuldade para saber o que entrou, o que saiu e quanto o salão realmente faturou.',
                 },
               ].map((item) => (
                 <article
@@ -583,8 +583,8 @@ export default function SalePage() {
 
           <SalesSection
             id="precos"
-            title="Um investimento que se paga no primeiro mes"
-            subtitle="Sem taxa de instalacao. Sem fidelidade. Mantendo o checkout atual."
+            title="Um investimento que se paga no primeiro mês"
+            subtitle="Sem taxa de instalação. Sem fidelidade. Mantendo o checkout atual."
           >
             <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
               <article aria-label="Plano em destaque">
@@ -610,7 +610,7 @@ export default function SalePage() {
                           </span>
                           {selectedProduct.validityMonths && (
                             <span className="ml-1 text-sm text-muted-foreground">
-                              /{selectedProduct.validityMonths === 1 ? 'mes' : `${selectedProduct.validityMonths} meses`}
+                              /{selectedProduct.validityMonths === 1 ? 'mês' : `${selectedProduct.validityMonths} meses`}
                             </span>
                           )}
                         </div>
@@ -619,8 +619,8 @@ export default function SalePage() {
                             'Agenda inteligente ilimitada',
                             'CRM de clientes completo',
                             'Controle financeiro',
-                            'Confirmacao automatica',
-                            'Suporte prioritario',
+                            'Confirmação automática',
+                            'Suporte prioritário',
                           ]).map((feature) => (
                             <li key={feature} className="flex items-center gap-2 text-foreground">
                               <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
@@ -633,15 +633,15 @@ export default function SalePage() {
                       <>
                         <h3 className="mt-5 text-2xl font-bold text-foreground">Plano Pro Growth</h3>
                         <p className="mt-2 text-sm text-muted-foreground">
-                          Agenda, equipe, clientes e financeiro em um unico painel.
+                          Agenda, equipe, clientes e financeiro em um único painel.
                         </p>
                         <ul className="mt-6 space-y-2 text-sm">
                           {[
                             'Agenda inteligente ilimitada',
                             'CRM de clientes completo',
                             'Controle financeiro',
-                            'Confirmacao automatica',
-                            'Suporte prioritario via WhatsApp',
+                            'Confirmação automática',
+                            'Suporte prioritário via WhatsApp',
                           ].map((feature) => (
                             <li key={feature} className="flex items-center gap-2 text-foreground">
                               <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
@@ -657,11 +657,11 @@ export default function SalePage() {
                       className="mt-8 w-full bg-emerald-600 text-base text-white hover:bg-emerald-700"
                       onClick={() => scrollToSection('cadastro')}
                     >
-                      Comecar agora
+                      Começar agora
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                     <p className="mt-3 text-xs text-muted-foreground">
-                      7 dias de garantia · Sem cartao agora · Cancele quando quiser
+                      7 dias de garantia · Sem cartão agora · Cancele quando quiser
                     </p>
                   </CardContent>
                 </Card>
@@ -670,7 +670,7 @@ export default function SalePage() {
               <article className="rounded-[28px] border border-border bg-card p-6 shadow-lg">
                 <img
                   src="/images/detalhe_premium.png"
-                  alt="Detalhe visual premium do sistema para salao de beleza"
+                  alt="Detalhe visual premium do sistema para salão de beleza"
                   loading="lazy"
                   className="h-64 w-full rounded-[22px] object-cover"
                 />
@@ -678,16 +678,16 @@ export default function SalePage() {
                   O mesmo sistema para vender melhor e operar melhor
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  A ideia desta pagina continua a mesma: capturar a venda sem quebrar o fluxo real
-                  de cadastro e escolha do plano. O ajuste aqui foi visual, mantendo formulario,
-                  checkout e navegacao como ja estavam funcionando.
+                  A ideia desta página continua a mesma: capturar a venda sem quebrar o fluxo real
+                  de cadastro e escolha do plano. O ajuste aqui foi visual, mantendo formulário,
+                  checkout e navegação como já estavam funcionando.
                 </p>
                 <ul className="mt-5 space-y-3 text-sm text-muted-foreground">
                   {[
-                    'Formulario real de criacao de conta mantido',
-                    'Integracao atual com produto e checkout preservada',
+                    'Formulário real de criação de conta mantido',
+                    'Integração atual com produto e checkout preservada',
                     'CTA direcionando para o mesmo fluxo de compra',
-                    'Conteudo mais alinhado com a proposta da landing de referencia',
+                    'Conteúdo mais alinhado com a proposta da landing de referência',
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-3">
                       <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
@@ -712,7 +712,7 @@ export default function SalePage() {
                   Garantia total de 7 dias
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Experimente o Azzo por 7 dias. Se nao fizer sentido para o seu negocio,
+                  Experimente o Azzo por 7 dias. Se não fizer sentido para o seu negócio,
                   devolvemos o valor sem burocracia.
                 </p>
               </div>
@@ -721,32 +721,32 @@ export default function SalePage() {
 
           <SalesSection
             id="depoimentos"
-            title="O que donos de salao dizem sobre o Azzo"
-            subtitle="Resultados reais de quem ja usa no dia a dia."
+            title="O que donos de salão dizem sobre o Azzo"
+            subtitle="Resultados reais de quem já usa no dia a dia."
           >
             <div className="grid gap-4 md:grid-cols-3">
               {[
                 {
                   name: 'Marina Silva',
-                  salon: 'Studio Aurora · Sao Paulo, SP',
-                  result: 'Aumentei meus agendamentos em 40% no primeiro mes',
+                  salon: 'Studio Aurora · São Paulo, SP',
+                  result: 'Aumentei meus agendamentos em 40% no primeiro mês',
                   text: 'Antes eu dependia de mensagem manual para tudo. Hoje minha agenda fica muito mais organizada.',
                   avatar: 'MS',
                   color: 'bg-emerald-100 text-emerald-700',
                 },
                 {
                   name: 'Carlos Mendes',
-                  salon: 'Salao Prime · Belo Horizonte, MG',
+                  salon: 'Salão Prime · Belo Horizonte, MG',
                   result: 'Reduzi o tempo administrativo da equipe',
-                  text: 'O financeiro e a agenda em um painel so mudaram minha rotina. Fica muito mais facil decidir.',
+                  text: 'O financeiro e a agenda em um painel só mudaram minha rotina. Fica muito mais fácil decidir.',
                   avatar: 'CM',
                   color: 'bg-blue-100 text-blue-700',
                 },
                 {
                   name: 'Beatriz Costa',
-                  salon: 'Bella Estetica · Curitiba, PR',
-                  result: 'Zero conflito de horario desde a implantacao',
-                  text: 'Minha equipe finalmente trabalha com a mesma visao do dia. Isso tirou muito ruido da operacao.',
+                  salon: 'Bella Estética · Curitiba, PR',
+                  result: 'Zero conflito de horário desde a implantação',
+                  text: 'Minha equipe finalmente trabalha com a mesma visão do dia. Isso tirou muito ruído da operação.',
                   avatar: 'BC',
                   color: 'bg-purple-100 text-purple-700',
                 },
@@ -785,7 +785,7 @@ export default function SalePage() {
             id="faq"
             className="bg-slate-50 dark:bg-slate-900/40"
             title="Perguntas frequentes"
-            subtitle="Tire suas duvidas antes de comecar."
+            subtitle="Tire suas dúvidas antes de começar."
           >
             <div className="mx-auto max-w-2xl">
               <Accordion type="single" collapsible className="space-y-2">
@@ -815,11 +815,11 @@ export default function SalePage() {
               className="rounded-[28px] bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-500 px-6 py-14 text-center text-white shadow-lg"
             >
               <h2 id="cta-final-title" className="text-2xl font-bold md:text-4xl">
-                Pronto para transformar seu salao?
+                Pronto para transformar seu salão?
               </h2>
               <p className="mx-auto mt-3 max-w-2xl text-sm text-white/90 md:text-base">
                 Comece hoje e use um sistema pensado para organizar agenda, clientes, equipe e
-                financeiro sem complicar a operacao.
+                financeiro sem complicar a operação.
               </p>
               <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Button
@@ -827,7 +827,7 @@ export default function SalePage() {
                   className="bg-white px-8 text-base font-semibold text-emerald-700 hover:bg-white/90"
                   onClick={() => scrollToSection('cadastro')}
                 >
-                  Criar minha conta gratis
+                  Criar minha conta grátis
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <Button
@@ -858,7 +858,7 @@ export default function SalePage() {
                   <p className="font-semibold text-white">Azzo Agenda Pro</p>
                 </div>
                 <p className="mt-2 text-sm text-slate-400">
-                  Sistema de gestao completo para saloes de beleza, barbearias e esteticas.
+                  Sistema de gestão completo para salões de beleza, barbearias e estéticas.
                 </p>
               </div>
               <div>
@@ -871,12 +871,12 @@ export default function SalePage() {
                   </li>
                   <li>
                     <a href="#experiencia" className="transition-colors hover:text-white">
-                      Experiencia
+                      Experiência
                     </a>
                   </li>
                   <li>
                     <a href="#precos" className="transition-colors hover:text-white">
-                      Precos
+                      Preços
                     </a>
                   </li>
                 </ul>

@@ -20,6 +20,9 @@ import ServicesOverviewPage from "./pages/services/ServicesOverviewPage";
 import ServiceImportsPage from "./pages/services/ServiceImportsPage";
 import ServiceImportDetailPage from "./pages/services/ServiceImportDetailPage";
 import Specialties from "./pages/Specialties";
+import SpecialtiesOverviewPage from "./pages/specialties/SpecialtiesOverviewPage";
+import SpecialtyImportsPage from "./pages/specialties/SpecialtyImportsPage";
+import SpecialtyImportDetailPage from "./pages/specialties/SpecialtyImportDetailPage";
 import Professionals from "./pages/Professionals";
 import ProfessionalProfile from "./pages/ProfessionalProfile";
 import ProfessionalCommissionSettings from "./pages/ProfessionalCommissionSettings";
@@ -361,7 +364,11 @@ function AppRoutes() {
               <Specialties />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<SpecialtiesOverviewPage />} />
+          <Route path="importacoes" element={<SpecialtyImportsPage />} />
+          <Route path="importacoes/:jobId" element={<SpecialtyImportDetailPage />} />
+        </Route>
         <Route
           path="/profissionais"
           element={
