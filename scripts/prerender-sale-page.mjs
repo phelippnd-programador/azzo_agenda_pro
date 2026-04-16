@@ -4,8 +4,9 @@ import path from "node:path";
 const projectRoot = process.cwd();
 const distDir = path.join(projectRoot, "dist");
 const sourceIndexPath = path.join(distDir, "index.html");
-const targetDir = path.join(distDir, "compras");
-const targetIndexPath = path.join(targetDir, "index.html");
+const saleTargetDir = path.join(distDir, "compras");
+const saleTargetIndexPath = path.join(saleTargetDir, "index.html");
+const staticPublicRoutes = ["login", "termos-de-uso", "politica-privacidade"];
 
 const canonicalUrl = "https://www.azzoholding.com.br/compras";
 const ogImageUrl = "https://www.azzoholding.com.br/images/hero_salon_system.png";
@@ -182,8 +183,15 @@ const run = async () => {
   ]);
   const prerenderedHtml = replaceRoot(withStructuredData, salePageSnapshot);
 
-  await fs.mkdir(targetDir, { recursive: true });
-  await fs.writeFile(targetIndexPath, prerenderedHtml, "utf8");
+  await fs.mkdir(saleTargetDir, { recursive: true });
+  await fs.writeFile(saleTargetIndexPath, prerenderedHtml, "utf8");
+
+  for (const route of staticPublicRoutes) {
+    const routeDir = path.join(distDir, route);
+    const routeIndexPath = path.join(routeDir, "index.html");
+    await fs.mkdir(routeDir, { recursive: true });
+    await fs.writeFile(routeIndexPath, sourceHtml, "utf8");
+  }
 };
 
 run().catch((error) => {

@@ -14,10 +14,6 @@
   ],
   "routes": [
     {
-      "src": "^/compras/?$",
-      "dest": "/compras/index.html"
-    },
-    {
       "handle": "filesystem"
     },
     {
