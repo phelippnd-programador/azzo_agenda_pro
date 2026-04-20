@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Service, Professional } from '@/lib/api';
 import { maskPhoneBr } from '@/lib/input-masks';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrencyCents } from '@/lib/format';
 
 interface BookingCustomerStepProps {
   customerName: string;
@@ -106,7 +106,7 @@ export function BookingCustomerStep({
             <div className="flex justify-between pt-2 border-t mt-2">
               <span className="text-foreground font-medium">Total:</span>
               <span className="font-bold text-primary">
-                {formatCurrency(selectedServiceTotal)}
+                {formatCurrencyCents(selectedServiceTotal)}
               </span>
             </div>
           </div>

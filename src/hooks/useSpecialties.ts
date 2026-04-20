@@ -66,6 +66,34 @@ export function useSpecialties() {
     }
   };
 
+  const deleteSelectedSpecialties = async (ids: string[]) => {
+    try {
+      const result = await specialtiesApi.removeSelected(ids);
+      await fetchSpecialties();
+      toast.success(`${result.removedCount} especialidade(s) removida(s) com sucesso!`);
+      return result;
+    } catch (err) {
+      if (!isPlanExpiredApiError(err)) {
+        toast.error(resolveUiError(err, "Erro ao remover especialidades selecionadas").message);
+      }
+      throw err;
+    }
+  };
+
+  const deleteAllSpecialties = async () => {
+    try {
+      const result = await specialtiesApi.removeAll();
+      await fetchSpecialties();
+      toast.success(`${result.removedCount} especialidade(s) removida(s) com sucesso!`);
+      return result;
+    } catch (err) {
+      if (!isPlanExpiredApiError(err)) {
+        toast.error(resolveUiError(err, "Erro ao remover todas as especialidades").message);
+      }
+      throw err;
+    }
+  };
+
   const updateSpecialty = async (
     id: string,
     input: { name: string; description?: string }
@@ -99,5 +127,7 @@ export function useSpecialties() {
     createSpecialty,
     updateSpecialty,
     deleteSpecialty,
+    deleteSelectedSpecialties,
+    deleteAllSpecialties,
   };
 }

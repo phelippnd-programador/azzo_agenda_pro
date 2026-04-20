@@ -10,11 +10,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageErrorState } from "@/components/ui/page-states";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileDropzone } from "@/components/ui/file-dropzone";
 import { ClientAppointmentDetailSheet } from "@/components/clients/ClientAppointmentDetailSheet";
 import { formatStatusLabel } from "@/components/clients/AppointmentTimelineCard";
-import { appointmentsApi, clientsApi, servicesApi, type Client, type Service } from "@/lib/api";
+import { appointmentsApi, clientsApi, resolveApiMediaUrl, servicesApi, type Client, type Service } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import { formatCurrency, formatDateOnly, formatDateTime } from "@/lib/format";
+import { prepareImageUpload } from "@/lib/image-upload";
+import { toast } from "sonner";
 import type {
   AppointmentDetailResponse,
   ClientAppointmentHistoryResponse,
@@ -38,6 +41,9 @@ export default function ClientProfile() {
   const [detailError, setDetailError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAvatarUploading, setIsAvatarUploading] = useState(false);
+  const [isAvatarRemoving, setIsAvatarRemoving] = useState(false);
+  const avatarUrl = resolveApiMediaUrl(client?.avatarUrl ?? null);
 
   useEffect(() => {
     let mounted = true;
@@ -163,6 +169,34 @@ export default function ClientProfile() {
     badgeText: `${service.completedServices}x`,
     metaText: `${formatCurrency(service.revenueTotal)} - ultima: ${service.lastAppointmentDate ? formatDateOnly(service.lastAppointmentDate) : "-"}`,
   }));
+  const handleAvatarUpload = async (file: File) => {
+    if (!client) return;
+    setIsAvatarUploading(true);
+    try {
+      const preparedFile = await prepareImageUpload(file);
+      const updatedClient = await clientsApi.uploadAvatar(client.id, preparedFile);
+      setClient(updatedClient);
+      toast.success("Avatar do cliente atualizado com sucesso");
+    } catch (err) {
+      toast.error(resolveUiError(err, "Nao foi possivel atualizar o avatar do cliente.").message);
+    } finally {
+      setIsAvatarUploading(false);
+    }
+  };
+
+  const handleAvatarRemove = async () => {
+    if (!client) return;
+    setIsAvatarRemoving(true);
+    try {
+      const updatedClient = await clientsApi.removeAvatar(client.id);
+      setClient(updatedClient);
+      toast.success("Avatar do cliente removido com sucesso");
+    } catch (err) {
+      toast.error(resolveUiError(err, "Nao foi possivel remover o avatar do cliente.").message);
+    } finally {
+      setIsAvatarRemoving(false);
+    }
+  };
 
   return (
     <MainLayout title="Perfil do Cliente" subtitle={client.name}>
@@ -179,37 +213,59 @@ export default function ClientProfile() {
               {client.name}
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2">
-            <p className="text-sm">
-              <span className="font-medium">Telefone:</span>{" "}
-              <span className="inline-flex items-center gap-1">
-                <Phone className="w-3.5 h-3.5 text-muted-foreground" />
-                {client.phone || "-"}
-              </span>
-            </p>
-            <p className="text-sm">
-              <span className="font-medium">E-mail:</span>{" "}
-              <span className="inline-flex items-center gap-1">
-                <Mail className="w-3.5 h-3.5 text-muted-foreground" />
-                {client.email || "-"}
-              </span>
-            </p>
-            <p className="text-sm">
-              <span className="font-medium">Ultima visita:</span>{" "}
-              <span className="inline-flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-                {client.lastVisit ? formatDateOnly(client.lastVisit) : "Nunca"}
-              </span>
-            </p>
-            <p className="text-sm">
-              <span className="font-medium">Visitas:</span> {client.totalVisits}
-            </p>
-            <p className="text-sm">
-              <span className="font-medium">Total gasto:</span> {formatCurrency(client.totalSpent)}
-            </p>
-            <p className="text-sm">
-              <span className="font-medium">Observacoes:</span> {client.notes || "-"}
-            </p>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <FileDropzone
+                title="Avatar do cliente"
+                helperText="JPG, PNG ou WEBP"
+                accept={{
+                  "image/jpeg": [".jpg", ".jpeg"],
+                  "image/png": [".png"],
+                  "image/webp": [".webp"],
+                }}
+                maxSizeBytes={10 * 1024 * 1024}
+                currentPreviewUrl={avatarUrl}
+                previewAlt={client.name}
+                isLoading={isAvatarUploading || isAvatarRemoving}
+                onFileSelected={handleAvatarUpload}
+                onRemove={avatarUrl ? handleAvatarRemove : undefined}
+                inputTestId="client-avatar-input"
+                variant="avatar"
+                className="shrink-0"
+              />
+              <div className="grid flex-1 gap-3 sm:grid-cols-2">
+                <p className="text-sm">
+                  <span className="font-medium">Telefone:</span>{" "}
+                  <span className="inline-flex items-center gap-1">
+                    <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+                    {client.phone || "-"}
+                  </span>
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">E-mail:</span>{" "}
+                  <span className="inline-flex items-center gap-1">
+                    <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                    {client.email || "-"}
+                  </span>
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Ultima visita:</span>{" "}
+                  <span className="inline-flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                    {client.lastVisit ? formatDateOnly(client.lastVisit) : "Nunca"}
+                  </span>
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Visitas:</span> {client.totalVisits}
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Total gasto:</span> {formatCurrency(client.totalSpent)}
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Observacoes:</span> {client.notes || "-"}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 

@@ -4,7 +4,7 @@
   "packageManager": "pnpm@8.10.0",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/prerender-sale-page.mjs",
     "lint": "eslint --quiet ./src",
     "preview": "vite preview",
     "test": "vitest --config vitest.config.ts",

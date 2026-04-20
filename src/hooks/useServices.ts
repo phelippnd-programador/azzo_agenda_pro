@@ -51,6 +51,32 @@ export function useServices(options?: UseResourceListOptions) {
     }
   };
 
+  const deleteSelectedServices = async (ids: string[]) => {
+    try {
+      const result = await servicesApi.removeSelected(ids);
+      await _fetch({ page: pagination.page, limit: pagination.limit });
+      toast.success(`${result.removedCount} servico(s) removido(s) com sucesso!`);
+      return result;
+    } catch (err) {
+      if (!isPlanExpiredApiError(err))
+        toast.error(resolveUiError(err, "Erro ao remover servicos selecionados").message);
+      throw err;
+    }
+  };
+
+  const deleteAllServices = async () => {
+    try {
+      const result = await servicesApi.removeAll();
+      await _fetch({ page: 1, limit: pagination.limit });
+      toast.success(`${result.removedCount} servico(s) removido(s) com sucesso!`);
+      return result;
+    } catch (err) {
+      if (!isPlanExpiredApiError(err))
+        toast.error(resolveUiError(err, "Erro ao remover todos os servicos").message);
+      throw err;
+    }
+  };
+
   return {
     services,
     pagination,
@@ -61,5 +87,7 @@ export function useServices(options?: UseResourceListOptions) {
     createService,
     updateService,
     deleteService,
+    deleteSelectedServices,
+    deleteAllServices,
   };
 }

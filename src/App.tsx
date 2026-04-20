@@ -20,6 +20,9 @@ import ServicesOverviewPage from "./pages/services/ServicesOverviewPage";
 import ServiceImportsPage from "./pages/services/ServiceImportsPage";
 import ServiceImportDetailPage from "./pages/services/ServiceImportDetailPage";
 import Specialties from "./pages/Specialties";
+import SpecialtiesOverviewPage from "./pages/specialties/SpecialtiesOverviewPage";
+import SpecialtyImportsPage from "./pages/specialties/SpecialtyImportsPage";
+import SpecialtyImportDetailPage from "./pages/specialties/SpecialtyImportDetailPage";
 import Professionals from "./pages/Professionals";
 import ProfessionalProfile from "./pages/ProfessionalProfile";
 import ProfessionalCommissionSettings from "./pages/ProfessionalCommissionSettings";
@@ -57,6 +60,7 @@ import LicensePage from "./pages/LicensePage";
 import SalonProfile from "./pages/SalonProfile";
 import UserProfile from "./pages/UserProfile";
 import AppointmentManagementReport from "./pages/report/AppointmentManagementReport";
+import AbandonmentReport from "./pages/report/AbandonmentReport";
 import NoShowReport from "./pages/report/NoShowReport";
 import TaxConfig from "./pages/tax/TaxConfig";
 import FiscalCertificatesSettings from "./pages/tax/FiscalCertificatesSettings";
@@ -278,6 +282,14 @@ function AppRoutes() {
           }
         />
           <Route
+            path="/relatorio/abandono"
+            element={
+              <ProtectedRoute>
+                <AbandonmentReport />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/relatorios"
             element={
               <ProtectedRoute>
@@ -309,6 +321,14 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+          <Route
+            path="/relatorios/abandono"
+            element={
+              <ProtectedRoute>
+                <Navigate to="/relatorio/abandono" replace />
+              </ProtectedRoute>
+            }
+          />
         <Route
           path="/agenda/no-show"
           element={
@@ -344,7 +364,11 @@ function AppRoutes() {
               <Specialties />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<SpecialtiesOverviewPage />} />
+          <Route path="importacoes" element={<SpecialtyImportsPage />} />
+          <Route path="importacoes/:jobId" element={<SpecialtyImportDetailPage />} />
+        </Route>
         <Route
           path="/profissionais"
           element={

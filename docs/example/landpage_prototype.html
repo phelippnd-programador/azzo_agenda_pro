@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azzo Agenda Pro - Sistema para Salão de Beleza</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        /* Header/Navbar */
+        header {
+            background: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1a7c5c;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #1a7c5c;
+        }
+
+        .cta-button {
+            background: #1a7c5c;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .cta-button:hover {
+            background: #156b4d;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, rgba(26, 124, 92, 0.8) 0%, rgba(26, 124, 92, 0.6) 100%),
+                        url('file:///home/ubuntu/card_hero_3_2.png') center/cover;
+            background-attachment: fixed;
+            color: white;
+            padding: 6rem 2rem;
+            text-align: center;
+            min-height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-content {
+            max-width: 700px;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #1a7c5c;
+            padding: 1rem 2rem;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            padding: 1rem 2rem;
+            border: 2px solid white;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: #1a7c5c;
+        }
+
+        /* Stats Section */
+        .stats {
+            background: #f8f9fa;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .stats-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .stat-item h3 {
+            font-size: 2.5rem;
+            color: #1a7c5c;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-item p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 4rem 2rem;
+            background: white;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+        }
+
+        .features-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .feature-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+
+        .feature-content {
+            padding: 1.5rem;
+        }
+
+        .feature-content h3 {
+            color: #1a7c5c;
+            margin-bottom: 0.75rem;
+            font-size: 1.3rem;
+        }
+
+        .feature-content p {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* Experience Section */
+        .experience {
+            padding: 4rem 2rem;
+            background: #f8f9fa;
+        }
+
+        .experience-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .experience-image {
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .experience-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .experience-content h2 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .experience-content p {
+            color: #666;
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+
+        .experience-list {
+            list-style: none;
+            margin-top: 1.5rem;
+        }
+
+        .experience-list li {
+            padding: 0.75rem 0;
+            padding-left: 2rem;
+            position: relative;
+            color: #666;
+        }
+
+        .experience-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #1a7c5c;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        /* Management Section */
+        .management {
+            padding: 4rem 2rem;
+            background: white;
+        }
+
+        .management-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .management-content {
+            order: 2;
+        }
+
+        .management-image {
+            order: 1;
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .management-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .management-content h2 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .management-content p {
+            color: #666;
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #1a7c5c 0%, #156b4d 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        /* Footer */
+        footer {
+            background: #333;
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .section-title {
+                font-size: 1.8rem;
+            }
+
+            .experience-container,
+            .management-container {
+                grid-template-columns: 1fr;
+            }
+
+            .management-content {
+                order: 1;
+            }
+
+            .management-image {
+                order: 2;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <div class="logo">🌿 Azzo Agenda Pro</div>
+            <ul class="nav-links">
+                <li><a href="#features">Funcionalidades</a></li>
+                <li><a href="#experience">Experiência</a></li>
+                <li><a href="#management">Gestão</a></li>
+                <li><a href="#cta">Preços</a></li>
+            </ul>
+            <button class="cta-button">Teste Grátis</button>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Sistema Completo para Salão de Beleza</h1>
+            <p>Agenda, clientes, financeiro e equipe em um único lugar. Organize seu negócio e cresça sem complicações.</p>
+            <div class="hero-buttons">
+                <a href="#" class="btn-primary">Começar Teste Grátis</a>
+                <a href="#" class="btn-secondary">Ver Como Funciona</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="stats-container">
+            <div class="stat-item">
+                <h3>200+</h3>
+                <p>Salões Ativos</p>
+            </div>
+            <div class="stat-item">
+                <h3>15 mil+</h3>
+                <p>Agendamentos/mês</p>
+            </div>
+            <div class="stat-item">
+                <h3>98%</h3>
+                <p>Taxa de Satisfação</p>
+            </div>
+            <div class="stat-item">
+                <h3>&lt; 5 min</h3>
+                <p>Para Começar</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <h2 class="section-title">Tudo que seu Salão Precisa</h2>
+        <p class="section-subtitle">Funcionalidades completas pensadas para o seu sucesso</p>
+        
+        <div class="features-container">
+            <div class="feature-card">
+                <img src="file:///home/ubuntu/card_servico_1_1.png" alt="Experiência do Cliente" class="feature-image">
+                <div class="feature-content">
+                    <h3>Experiência Premium</h3>
+                    <p>Seus clientes recebem um atendimento de primeira qualidade, com agendamentos confirmados e lembretes automáticos.</p>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <img src="file:///home/ubuntu/card_ferramentas_1_1.png" alt="Ferramentas Profissionais" class="feature-image">
+                <div class="feature-content">
+                    <h3>Ferramentas Profissionais</h3>
+                    <p>Sistema robusto e confiável, desenvolvido especificamente para salões, barbearias e clínicas de estética.</p>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <img src="file:///home/ubuntu/card_gestao_3_2.png" alt="Gestão Tranquila" class="feature-image">
+                <div class="feature-content">
+                    <h3>Gestão Tranquila</h3>
+                    <p>Controle total do seu negócio com relatórios inteligentes, análise de rentabilidade e previsões de crescimento.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Experience Section -->
+    <section class="experience" id="experience">
+        <div class="experience-container">
+            <div class="experience-image">
+                <img src="file:///home/ubuntu/card_servico_1_1.png" alt="Experiência do Cliente">
+            </div>
+            <div class="experience-content">
+                <h2>Uma Experiência Excepcional para Seus Clientes</h2>
+                <p>Com o Azzo Agenda Pro, seus clientes têm acesso a um sistema intuitivo e fácil de usar. Eles podem agendar, confirmar e receber lembretes automáticos.</p>
+                <ul class="experience-list">
+                    <li>Agendamento online 24/7</li>
+                    <li>Confirmação automática de compromissos</li>
+                    <li>Lembretes por SMS e WhatsApp</li>
+                    <li>Histórico de serviços e preferências</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Management Section -->
+    <section class="management" id="management">
+        <div class="management-container">
+            <div class="management-image">
+                <img src="file:///home/ubuntu/card_gestao_3_2.png" alt="Gestão do Negócio">
+            </div>
+            <div class="management-content">
+                <h2>Gestão Inteligente do Seu Negócio</h2>
+                <p>Tenha controle total sobre agendamentos, equipe, financeiro e clientes. Tudo em um único dashboard intuitivo que te dá a visão completa do seu negócio.</p>
+                <ul class="experience-list">
+                    <li>Dashboard com indicadores em tempo real</li>
+                    <li>Gestão de equipe e comissões</li>
+                    <li>Controle financeiro e fluxo de caixa</li>
+                    <li>Relatórios detalhados e exportáveis</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="cta">
+        <h2>Pronto para Transformar Seu Salão?</h2>
+        <p>Comece seu teste grátis agora. Sem cartão de crédito, sem compromisso.</p>
+        <button class="cta-button" style="background: white; color: #1a7c5c; font-size: 1.1rem; padding: 1rem 2rem;">Começar Teste Grátis Agora</button>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 Azzo Agenda Pro. Todos os direitos reservados.</p>
+    </footer>
+</body>
+</html>

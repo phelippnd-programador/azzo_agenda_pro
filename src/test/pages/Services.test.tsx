@@ -77,5 +77,6 @@ describe("Services", () => {
     expect(await screen.findByText("Corte Feminino")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Novo Servi/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Cabelo" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button").length).toBeGreaterThan(2);
   });
 });

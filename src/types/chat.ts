@@ -13,6 +13,7 @@ export interface ChatConversation {
   id: string;
   clientId: string;
   clientName?: string | null;
+  clientAvatar?: string | null;
   clientProfileImageUrl?: string | null;
   clientPhoneMasked?: string | null;
   channel: "WHATSAPP";

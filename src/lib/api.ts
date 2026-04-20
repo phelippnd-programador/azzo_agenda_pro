@@ -150,6 +150,12 @@ import type {
   ServiceImportTemplateFormat,
 } from "@/types/service-import";
 import type {
+  SpecialtyImportErrorLine,
+  SpecialtyImportJob,
+  SpecialtyImportMode,
+  SpecialtyImportTemplateFormat,
+} from "@/types/specialty-import";
+import type {
   ChatAppointmentMarker,
   ChatConversation,
   ChatConversationListResponse,
@@ -274,6 +280,9 @@ export type ListResponse<T> =
       page?: number;
       pageSize?: number;
       hasMore?: boolean;
+      totalCount?: number;
+      currentPage?: number;
+      totalPages?: number;
     };
 
 export type DashboardProfessionalMetricsResponse = {
@@ -956,6 +965,15 @@ export const servicesApi = {
     request<void>(`/services/${id}`, {
       method: "DELETE",
     }),
+  removeSelected: (ids: string[]) =>
+    request<{ removedCount: number }>("/services/remove-selected", {
+      method: "POST",
+      body: JSON.stringify({ ids }),
+    }),
+  removeAll: () =>
+    request<{ removedCount: number }>("/services/remove-all", {
+      method: "POST",
+    }),
 };
 
 /* ================= PROFESSIONALS ================= */
@@ -1009,15 +1027,81 @@ export const specialtiesApi = {
     request<void>(`/specialties/${id}`, {
       method: "DELETE",
     }),
+  removeSelected: (ids: string[]) =>
+    request<{ removedCount: number }>("/specialties/remove-selected", {
+      method: "POST",
+      body: JSON.stringify({ ids }),
+    }),
+  removeAll: () =>
+    request<{ removedCount: number }>("/specialties/remove-all", {
+      method: "POST",
+    }),
+};
+
+export const specialtyImportApi = {
+  listImportJobs: () => request<SpecialtyImportJob[]>("/specialties/importacoes"),
+  downloadImportTemplate: (params?: { formato?: SpecialtyImportTemplateFormat }) => {
+    const query = new URLSearchParams();
+    query.set("formato", params?.formato ?? "xlsx");
+    return requestBlob(`/specialties/importacoes/modelo?${query.toString()}`);
+  },
+  createImportJob: (params: { arquivo: File; modoImportacao: SpecialtyImportMode; dryRun?: boolean }) => {
+    const formData = new FormData();
+    formData.append("arquivo", params.arquivo);
+    formData.append("modoImportacao", params.modoImportacao);
+    if (typeof params.dryRun === "boolean") formData.append("dryRun", String(params.dryRun));
+    return request<SpecialtyImportJob>("/specialties/importacoes", {
+      method: "POST",
+      body: formData,
+    });
+  },
+  getImportJobById: (jobId: string) =>
+    request<SpecialtyImportJob>(`/specialties/importacoes/${jobId}`),
+  getImportErrors: (jobId: string) =>
+    request<SpecialtyImportErrorLine[]>(`/specialties/importacoes/${jobId}/erros`),
+  cancelImportJob: (jobId: string) =>
+    request<SpecialtyImportJob>(`/specialties/importacoes/${jobId}/cancelar`, {
+      method: "POST",
+    }),
 };
 
 /* ================= CLIENTS ================= */
 
 export const clientsApi = {
   getAll: (params?: ListQueryParams) => {
-    const query = buildListQuery(params);
-    const suffix = query.toString() ? `?${query.toString()}` : "";
-    return request<ListResponse<Client>>(`/clients${suffix}`);
+    const page = typeof params?.page === "number" && params.page > 0 ? params.page : 1;
+    const size = typeof params?.limit === "number" && params.limit > 0 ? params.limit : undefined;
+    const query = new URLSearchParams();
+    query.set("page", String(page - 1));
+    if (size) {
+      query.set("size", String(size));
+    }
+    if (typeof params?.search === "string" && params.search.trim()) {
+      query.set("search", params.search.trim());
+    }
+
+    return request<{
+      items?: Client[];
+      totalCount?: number;
+      currentPage?: number;
+      totalPages?: number;
+    }>(`/clients/paged?${query.toString()}`).then((response) => {
+      const items = response.items ?? [];
+      const totalCount = response.totalCount ?? items.length;
+      const currentPage = (response.currentPage ?? 0) + 1;
+      const pageSize = size ?? (items.length > 0 ? items.length : 20);
+      const totalPages =
+        response.totalPages ??
+        (pageSize > 0 ? Math.ceil(totalCount / pageSize) : 0);
+
+      return {
+        items,
+        total: totalCount,
+        page: currentPage,
+        pageSize,
+        hasMore: currentPage < totalPages,
+      } satisfies ListResponse<Client>;
+    });
   },
   getById: (id: string) => request<Client>(`/clients/${id}`),
   getAppointmentHistory: (
@@ -1048,6 +1132,18 @@ export const clientsApi = {
     request<Client>(`/clients/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
+    }),
+  uploadAvatar: (id: string, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return request<Client>(`/clients/${id}/avatar`, {
+      method: "POST",
+      body: formData,
+    });
+  },
+  removeAvatar: (id: string) =>
+    request<Client>(`/clients/${id}/avatar`, {
+      method: "DELETE",
     }),
   delete: (id: string) =>
     request<void>(`/clients/${id}`, {
@@ -1594,6 +1690,28 @@ export const reportsApi = {
     request(
       `/reports/commissions?from=${from}&to=${to}&professionalUserId=${professionalUserId}`
     ),
+  getAbandonment: (params?: {
+    from?: string;
+    to?: string;
+    days?: number;
+    status?: string;
+    stage?: string;
+    search?: string;
+    pageIndex?: number;
+    pageSize?: number;
+  }) => {
+    const query = new URLSearchParams();
+    if (params?.from) query.set("from", params.from);
+    if (params?.to) query.set("to", params.to);
+    if (typeof params?.days === "number") query.set("days", String(params.days));
+    if (params?.status && params.status.trim().length > 0) query.set("status", params.status.trim());
+    if (params?.stage && params.stage.trim().length > 0) query.set("stage", params.stage.trim());
+    if (params?.search && params.search.trim().length > 0) query.set("search", params.search.trim());
+    if (typeof params?.pageIndex === "number") query.set("pageIndex", String(params.pageIndex));
+    if (typeof params?.pageSize === "number") query.set("pageSize", String(params.pageSize));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<DashboardWhatsAppReactivationQueueResponse>(`/reports/abandonment${suffix}`);
+  },
 };
 
 /* ================= NOTIFICATIONS ================= */
@@ -1666,6 +1784,11 @@ export type SalonBusinessHours = {
   close: string;
 };
 
+export type SalonSpecialClosureDate = {
+  date: string;
+  reason?: string | null;
+};
+
 export type SalonProfile = {
   salonName: string;
   salonSlug: string;
@@ -1688,6 +1811,7 @@ export type SalonProfile = {
   state?: string | null;
   zipCode?: string | null;
   businessHours: SalonBusinessHours[];
+  specialClosureDates: SalonSpecialClosureDate[];
 };
 
 export const salonApi = {
@@ -2727,3 +2851,15 @@ export const publicBookingApi = {
 };
 
 
+export const resolveApiMediaUrl = (value?: string | null) => {
+  if (!value) return null;
+  if (value.startsWith("http://") || value.startsWith("https://")) return value;
+  if (!value.startsWith("/")) return value;
+
+  const apiOrigin = API_URL.replace(/\/api\/v1$/, "");
+  try {
+    return new URL(value, `${apiOrigin}/`).toString();
+  } catch {
+    return value;
+  }
+};

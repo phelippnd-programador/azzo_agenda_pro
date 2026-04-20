@@ -144,6 +144,7 @@ type DynamicMenuNode = {
 };
 
 const DYNAMIC_BOTTOM_ROUTES = new Set(["/perfil-salao", "/configuracoes"]);
+const STANDALONE_LAST_ROUTES = new Set(["/financeiro/licenca"]);
 const GROUP_ONLY_ROUTES = new Set(["/relatorio"]);
 const HIDDEN_MENU_ROUTES = new Set([
   "/unauthorized",
@@ -159,6 +160,8 @@ const HIDDEN_MENU_ROUTES = new Set([
   "/clientes/importacoes/:jobId",
   "/servicos/importacoes",
   "/servicos/importacoes/:jobId",
+  "/especialidades/importacoes",
+  "/especialidades/importacoes/:jobId",
   "/perfil-usuario",
 ]);
 
@@ -173,6 +176,12 @@ function sortMenuNodes<T extends { displayOrder?: number; label?: string }>(item
 function resolveMenuIcon(item: CurrentMenuPermissionItem): LucideIcon {
   if (item.iconKey && ICON_REGISTRY[item.iconKey]) return ICON_REGISTRY[item.iconKey];
   return MENU_REGISTRY[item.route as keyof typeof MENU_REGISTRY]?.icon ?? Settings;
+}
+
+function moveStandaloneRoutesToEnd<T extends { path: string }>(items: T[]) {
+  const regularItems = items.filter((item) => !STANDALONE_LAST_ROUTES.has(item.path));
+  const standaloneItems = items.filter((item) => STANDALONE_LAST_ROUTES.has(item.path));
+  return [...regularItems, ...standaloneItems];
 }
 
 export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: SidebarProps) {
@@ -199,6 +208,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
     visibleItems.forEach((item) => {
       if (!allowedSet.has(item.route)) return;
       includedIds.add(item.id);
+      if (STANDALONE_LAST_ROUTES.has(item.route)) return;
       let currentParentId = item.parentId || null;
       while (currentParentId) {
         const parent = byId.get(currentParentId);
@@ -229,7 +239,10 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
     ).forEach((item) => {
       const node = nodeMap.get(item.id);
       if (!node) return;
-      const parent = item.parentId ? nodeMap.get(item.parentId) : null;
+      const parent =
+        item.parentId && !STANDALONE_LAST_ROUTES.has(item.route)
+          ? nodeMap.get(item.parentId)
+          : null;
       if (parent) {
         parent.children.push(node);
         parent.children = sortMenuNodes(
@@ -243,7 +256,9 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
       }
     });
 
-    return sortMenuNodes(roots).map(({ displayOrder: _, ...node }) => node);
+    return moveStandaloneRoutesToEnd(
+      sortMenuNodes(roots).map(({ displayOrder: _, ...node }) => node)
+    );
   }, [allowedSet, menuItems]);
 
   const visibleMenuEntries = useMemo(() => {
@@ -294,7 +309,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
       else entries.push(financialGroup);
     }
 
-    return entries;
+    return moveStandaloneRoutesToEnd(entries);
   }, [allowedSet, dynamicMenuNodes]);
   const [salonSlug, setSalonSlug] = useState("meu-salao");
 

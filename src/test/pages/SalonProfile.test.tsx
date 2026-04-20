@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import SalonProfile from "@/pages/SalonProfile";
@@ -81,6 +81,7 @@ describe("SalonProfile", () => {
       state: "SP",
       zipCode: "01001-000",
       businessHours: [],
+      specialClosureDates: [],
     });
     updateProfileMock.mockResolvedValue({ publicBookingUrl: "https://qa.local/agendar/salao-qa" });
     uploadLogoMock.mockResolvedValue({
@@ -90,6 +91,7 @@ describe("SalonProfile", () => {
       logo: "tenant/owner-1/salao/logo/logo.webp",
       logoUrl: "https://cdn.qa.local/logo.webp",
       businessHours: [],
+      specialClosureDates: [],
     });
     removeLogoMock.mockResolvedValue({
       salonName: "Salao QA",
@@ -98,6 +100,7 @@ describe("SalonProfile", () => {
       logo: null,
       logoUrl: null,
       businessHours: [],
+      specialClosureDates: [],
     });
     prepareImageUploadMock.mockImplementation(async (file: File) => file);
     getAddressByCepMock.mockResolvedValue({ street: "Rua A", neighborhood: "Centro", city: "Sao Paulo", state: "SP", complement: "Sala 1" });
@@ -129,6 +132,28 @@ describe("SalonProfile", () => {
       expect(updateProfileMock).toHaveBeenCalled();
     });
     expect(toastSuccessMock).toHaveBeenCalled();
+  });
+
+  it("should add special closure date before save", async () => {
+    render(
+      <MemoryRouter initialEntries={["/perfil-salao"]}>
+        <SalonProfile />
+      </MemoryRouter>
+    );
+
+    await screen.findByText("Datas Especiais de Fechamento");
+    fireEvent.change(screen.getByTestId("special-closure-date-input"), { target: { value: "2026-12-25" } });
+    fireEvent.change(screen.getByTestId("special-closure-reason-input"), { target: { value: "Natal" } });
+    fireEvent.click(screen.getByRole("button", { name: /Marcar fechado/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Salvar Alteracoes/i }));
+
+    await waitFor(() => {
+      expect(updateProfileMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          specialClosureDates: [{ date: "2026-12-25", reason: "Natal" }],
+        }),
+      );
+    });
   });
 
   it("should upload salon logo", async () => {

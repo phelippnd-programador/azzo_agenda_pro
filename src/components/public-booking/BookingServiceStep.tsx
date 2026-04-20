@@ -3,7 +3,7 @@ import { CardContent, CardDescription, CardHeader, CardTitle } from '@/component
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Service } from '@/lib/api';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrencyCents } from '@/lib/format';
 
 interface BookingServiceStepProps {
   services: Service[];
@@ -66,7 +66,7 @@ export function BookingServiceStep({
                     </div>
                     <div className="text-right flex-shrink-0">
                       <span className="text-base sm:text-lg font-bold text-primary">
-                        {formatCurrency(service.price)}
+                        {formatCurrencyCents(service.price)}
                       </span>
                     </div>
                   </div>
@@ -87,7 +87,7 @@ export function BookingServiceStep({
             </div>
             <div className="mt-1 flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Valor total</span>
-              <span className="font-semibold text-primary">{formatCurrency(selectedServiceTotal)}</span>
+              <span className="font-semibold text-primary">{formatCurrencyCents(selectedServiceTotal)}</span>
             </div>
           </div>
         ) : null}

@@ -1,26 +1,36 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { WhatsAppReactivationQueue } from "@/components/dashboard/WhatsAppReactivationQueue";
-import { dashboardApi } from "@/lib/api";
+import { reportsApi } from "@/lib/api";
 
 vi.mock("@/lib/api", async () => {
   const actual = await vi.importActual<typeof import("@/lib/api")>("@/lib/api");
   return {
     ...actual,
-    dashboardApi: {
-      ...actual.dashboardApi,
-      getWhatsAppReactivationQueue: vi.fn(),
+    reportsApi: {
+      ...actual.reportsApi,
+      getAbandonment: vi.fn(),
     },
   };
 });
 
 describe("WhatsAppReactivationQueue", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should render recent abandoned cycles with operational context", async () => {
-    vi.mocked(dashboardApi.getWhatsAppReactivationQueue).mockResolvedValue({
+    vi.mocked(reportsApi.getAbandonment).mockResolvedValue({
       startDate: "2026-03-01",
       endDate: "2026-03-30",
       statusFilter: "ALL",
+      stageFilter: "ALL",
+      searchTerm: "",
       limit: 12,
+      pageIndex: 0,
+      pageSize: 12,
+      totalItems: 1,
+      totalPages: 1,
       exceptionItems: [
         {
           cycleId: "cycle-ex",
@@ -82,17 +92,38 @@ describe("WhatsAppReactivationQueue", () => {
     expect(screen.getByText("Escolha de horario")).toBeInTheDocument();
     expect(screen.getByText("Fluxo travado")).toBeInTheDocument();
     expect(screen.getByText("O assistente identificou travamento no fluxo apos 4 tentativas.")).toBeInTheDocument();
-    expect(screen.getByText("Corte • Phelipp • 30/03/2026 • 15:00")).toBeInTheDocument();
+    expect(screen.getAllByText(/Corte/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Phelipp/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/15:00/).length).toBeGreaterThan(0);
     expect(screen.getByRole("link", { name: /Abrir conversa/i })).toHaveAttribute("href", "/chat/conv-1");
-    expect(screen.getAllByRole("link", { name: /Abrir cliente/i }).some((link) => link.getAttribute("href") === "/clientes/client-1")).toBe(true);
+    expect(
+      screen
+        .getAllByRole("link", { name: /Abrir cliente/i })
+        .some((link) => link.getAttribute("href") === "/clientes/client-1")
+    ).toBe(true);
+    expect(reportsApi.getAbandonment).toHaveBeenCalledWith({
+      from: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      to: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      status: "ALL",
+      stage: "ALL",
+      search: "",
+      pageIndex: 0,
+      pageSize: 12,
+    });
   });
 
   it("should render empty state when there are no cycles in the filter", async () => {
-    vi.mocked(dashboardApi.getWhatsAppReactivationQueue).mockResolvedValue({
+    vi.mocked(reportsApi.getAbandonment).mockResolvedValue({
       startDate: "2026-03-01",
       endDate: "2026-03-30",
       statusFilter: "ALL",
+      stageFilter: "ALL",
+      searchTerm: "",
       limit: 12,
+      pageIndex: 0,
+      pageSize: 12,
+      totalItems: 0,
+      totalPages: 0,
       exceptionItems: [],
       items: [],
     });

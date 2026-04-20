@@ -89,6 +89,8 @@ export interface Client {
   name: string;
   email: string;
   phone: string;
+  avatar?: string | null;
+  avatarUrl?: string | null;
   birthDate?: Date | string;
   notes?: string;
   address?: ClientAddress;
@@ -353,7 +355,13 @@ export interface DashboardWhatsAppReactivationQueueResponse {
   startDate: string;
   endDate: string;
   statusFilter: string;
+  stageFilter?: string;
+  searchTerm?: string | null;
   limit: number;
+  pageIndex?: number;
+  pageSize?: number;
+  totalItems?: number;
+  totalPages?: number;
   items: DashboardWhatsAppReactivationQueueItem[];
   exceptionItems: DashboardWhatsAppReactivationQueueItem[];
 }
@@ -444,6 +452,11 @@ export interface DashboardMetrics {
   stoppedAtProfessionalSelection: number;
   stoppedAtTimeSelection: number;
   stoppedAtFinalReview: number;
+  whatsAppOpenFlowsToday: number;
+  whatsAppStoppedAtServiceSelection: number;
+  whatsAppStoppedAtProfessionalSelection: number;
+  whatsAppStoppedAtTimeSelection: number;
+  whatsAppStoppedAtFinalReview: number;
 }
 
 export type AppointmentStatus = Appointment['status'];

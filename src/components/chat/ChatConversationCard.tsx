@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { resolveApiMediaUrl } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { ChatAppointmentMarker, ChatConversation } from "@/types/chat";
 import { Clock } from "lucide-react";
@@ -40,6 +41,7 @@ const getInitials = (name?: string | null) => {
 export function ChatConversationCard({ conversation, selected, onClick }: Props) {
   const marker = MARKER_LABELS[conversation.appointmentMarker];
   const preview = conversation.lastMessagePreview || "Sem ultima mensagem.";
+  const avatarSrc = resolveApiMediaUrl(conversation.clientProfileImageUrl);
 
   return (
     <button
@@ -54,7 +56,7 @@ export function ChatConversationCard({ conversation, selected, onClick }: Props)
     >
       <div className="flex items-center gap-2">
         <Avatar className="w-8 h-8 flex-shrink-0">
-            <AvatarImage src={conversation.clientProfileImageUrl || undefined} />
+            <AvatarImage src={avatarSrc || undefined} />
             <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
               {getInitials(conversation.clientName)}
             </AvatarFallback>

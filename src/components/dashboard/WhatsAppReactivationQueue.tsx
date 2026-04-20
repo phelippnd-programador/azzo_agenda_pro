@@ -1,7 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { AlertCircle, CalendarClock, MessageSquareText, RefreshCcw, UserRound } from "lucide-react";
-import { dashboardApi } from "@/lib/api";
+import {
+  AlertCircle,
+  CalendarClock,
+  Filter,
+  MessageSquareText,
+  RefreshCcw,
+  Search,
+  UserRound,
+} from "lucide-react";
+import { reportsApi } from "@/lib/api";
 import { formatDateOnly, formatDateTime } from "@/lib/format";
 import type {
   DashboardWhatsAppReactivationQueueItem,
@@ -9,15 +17,11 @@ import type {
 } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-
-const DAYS_OPTIONS = [
-  { label: "7 dias", value: "7" },
-  { label: "15 dias", value: "15" },
-  { label: "30 dias", value: "30" },
-] as const;
 
 const STATUS_OPTIONS = [
   { label: "Todos os status", value: "ALL" },
@@ -28,13 +32,45 @@ const STATUS_OPTIONS = [
   { label: "Encerrados", value: "EXHAUSTED" },
 ] as const;
 
+const STAGE_OPTIONS = [
+  { label: "Todas as etapas", value: "ALL" },
+  { label: "Servico", value: "SERVICE_SELECTION" },
+  { label: "Profissional", value: "PROFESSIONAL_SELECTION" },
+  { label: "Horario", value: "TIME_SELECTION" },
+  { label: "Revisao final", value: "FINAL_REVIEW" },
+] as const;
+
+const PAGE_SIZE_OPTIONS = [
+  { label: "12 por pagina", value: "12" },
+  { label: "24 por pagina", value: "24" },
+  { label: "50 por pagina", value: "50" },
+] as const;
+
 const emptyQueue: DashboardWhatsAppReactivationQueueResponse = {
   startDate: "",
   endDate: "",
   statusFilter: "ALL",
+  stageFilter: "ALL",
+  searchTerm: "",
   limit: 12,
+  pageIndex: 0,
+  pageSize: 12,
+  totalItems: 0,
+  totalPages: 0,
   items: [],
   exceptionItems: [],
+};
+
+const toInputDate = (value: Date) => value.toISOString().split("T")[0];
+
+const createDefaultDateRange = () => {
+  const end = new Date();
+  const start = new Date(end);
+  start.setDate(end.getDate() - 29);
+  return {
+    from: toInputDate(start),
+    to: toInputDate(end),
+  };
 };
 
 const maskPhone = (value?: string | null) => {
@@ -95,8 +131,22 @@ const getManualInterventionLabel = (reason?: string | null) => {
 };
 
 export function WhatsAppReactivationQueue() {
-  const [days, setDays] = useState("30");
-  const [status, setStatus] = useState("ALL");
+  const defaultRange = useMemo(() => createDefaultDateRange(), []);
+  const [fromInput, setFromInput] = useState(defaultRange.from);
+  const [toInput, setToInput] = useState(defaultRange.to);
+  const [statusInput, setStatusInput] = useState("ALL");
+  const [stageInput, setStageInput] = useState("ALL");
+  const [searchInput, setSearchInput] = useState("");
+  const [pageSizeInput, setPageSizeInput] = useState("12");
+  const [activeFilters, setActiveFilters] = useState({
+    from: defaultRange.from,
+    to: defaultRange.to,
+    status: "ALL",
+    stage: "ALL",
+    search: "",
+    pageIndex: 0,
+    pageSize: 12,
+  });
   const [queue, setQueue] = useState<DashboardWhatsAppReactivationQueueResponse>(emptyQueue);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -105,11 +155,15 @@ export function WhatsAppReactivationQueue() {
     let mounted = true;
     setIsLoading(true);
 
-    dashboardApi
-      .getWhatsAppReactivationQueue({
-        days: Number(days),
-        status,
-        limit: 12,
+    reportsApi
+      .getAbandonment({
+        from: activeFilters.from,
+        to: activeFilters.to,
+        status: activeFilters.status,
+        stage: activeFilters.stage,
+        search: activeFilters.search,
+        pageIndex: activeFilters.pageIndex,
+        pageSize: activeFilters.pageSize,
       })
       .then((data) => {
         if (!mounted) return;
@@ -129,38 +183,98 @@ export function WhatsAppReactivationQueue() {
     return () => {
       mounted = false;
     };
-  }, [days, status]);
+  }, [activeFilters]);
+
+  const totalPages = Math.max(queue.totalPages ?? 0, 0);
+  const currentPage = (queue.pageIndex ?? activeFilters.pageIndex) + 1;
+  const hasItems = queue.items.length > 0;
+
+  const applyFilters = () => {
+    setActiveFilters({
+      from: fromInput,
+      to: toInput,
+      status: statusInput,
+      stage: stageInput,
+      search: searchInput.trim(),
+      pageIndex: 0,
+      pageSize: Number(pageSizeInput),
+    });
+  };
+
+  const clearFilters = () => {
+    const resetRange = createDefaultDateRange();
+    setFromInput(resetRange.from);
+    setToInput(resetRange.to);
+    setStatusInput("ALL");
+    setStageInput("ALL");
+    setSearchInput("");
+    setPageSizeInput("12");
+    setActiveFilters({
+      from: resetRange.from,
+      to: resetRange.to,
+      status: "ALL",
+      stage: "ALL",
+      search: "",
+      pageIndex: 0,
+      pageSize: 12,
+    });
+  };
+
+  const reloadPage = () => {
+    setActiveFilters((current) => ({ ...current }));
+  };
+
+  const handlePreviousPage = () => {
+    setActiveFilters((current) => ({
+      ...current,
+      pageIndex: Math.max(current.pageIndex - 1, 0),
+    }));
+  };
+
+  const handleNextPage = () => {
+    setActiveFilters((current) => ({
+      ...current,
+      pageIndex: totalPages > 0 ? Math.min(current.pageIndex + 1, totalPages - 1) : current.pageIndex + 1,
+    }));
+  };
 
   return (
     <Card className="border-slate-200 bg-white">
-      <CardHeader className="pb-3">
+      <CardHeader className="gap-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-1">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <MessageSquareText className="h-5 w-5 text-slate-700" />
               Fila operacional de abandonos
             </CardTitle>
-            <p className="text-sm text-muted-foreground">
+            <CardDescription>
               Casos recentes para o time acompanhar, reativar ou assumir manualmente no chat.
-            </p>
+            </CardDescription>
           </div>
 
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <Select value={days} onValueChange={setDays}>
-              <SelectTrigger className="w-full sm:w-[140px]">
-                <SelectValue placeholder="Periodo" />
-              </SelectTrigger>
-              <SelectContent>
-                {DAYS_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="text-sm text-muted-foreground lg:text-right">
+            <div>
+              {queue.totalItems ?? 0} ciclo(s) encontrado(s)
+            </div>
+            <div>
+              Pagina {Math.max(currentPage, 1)} de {Math.max(totalPages, 1)}
+            </div>
+          </div>
+        </div>
 
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-full sm:w-[190px]">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">Data inicial</p>
+            <Input type="date" value={fromInput} onChange={(event) => setFromInput(event.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">Data final</p>
+            <Input type="date" value={toInput} onChange={(event) => setToInput(event.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">Status</p>
+            <Select value={statusInput} onValueChange={setStatusInput}>
+              <SelectTrigger>
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -172,10 +286,66 @@ export function WhatsAppReactivationQueue() {
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">Etapa</p>
+            <Select value={stageInput} onValueChange={setStageInput}>
+              <SelectTrigger>
+                <SelectValue placeholder="Etapa" />
+              </SelectTrigger>
+              <SelectContent>
+                {STAGE_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">Busca</p>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                placeholder="Cliente, telefone, servico..."
+                className="pl-9"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">Pagina</p>
+            <Select value={pageSizeInput} onValueChange={setPageSizeInput}>
+              <SelectTrigger>
+                <SelectValue placeholder="Tamanho" />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_SIZE_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={applyFilters}>
+            <Filter className="mr-2 h-4 w-4" />
+            Aplicar filtros
+          </Button>
+          <Button variant="outline" onClick={clearFilters}>
+            Limpar filtros
+          </Button>
+          <Button variant="outline" onClick={reloadPage} disabled={isLoading}>
+            <RefreshCcw className="mr-2 h-4 w-4" />
+            Atualizar
+          </Button>
         </div>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="space-y-4">
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((item) => (
@@ -191,7 +361,7 @@ export function WhatsAppReactivationQueue() {
             <RefreshCcw className="mx-auto mb-3 h-8 w-8 text-slate-500" />
             <p className="font-medium text-foreground">Nenhum ciclo encontrado neste filtro</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Ajuste o periodo ou o status para revisar outros abandonos do WhatsApp.
+              Ajuste periodo, busca, etapa ou status para revisar outros abandonos do WhatsApp.
             </p>
           </div>
         ) : (
@@ -403,6 +573,16 @@ export function WhatsAppReactivationQueue() {
             ) : null}
           </div>
         )}
+
+        {!isLoading && hasItems ? (
+          <PaginationControls
+            page={Math.max(currentPage, 1)}
+            totalPages={Math.max(totalPages, 1)}
+            isLoading={isLoading}
+            onPrevious={handlePreviousPage}
+            onNext={handleNextPage}
+          />
+        ) : null}
       </CardContent>
     </Card>
   );

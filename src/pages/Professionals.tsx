@@ -15,6 +15,7 @@ import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmation
 import { ProfessionalLimitMeter } from '@/components/professionals/ProfessionalLimitMeter';
 import { ProfessionalCard } from '@/components/professionals/ProfessionalCard';
 import { ProfessionalFormDialog } from '@/components/professionals/ProfessionalFormDialog';
+import { useMenuPermissions } from '@/contexts/MenuPermissionsContext';
 import type { WorkingHours } from '@/types';
 
 type ProfessionalData = {
@@ -29,6 +30,7 @@ type ProfessionalData = {
 
 export default function Professionals() {
   const navigate = useNavigate();
+  const { canAccess } = useMenuPermissions();
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProfessional, setEditingProfessional] = useState<ProfessionalData | null>(null);
@@ -53,6 +55,7 @@ export default function Professionals() {
     );
   });
   const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.limit));
+  const canAccessFinancialCommissions = canAccess('/financeiro/comissoes');
 
   const openEditDialog = (prof: ProfessionalData) => {
     setEditingProfessional(prof);
@@ -120,8 +123,17 @@ export default function Professionals() {
           <Info className="h-4 w-4" />
           <AlertTitle>Comissao por profissional</AlertTitle>
           <AlertDescription>
-            A configuracao principal de comissao agora e feita no modulo novo. Use o perfil do profissional ou
-            <strong> Financeiro &gt; Comissoes</strong> para configurar regras e acompanhar apuracao.
+            {canAccessFinancialCommissions ? (
+              <>
+                A configuracao principal de comissao agora e feita no modulo novo. Use o perfil do profissional ou
+                <strong> Financeiro &gt; Comissoes</strong> para configurar regras e acompanhar apuracao.
+              </>
+            ) : (
+              <>
+                A configuracao principal de comissao agora e feita no modulo novo. Use o perfil do profissional
+                para configurar regras e acompanhar apuracao.
+              </>
+            )}
           </AlertDescription>
         </Alert>
 

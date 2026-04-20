@@ -2,6 +2,8 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import Professionals from "@/pages/Professionals";
 
+const canAccessMock = vi.fn((path: string) => path === "/financeiro/comissoes");
+
 vi.mock("@/hooks/useProfessionals", () => ({
   useProfessionals: () => ({
     professionals: [
@@ -50,6 +52,7 @@ vi.mock("@/contexts/MenuPermissionsContext", () => ({
     allowedRoutes: ["/profissionais"],
     menuItems: [],
     hasRoutePermission: () => true,
+    canAccess: canAccessMock,
     refreshPermissions: vi.fn(),
   }),
 }));
@@ -66,6 +69,10 @@ vi.mock("@/components/chat/ChatInboxNotifier", () => ({
 }));
 
 describe("Professionals", () => {
+  beforeEach(() => {
+    canAccessMock.mockImplementation((path: string) => path === "/financeiro/comissoes");
+  });
+
   it("should render professional list and new professional action", async () => {
     render(
       <MemoryRouter initialEntries={["/profissionais"]}>
@@ -74,7 +81,22 @@ describe("Professionals", () => {
     );
 
     expect(await screen.findByText("Comissao por profissional")).toBeInTheDocument();
+    expect(screen.getByText(/Financeiro > Comissoes/i)).toBeInTheDocument();
     expect(screen.getAllByText("Ana Costa").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: /Novo Profissional/i })).toBeInTheDocument();
+  });
+
+  it("should hide financial commissions guidance when route is not allowed", async () => {
+    canAccessMock.mockReturnValue(false);
+
+    render(
+      <MemoryRouter initialEntries={["/profissionais"]}>
+        <Professionals />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText("Comissao por profissional")).toBeInTheDocument();
+    expect(screen.queryByText(/Financeiro > Comissoes/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Use o perfil do profissional/i)).toBeInTheDocument();
   });
 });
