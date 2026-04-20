@@ -352,11 +352,23 @@ export default function Agenda() {
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
           {/* Navegação de data */}
           <div className="flex items-center gap-2 sm:gap-3">
-            <Button variant="outline" size="icon" onClick={() => navigateDate('prev')} className="h-8 w-8 sm:h-9 sm:w-9">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigateDate('prev')}
+              className="h-8 w-8 sm:h-9 sm:w-9"
+              aria-label={viewMode === 'day' ? 'Ir para o dia anterior' : 'Ir para o mes anterior'}
+            >
               <ChevronLeft className="w-4 h-4" />
             </Button>
             <Button variant="outline" size="sm" onClick={goToToday} className="text-xs sm:text-sm">Hoje</Button>
-            <Button variant="outline" size="icon" onClick={() => navigateDate('next')} className="h-8 w-8 sm:h-9 sm:w-9">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigateDate('next')}
+              className="h-8 w-8 sm:h-9 sm:w-9"
+              aria-label={viewMode === 'day' ? 'Ir para o proximo dia' : 'Ir para o proximo mes'}
+            >
               <ChevronRight className="w-4 h-4" />
             </Button>
             <span className="text-xs sm:text-base font-medium text-foreground capitalize truncate">{formattedDate}</span>

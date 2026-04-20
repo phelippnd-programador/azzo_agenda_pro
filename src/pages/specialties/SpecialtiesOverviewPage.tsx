@@ -323,29 +323,29 @@ export default function SpecialtiesOverviewPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() =>
-                          openEditDialog({
-                            id: specialty.id,
-                            name: specialty.name,
-                            description: specialty.description,
-                          })
-                        }
-                        aria-label="Editar especialidade"
-                      >
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() =>
+                            openEditDialog({
+                              id: specialty.id,
+                              name: specialty.name,
+                              description: specialty.description,
+                            })
+                          }
+                          aria-label={`Editar especialidade ${specialty.name}`}
+                        >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        onClick={() =>
-                          setSpecialtyToDelete({ id: specialty.id, name: specialty.name })
-                        }
-                        aria-label="Remover especialidade"
-                      >
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() =>
+                            setSpecialtyToDelete({ id: specialty.id, name: specialty.name })
+                          }
+                          aria-label={`Remover especialidade ${specialty.name}`}
+                        >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -404,7 +404,7 @@ export default function SpecialtiesOverviewPage() {
                                     description: specialty.description,
                                   })
                                 }
-                                aria-label="Editar especialidade"
+                                aria-label={`Editar especialidade ${specialty.name}`}
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
@@ -418,7 +418,7 @@ export default function SpecialtiesOverviewPage() {
                                     name: specialty.name,
                                   })
                                 }
-                                aria-label="Remover especialidade"
+                                aria-label={`Remover especialidade ${specialty.name}`}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>

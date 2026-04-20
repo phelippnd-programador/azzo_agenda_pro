@@ -87,6 +87,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
               size="icon"
               className="lg:hidden flex-shrink-0 h-7 w-7"
               onClick={onToggleMobile}
+              aria-label="Fechar menu"
             >
               <X className="w-4 h-4" />
             </Button>

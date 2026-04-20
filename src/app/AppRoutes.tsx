@@ -1,5 +1,7 @@
 import { Suspense, lazy } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { MainLayout } from "@/components/layout/MainLayout";
+import { RouteContentLoader } from "@/components/ui/route-content-loader";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMenuPermissions } from "@/contexts/MenuPermissionsContext";
 import { FullScreenLoader } from "@/components/ui/full-screen-loader";
@@ -154,7 +156,17 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to={appRouteManifest.shell.unauthorized} replace />;
   }
 
-  return <>{children}</>;
+  return (
+    <Suspense
+      fallback={
+        <MainLayout title="Carregando modulo" subtitle="Preparando o conteudo da pagina">
+          <RouteContentLoader />
+        </MainLayout>
+      }
+    >
+      {children}
+    </Suspense>
+  );
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
@@ -173,7 +185,11 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to={getFirstAllowedRoute(allowedRoutes, user?.role)} replace />;
   }
 
-  return <>{children}</>;
+  return <Suspense fallback={<FullScreenLoader />}>{children}</Suspense>;
+}
+
+function PublicLazyRoute({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={<FullScreenLoader />}>{children}</Suspense>;
 }
 
 function RootRoute() {
@@ -208,7 +224,6 @@ export function AppRoutes() {
   }
 
   return (
-    <Suspense fallback={<FullScreenLoader />}>
       <Routes>
         <Route path={appRouteManifest.public.root} element={<RootRoute />} />
         <Route
@@ -239,21 +254,55 @@ export function AppRoutes() {
         <Route path={appRouteManifest.public.publicBooking} element={<PublicBooking />} />
         <Route
           path={appRouteManifest.public.termsOfUse}
-          element={<LegalDocument documentType="TERMS_OF_USE" fallbackTitle="Termos de Uso" />}
+          element={
+            <PublicLazyRoute>
+              <LegalDocument documentType="TERMS_OF_USE" fallbackTitle="Termos de Uso" />
+            </PublicLazyRoute>
+          }
         />
         <Route
           path={appRouteManifest.public.privacyPolicy}
           element={
-            <LegalDocument
-              documentType="PRIVACY_POLICY"
-              fallbackTitle="Politica de Privacidade"
-            />
+            <PublicLazyRoute>
+              <LegalDocument
+                documentType="PRIVACY_POLICY"
+                fallbackTitle="Politica de Privacidade"
+              />
+            </PublicLazyRoute>
           }
         />
-        <Route path={appRouteManifest.public.sales} element={<SalePage />} />
-        <Route path={appRouteManifest.public.salesProduct} element={<SalePage />} />
-        <Route path={appRouteManifest.public.checkoutSuccess} element={<CheckoutSuccess />} />
-        <Route path={appRouteManifest.public.checkoutError} element={<CheckoutError />} />
+        <Route
+          path={appRouteManifest.public.sales}
+          element={
+            <PublicLazyRoute>
+              <SalePage />
+            </PublicLazyRoute>
+          }
+        />
+        <Route
+          path={appRouteManifest.public.salesProduct}
+          element={
+            <PublicLazyRoute>
+              <SalePage />
+            </PublicLazyRoute>
+          }
+        />
+        <Route
+          path={appRouteManifest.public.checkoutSuccess}
+          element={
+            <PublicLazyRoute>
+              <CheckoutSuccess />
+            </PublicLazyRoute>
+          }
+        />
+        <Route
+          path={appRouteManifest.public.checkoutError}
+          element={
+            <PublicLazyRoute>
+              <CheckoutError />
+            </PublicLazyRoute>
+          }
+        />
 
         <Route
           path={appRouteManifest.shell.dashboard}
@@ -716,6 +765,5 @@ export function AppRoutes() {
           }
         />
       </Routes>
-    </Suspense>
   );
 }

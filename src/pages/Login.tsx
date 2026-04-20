@@ -34,6 +34,7 @@ export default function Login() {
       mfaCode: '',
     },
   });
+  const errors = form.formState.errors;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -202,7 +203,14 @@ export default function Login() {
                   {...form.register('email')}
                   disabled={isLoading}
                   className="h-10 sm:h-11"
+                  aria-invalid={Boolean(errors.email)}
+                  aria-describedby={errors.email ? 'login-email-error' : undefined}
                 />
+                {errors.email ? (
+                  <p id="login-email-error" className="text-xs text-destructive" aria-live="polite">
+                    {errors.email.message}
+                  </p>
+                ) : null}
               </div>
 
               <div className="space-y-2">
@@ -224,6 +232,8 @@ export default function Login() {
                     {...form.register('password')}
                     disabled={isLoading}
                     className="h-10 sm:h-11 pr-10"
+                    aria-invalid={Boolean(errors.password)}
+                    aria-describedby={errors.password ? 'login-password-error' : undefined}
                   />
                   <Button
                     type="button"
@@ -240,6 +250,11 @@ export default function Login() {
                     )}
                   </Button>
                 </div>
+                {errors.password ? (
+                  <p id="login-password-error" className="text-xs text-destructive" aria-live="polite">
+                    {errors.password.message}
+                  </p>
+                ) : null}
               </div>
 
               {mfaRequired ? (
@@ -260,7 +275,14 @@ export default function Login() {
                     })}
                     disabled={isLoading}
                     className="h-10 sm:h-11"
+                    aria-invalid={Boolean(errors.mfaCode)}
+                    aria-describedby={errors.mfaCode ? 'login-mfa-error' : undefined}
                   />
+                  {errors.mfaCode ? (
+                    <p id="login-mfa-error" className="text-xs text-destructive" aria-live="polite">
+                      {errors.mfaCode.message}
+                    </p>
+                  ) : null}
                 </div>
               ) : null}
 

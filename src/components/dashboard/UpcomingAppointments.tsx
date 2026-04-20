@@ -96,7 +96,12 @@ export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingA
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 flex-shrink-0"
+                    aria-label={`Abrir acoes do agendamento de ${appointment.client?.name || 'cliente'}`}
+                  >
                     <MoreVertical className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>

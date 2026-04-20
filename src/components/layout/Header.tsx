@@ -84,7 +84,12 @@ export function Header({
             }}
           >
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative h-8 w-8 text-muted-foreground hover:text-foreground">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative h-8 w-8 text-muted-foreground hover:text-foreground"
+                aria-label="Abrir notificacoes"
+              >
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 ? (
                   <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">

@@ -67,6 +67,7 @@ export default function Register() {
   const watchedPhone = form.watch("phone");
   const watchedCpfCnpj = form.watch("cpfCnpj");
   const passwordStrength = getPasswordStrengthStatus(watchedPassword || "");
+  const errors = form.formState.errors;
 
   useEffect(() => {
     const loadLegalVersions = async () => {
@@ -207,7 +208,14 @@ export default function Register() {
                     autoFocus
                     {...form.register("name")}
                     className="h-10 sm:h-11"
+                    aria-invalid={Boolean(errors.name)}
+                    aria-describedby={errors.name ? "register-name-error" : undefined}
                   />
+                  {errors.name ? (
+                    <p id="register-name-error" className="text-xs text-destructive" aria-live="polite">
+                      {errors.name.message}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="space-y-2">
@@ -221,7 +229,14 @@ export default function Register() {
                     autoComplete="email"
                     {...form.register("email")}
                     className="h-10 sm:h-11"
+                    aria-invalid={Boolean(errors.email)}
+                    aria-describedby={errors.email ? "register-email-error" : undefined}
                   />
+                  {errors.email ? (
+                    <p id="register-email-error" className="text-xs text-destructive" aria-live="polite">
+                      {errors.email.message}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="space-y-2">
@@ -236,6 +251,8 @@ export default function Register() {
                       autoComplete="new-password"
                       {...form.register("password")}
                       className="h-10 sm:h-11 pr-10"
+                      aria-invalid={Boolean(errors.password)}
+                      aria-describedby="register-password-strength register-password-storage register-password-error"
                     />
                     <Button
                       type="button"
@@ -264,6 +281,7 @@ export default function Register() {
                       />
                     </div>
                     <p
+                      id="register-password-strength"
                       className={`text-xs ${
                         watchedPassword
                           ? passwordStrength.textClassName
@@ -273,9 +291,14 @@ export default function Register() {
                       Seguranca da senha:{" "}
                       {watchedPassword ? passwordStrength.label : "Nao definida"}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p id="register-password-storage" className="text-xs text-muted-foreground">
                       Sua senha e usada apenas para autenticar a conta e nao fica salva no navegador.
                     </p>
+                    {errors.password ? (
+                      <p id="register-password-error" className="text-xs text-destructive" aria-live="polite">
+                        {errors.password.message}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
 
@@ -290,7 +313,18 @@ export default function Register() {
                     autoComplete="new-password"
                     {...form.register("confirmPassword")}
                     className="h-10 sm:h-11"
+                    aria-invalid={Boolean(errors.confirmPassword)}
+                    aria-describedby={errors.confirmPassword ? "register-confirm-password-error" : undefined}
                   />
+                  {errors.confirmPassword ? (
+                    <p
+                      id="register-confirm-password-error"
+                      className="text-xs text-destructive"
+                      aria-live="polite"
+                    >
+                      {errors.confirmPassword.message}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="flex items-start gap-2 rounded-md border border-input p-3">
@@ -302,6 +336,8 @@ export default function Register() {
                         shouldValidate: true,
                       })
                     }
+                    aria-invalid={Boolean(errors.acceptedLegalTerms)}
+                    aria-describedby={errors.acceptedLegalTerms ? "register-legal-error" : undefined}
                   />
                   <Label
                     htmlFor="acceptLegalTerms"
@@ -326,6 +362,11 @@ export default function Register() {
                     .
                   </Label>
                 </div>
+                {errors.acceptedLegalTerms ? (
+                  <p id="register-legal-error" className="text-xs text-destructive" aria-live="polite">
+                    {errors.acceptedLegalTerms.message}
+                  </p>
+                ) : null}
 
                 <Button
                   type="button"
@@ -349,7 +390,14 @@ export default function Register() {
                     {...form.register("salonName")}
                     disabled={isLoading}
                     className="h-10 sm:h-11"
+                    aria-invalid={Boolean(errors.salonName)}
+                    aria-describedby={errors.salonName ? "register-salon-name-error" : undefined}
                   />
+                  {errors.salonName ? (
+                    <p id="register-salon-name-error" className="text-xs text-destructive" aria-live="polite">
+                      {errors.salonName.message}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="space-y-2">
@@ -368,7 +416,14 @@ export default function Register() {
                     }
                     disabled={isLoading}
                     className="h-10 sm:h-11"
+                    aria-invalid={Boolean(errors.phone)}
+                    aria-describedby={errors.phone ? "register-phone-error" : undefined}
                   />
+                  {errors.phone ? (
+                    <p id="register-phone-error" className="text-xs text-destructive" aria-live="polite">
+                      {errors.phone.message}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="space-y-2">
@@ -386,7 +441,14 @@ export default function Register() {
                     }
                     disabled={isLoading}
                     className="h-10 sm:h-11"
+                    aria-invalid={Boolean(errors.cpfCnpj)}
+                    aria-describedby={errors.cpfCnpj ? "register-cpf-cnpj-error" : undefined}
                   />
+                  {errors.cpfCnpj ? (
+                    <p id="register-cpf-cnpj-error" className="text-xs text-destructive" aria-live="polite">
+                      {errors.cpfCnpj.message}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="flex gap-3">

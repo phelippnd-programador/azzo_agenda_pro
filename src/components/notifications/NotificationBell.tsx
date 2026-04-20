@@ -49,7 +49,12 @@ export function NotificationBell() {
       }}
     >
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-9 sm:w-9">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative h-8 w-8 sm:h-9 sm:w-9"
+          aria-label="Abrir notificacoes"
+        >
           <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
           {unreadCount > 0 ? (
             <Badge className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 p-0 flex items-center justify-center bg-destructive text-[10px] sm:text-xs">
