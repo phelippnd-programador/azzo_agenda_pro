@@ -93,6 +93,8 @@ describe("ChatPage", () => {
     );
 
     expect(await screen.findByText("Modo Manual")).toBeInTheDocument();
+    expect(screen.getByText("Todas as Conversas")).toBeInTheDocument();
+    expect(screen.getByText("Historico completo de mensagens por cliente")).toBeInTheDocument();
     expect(screen.getAllByText("Maria Silva").length).toBeGreaterThan(0);
     expect(screen.getByText("Modo Manual")).toBeInTheDocument();
     expect(screen.getByText("Mensagem teste")).toBeInTheDocument();

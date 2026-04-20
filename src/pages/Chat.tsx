@@ -75,7 +75,7 @@ export default function ChatPage() {
     loadConversations,
     loadMessages,
     sendMessage,
-  } = useChat({ todayOnly: true, pageSize: 100 });
+  } = useChat({ todayOnly: false, pageSize: 100 });
 
   const selectedConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === conversationId) ?? null,
@@ -205,7 +205,7 @@ export default function ChatPage() {
 
   if (error) {
     return (
-      <MainLayout title="Chat" subtitle="Conversas do dia">
+      <MainLayout title="Chat" subtitle="Historico completo de conversas">
         <PageErrorState
           title="Falha ao carregar chat"
           description={error}
@@ -224,13 +224,13 @@ export default function ChatPage() {
   }
 
   return (
-    <MainLayout title="Chat" subtitle="Mensagens do dia por cliente">
+    <MainLayout title="Chat" subtitle="Historico completo de mensagens por cliente">
       <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
         <Card className="h-[calc(100vh-13rem)]">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <MessageCircleMore className="w-4 h-4" />
-              Conversas de Hoje
+              Todas as Conversas
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 overflow-y-auto h-[calc(100%-4.25rem)] pr-1">
@@ -242,7 +242,7 @@ export default function ChatPage() {
               </>
             ) : conversations.length === 0 ? (
               <PageEmptyState
-                title="Sem conversas hoje"
+                title="Sem conversas"
                 description="Assim que houver mensagens no WhatsApp, elas aparecem aqui."
               />
             ) : (

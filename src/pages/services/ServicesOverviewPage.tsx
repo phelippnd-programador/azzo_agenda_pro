@@ -10,6 +10,14 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PageErrorState } from '@/components/ui/page-states';
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -31,7 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Plus, Clock, MoreVertical, Scissors, Loader2 } from 'lucide-react';
+import { Search, Plus, Clock, MoreVertical, Scissors, Loader2, Grid3X3, List } from 'lucide-react';
 import { useServices } from '@/hooks/useServices';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { useProfessionals } from '@/hooks/useProfessionals';
@@ -42,6 +50,7 @@ const categories = ['Todos', 'Cabelo', 'Barba', 'Unhas', 'Estetica', 'Maquiagem'
 
 export default function ServicesOverviewPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [isNewServiceOpen, setIsNewServiceOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -257,159 +266,180 @@ export default function ServicesOverviewPage() {
           />
         </div>
 
-        <Dialog
-          open={isNewServiceOpen}
-          onOpenChange={(open) => {
-            setIsNewServiceOpen(open);
-            if (!open) resetForm();
-          }}
-        >
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" />
-              Novo Servico
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex overflow-hidden rounded-lg border">
+            <Button
+              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+              size="icon"
+              onClick={() => setViewMode('grid')}
+              className="h-8 w-8 rounded-none sm:h-9 sm:w-9"
+            >
+              <Grid3X3 className="h-4 w-4" />
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md mx-4 sm:mx-auto sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingService ? 'Editar Servico' : 'Novo Servico'}</DialogTitle>
-              <DialogDescription>
-                {editingService ? 'Atualize os dados do servico' : 'Preencha os dados do novo servico'}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Nome do Servico *</Label>
-                <Input
-                  placeholder="Ex: Corte Feminino"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                />
-              </div>
+            <Button
+              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+              size="icon"
+              onClick={() => setViewMode('table')}
+              className="h-8 w-8 rounded-none sm:h-9 sm:w-9"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
 
-              <div className="space-y-2">
-                <Label>Descricao</Label>
-                <Textarea
-                  placeholder="Descreva o servico..."
-                  value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
-                  rows={2}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+          <Dialog
+            open={isNewServiceOpen}
+            onOpenChange={(open) => {
+              setIsNewServiceOpen(open);
+              if (!open) resetForm();
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="w-4 h-4" />
+                Novo Servico
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md mx-4 sm:mx-auto sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editingService ? 'Editar Servico' : 'Novo Servico'}</DialogTitle>
+                <DialogDescription>
+                  {editingService ? 'Atualize os dados do servico' : 'Preencha os dados do novo servico'}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label>Duracao (min) *</Label>
+                  <Label>Nome do Servico *</Label>
                   <Input
-                    type="number"
-                    placeholder="60"
-                    value={formDuration}
-                    onChange={(e) => setFormDuration(e.target.value)}
+                    placeholder="Ex: Corte Feminino"
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
                   />
                 </div>
+
                 <div className="space-y-2">
-                  <Label>Preco (R$) *</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="80.00"
-                    value={formPrice}
-                    onChange={(e) => setFormPrice(e.target.value)}
+                  <Label>Descricao</Label>
+                  <Textarea
+                    placeholder="Descreva o servico..."
+                    value={formDescription}
+                    onChange={(e) => setFormDescription(e.target.value)}
+                    rows={2}
                   />
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label>Categoria</Label>
-                <Select value={formCategory} onValueChange={setFormCategory}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.filter((c) => c !== 'Todos').map((cat) => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Profissionais</Label>
-                <div className="rounded-lg border p-3 space-y-3 max-h-48 overflow-y-auto">
-                  {isLoadingProfessionals ? (
-                    <p className="text-sm text-muted-foreground">Carregando profissionais...</p>
-                  ) : !professionals.length ? (
-                    <p className="text-sm text-muted-foreground">Nenhum profissional cadastrado.</p>
-                  ) : (
-                    professionals.map((professional) => (
-                      <label
-                        key={professional.id}
-                        className="flex items-center gap-2 text-sm cursor-pointer"
-                      >
-                        <Checkbox
-                          checked={formProfessionalIds.includes(professional.id)}
-                          onCheckedChange={() => toggleProfessional(professional.id)}
-                        />
-                        <span>{professional.name}</span>
-                        {!professional.isActive ? (
-                          <Badge variant="outline" className="text-[10px] text-muted-foreground">
-                            Inativo
-                          </Badge>
-                        ) : null}
-                      </label>
-                    ))
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Se nenhum profissional for selecionado, o servico fica disponivel para todos.
-                </p>
-                {formProfessionalIds.length > 0 ? (
-                  <div className="flex flex-wrap gap-1">
-                    {formProfessionalIds.map((id) => {
-                      const professional = professionals.find((item) => item.id === id);
-                      if (!professional) return null;
-                      return (
-                        <Badge key={id} variant="secondary" className="text-[10px] sm:text-xs">
-                          {professional.name}
-                        </Badge>
-                      );
-                    })}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Duracao (min) *</Label>
+                    <Input
+                      type="number"
+                      placeholder="60"
+                      value={formDuration}
+                      onChange={(e) => setFormDuration(e.target.value)}
+                    />
                   </div>
-                ) : null}
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-muted/40 rounded-lg">
-                <div>
-                  <Label>Servico Ativo</Label>
-                  <p className="text-xs text-muted-foreground">Disponivel para agendamento</p>
+                  <div className="space-y-2">
+                    <Label>Preco (R$) *</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="80.00"
+                      value={formPrice}
+                      onChange={(e) => setFormPrice(e.target.value)}
+                    />
+                  </div>
                 </div>
-                <Switch
-                  checked={formIsActive}
-                  onCheckedChange={setFormIsActive}
-                />
+
+                <div className="space-y-2">
+                  <Label>Categoria</Label>
+                  <Select value={formCategory} onValueChange={setFormCategory}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.filter((c) => c !== 'Todos').map((cat) => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Profissionais</Label>
+                  <div className="rounded-lg border p-3 space-y-3 max-h-48 overflow-y-auto">
+                    {isLoadingProfessionals ? (
+                      <p className="text-sm text-muted-foreground">Carregando profissionais...</p>
+                    ) : !professionals.length ? (
+                      <p className="text-sm text-muted-foreground">Nenhum profissional cadastrado.</p>
+                    ) : (
+                      professionals.map((professional) => (
+                        <label
+                          key={professional.id}
+                          className="flex items-center gap-2 text-sm cursor-pointer"
+                        >
+                          <Checkbox
+                            checked={formProfessionalIds.includes(professional.id)}
+                            onCheckedChange={() => toggleProfessional(professional.id)}
+                          />
+                          <span>{professional.name}</span>
+                          {!professional.isActive ? (
+                            <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                              Inativo
+                            </Badge>
+                          ) : null}
+                        </label>
+                      ))
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Se nenhum profissional for selecionado, o servico fica disponivel para todos.
+                  </p>
+                  {formProfessionalIds.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {formProfessionalIds.map((id) => {
+                        const professional = professionals.find((item) => item.id === id);
+                        if (!professional) return null;
+                        return (
+                          <Badge key={id} variant="secondary" className="text-[10px] sm:text-xs">
+                            {professional.name}
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-muted/40 rounded-lg">
+                  <div>
+                    <Label>Servico Ativo</Label>
+                    <p className="text-xs text-muted-foreground">Disponivel para agendamento</p>
+                  </div>
+                  <Switch
+                    checked={formIsActive}
+                    onCheckedChange={setFormIsActive}
+                  />
+                </div>
               </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsNewServiceOpen(false);
-                  resetForm();
-                }}
-              >
-                Cancelar
-              </Button>
-              <Button onClick={handleSubmit} disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {editingService ? 'Salvando...' : 'Criando...'}
-                  </>
-                ) : editingService ? 'Salvar' : 'Criar Servico'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsNewServiceOpen(false);
+                    resetForm();
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button onClick={handleSubmit} disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      {editingService ? 'Salvando...' : 'Criando...'}
+                    </>
+                  ) : editingService ? 'Salvar' : 'Criar Servico'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
@@ -470,7 +500,7 @@ export default function ServicesOverviewPage() {
             </Button>
           </CardContent>
         </Card>
-      ) : (
+      ) : viewMode === 'grid' ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {filteredServices.map((service) => (
             <Card
@@ -542,6 +572,93 @@ export default function ServicesOverviewPage() {
             </Card>
           ))}
         </div>
+      ) : (
+        <Card>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={allFilteredSelected}
+                      onCheckedChange={(checked) => toggleSelectAllFiltered(checked === true)}
+                      aria-label="Selecionar todos os servicos filtrados"
+                    />
+                  </TableHead>
+                  <TableHead>Servico</TableHead>
+                  <TableHead className="hidden md:table-cell">Descricao</TableHead>
+                  <TableHead className="text-center">Duracao</TableHead>
+                  <TableHead className="text-right">Preco</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="w-10" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredServices.map((service) => (
+                  <TableRow
+                    key={service.id}
+                    className={!service.isActive ? 'opacity-60' : undefined}
+                  >
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedServiceIds.includes(service.id)}
+                        onCheckedChange={() => toggleServiceSelection(service.id)}
+                        aria-label={`Selecionar servico ${service.name}`}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate font-medium">{service.name}</p>
+                          <Badge variant="secondary" className="text-[10px] sm:text-xs">
+                            {service.category}
+                          </Badge>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden max-w-[320px] truncate text-sm text-muted-foreground md:table-cell">
+                      {service.description || 'Sem descricao'}
+                    </TableCell>
+                    <TableCell className="text-center text-sm">
+                      {service.duration} min
+                    </TableCell>
+                    <TableCell className="text-right font-medium text-primary">
+                      {formatCurrencyCents(service.price)}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant={service.isActive ? 'default' : 'outline'} className="text-[10px] sm:text-xs">
+                        {service.isActive ? 'Ativo' : 'Inativo'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openEditDialog(service)}>
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleToggleActive(service.id, !service.isActive)}>
+                            {service.isActive ? 'Desativar' : 'Ativar'}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => setServiceToDelete(service.id)}
+                          >
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
       )}
 
       {!searchTerm && selectedCategory === 'Todos' && totalPages > 1 ? (

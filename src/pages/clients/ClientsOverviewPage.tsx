@@ -50,6 +50,10 @@ export default function ClientsOverviewPage() {
   const [isDeletingClient, setIsDeletingClient] = useState(false);
 
   const { clients, pagination, isLoading, error, refetch, goToPage, createClient, updateClient, deleteClient } = useClients();
+  const activeClientsOnPage = clients.filter(
+    (client) => client.lastVisit && new Date(client.lastVisit) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+  ).length;
+  const totalSpentOnPage = clients.reduce((sum, client) => sum + client.totalSpent, 0);
 
   const filteredClients = clients.filter((client) =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -166,12 +170,8 @@ export default function ClientsOverviewPage() {
           iconClassName="text-primary"
         />
         <HighlightMetricCard
-          title="Ativos (30 dias)"
-          value={String(
-            clients.filter(
-              (client) => client.lastVisit && new Date(client.lastVisit) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-            ).length
-          )}
+          title="Ativos nesta pagina"
+          value={String(activeClientsOnPage)}
           icon={Calendar}
           className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50"
           titleClassName="text-green-700"
@@ -180,8 +180,8 @@ export default function ClientsOverviewPage() {
           iconClassName="text-green-600"
         />
         <HighlightMetricCard
-          title="Faturamento Total"
-          value={formatCurrency(clients.reduce((sum, client) => sum + client.totalSpent, 0))}
+          title="Faturamento na pagina"
+          value={formatCurrency(totalSpentOnPage)}
           icon={DollarSign}
           className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50"
           titleClassName="text-indigo-700"

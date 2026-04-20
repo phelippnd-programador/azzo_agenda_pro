@@ -280,6 +280,9 @@ export type ListResponse<T> =
       page?: number;
       pageSize?: number;
       hasMore?: boolean;
+      totalCount?: number;
+      currentPage?: number;
+      totalPages?: number;
     };
 
 export type DashboardProfessionalMetricsResponse = {
@@ -1066,9 +1069,39 @@ export const specialtyImportApi = {
 
 export const clientsApi = {
   getAll: (params?: ListQueryParams) => {
-    const query = buildListQuery(params);
-    const suffix = query.toString() ? `?${query.toString()}` : "";
-    return request<ListResponse<Client>>(`/clients${suffix}`);
+    const page = typeof params?.page === "number" && params.page > 0 ? params.page : 1;
+    const size = typeof params?.limit === "number" && params.limit > 0 ? params.limit : undefined;
+    const query = new URLSearchParams();
+    query.set("page", String(page - 1));
+    if (size) {
+      query.set("size", String(size));
+    }
+    if (typeof params?.search === "string" && params.search.trim()) {
+      query.set("search", params.search.trim());
+    }
+
+    return request<{
+      items?: Client[];
+      totalCount?: number;
+      currentPage?: number;
+      totalPages?: number;
+    }>(`/clients/paged?${query.toString()}`).then((response) => {
+      const items = response.items ?? [];
+      const totalCount = response.totalCount ?? items.length;
+      const currentPage = (response.currentPage ?? 0) + 1;
+      const pageSize = size ?? (items.length > 0 ? items.length : 20);
+      const totalPages =
+        response.totalPages ??
+        (pageSize > 0 ? Math.ceil(totalCount / pageSize) : 0);
+
+      return {
+        items,
+        total: totalCount,
+        page: currentPage,
+        pageSize,
+        hasMore: currentPage < totalPages,
+      } satisfies ListResponse<Client>;
+    });
   },
   getById: (id: string) => request<Client>(`/clients/${id}`),
   getAppointmentHistory: (
