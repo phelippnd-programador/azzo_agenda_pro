@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   ArrowRight,
@@ -79,6 +79,7 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'notifications');
   const { user } = useAuth();
   const { allowedRoutes, canAccess } = useMenuPermissions();
+  const tabsSectionRef = useRef<HTMLDivElement | null>(null);
 
   const hasExactRoute = (route: string) => (allowedRoutes ?? []).includes(route);
   const canAccessWhatsAppIntegration = hasExactRoute('/configuracoes/integracoes/whatsapp');
@@ -116,11 +117,22 @@ export default function Settings() {
     setSearchParams(next, { replace: true });
   }, [activeTab, searchParams, setSearchParams, visibleTabs]);
 
-  const handleTabChange = (tab: string) => {
+  const scrollToSettingsTabs = (behavior: ScrollBehavior = 'smooth') => {
+    tabsSectionRef.current?.scrollIntoView({
+      behavior,
+      block: 'start',
+    });
+  };
+
+  const handleTabChange = (tab: string, options?: { scrollToSection?: boolean }) => {
     setActiveTab(tab);
     const next = new URLSearchParams(searchParams);
     next.set('tab', tab);
     setSearchParams(next, { replace: true });
+
+    if (options?.scrollToSection) {
+      requestAnimationFrame(() => scrollToSettingsTabs());
+    }
   };
 
   const domainCards = useMemo(() => {
@@ -133,7 +145,7 @@ export default function Settings() {
         statusLabel: 'Em uso',
         statusTone: 'success' as const,
         actionLabel: 'Revisar notificacoes',
-        onAction: () => handleTabChange('notifications'),
+        onAction: () => handleTabChange('notifications', { scrollToSection: true }),
       },
       {
         key: 'account',
@@ -143,7 +155,7 @@ export default function Settings() {
         statusLabel: 'Ativo',
         statusTone: 'success' as const,
         actionLabel: 'Abrir conta',
-        onAction: () => handleTabChange('account'),
+        onAction: () => handleTabChange('account', { scrollToSection: true }),
       },
     ];
 
@@ -156,7 +168,7 @@ export default function Settings() {
         statusLabel: canAccessWhatsAppIntegration ? 'Revisar' : 'Parcial',
         statusTone: 'warning' as const,
         actionLabel: 'Abrir integracoes',
-        onAction: () => handleTabChange('integrations'),
+        onAction: () => handleTabChange('integrations', { scrollToSection: true }),
       });
     }
 
@@ -169,7 +181,7 @@ export default function Settings() {
         statusLabel: 'Atencao',
         statusTone: 'warning' as const,
         actionLabel: 'Abrir fiscal',
-        onAction: () => handleTabChange('fiscal'),
+        onAction: () => handleTabChange('fiscal', { scrollToSection: true }),
       });
     }
 
@@ -182,7 +194,7 @@ export default function Settings() {
         statusLabel: 'Centralizado',
         statusTone: 'default' as const,
         actionLabel: 'Abrir perfil do salao',
-        onAction: () => handleTabChange('salon'),
+        onAction: () => handleTabChange('salon', { scrollToSection: true }),
       });
     }
 
@@ -198,7 +210,7 @@ export default function Settings() {
         title: 'Revisar notificacoes e reativacao',
         description: 'Confirme se canais e janelas de disparo ainda refletem a operacao atual.',
         actionLabel: 'Abrir notificacoes',
-        onAction: () => handleTabChange('notifications'),
+        onAction: () => handleTabChange('notifications', { scrollToSection: true }),
       },
     ];
 
@@ -207,7 +219,7 @@ export default function Settings() {
         title: 'Conferir integracao do WhatsApp',
         description: 'Valide credenciais, webhook e capacidade operacional do canal.',
         actionLabel: 'Abrir integracoes',
-        onAction: () => handleTabChange('integrations'),
+        onAction: () => handleTabChange('integrations', { scrollToSection: true }),
       });
     }
 
@@ -216,7 +228,7 @@ export default function Settings() {
         title: 'Revisar setup fiscal',
         description: 'Garanta consistencia entre impostos, certificado e configuracao NFS-e.',
         actionLabel: 'Abrir fiscal',
-        onAction: () => handleTabChange('fiscal'),
+        onAction: () => handleTabChange('fiscal', { scrollToSection: true }),
       });
     }
 
@@ -225,7 +237,7 @@ export default function Settings() {
         title: 'Validar dados do salao',
         description: 'Slug, endereco e horarios precisam permanecer corretos para os fluxos publicos.',
         actionLabel: 'Abrir perfil',
-        onAction: () => handleTabChange('salon'),
+        onAction: () => handleTabChange('salon', { scrollToSection: true }),
       });
     }
 
@@ -309,7 +321,15 @@ export default function Settings() {
           </Card>
         </div>
 
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+        <div ref={tabsSectionRef} className="scroll-mt-24 space-y-3">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold tracking-tight text-foreground">Configuracao detalhada</h2>
+            <p className="text-sm text-muted-foreground">
+              Ao escolher um dominio acima, a pagina abre a aba correspondente aqui para voce seguir direto no ajuste.
+            </p>
+          </div>
+
+          <Tabs value={activeTab} onValueChange={(tab) => handleTabChange(tab)} className="space-y-6">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-2 h-auto">
           {visibleTabs.includes('notifications') ? (
             <TabsTrigger value="notifications">Notificacoes</TabsTrigger>
@@ -532,7 +552,8 @@ export default function Settings() {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+          </Tabs>
+        </div>
       </div>
     </MainLayout>
   );

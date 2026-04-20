@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import Settings from "@/pages/Settings";
@@ -96,6 +96,15 @@ vi.mock("sonner", () => ({
 describe("Settings", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback: FrameRequestCallback) => {
+      callback(0);
+      return 1;
+    });
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      writable: true,
+      value: vi.fn(),
+    });
     getSettingsMock.mockResolvedValue({
       notifications: { emailNotifications: true, smsNotifications: true, whatsappNotifications: true, reminderHours: 24 },
       reactivation: { enabled: true, respectBusinessHours: true, sendWindowStart: "09:00", sendWindowEnd: "19:00", maxAttemptsEnabled: 3 },
@@ -108,6 +117,10 @@ describe("Settings", () => {
     updateReactivationMock.mockResolvedValue(undefined);
     updateMeMock.mockResolvedValue(undefined);
     setupMfaMock.mockResolvedValue({ secret: "SECRET123", otpauthUri: "otpauth://totp/Azzo" });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("should render settings tabs based on permissions", async () => {
@@ -157,5 +170,24 @@ describe("Settings", () => {
       maxAttemptsEnabled: 3,
     });
     expect(toastSuccessMock).toHaveBeenCalled();
+  });
+
+  it("should scroll to the detailed section when opening a domain card", async () => {
+    const user = userEvent.setup();
+    const scrollIntoViewMock = vi.mocked(HTMLElement.prototype.scrollIntoView);
+
+    render(
+      <MemoryRouter initialEntries={["/configuracoes?tab=notifications"]}>
+        <Settings />
+      </MemoryRouter>
+    );
+
+    const integrationsTitle = (await screen.findAllByText("Integracoes"))[0];
+    const integrationsCard = integrationsTitle.closest('[class*="rounded-lg"]') as HTMLElement;
+    await user.click(within(integrationsCard).getByRole("button", { name: /Abrir integracoes/i }));
+
+    expect(await screen.findByRole("tab", { name: "Integracoes", selected: true })).toBeInTheDocument();
+    expect(screen.getByText(/Acompanhe o estado das integracoes operacionais/i)).toBeInTheDocument();
+    expect(scrollIntoViewMock).toHaveBeenCalled();
   });
 });
