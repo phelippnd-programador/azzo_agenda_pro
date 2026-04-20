@@ -8,7 +8,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
-import { PageErrorState } from '@/components/ui/page-states';
+import { PageEmptyState, PageErrorState } from '@/components/ui/page-states';
+import { PaginationControls } from '@/components/ui/pagination-controls';
+import { CrudListToolbar } from '@/components/crud/CrudListToolbar';
 import {
   Table,
   TableBody,
@@ -24,7 +26,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   DropdownMenu,
@@ -39,7 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Plus, Clock, MoreVertical, Scissors, Loader2, Grid3X3, List } from 'lucide-react';
+import { Plus, Clock, MoreVertical, Scissors, Loader2 } from 'lucide-react';
 import { useServices } from '@/hooks/useServices';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { useProfessionals } from '@/hooks/useProfessionals';
@@ -255,58 +256,38 @@ export default function ServicesOverviewPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar servicos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
-          />
-        </div>
+      <Dialog
+        open={isNewServiceOpen}
+        onOpenChange={(open) => {
+          setIsNewServiceOpen(open);
+          if (!open) resetForm();
+        }}
+      >
+        <CrudListToolbar
+          searchPlaceholder="Buscar servicos..."
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          gridAriaLabel="Visualizar servicos em cards"
+          tableAriaLabel="Visualizar servicos em lista"
+          actionLabel="Servico"
+          actionLabelMobile="Novo"
+          actionIcon={Plus}
+          onAction={() => {
+            setEditingService(null);
+            setIsNewServiceOpen(true);
+          }}
+        />
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="flex overflow-hidden rounded-lg border">
-            <Button
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={() => setViewMode('grid')}
-              className="h-8 w-8 rounded-none sm:h-9 sm:w-9"
-            >
-              <Grid3X3 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={() => setViewMode('table')}
-              className="h-8 w-8 rounded-none sm:h-9 sm:w-9"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <Dialog
-            open={isNewServiceOpen}
-            onOpenChange={(open) => {
-              setIsNewServiceOpen(open);
-              if (!open) resetForm();
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                Novo Servico
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md mx-4 sm:mx-auto sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingService ? 'Editar Servico' : 'Novo Servico'}</DialogTitle>
-                <DialogDescription>
-                  {editingService ? 'Atualize os dados do servico' : 'Preencha os dados do novo servico'}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
+        <DialogContent className="max-w-md mx-4 sm:mx-auto sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingService ? 'Editar Servico' : 'Novo Servico'}</DialogTitle>
+            <DialogDescription>
+              {editingService ? 'Atualize os dados do servico' : 'Preencha os dados do novo servico'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label>Nome do Servico *</Label>
                   <Input
@@ -417,30 +398,28 @@ export default function ServicesOverviewPage() {
                     onCheckedChange={setFormIsActive}
                   />
                 </div>
-              </div>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsNewServiceOpen(false);
-                    resetForm();
-                  }}
-                >
-                  Cancelar
-                </Button>
-                <Button onClick={handleSubmit} disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      {editingService ? 'Salvando...' : 'Criando...'}
-                    </>
-                  ) : editingService ? 'Salvar' : 'Criar Servico'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsNewServiceOpen(false);
+                resetForm();
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleSubmit} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {editingService ? 'Salvando...' : 'Criando...'}
+                </>
+              ) : editingService ? 'Salvar' : 'Criar Servico'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
         <label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -485,21 +464,31 @@ export default function ServicesOverviewPage() {
       </div>
 
       {filteredServices.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Scissors className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-            <p className="text-muted-foreground">Nenhum servico encontrado</p>
-            <Button
-              variant="link"
-              onClick={() => {
+        <PageEmptyState
+          title={
+            searchTerm || selectedCategory !== 'Todos'
+              ? 'Nenhum servico encontrado para os filtros atuais'
+              : 'Nenhum servico cadastrado'
+          }
+          description={
+            searchTerm || selectedCategory !== 'Todos'
+              ? 'A busca e os filtros atuais esconderam todos os resultados. Limpe os filtros para voltar a ver a lista completa.'
+              : 'Cadastre o primeiro servico para começar a montar o catalogo operacional do salao.'
+          }
+          action={{
+            label: searchTerm || selectedCategory !== 'Todos' ? 'Limpar filtros' : 'Novo servico',
+            onClick: () => {
+              if (searchTerm || selectedCategory !== 'Todos') {
                 setSearchTerm('');
                 setSelectedCategory('Todos');
-              }}
-            >
-              Limpar filtros
-            </Button>
-          </CardContent>
-        </Card>
+                return;
+              }
+              setEditingService(null);
+              setIsNewServiceOpen(true);
+            },
+            variant: searchTerm || selectedCategory !== 'Todos' ? 'outline' : 'default',
+          }}
+        />
       ) : viewMode === 'grid' ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {filteredServices.map((service) => (
@@ -662,29 +651,14 @@ export default function ServicesOverviewPage() {
       )}
 
       {!searchTerm && selectedCategory === 'Todos' && totalPages > 1 ? (
-        <div className="flex items-center justify-between gap-3 border rounded-lg p-3 bg-muted/20">
-          <p className="text-sm text-muted-foreground">
-            Pagina {pagination.page} de {totalPages}
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(pagination.page - 1)}
-              disabled={pagination.page <= 1 || isLoading}
-            >
-              Anterior
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(pagination.page + 1)}
-              disabled={pagination.page >= totalPages || isLoading || !pagination.hasMore}
-            >
-              Proxima
-            </Button>
-          </div>
-        </div>
+        <PaginationControls
+          page={pagination.page}
+          totalPages={totalPages}
+          isLoading={isLoading}
+          hasNextPage={pagination.hasMore}
+          onPrevious={() => goToPage(pagination.page - 1)}
+          onNext={() => goToPage(pagination.page + 1)}
+        />
       ) : null}
 
       <DeleteConfirmationDialog

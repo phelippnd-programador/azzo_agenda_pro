@@ -309,21 +309,21 @@ export default function SalePage() {
               <header className="max-w-2xl">
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90">
                   <Star className="h-3.5 w-3.5 fill-white text-white" />
-                  Sistema completo para salão de beleza
+                  Teste gratis e configuracao em minutos
                 </span>
                 <h1
                   id="sale-hero-title"
                   className="mt-6 text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-6xl"
                 >
-                  Agenda, clientes, equipe e financeiro em um só lugar
+                  Pare de perder agendamentos e organize seu salao em um unico sistema
                 </h1>
                 <p className="mt-5 max-w-xl text-base text-white/85 md:text-lg">
-                  O Azzo Agenda Pro organiza o dia a dia do seu salão com uma experiência mais
-                  profissional para o cliente e uma rotina mais simples para a operação.
+                  O Azzo Agenda Pro centraliza agenda, clientes, equipe e financeiro para voce sair
+                  da improvisacao e operar com mais previsibilidade.
                 </p>
                 <p className="mt-3 max-w-xl text-sm text-white/70">
-                  Ideal para salões de beleza, barbearias e estéticas que precisam reduzir faltas,
-                  organizar a equipe e enxergar melhor o faturamento.
+                  Ideal para saloes de beleza, barbearias e esteticas que precisam reduzir faltas,
+                  melhorar a experiencia do cliente e crescer com controle.
                 </p>
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -332,7 +332,7 @@ export default function SalePage() {
                     className="bg-white px-8 text-base font-semibold text-emerald-700 hover:bg-white/90"
                     onClick={() => scrollToSection('cadastro')}
                   >
-                    Começar teste grátis
+                    Criar conta gratis agora
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                   <Button
@@ -346,13 +346,16 @@ export default function SalePage() {
                 </div>
 
                 <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/75">
-                  {['Sem cartão agora', 'Acesso imediato', 'Garantia de 7 dias'].map((text) => (
+                  {['Sem cartao agora', 'Primeira etapa em 2 passos', 'Garantia de 7 dias'].map((text) => (
                     <span key={text} className="inline-flex items-center gap-1.5">
                       <CheckCircle2 className="h-3.5 w-3.5 text-emerald-300" />
                       {text}
                     </span>
                   ))}
                 </div>
+                <p className="mt-4 max-w-xl text-xs text-white/70">
+                  Comece criando sua conta e avance para a escolha do plano so depois de concluir o cadastro basico.
+                </p>
               </header>
             </div>
           </section>
@@ -415,13 +418,13 @@ export default function SalePage() {
           >
             <div className="grid gap-6 md:grid-cols-3">
               {featureCards.map((item) => (
-                <article key={item.title}>
+                <article key={item.title}>  
                   <Card className="overflow-hidden border-border bg-card shadow-sm transition-transform hover:-translate-y-1 hover:shadow-lg">
                     <img
                       src={item.image}
                       alt={item.title}
                       loading="lazy"
-                      className="h-64 w-full object-cover"
+                      className="h-64 w-full object-cover object-center"
                     />
                     <CardContent className="p-6">
                       <h3 className="text-xl font-semibold text-emerald-700">{item.title}</h3>
@@ -836,7 +839,7 @@ export default function SalePage() {
                   className="border-white/60 bg-transparent text-white hover:bg-white/10"
                   asChild
                 >
-                  <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer">
+                  <a href="https://wa.me/5521993797749" target="_blank" rel="noopener noreferrer">
                     Falar com suporte
                     <MessageCircle className="ml-2 h-4 w-4" />
                   </a>

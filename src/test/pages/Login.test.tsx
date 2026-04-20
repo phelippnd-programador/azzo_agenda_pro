@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import Login from "@/pages/Login";
@@ -71,6 +71,7 @@ describe("Login", () => {
       </MemoryRouter>
     );
 
+    expect(screen.getByLabelText("E-mail")).toHaveFocus();
     await user.type(screen.getByLabelText("E-mail"), "owner@qa.local");
     await user.type(screen.getByLabelText("Senha"), "Pr14052019!");
     await user.click(screen.getByRole("button", { name: "Entrar" }));
@@ -80,7 +81,7 @@ describe("Login", () => {
     expect(await screen.findByText("Bem-vindo de volta!")).toBeInTheDocument();
   });
 
-  it("should persist credentials locally when remember password is checked", async () => {
+  it("should persist only the email locally when remember option is checked", async () => {
     const user = userEvent.setup();
 
     render(
@@ -91,12 +92,60 @@ describe("Login", () => {
 
     await user.type(screen.getByLabelText("E-mail"), "owner@qa.local");
     await user.type(screen.getByLabelText("Senha"), "Pr14052019!");
-    await user.click(screen.getByLabelText("Salvar senha neste dispositivo"));
+    await user.click(screen.getByLabelText("Salvar e-mail neste dispositivo"));
     await user.click(screen.getByRole("button", { name: "Entrar" }));
 
     expect(JSON.parse(localStorage.getItem("azzo_remembered_login") || "{}")).toEqual({
       email: "owner@qa.local",
-      password: "Pr14052019!",
+    });
+  });
+
+  it("should show loading state while login is in progress", async () => {
+    const user = userEvent.setup();
+    let resolveLogin: (() => void) | null = null;
+    mocks.login.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveLogin = resolve;
+        })
+    );
+
+    render(
+      <MemoryRouter initialEntries={["/login"]}>
+        <Login />
+      </MemoryRouter>
+    );
+
+    await user.type(screen.getByLabelText("E-mail"), "owner@qa.local");
+    await user.type(screen.getByLabelText("Senha"), "Pr14052019!");
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
+
+    expect(screen.getByRole("button", { name: /Entrando/i })).toBeDisabled();
+
+    await act(async () => {
+      resolveLogin?.();
+    });
+  });
+
+  it("should sanitize legacy remembered credentials and preload only the email", () => {
+    localStorage.setItem(
+      "azzo_remembered_login",
+      JSON.stringify({
+        email: "owner@qa.local",
+        password: "Pr14052019!",
+      })
+    );
+
+    render(
+      <MemoryRouter initialEntries={["/login"]}>
+        <Login />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByLabelText("E-mail")).toHaveValue("owner@qa.local");
+    expect(screen.getByLabelText("Senha")).toHaveValue("");
+    expect(JSON.parse(localStorage.getItem("azzo_remembered_login") || "{}")).toEqual({
+      email: "owner@qa.local",
     });
   });
 

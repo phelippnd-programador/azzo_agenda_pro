@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, KeyRound, Loader2, Lock, Scissors } from "lucide-react";
+import { ArrowLeft, KeyRound, Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { BrandLockup } from "@/components/common/BrandLockup";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -51,20 +52,14 @@ export default function ResetPassword() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-card p-4">
       <div className="w-full max-w-md">
-        <div className="flex items-center justify-center gap-2 mb-6 sm:mb-8">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-xl flex items-center justify-center">
-            <Scissors className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Azzo</h1>
-            <p className="text-xs sm:text-sm text-primary font-medium -mt-1">Agenda Pro</p>
-          </div>
-        </div>
+        <BrandLockup className="mb-6 sm:mb-8" />
 
         <Card className="shadow-xl border-0">
           <CardHeader className="text-center pb-2 sm:pb-4">
-            <CardTitle className="text-xl sm:text-2xl">Definir nova senha</CardTitle>
-            <CardDescription className="text-sm">
+            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-[2rem]">
+              Definir nova senha
+            </CardTitle>
+            <CardDescription className="text-sm leading-6 sm:text-[15px]">
               Informe sua nova senha para concluir a recuperacao de acesso.
             </CardDescription>
           </CardHeader>

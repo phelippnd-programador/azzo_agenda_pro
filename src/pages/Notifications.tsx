@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { PageEmptyState } from "@/components/ui/page-states";
 import {
   Dialog,
   DialogContent,
@@ -47,6 +48,11 @@ function maskDestination(value?: string | null) {
   return maskPhoneBr(value, false);
 }
 
+const DEFAULT_FILTERS: NotificationFilters = {
+  failedOnly: false,
+  limit: 20,
+};
+
 export default function Notifications() {
   const [searchParams] = useSearchParams();
   const {
@@ -72,10 +78,7 @@ export default function Notifications() {
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
   const [isClearingAll, setIsClearingAll] = useState(false);
 
-  const [filters, setFilters] = useState<NotificationFilters>({
-    failedOnly: false,
-    limit: 20,
-  });
+  const [filters, setFilters] = useState<NotificationFilters>(DEFAULT_FILTERS);
 
   useEffect(() => {
     const selectedFromUrl = searchParams.get("id");
@@ -153,8 +156,8 @@ export default function Notifications() {
   );
 
   const getStatusBadgeClass = (status?: AppNotification["status"]) => {
-    if (status === "FAILED") return "bg-destructive/10 text-destructive border-destructive/30";
-    if (status === "PENDING") return "bg-muted text-muted-foreground border-border";
+    if (status === "FAILED") return "border-red-300 bg-red-100 text-red-900";
+    if (status === "PENDING") return "border-amber-300 bg-amber-100 text-amber-900";
     return "bg-primary/10 text-primary border-primary/30";
   };
 
@@ -164,6 +167,15 @@ export default function Notifications() {
     setSelectedId(id);
     setIsDetailOpen(true);
     await markNotificationAsRead(id);
+  };
+
+  const hasActiveFilters =
+    Boolean(filters.status || filters.channel || filters.failedOnly || filters.unreadOnly) ||
+    (filters.limit ?? DEFAULT_FILTERS.limit) !== DEFAULT_FILTERS.limit;
+
+  const resetFilters = async () => {
+    setFilters(DEFAULT_FILTERS);
+    await fetchAll(DEFAULT_FILTERS);
   };
 
   return (
@@ -207,7 +219,7 @@ export default function Notifications() {
         </Card>
 
         {error ? (
-          <Alert className="border-red-200 bg-red-50">
+          <Alert variant="destructive">
             <AlertTitle>Erro ao carregar notificacoes</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
@@ -236,7 +248,26 @@ export default function Notifications() {
             {loading && !notifications.length ? (
               <p className="text-sm text-muted-foreground">Carregando notificacoes...</p>
             ) : !notifications.length ? (
-              <p className="text-sm text-muted-foreground">Nenhuma notificacao encontrada.</p>
+              <PageEmptyState
+                title={hasActiveFilters ? "Nenhuma notificacao para estes filtros" : "Nenhuma notificacao encontrada"}
+                description={
+                  hasActiveFilters
+                    ? "Os filtros atuais esconderam todos os resultados. Limpe os filtros para voltar a ver a fila completa."
+                    : "Quando o sistema gerar avisos, lembretes ou falhas de entrega, eles aparecerao aqui."
+                }
+                action={
+                  hasActiveFilters
+                    ? {
+                        label: "Limpar filtros",
+                        onClick: () => void resetFilters(),
+                      }
+                    : {
+                        label: "Atualizar lista",
+                        onClick: () => void handleRefresh(),
+                        variant: "outline",
+                      }
+                }
+              />
             ) : (
               <>
                 <div className="overflow-x-auto">

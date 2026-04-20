@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PageErrorState } from '@/components/ui/page-states';
+import { PageEmptyState, PageErrorState } from '@/components/ui/page-states';
 import { HighlightMetricCard } from '@/components/ui/highlight-metric-card';
+import { PaginationControls } from '@/components/ui/pagination-controls';
+import { CrudListToolbar } from '@/components/crud/CrudListToolbar';
 import {
   Table,
   TableBody,
@@ -23,13 +24,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  Search,
-  Plus,
   MoreVertical,
   Calendar,
   DollarSign,
-  Grid3X3,
-  List,
   Users,
 } from 'lucide-react';
 import { useClients } from '@/hooks/useClients';
@@ -114,49 +111,21 @@ export default function ClientsOverviewPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-        <div className="relative max-w-md flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Buscar clientes..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="flex overflow-hidden rounded-lg border">
-            <Button
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={() => setViewMode('grid')}
-              className="h-8 w-8 rounded-none sm:h-9 sm:w-9"
-            >
-              <Grid3X3 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={() => setViewMode('table')}
-              className="h-8 w-8 rounded-none sm:h-9 sm:w-9"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <Button
-            className="gap-2"
-            onClick={() => {
-              setEditingClientId(null);
-              setIsClientDialogOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Novo</span> Cliente
-          </Button>
-        </div>
-      </div>
+      <CrudListToolbar
+        searchPlaceholder="Buscar clientes..."
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        gridAriaLabel="Visualizar clientes em cards"
+        tableAriaLabel="Visualizar clientes em lista"
+        actionLabel="Cliente"
+        actionLabelMobile="Novo"
+        onAction={() => {
+          setEditingClientId(null);
+          setIsClientDialogOpen(true);
+        }}
+      />
 
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <HighlightMetricCard
@@ -192,17 +161,26 @@ export default function ClientsOverviewPage() {
       </div>
 
       {filteredClients.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
-            <p className="text-muted-foreground">Nenhum cliente encontrado</p>
-            {searchTerm ? (
-              <Button variant="link" onClick={() => setSearchTerm('')}>
-                Limpar busca
-              </Button>
-            ) : null}
-          </CardContent>
-        </Card>
+        <PageEmptyState
+          title={searchTerm ? "Nenhum cliente encontrado para esta busca" : "Nenhum cliente cadastrado"}
+          description={
+            searchTerm
+              ? "A busca atual nao retornou resultados. Limpe o termo para voltar a ver a lista completa."
+              : "Cadastre o primeiro cliente para começar a organizar histórico, visitas e faturamento."
+          }
+          action={{
+            label: searchTerm ? "Limpar busca" : "Novo cliente",
+            onClick: () => {
+              if (searchTerm) {
+                setSearchTerm('');
+                return;
+              }
+              setEditingClientId(null);
+              setIsClientDialogOpen(true);
+            },
+            variant: searchTerm ? "outline" : "default",
+          }}
+        />
       ) : viewMode === 'grid' ? (
         <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {filteredClients.map((client) => (
@@ -292,29 +270,14 @@ export default function ClientsOverviewPage() {
       )}
 
       {!searchTerm && totalPages > 1 ? (
-        <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/20 p-3">
-          <p className="text-sm text-muted-foreground">
-            Pagina {pagination.page} de {totalPages}
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(pagination.page - 1)}
-              disabled={pagination.page <= 1 || isLoading}
-            >
-              Anterior
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(pagination.page + 1)}
-              disabled={pagination.page >= totalPages || isLoading || !pagination.hasMore}
-            >
-              Proxima
-            </Button>
-          </div>
-        </div>
+        <PaginationControls
+          page={pagination.page}
+          totalPages={totalPages}
+          isLoading={isLoading}
+          hasNextPage={pagination.hasMore}
+          onPrevious={() => goToPage(pagination.page - 1)}
+          onNext={() => goToPage(pagination.page + 1)}
+        />
       ) : null}
 
       <ClientUpsertDialog

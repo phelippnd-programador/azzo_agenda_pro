@@ -4,6 +4,7 @@ type PaginationControlsProps = {
   page: number;
   totalPages: number;
   isLoading?: boolean;
+  hasNextPage?: boolean;
   onPrevious: () => void;
   onNext: () => void;
 };
@@ -12,6 +13,7 @@ export function PaginationControls({
   page,
   totalPages,
   isLoading = false,
+  hasNextPage = true,
   onPrevious,
   onNext,
 }: PaginationControlsProps) {
@@ -30,7 +32,7 @@ export function PaginationControls({
           variant="outline"
           size="sm"
           onClick={onNext}
-          disabled={page >= totalPages || isLoading}
+          disabled={page >= totalPages || isLoading || !hasNextPage}
         >
           Proxima
         </Button>

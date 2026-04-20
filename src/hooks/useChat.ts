@@ -13,6 +13,10 @@ type UseChatOptions = {
   todayOnly?: boolean;
 };
 
+type LoadOptions = {
+  background?: boolean;
+};
+
 export function useChat(options: UseChatOptions = {}) {
   const pageSize = options.pageSize ?? 50;
   const todayOnly = options.todayOnly ?? true;
@@ -25,9 +29,9 @@ export function useChat(options: UseChatOptions = {}) {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const hasLoadedConversationsRef = useRef(false);
 
-  const loadConversations = useCallback(async () => {
+  const loadConversations = useCallback(async (options: LoadOptions = {}) => {
     try {
-      if (!hasLoadedConversationsRef.current) {
+      if (!hasLoadedConversationsRef.current || !options.background) {
         setIsLoadingConversations(true);
       }
       const response = await chatApi.listConversations({ page: 1, pageSize, todayOnly });
@@ -42,7 +46,7 @@ export function useChat(options: UseChatOptions = {}) {
     }
   }, [pageSize, todayOnly]);
 
-  const loadMessages = useCallback(async (conversationId: string) => {
+  const loadMessages = useCallback(async (conversationId: string, options: LoadOptions = {}) => {
     if (!conversationId) {
       setActiveConversationId(null);
       setMessages([]);
@@ -51,12 +55,42 @@ export function useChat(options: UseChatOptions = {}) {
     try {
       const isConversationChanged = activeConversationId !== conversationId;
       setActiveConversationId(conversationId);
-      setIsLoadingMessages(true);
+      if (!options.background) {
+        setIsLoadingMessages(true);
+      }
       if (isConversationChanged) {
         setMessages([]);
       }
       const response = await chatApi.listMessages(conversationId, { page: 1, pageSize: 200 });
-      setMessages(response.items || []);
+      const nextMessages = response.items || [];
+      setMessages(nextMessages);
+      setConversations((prev) => {
+        const lastMessage = nextMessages.at(-1);
+        if (!lastMessage) return prev;
+
+        const lastMessagePreview = lastMessage.content?.trim() || "[Conteudo expirado]";
+        const lastMessageAt = lastMessage.createdAt;
+
+        const next = prev.map((conversation) =>
+          conversation.id === conversationId
+            ? {
+                ...conversation,
+                clientId: lastMessage.clientId || conversation.clientId,
+                lastMessagePreview,
+                lastMessageAt,
+                updatedAt: lastMessageAt,
+                unreadCount: 0,
+              }
+            : conversation
+        );
+
+        next.sort((a, b) => {
+          const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+          const bTime = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+          return bTime - aTime;
+        });
+        return next;
+      });
     } catch (err) {
       const uiError = resolveUiError(err, "Erro ao carregar mensagens da conversa");
       toast.error(uiError.message);

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { Grid3X3, List, Pencil, Plus, Search, Tag, Trash2 } from "lucide-react";
+import { Pencil, Plus, Tag, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { CrudListToolbar } from "@/components/crud/CrudListToolbar";
 import { DeleteConfirmationDialog } from "@/components/common/DeleteConfirmationDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,9 +13,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { PageEmptyState, PageErrorState } from "@/components/ui/page-states";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -193,91 +194,65 @@ export default function SpecialtiesOverviewPage() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="relative w-full lg:max-w-xl">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Buscar especialidade ou descricao..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
-            />
-          </div>
+        <Dialog
+          open={isNewSpecialtyOpen}
+          onOpenChange={(open) => {
+            setIsNewSpecialtyOpen(open);
+            if (!open) resetCreateForm();
+          }}
+        >
+          <CrudListToolbar
+            searchPlaceholder="Buscar especialidade ou descricao..."
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            gridAriaLabel="Visualizar especialidades em cards"
+            tableAriaLabel="Visualizar especialidades em lista"
+            actionLabel="Especialidade"
+            actionLabelMobile="Nova"
+            actionIcon={Plus}
+            searchMaxWidthClassName="lg:max-w-xl"
+            onAction={() => setIsNewSpecialtyOpen(true)}
+          />
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex overflow-hidden rounded-lg border bg-background">
-              <Button
-                variant={viewMode === "grid" ? "secondary" : "ghost"}
-                size="icon"
-                onClick={() => setViewMode("grid")}
-                className="h-8 w-8 rounded-none sm:h-9 sm:w-9"
-                aria-label="Visualizar especialidades em cards"
-              >
-                <Grid3X3 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "table" ? "secondary" : "ghost"}
-                size="icon"
-                onClick={() => setViewMode("table")}
-                className="h-8 w-8 rounded-none sm:h-9 sm:w-9"
-                aria-label="Visualizar especialidades em lista"
-              >
-                <List className="h-4 w-4" />
-              </Button>
+          <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Nova especialidade</DialogTitle>
+              <DialogDescription>
+                Preencha os dados da nova especialidade.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 py-4">
+              <Input
+                placeholder="Ex.: Corte, Coloracao, Escova..."
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <Textarea
+                placeholder="Descricao opcional da especialidade (usada para detalhamento e contexto do assistente)."
+                value={description}
+                maxLength={500}
+                onChange={(e) => setDescription(e.target.value)}
+              />
             </div>
-
-            <Dialog
-              open={isNewSpecialtyOpen}
-              onOpenChange={(open) => {
-                setIsNewSpecialtyOpen(open);
-                if (!open) resetCreateForm();
-              }}
-            >
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Nova Especialidade
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Nova especialidade</DialogTitle>
-                  <DialogDescription>
-                    Preencha os dados da nova especialidade.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-3 py-4">
-                  <Input
-                    placeholder="Ex.: Corte, Coloracao, Escova..."
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                  <Textarea
-                    placeholder="Descricao opcional da especialidade (usada para detalhamento e contexto do assistente)."
-                    value={description}
-                    maxLength={500}
-                    onChange={(e) => setDescription(e.target.value)}
-                  />
-                </div>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setIsNewSpecialtyOpen(false);
-                      resetCreateForm();
-                    }}
-                    disabled={isCreating}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleCreate} disabled={isCreating}>
-                    {isCreating ? "Salvando..." : "Criar especialidade"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsNewSpecialtyOpen(false);
+                  resetCreateForm();
+                }}
+                disabled={isCreating}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleCreate} disabled={isCreating}>
+                {isCreating ? "Salvando..." : "Criar especialidade"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <div className="flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -316,14 +291,11 @@ export default function SpecialtiesOverviewPage() {
         ) : null}
 
         {error ? (
-          <Card>
-            <CardContent className="space-y-3 py-6">
-              <p className="text-sm text-destructive">{error}</p>
-              <Button variant="outline" onClick={refetch}>
-                Tentar novamente
-              </Button>
-            </CardContent>
-          </Card>
+          <PageErrorState
+            title="Nao foi possivel carregar as especialidades"
+            description={error}
+            action={{ label: "Tentar novamente", onClick: refetch }}
+          />
         ) : null}
 
         {!isLoading && !error ? (
@@ -460,11 +432,25 @@ export default function SpecialtiesOverviewPage() {
               </Card>
             )
           ) : (
-            <Card>
-              <CardContent className="py-10 text-center text-muted-foreground">
-                Nenhuma especialidade encontrada.
-              </CardContent>
-            </Card>
+            <PageEmptyState
+              title={searchTerm ? "Nenhuma especialidade encontrada para esta busca" : "Nenhuma especialidade cadastrada"}
+              description={
+                searchTerm
+                  ? "A busca atual nao retornou resultados. Limpe o termo para voltar a ver a lista completa."
+                  : "Cadastre a primeira especialidade para organizar catalogo, filtros e contexto operacional."
+              }
+              action={{
+                label: searchTerm ? "Limpar busca" : "Nova especialidade",
+                onClick: () => {
+                  if (searchTerm) {
+                    setSearchTerm("");
+                    return;
+                  }
+                  setIsNewSpecialtyOpen(true);
+                },
+                variant: searchTerm ? "outline" : "default",
+              }}
+            />
           )
         ) : null}
       </div>

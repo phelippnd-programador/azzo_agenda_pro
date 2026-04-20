@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { BrandLockup } from '@/components/common/BrandLockup';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Scissors, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { getCurrentBillingSubscription } from '@/services/billingService';
@@ -39,10 +40,17 @@ export default function Login() {
     const raw = localStorage.getItem(REMEMBER_LOGIN_STORAGE_KEY);
     if (!raw) return;
     try {
-      const parsed = JSON.parse(raw) as { email?: string; password?: string };
-      if (parsed.email) form.setValue("email", parsed.email);
-      if (parsed.password) form.setValue("password", parsed.password);
-      setRememberPassword(Boolean(parsed.email || parsed.password));
+      const parsed = JSON.parse(raw) as { email?: string };
+      if (parsed.email) {
+        form.setValue("email", parsed.email);
+        setRememberPassword(true);
+        localStorage.setItem(
+          REMEMBER_LOGIN_STORAGE_KEY,
+          JSON.stringify({ email: parsed.email })
+        );
+        return;
+      }
+      localStorage.removeItem(REMEMBER_LOGIN_STORAGE_KEY);
     } catch {
       localStorage.removeItem(REMEMBER_LOGIN_STORAGE_KEY);
     }
@@ -136,7 +144,6 @@ export default function Login() {
             REMEMBER_LOGIN_STORAGE_KEY,
             JSON.stringify({
               email: values.email.trim(),
-              password: values.password,
             })
           );
         } else {
@@ -171,20 +178,16 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-card p-4">
       <div className="w-full max-w-md">
-        <div className="flex items-center justify-center gap-2 mb-6 sm:mb-8">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-xl flex items-center justify-center">
-            <Scissors className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Azzo</h1>
-            <p className="text-xs sm:text-sm text-primary font-medium -mt-1">Agenda Pro</p>
-          </div>
-        </div>
+        <BrandLockup className="mb-6 sm:mb-8" />
 
         <Card className="shadow-xl border-0">
           <CardHeader className="text-center pb-2 sm:pb-4">
-            <CardTitle className="text-xl sm:text-2xl">Bem-vindo de volta!</CardTitle>
-            <CardDescription className="text-sm">Entre na sua conta para continuar</CardDescription>
+            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-[2rem]">
+              Bem-vindo de volta!
+            </CardTitle>
+            <CardDescription className="text-sm leading-6 sm:text-[15px]">
+              Entre na sua conta para continuar
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={onSubmit} className="space-y-4">
@@ -194,6 +197,8 @@ export default function Login() {
                   id="email"
                   type="email"
                   placeholder="seu@email.com"
+                  autoComplete="username"
+                  autoFocus
                   {...form.register('email')}
                   disabled={isLoading}
                   className="h-10 sm:h-11"
@@ -215,6 +220,7 @@ export default function Login() {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="........"
+                    autoComplete="current-password"
                     {...form.register('password')}
                     disabled={isLoading}
                     className="h-10 sm:h-11 pr-10"
@@ -225,6 +231,7 @@ export default function Login() {
                     size="icon"
                     className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                   >
                     {showPassword ? (
                       <EyeOff className="w-4 h-4 text-muted-foreground" />
@@ -244,6 +251,7 @@ export default function Login() {
                     inputMode="numeric"
                     maxLength={6}
                     placeholder="000000"
+                    autoComplete="one-time-code"
                     {...form.register('mfaCode', {
                       onChange: (event) => {
                         const target = event.target as HTMLInputElement;
@@ -264,9 +272,13 @@ export default function Login() {
                   disabled={isLoading}
                 />
                 <Label htmlFor="rememberPassword" className="text-sm text-muted-foreground">
-                  Salvar senha neste dispositivo
+                  Salvar e-mail neste dispositivo
                 </Label>
               </div>
+
+              <p className="text-xs text-muted-foreground">
+                Apenas seu e-mail pode ser lembrado neste navegador. Sua senha nunca e salva localmente.
+              </p>
 
               <Button
                 type="submit"

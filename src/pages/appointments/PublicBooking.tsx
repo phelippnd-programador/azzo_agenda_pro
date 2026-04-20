@@ -1,16 +1,18 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Check, ChevronLeft, ChevronRight, Loader2, Scissors } from 'lucide-react';
 import {
-  Scissors,
-  ChevronLeft,
-  ChevronRight,
-  Check,
-  Loader2,
-} from 'lucide-react';
-import { servicesApi, professionalsApi, appointmentsApi, publicBookingApi, Service, Professional } from '@/lib/api';
+  appointmentsApi,
+  Professional,
+  professionalsApi,
+  publicBookingApi,
+  salonApi,
+  Service,
+  servicesApi,
+} from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
 import { toast } from 'sonner';
 import { BookingSuccessScreen } from '@/components/public-booking/BookingSuccessScreen';
@@ -26,24 +28,27 @@ export default function PublicBooking() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProfessionals, setIsLoadingProfessionals] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
+  const [serviceSearch, setServiceSearch] = useState('');
+  const [servicePage, setServicePage] = useState(1);
+  const [salonName, setSalonName] = useState('Agende seu horário');
+  const [salonLogoUrl, setSalonLogoUrl] = useState<string | null>(null);
 
-  // Data
   const [services, setServices] = useState<Service[]>([]);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
 
-  // Selection state
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [selectedProfessional, setSelectedProfessional] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  // Customer info
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
+
+  const servicePageSize = 10;
 
   const formatDateParam = (date: Date) => {
     const year = date.getFullYear();
@@ -55,12 +60,22 @@ export default function PublicBooking() {
   useEffect(() => {
     const loadData = async () => {
       try {
+        if (slug) {
+          const salonProfile = await salonApi.getPublicBySlug(slug);
+          setSalonName(salonProfile.salonName?.trim() || 'Agende seu horário');
+          setSalonLogoUrl(salonProfile.logoUrl || salonProfile.logo || null);
+        } else {
+          setSalonName('Agende seu horário');
+          setSalonLogoUrl(null);
+        }
+
         const servicesResponse = slug
           ? await publicBookingApi.getServices(slug)
           : await servicesApi.getAll();
         const availableServices = Array.isArray(servicesResponse)
           ? servicesResponse
           : servicesResponse.items || [];
+
         setServices(availableServices.filter((service) => service.isActive));
         setProfessionals([]);
       } catch (error) {
@@ -69,6 +84,7 @@ export default function PublicBooking() {
         setIsLoading(false);
       }
     };
+
     loadData();
   }, [slug]);
 
@@ -77,6 +93,7 @@ export default function PublicBooking() {
 
     const date = formatDateParam(selectedDate);
     setIsLoadingAvailability(true);
+
     publicBookingApi
       .getAvailability({
         slug,
@@ -102,19 +119,46 @@ export default function PublicBooking() {
     () => services.filter((service) => selectedServiceIds.includes(service.id)),
     [services, selectedServiceIds]
   );
+
+  const filteredServices = useMemo(() => {
+    const normalizedSearch = serviceSearch.trim().toLowerCase();
+    if (!normalizedSearch) return services;
+
+    return services.filter((service) => service.name.toLowerCase().includes(normalizedSearch));
+  }, [services, serviceSearch]);
+
+  const totalServicePages = useMemo(
+    () => Math.max(1, Math.ceil(filteredServices.length / servicePageSize)),
+    [filteredServices.length]
+  );
+
+  const paginatedServices = useMemo(() => {
+    const start = (servicePage - 1) * servicePageSize;
+    return filteredServices.slice(start, start + servicePageSize);
+  }, [filteredServices, servicePage]);
+
   const selectedServiceDuration = useMemo(
     () => selectedServicesData.reduce((sum, service) => sum + Number(service.duration || 0), 0),
     [selectedServicesData]
   );
+
   const selectedServiceTotal = useMemo(
     () => selectedServicesData.reduce((sum, service) => sum + Number(service.price || 0), 0),
     [selectedServicesData]
   );
 
-  const selectedProfessionalData = useMemo(() =>
-    professionals.find(p => p.id === selectedProfessional),
+  const selectedProfessionalData = useMemo(
+    () => professionals.find((professional) => professional.id === selectedProfessional),
     [professionals, selectedProfessional]
   );
+
+  useEffect(() => {
+    setServicePage(1);
+  }, [serviceSearch]);
+
+  useEffect(() => {
+    setServicePage((current) => Math.min(current, totalServicePages));
+  }, [totalServicePages]);
 
   const loadProfessionalsForServices = async (serviceIds: string[]) => {
     setIsLoadingProfessionals(true);
@@ -143,7 +187,9 @@ export default function PublicBooking() {
         .map((service) => service.professionalIds || [])
         .filter((ids) => ids.length > 0);
       const filtered = restrictedGroups.length
-        ? active.filter((professional) => restrictedGroups.every((ids) => ids.includes(professional.id)))
+        ? active.filter((professional) =>
+            restrictedGroups.every((ids) => ids.includes(professional.id))
+          )
         : active;
 
       setProfessionals(filtered);
@@ -166,12 +212,10 @@ export default function PublicBooking() {
     const lastDay = new Date(year, month + 1, 0);
     const days: (Date | null)[] = [];
 
-    // Add empty days for the start of the week
     for (let i = 0; i < firstDay.getDay(); i++) {
       days.push(null);
     }
 
-    // Add all days of the month
     for (let i = 1; i <= lastDay.getDate(); i++) {
       days.push(new Date(year, month, i));
     }
@@ -183,7 +227,7 @@ export default function PublicBooking() {
     if (!date) return false;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return date >= today && date.getDay() !== 0; // Not in the past and not Sunday
+    return date >= today && date.getDay() !== 0;
   };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -208,6 +252,7 @@ export default function PublicBooking() {
       const defaultDate = getFirstSelectableDate();
       if (defaultDate) setSelectedDate(defaultDate);
     }
+
     setCurrentStep(currentStep + 1);
   };
 
@@ -229,18 +274,24 @@ export default function PublicBooking() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedServiceIds.length || !selectedProfessional || !selectedDate || !selectedTime || !selectedServicesData.length) {
+    if (
+      !selectedServiceIds.length ||
+      !selectedProfessional ||
+      !selectedDate ||
+      !selectedTime ||
+      !selectedServicesData.length
+    ) {
       toast.error('Preencha todos os campos');
       return;
     }
+
     if (slug && !availableSlots.includes(selectedTime)) {
-      toast.error('Horario indisponivel. Selecione outro horario e tente novamente.');
+      toast.error('Horário indisponível. Selecione outro horário e tente novamente.');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // Calculate end time
       const [hours, minutes] = selectedTime.split(':').map(Number);
       const endDate = new Date();
       endDate.setHours(hours, minutes + selectedServiceDuration);
@@ -262,7 +313,7 @@ export default function PublicBooking() {
         });
       } else {
         await appointmentsApi.create({
-          clientId: 'public_' + Date.now(), // fallback
+          clientId: `public_${Date.now()}`,
           professionalId: selectedProfessional,
           date: formatDateParam(selectedDate),
           startTime: selectedTime,
@@ -303,8 +354,8 @@ export default function PublicBooking() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-card p-4">
-        <div className="max-w-2xl mx-auto">
-          <Skeleton className="h-16 w-48 mx-auto mb-8" />
+        <div className="mx-auto max-w-2xl">
+          <Skeleton className="mx-auto mb-8 h-16 w-48" />
           <Skeleton className="h-96 w-full" />
         </div>
       </div>
@@ -325,70 +376,79 @@ export default function PublicBooking() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-card p-4 sm:p-6">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-xl flex items-center justify-center">
-              <Scissors className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Bella Studio</h1>
-              <p className="text-xs sm:text-sm text-primary font-medium">Agende seu horário</p>
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-6 text-center sm:mb-8">
+          <div className="mb-2 flex flex-col items-center justify-center gap-3">
+            {salonLogoUrl ? (
+              <img
+                src={salonLogoUrl}
+                alt={`Logo do salão ${salonName}`}
+                className="h-16 w-16 rounded-2xl border border-border bg-background object-cover shadow-sm sm:h-20 sm:w-20"
+              />
+            ) : (
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-sm sm:h-20 sm:w-20">
+                <Scissors className="h-7 w-7 text-white sm:h-8 sm:w-8" />
+              </div>
+            )}
+            <div className="text-center">
+              <h1 className="text-xl font-bold text-foreground sm:text-2xl">{salonName}</h1>
+              <p className="text-xs font-medium text-primary sm:text-sm">Agende seu horário</p>
             </div>
           </div>
         </div>
 
-        {/* Progress Steps */}
-        <div className="flex items-center justify-center gap-2 sm:gap-4 mb-6 sm:mb-8">
+        <div className="mb-6 flex items-center justify-center gap-2 sm:mb-8 sm:gap-4">
           {[1, 2, 3, 4].map((step) => (
             <div key={step} className="flex items-center">
               <div
-                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium transition-colors ${
+                className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium transition-colors sm:h-8 sm:w-8 sm:text-sm ${
                   currentStep >= step
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-muted-foreground'
                 }`}
               >
-                {currentStep > step ? <Check className="w-3 h-3 sm:w-4 sm:h-4" /> : step}
+                {currentStep > step ? <Check className="h-3 w-3 sm:h-4 sm:w-4" /> : step}
               </div>
-              {step < 4 && (
+              {step < 4 ? (
                 <div
-                  className={`w-6 sm:w-12 h-1 mx-1 sm:mx-2 rounded ${
+                  className={`mx-1 h-1 w-6 rounded sm:mx-2 sm:w-12 ${
                     currentStep > step ? 'bg-primary' : 'bg-muted'
                   }`}
                 />
-              )}
+              ) : null}
             </div>
           ))}
         </div>
 
-        {/* Step Content */}
-        <Card className="shadow-xl border-0">
-          {/* Step 1: Select Service */}
-          {currentStep === 1 && (
+        <Card className="border-0 shadow-xl">
+          {currentStep === 1 ? (
             <BookingServiceStep
-              services={services}
+              services={paginatedServices}
               selectedServiceIds={selectedServiceIds}
               selectedServicesData={selectedServicesData}
               selectedServiceDuration={selectedServiceDuration}
               selectedServiceTotal={selectedServiceTotal}
+              serviceSearch={serviceSearch}
+              servicePage={servicePage}
+              servicePageSize={servicePageSize}
+              totalFilteredServices={filteredServices.length}
+              totalPages={totalServicePages}
+              onSearchChange={setServiceSearch}
+              onPageChange={setServicePage}
               onSelectService={handleSelectService}
             />
-          )}
+          ) : null}
 
-          {/* Step 2: Select Professional */}
-          {currentStep === 2 && (
+          {currentStep === 2 ? (
             <BookingProfessionalStep
               professionals={professionals}
               selectedProfessional={selectedProfessional}
               isLoadingProfessionals={isLoadingProfessionals}
               onSelect={setSelectedProfessional}
             />
-          )}
+          ) : null}
 
-          {/* Step 3: Select Date and Time */}
-          {currentStep === 3 && (
+          {currentStep === 3 ? (
             <BookingDateTimeStep
               currentMonth={currentMonth}
               selectedDate={selectedDate}
@@ -402,10 +462,9 @@ export default function PublicBooking() {
               onSelectDate={setSelectedDate}
               onSelectTime={setSelectedTime}
             />
-          )}
+          ) : null}
 
-          {/* Step 4: Customer Info */}
-          {currentStep === 4 && (
+          {currentStep === 4 ? (
             <BookingCustomerStep
               customerName={customerName}
               customerPhone={customerPhone}
@@ -419,13 +478,12 @@ export default function PublicBooking() {
               onChangePhone={setCustomerPhone}
               onChangeEmail={setCustomerEmail}
             />
-          )}
+          ) : null}
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between p-4 sm:p-6 pt-0">
+          <div className="flex justify-between p-4 pt-0 sm:p-6 sm:pt-0">
             {currentStep > 1 ? (
               <Button variant="outline" onClick={() => setCurrentStep(currentStep - 1)}>
-                <ChevronLeft className="w-4 h-4 mr-1" />
+                <ChevronLeft className="mr-1 h-4 w-4" />
                 Voltar
               </Button>
             ) : (
@@ -440,13 +498,13 @@ export default function PublicBooking() {
               >
                 {isLoadingProfessionals && currentStep === 1 ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Carregando...
                   </>
                 ) : (
                   <>
                     Continuar
-                    <ChevronRight className="w-4 h-4 ml-1" />
+                    <ChevronRight className="ml-1 h-4 w-4" />
                   </>
                 )}
               </Button>
@@ -458,12 +516,12 @@ export default function PublicBooking() {
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Confirmando...
                   </>
                 ) : (
                   <>
-                    <Check className="w-4 h-4 mr-1" />
+                    <Check className="mr-1 h-4 w-4" />
                     Confirmar Agendamento
                   </>
                 )}

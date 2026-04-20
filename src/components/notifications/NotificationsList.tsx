@@ -23,9 +23,9 @@ function formatDate(value?: string | null) {
 }
 
 function getStatusBadgeClass(status: NotificationItem["status"]) {
-  if (status === "FAILED") return "bg-red-100 text-red-700";
-  if (status === "PENDING") return "bg-amber-100 text-amber-700";
-  return "bg-emerald-100 text-emerald-700";
+  if (status === "FAILED") return "border border-red-300 bg-red-100 text-red-900";
+  if (status === "PENDING") return "border border-amber-300 bg-amber-100 text-amber-900";
+  return "border border-emerald-300 bg-emerald-100 text-emerald-900";
 }
 
 export function NotificationsList({
@@ -65,7 +65,7 @@ export function NotificationsList({
           </div>
 
           {item.status === "FAILED" && item.errorMessage ? (
-            <div className="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive flex items-start gap-2">
+            <div className="rounded-md border border-destructive/35 bg-destructive/10 p-2 text-xs font-medium text-red-900 dark:text-red-50 flex items-start gap-2">
               <AlertCircle className="w-3.5 h-3.5 mt-0.5" />
               <span>{item.errorMessage}</span>
             </div>

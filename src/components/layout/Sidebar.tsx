@@ -1,187 +1,21 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import { cn } from "@/lib/utils";
+import { ExternalLink, LogOut, Menu, X } from "lucide-react";
+import { BrandLockup } from "@/components/common/BrandLockup";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMenuPermissions } from "@/contexts/MenuPermissionsContext";
-import {
-  LayoutDashboard,
-  Calendar,
-  Scissors,
-  Users,
-  Tag,
-  UserCircle,
-  DollarSign,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  Bell,
-  ExternalLink,
-  Building2,
-  Receipt,
-  FileText,
-  Calculator,
-  Eye,
-  CreditCard,
-  BarChart3,
-  ShieldCheck,
-  FileSearch,
-  Boxes,
-  User,
-  ChevronDown,
-  MessageCircleMore,
-  Lightbulb,
-  type LucideIcon,
-} from "lucide-react";
-import type { CurrentMenuPermissionItem } from "@/types/menu-permissions";
-
-const MENU_REGISTRY = {
-  "/dashboard": { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  "/relatorio": { icon: BarChart3, label: "Relatorio", path: "/relatorio" },
-  "/notificacoes": { icon: Bell, label: "Notificacoes", path: "/notificacoes" },
-  "/agenda": { icon: Calendar, label: "Agenda", path: "/agenda" },
-  "/servicos": { icon: Scissors, label: "Servicos", path: "/servicos" },
-  "/especialidades": { icon: Tag, label: "Especialidades", path: "/especialidades" },
-  "/profissionais": { icon: Users, label: "Profissionais", path: "/profissionais" },
-  "/clientes": { icon: UserCircle, label: "Clientes", path: "/clientes" },
-  "/sugestoes": { icon: Lightbulb, label: "Sugestoes", path: "/sugestoes" },
-  "/chat": { icon: MessageCircleMore, label: "Chat", path: "/chat" },
-  "/estoque": { icon: Boxes, label: "Estoque", path: "/estoque" },
-  "/financeiro": { icon: DollarSign, label: "Resumo Financeiro", path: "/financeiro" },
-  "/financeiro/comissoes": {
-    icon: Receipt,
-    label: "Comissoes",
-    path: "/financeiro/comissoes",
-  },
-  "/financeiro/profissionais": {
-    icon: BarChart3,
-    label: "Financeiro Profissionais",
-    path: "/financeiro/profissionais",
-  },
-  "/financeiro/licenca": {
-    icon: CreditCard,
-    label: "Plano",
-    path: "/financeiro/licenca",
-  },
-  "/auditoria": { icon: ShieldCheck, label: "Auditoria", path: "/auditoria" },
-  "/auditoria/lgpd": { icon: FileSearch, label: "LGPD Titulares", path: "/auditoria/lgpd" },
-  "/configuracoes/admin-sistema": {
-    icon: ShieldCheck,
-    label: "Admin Sistema",
-    path: "/configuracoes/admin-sistema",
-  },
-  "/emitir-nota": { icon: FileText, label: "Emitir Nota Fiscal", path: "/emitir-nota" },
-  "/nota-fiscal": { icon: Eye, label: "Pre-visualizacao de NF", path: "/nota-fiscal" },
-  "/apuracao-mensal": { icon: Calculator, label: "Apuracao Mensal", path: "/apuracao-mensal" },
-  "/configuracoes": { icon: Settings, label: "Configuracoes", path: "/configuracoes" },
-  "/perfil-usuario": { icon: User, label: "Perfil", path: "/perfil-usuario" },
-  "/perfil-salao": { icon: Building2, label: "Perfil do Salao", path: "/perfil-salao" },
-} as const;
-
-const MAIN_MENU_ORDER = [
-  "/dashboard",
-  "/notificacoes",
-  "/agenda",
-  "/relatorio",
-  "/servicos",
-  "/especialidades",
-  "/profissionais",
-  "/clientes",
-  "/sugestoes",
-  "/chat",
-  "/estoque",
-  "/financeiro",
-  "/financeiro/comissoes",
-  "/financeiro/profissionais",
-  "/financeiro/licenca",
-  "/auditoria",
-  "/auditoria/lgpd",
-  "/configuracoes/admin-sistema",
-  "/emitir-nota",
-  "/nota-fiscal",
-  "/apuracao-mensal",
-] as const;
-
-const ICON_REGISTRY: Record<string, LucideIcon> = {
-  LayoutDashboard,
-  Calendar,
-  Scissors,
-  Users,
-  Tag,
-  UserCircle,
-  DollarSign,
-  Settings,
-  Bell,
-  Building2,
-  Receipt,
-  FileText,
-  Calculator,
-  Eye,
-  CreditCard,
-  BarChart3,
-  ShieldCheck,
-  FileSearch,
-  Boxes,
-  User,
-  MessageCircleMore,
-  Lightbulb,
-};
+import { cn } from "@/lib/utils";
+import { appRouteManifest } from "@/app/route-manifest";
+import { SIDEBAR_BOTTOM_ITEMS } from "./sidebar/config";
+import { getVisibleSidebarEntries, isSidebarEntryActive } from "./sidebar/menu-builder";
+import { SidebarNavGroup } from "./sidebar/SidebarNavGroup";
+import { SidebarNavLink } from "./sidebar/SidebarNavLink";
 
 interface SidebarProps {
   isMobileOpen: boolean;
   onToggleMobile: () => void;
   isDesktopOpen: boolean;
-}
-
-type MenuItem = (typeof MENU_REGISTRY)[keyof typeof MENU_REGISTRY];
-type DynamicMenuNode = {
-  id: string;
-  path: string;
-  label: string;
-  icon: LucideIcon;
-  children: DynamicMenuNode[];
-};
-
-const DYNAMIC_BOTTOM_ROUTES = new Set(["/perfil-salao", "/configuracoes"]);
-const STANDALONE_LAST_ROUTES = new Set(["/financeiro/licenca"]);
-const GROUP_ONLY_ROUTES = new Set(["/relatorio"]);
-const HIDDEN_MENU_ROUTES = new Set([
-  "/unauthorized",
-  "/estoque/visao-geral",
-  "/estoque/itens",
-  "/estoque/movimentacoes",
-  "/estoque/importacoes",
-  "/estoque/inventarios",
-  "/estoque/fornecedores",
-  "/estoque/pedidos-compra",
-  "/estoque/transferencias",
-  "/clientes/importacoes",
-  "/clientes/importacoes/:jobId",
-  "/servicos/importacoes",
-  "/servicos/importacoes/:jobId",
-  "/especialidades/importacoes",
-  "/especialidades/importacoes/:jobId",
-  "/perfil-usuario",
-]);
-
-function sortMenuNodes<T extends { displayOrder?: number; label?: string }>(items: T[]) {
-  return [...items].sort((left, right) => {
-    const orderDelta = Number(left.displayOrder || 0) - Number(right.displayOrder || 0);
-    if (orderDelta !== 0) return orderDelta;
-    return String(left.label || "").localeCompare(String(right.label || ""), "pt-BR");
-  });
-}
-
-function resolveMenuIcon(item: CurrentMenuPermissionItem): LucideIcon {
-  if (item.iconKey && ICON_REGISTRY[item.iconKey]) return ICON_REGISTRY[item.iconKey];
-  return MENU_REGISTRY[item.route as keyof typeof MENU_REGISTRY]?.icon ?? Settings;
-}
-
-function moveStandaloneRoutesToEnd<T extends { path: string }>(items: T[]) {
-  const regularItems = items.filter((item) => !STANDALONE_LAST_ROUTES.has(item.path));
-  const standaloneItems = items.filter((item) => STANDALONE_LAST_ROUTES.has(item.path));
-  return [...regularItems, ...standaloneItems];
 }
 
 export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: SidebarProps) {
@@ -190,138 +24,29 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
   const { logout, user } = useAuth();
   const { allowedRoutes, menuItems } = useMenuPermissions();
   const allowedSet = useMemo(() => new Set(allowedRoutes ?? []), [allowedRoutes]);
+  const visibleMenuEntries = useMemo(
+    () => getVisibleSidebarEntries(menuItems, allowedSet),
+    [allowedSet, menuItems]
+  );
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
-
-  const dynamicMenuNodes = useMemo<DynamicMenuNode[] | null>(() => {
-    if (!menuItems || menuItems.length === 0) return null;
-    const visibleItems = menuItems.filter(
-      (item) =>
-        item.active &&
-        item.route &&
-        !item.route.includes(":") &&
-        !DYNAMIC_BOTTOM_ROUTES.has(item.route) &&
-        !HIDDEN_MENU_ROUTES.has(item.route)
-    );
-    const byId = new Map(visibleItems.map((item) => [item.id, item]));
-    const includedIds = new Set<string>();
-
-    visibleItems.forEach((item) => {
-      if (!allowedSet.has(item.route)) return;
-      includedIds.add(item.id);
-      if (STANDALONE_LAST_ROUTES.has(item.route)) return;
-      let currentParentId = item.parentId || null;
-      while (currentParentId) {
-        const parent = byId.get(currentParentId);
-        if (!parent) break;
-        includedIds.add(parent.id);
-        currentParentId = parent.parentId || null;
-      }
-    });
-
-    if (includedIds.size === 0) return [];
-
-    const nodeMap = new Map<string, DynamicMenuNode>();
-    includedIds.forEach((id) => {
-      const item = byId.get(id);
-      if (!item) return;
-      nodeMap.set(id, {
-        id: item.id,
-        path: item.route,
-        label: item.label || MENU_REGISTRY[item.route as keyof typeof MENU_REGISTRY]?.label || item.route,
-        icon: resolveMenuIcon(item),
-        children: [],
-      });
-    });
-
-    const roots: Array<DynamicMenuNode & { displayOrder?: number }> = [];
-    sortMenuNodes(
-      visibleItems.filter((item) => includedIds.has(item.id))
-    ).forEach((item) => {
-      const node = nodeMap.get(item.id);
-      if (!node) return;
-      const parent =
-        item.parentId && !STANDALONE_LAST_ROUTES.has(item.route)
-          ? nodeMap.get(item.parentId)
-          : null;
-      if (parent) {
-        parent.children.push(node);
-        parent.children = sortMenuNodes(
-          parent.children.map((child) => ({
-            ...child,
-            displayOrder: visibleItems.find((candidate) => candidate.id === child.id)?.displayOrder,
-          }))
-        ).map(({ displayOrder: _, ...child }) => child);
-      } else {
-        roots.push({ ...node, displayOrder: item.displayOrder });
-      }
-    });
-
-    return moveStandaloneRoutesToEnd(
-      sortMenuNodes(roots).map(({ displayOrder: _, ...node }) => node)
-    );
-  }, [allowedSet, menuItems]);
-
-  const visibleMenuEntries = useMemo(() => {
-    if (dynamicMenuNodes) return dynamicMenuNodes;
-    const financialGroupPaths = [
-      "/financeiro",
-      "/financeiro/comissoes",
-      "/financeiro/profissionais",
-    ] as const;
-    const financialItems = financialGroupPaths
-      .filter((route) => allowedSet.has(route))
-      .map((route) => MENU_REGISTRY[route]);
-
-    const entries: DynamicMenuNode[] = [];
-    MAIN_MENU_ORDER.forEach((route) => {
-      if (financialGroupPaths.includes(route)) return;
-      if (route === "/auditoria/lgpd") {
-        if (!allowedSet.has("/auditoria") && !allowedSet.has("/auditoria/lgpd")) return;
-      } else if (!allowedSet.has(route)) {
-        return;
-      }
-      const item = MENU_REGISTRY[route];
-      entries.push({
-        id: item.path,
-        path: item.path,
-        label: item.label,
-        icon: item.icon,
-        children: [],
-      });
-    });
-
-    if (financialItems.length > 0) {
-      const financeInsertIndex = entries.findIndex((entry) => entry.path === "/auditoria");
-      const financialGroup: DynamicMenuNode = {
-        id: "financeiro",
-        path: "/financeiro",
-        label: "Financeiro",
-        icon: DollarSign,
-        children: financialItems.map((item) => ({
-          id: item.path,
-          path: item.path,
-          label: item.label,
-          icon: item.icon,
-          children: [],
-        })),
-      };
-      if (financeInsertIndex >= 0) entries.splice(financeInsertIndex, 0, financialGroup);
-      else entries.push(financialGroup);
-    }
-
-    return moveStandaloneRoutesToEnd(entries);
-  }, [allowedSet, dynamicMenuNodes]);
   const [salonSlug, setSalonSlug] = useState("meu-salao");
+
+  const handleNavigate = () => {
+    if (window.innerWidth < 1024) {
+      onToggleMobile();
+    }
+  };
 
   useEffect(() => {
     const matchingGroup = visibleMenuEntries.find((entry) =>
-      entry.children.some(
-        (child) =>
-          location.pathname === child.path || location.pathname.startsWith(`${child.path}/`)
-      )
+      entry.children.some((child) => isSidebarEntryActive(location.pathname, child.path))
     );
-    if (!matchingGroup) return;
-    setExpandedGroups((prev) => (prev[matchingGroup.id] ? prev : { ...prev, [matchingGroup.id]: true }));
+    if (!matchingGroup) {
+      return;
+    }
+    setExpandedGroups((prev) =>
+      prev[matchingGroup.id] ? prev : { ...prev, [matchingGroup.id]: true }
+    );
   }, [location.pathname, visibleMenuEntries]);
 
   useEffect(() => {
@@ -333,17 +58,17 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
 
   const handleLogout = async () => {
     await logout();
-    navigate("/login");
+    navigate(appRouteManifest.public.login);
   };
 
   return (
     <>
-      {isMobileOpen && (
+      {isMobileOpen ? (
         <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={onToggleMobile}
         />
-      )}
+      ) : null}
 
       <aside
         className={cn(
@@ -353,16 +78,9 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
         )}
       >
         <div className="flex flex-col h-full">
-          {/* Logo */}
           <div className="flex items-center justify-between h-14 px-4 border-b border-sidebar-border">
-            <Link to="/dashboard" className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
-                <Scissors className="w-3.5 h-3.5 text-white" />
-              </div>
-              <div className="flex items-baseline gap-1 min-w-0">
-                <span className="text-sm font-semibold text-foreground truncate">Azzo</span>
-                <span className="text-xs font-medium text-muted-foreground truncate">Agenda Pro</span>
-              </div>
+            <Link to={appRouteManifest.shell.dashboard} className="min-w-0">
+              <BrandLockup compact className="justify-start" />
             </Link>
             <Button
               variant="ghost"
@@ -376,181 +94,58 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
 
           <div className="flex-1 overflow-y-auto py-3">
             <nav className="px-2 space-y-0.5">
-              {visibleMenuEntries.map((entry) => {
-                if (entry.children.length === 0) {
-                  const isLgpdSubPage = location.pathname.startsWith("/auditoria/lgpd");
-                  const isActive =
-                    (location.pathname === entry.path ||
-                      location.pathname.startsWith(`${entry.path}/`)) &&
-                    !(entry.path === "/auditoria" && isLgpdSubPage);
-                  return (
-                    <Link
-                      key={entry.path}
-                      to={entry.path}
-                      onClick={() => {
-                        if (window.innerWidth < 1024) onToggleMobile();
-                      }}
-                    >
-                      <div
-                        className={cn(
-                          "relative flex items-center gap-2.5 h-9 px-3 rounded-md text-sm cursor-pointer select-none transition-colors",
-                          isActive
-                            ? "bg-primary/8 text-primary font-medium"
-                            : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"
-                        )}
-                      >
-                        {isActive && (
-                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-r-full" />
-                        )}
-                        <entry.icon className="w-4 h-4 flex-shrink-0 opacity-80" />
-                        <span className="truncate">{entry.label}</span>
-                      </div>
-                    </Link>
-                  );
-                }
-
-                const isOpen = expandedGroups[entry.id] ?? false;
-                const activeChildPath =
-                  entry.children
-                    .filter(
-                      (item) =>
-                        location.pathname === item.path ||
-                        location.pathname.startsWith(`${item.path}/`)
-                    )
-                    .sort((left, right) => right.path.length - left.path.length)[0]?.path ?? null;
-                const isGroupActive = Boolean(activeChildPath);
-                const parentIsAccessible =
-                  allowedSet.has(entry.path) && !GROUP_ONLY_ROUTES.has(entry.path);
-
-                return (
-                  <div key={entry.id} className="space-y-0.5">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setExpandedGroups((prev) => ({ ...prev, [entry.id]: !isOpen }))
-                      }
-                      className={cn(
-                        "w-full flex items-center gap-2.5 h-9 px-3 rounded-md text-sm cursor-pointer select-none transition-colors",
-                        isGroupActive
-                          ? "text-primary font-medium"
-                          : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"
-                      )}
-                      >
-                      <entry.icon className="w-4 h-4 flex-shrink-0 opacity-80" />
-                      <span className="truncate flex-1 text-left">{entry.label}</span>
-                      <ChevronDown
-                        className={cn(
-                          "w-3.5 h-3.5 opacity-60 transition-transform duration-200",
-                          isOpen ? "rotate-180" : "rotate-0"
-                        )}
-                      />
-                    </button>
-                    {isOpen ? (
-                      <div className="ml-3 pl-3 border-l border-border space-y-0.5 py-0.5">
-                        {parentIsAccessible ? (
-                          <Link
-                            key={`${entry.path}-overview`}
-                            to={entry.path}
-                            onClick={() => {
-                              if (window.innerWidth < 1024) onToggleMobile();
-                            }}
-                          >
-                            <div
-                              className={cn(
-                                "flex items-center gap-2.5 h-8 px-2.5 rounded-md text-sm cursor-pointer select-none transition-colors",
-                                location.pathname === entry.path
-                                  ? "bg-primary/8 text-primary font-medium"
-                                  : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"
-                              )}
-                            >
-                              <entry.icon className="w-3.5 h-3.5 flex-shrink-0 opacity-80" />
-                              <span className="truncate">{entry.label}</span>
-                            </div>
-                          </Link>
-                        ) : null}
-                        {entry.children.map((item) => {
-                          const isChildActive = activeChildPath === item.path;
-                          return (
-                            <Link
-                              key={item.path}
-                              to={item.path}
-                              onClick={() => {
-                                if (window.innerWidth < 1024) onToggleMobile();
-                              }}
-                            >
-                              <div
-                                className={cn(
-                                  "flex items-center gap-2.5 h-8 px-2.5 rounded-md text-sm cursor-pointer select-none transition-colors",
-                                  isChildActive
-                                    ? "bg-primary/8 text-primary font-medium"
-                                    : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"
-                                )}
-                              >
-                                <item.icon className="w-3.5 h-3.5 flex-shrink-0 opacity-80" />
-                                <span className="truncate">{item.label}</span>
-                              </div>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })}
+              {visibleMenuEntries.map((entry) =>
+                entry.children.length === 0 ? (
+                  <SidebarNavLink
+                    key={entry.path}
+                    path={entry.path}
+                    label={entry.label}
+                    icon={entry.icon}
+                    isActive={
+                      isSidebarEntryActive(location.pathname, entry.path) &&
+                      !(entry.path === appRouteManifest.audit.root &&
+                        location.pathname.startsWith(appRouteManifest.audit.lgpd))
+                    }
+                    onNavigate={handleNavigate}
+                  />
+                ) : (
+                  <SidebarNavGroup
+                    key={entry.id}
+                    entry={entry}
+                    pathname={location.pathname}
+                    isOpen={expandedGroups[entry.id] ?? false}
+                    allowedSet={allowedSet}
+                    onNavigate={handleNavigate}
+                    onToggle={() =>
+                      setExpandedGroups((prev) => ({ ...prev, [entry.id]: !prev[entry.id] }))
+                    }
+                  />
+                )
+              )}
             </nav>
 
-            {/* Public booking link */}
             <div className="px-2 mt-4">
               <Link to={`/agendar/${salonSlug}`}>
                 <div className="flex items-center gap-2 h-9 px-3 rounded-md text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
                   <ExternalLink className="w-4 h-4 flex-shrink-0 opacity-70" />
-                  <span className="truncate">Página pública</span>
+                  <span className="truncate">Pagina publica</span>
                 </div>
               </Link>
             </div>
           </div>
 
-          {/* Bottom nav */}
           <div className="px-2 pb-3 pt-2 border-t border-sidebar-border space-y-0.5">
-            {user?.role === "OWNER" && allowedSet.has("/perfil-salao") && (
-              <Link
-                to="/perfil-salao"
-                onClick={() => {
-                  if (window.innerWidth < 1024) onToggleMobile();
-                }}
-              >
-                <div
-                  className={cn(
-                    "flex items-center gap-2.5 h-9 px-3 rounded-md text-sm cursor-pointer select-none transition-colors",
-                    location.pathname === "/perfil-salao"
-                      ? "bg-primary/8 text-primary font-medium"
-                      : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"
-                  )}
-                >
-                  <Building2 className="w-4 h-4 flex-shrink-0 opacity-80" />
-                  <span className="truncate">Perfil do Salão</span>
-                </div>
-              </Link>
-            )}
-            {allowedSet.has("/configuracoes") && (
-              <Link
-                to="/configuracoes"
-                onClick={() => {
-                  if (window.innerWidth < 1024) onToggleMobile();
-                }}
-              >
-                <div
-                  className={cn(
-                    "flex items-center gap-2.5 h-9 px-3 rounded-md text-sm cursor-pointer select-none transition-colors",
-                    location.pathname === "/configuracoes"
-                      ? "bg-primary/8 text-primary font-medium"
-                      : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"
-                  )}
-                >
-                  <Settings className="w-4 h-4 flex-shrink-0 opacity-80" />
-                  <span className="truncate">Configurações</span>
-                </div>
-              </Link>
+            {SIDEBAR_BOTTOM_ITEMS.filter((item) => item.isVisible(user?.role, allowedSet)).map(
+              (item) => (
+                <SidebarNavLink
+                  key={item.path}
+                  path={item.path}
+                  label={item.label}
+                  icon={item.icon}
+                  isActive={location.pathname === item.path}
+                  onNavigate={handleNavigate}
+                />
+              )
             )}
             <button
               type="button"

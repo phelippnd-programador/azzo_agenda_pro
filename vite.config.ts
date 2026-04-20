@@ -38,5 +38,26 @@ export default defineConfig(({ command }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return undefined;
+
+          if (id.includes("recharts")) return "vendor-charts";
+          if (id.includes("qrcode")) return "vendor-qrcode";
+          if (
+            id.includes("react-markdown") ||
+            id.includes("remark-gfm") ||
+            id.includes("rehype-sanitize") ||
+            id.includes("prismjs")
+          ) {
+            return "vendor-markdown";
+          }
+          return undefined;
+        },
+      },
+    },
+  },
   envPrefix: ["VITE_", "NEXT_PUBLIC_"],
 }));

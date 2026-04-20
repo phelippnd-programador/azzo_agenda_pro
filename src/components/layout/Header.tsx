@@ -64,8 +64,14 @@ export function Header({
             </Button>
           ) : null}
           <div className="min-w-0">
-            <h1 className="truncate text-sm font-medium text-foreground">{title}</h1>
-            {subtitle ? <p className="hidden truncate text-xs text-muted-foreground sm:block">{subtitle}</p> : null}
+            <h1 className="truncate text-base font-semibold tracking-tight text-foreground sm:text-[1.05rem]">
+              {title}
+            </h1>
+            {subtitle ? (
+              <p className="hidden truncate text-xs leading-5 text-muted-foreground sm:block sm:text-sm">
+                {subtitle}
+              </p>
+            ) : null}
           </div>
         </div>
 

@@ -84,6 +84,12 @@ describe("Professionals", () => {
     expect(screen.getByText(/Financeiro > Comissoes/i)).toBeInTheDocument();
     expect(screen.getAllByText("Ana Costa").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: /Novo Profissional/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Visualizar profissionais em cards" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Visualizar profissionais em lista" })
+    ).toBeInTheDocument();
   });
 
   it("should hide financial commissions guidance when route is not allowed", async () => {

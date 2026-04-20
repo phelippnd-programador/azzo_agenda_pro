@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Loader2, Scissors } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { BrandLockup } from "@/components/common/BrandLockup";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,12 +26,12 @@ const getPasswordStrengthStatus = (value: string) => {
   if (/\d/.test(value)) score += 1;
   if (/[^A-Za-z0-9]/.test(value)) score += 1;
   if (score <= 2) {
-    return { label: "Fraca", width: "33%", barClassName: "bg-red-500", textClassName: "text-red-600" };
+    return { label: "Fraca", width: "33%", barClassName: "bg-red-600", textClassName: "text-red-700" };
   }
   if (score <= 4) {
-    return { label: "Media", width: "66%", barClassName: "bg-amber-500", textClassName: "text-amber-600" };
+    return { label: "Media", width: "66%", barClassName: "bg-amber-500", textClassName: "text-amber-700" };
   }
-  return { label: "Forte", width: "100%", barClassName: "bg-emerald-500", textClassName: "text-emerald-600" };
+  return { label: "Forte", width: "100%", barClassName: "bg-emerald-600", textClassName: "text-emerald-700" };
 };
 
 export default function Register() {
@@ -158,20 +159,14 @@ export default function Register() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-card p-4">
       <div className="w-full max-w-md">
-        <div className="flex items-center justify-center gap-2 mb-6 sm:mb-8">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-xl flex items-center justify-center">
-            <Scissors className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Azzo</h1>
-            <p className="text-xs sm:text-sm text-primary font-medium -mt-1">Agenda Pro</p>
-          </div>
-        </div>
+        <BrandLockup className="mb-6 sm:mb-8" />
 
         <Card className="shadow-xl border-0">
           <CardHeader className="text-center pb-2 sm:pb-4">
-            <CardTitle className="text-xl sm:text-2xl">Crie sua conta</CardTitle>
-            <CardDescription className="text-sm">
+            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-[2rem]">
+              Crie sua conta
+            </CardTitle>
+            <CardDescription className="text-sm leading-6 sm:text-[15px]">
               {step === 1 ? "Seus dados pessoais" : "Dados do seu salao"}
             </CardDescription>
             {/* Step indicator */}
@@ -208,6 +203,8 @@ export default function Register() {
                   <Input
                     id="name"
                     placeholder="Seu nome"
+                    autoComplete="name"
+                    autoFocus
                     {...form.register("name")}
                     className="h-10 sm:h-11"
                   />
@@ -221,6 +218,7 @@ export default function Register() {
                     id="email"
                     type="email"
                     placeholder="seu@email.com"
+                    autoComplete="email"
                     {...form.register("email")}
                     className="h-10 sm:h-11"
                   />
@@ -235,6 +233,7 @@ export default function Register() {
                       id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Minimo 8 caracteres"
+                      autoComplete="new-password"
                       {...form.register("password")}
                       className="h-10 sm:h-11 pr-10"
                     />
@@ -244,6 +243,7 @@ export default function Register() {
                       size="icon"
                       className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                     >
                       {showPassword ? (
                         <EyeOff className="w-4 h-4 text-muted-foreground" />
@@ -273,6 +273,9 @@ export default function Register() {
                       Seguranca da senha:{" "}
                       {watchedPassword ? passwordStrength.label : "Nao definida"}
                     </p>
+                    <p className="text-xs text-muted-foreground">
+                      Sua senha e usada apenas para autenticar a conta e nao fica salva no navegador.
+                    </p>
                   </div>
                 </div>
 
@@ -284,6 +287,7 @@ export default function Register() {
                     id="confirmPassword"
                     type={showPassword ? "text" : "password"}
                     placeholder="Repita a senha"
+                    autoComplete="new-password"
                     {...form.register("confirmPassword")}
                     className="h-10 sm:h-11"
                   />
@@ -341,6 +345,7 @@ export default function Register() {
                   <Input
                     id="salonName"
                     placeholder="Ex: Bella Studio"
+                    autoComplete="organization"
                     {...form.register("salonName")}
                     disabled={isLoading}
                     className="h-10 sm:h-11"
@@ -354,6 +359,7 @@ export default function Register() {
                   <Input
                     id="phone"
                     placeholder="(11) 99999-0000"
+                    autoComplete="tel"
                     value={watchedPhone}
                     onChange={(e) =>
                       form.setValue("phone", maskPhoneBr(e.target.value), {

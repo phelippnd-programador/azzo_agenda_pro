@@ -35,6 +35,65 @@ const normalizeDateToIso = (value: unknown) => {
   return '';
 };
 
+function DashboardSectionHeader({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow?: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="space-y-1">
+      {eyebrow ? (
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          {eyebrow}
+        </p>
+      ) : null}
+      <div className="space-y-1">
+        <h2 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">{title}</h2>
+        <p className="max-w-3xl text-sm text-muted-foreground">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+function FlowStageCard({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: typeof Route;
+  label: string;
+  value: number;
+  tone: 'amber' | 'sky';
+}) {
+  const toneClasses =
+    tone === 'amber'
+      ? {
+          wrapper: 'border-orange-100 bg-white/80',
+          text: 'text-orange-700',
+          value: 'text-orange-900',
+        }
+      : {
+          wrapper: 'border-sky-100 bg-white/80',
+          text: 'text-sky-700',
+          value: 'text-sky-900',
+        };
+
+  return (
+    <div className={`rounded-xl border px-3 py-2 ${toneClasses.wrapper}`}>
+      <div className={`flex items-center gap-2 ${toneClasses.text}`}>
+        <Icon className="h-4 w-4" />
+        <span className="text-xs">{label}</span>
+      </div>
+      <p className={`text-xl font-semibold ${toneClasses.value}`}>{value}</p>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const isProfessionalUser = user?.role === 'PROFESSIONAL';
@@ -270,225 +329,166 @@ export default function Dashboard() {
   return (
     <MainLayout title="Dashboard" subtitle={formattedDate}>
       <div className="space-y-4 sm:space-y-6">
-        <Alert>
-          <Calendar className="h-4 w-4" />
-          <AlertTitle>Periodo das metricas</AlertTitle>
-          <AlertDescription>
-            {isProfessionalUser
-              ? 'Este dashboard profissional usa metricas consolidadas da view materializada no periodo fixo do mes atual.'
-              : 'Este dashboard principal usa periodos fixos: cards de hoje e do mes atual, grafico semanal para a semana corrente e linha mensal para o mes corrente. Para filtros personalizados, use o modulo financeiro detalhado.'}
-          </AlertDescription>
-        </Alert>
+        <Card className="border-border/60 bg-gradient-to-r from-background via-muted/30 to-background">
+          <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Visão executiva
+              </p>
+              <p className="text-sm font-medium text-foreground">
+                {isProfessionalUser ? 'Seu desempenho no mês atual e sua operação de hoje.' : 'Operação do dia, receita do mês e sinais de risco do funil.'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {isProfessionalUser
+                  ? 'As métricas do profissional usam o período fixo do mês atual.'
+                  : 'Os cards usam hoje e o mês atual. Para filtros personalizados, use os módulos detalhados.'}
+              </p>
+            </div>
+            <Badge variant="outline" className="w-fit bg-background/80">
+              Atualizado para {formattedDate}
+            </Badge>
+          </CardContent>
+        </Card>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-          <MetricCard
-            title={isProfessionalUser ? 'Servicos concluidos' : 'Agendamentos Hoje'}
-            value={resolvedMetrics.todayAppointments}
-            icon={isProfessionalUser ? CheckCircle : Calendar}
-            trend={
-              isProfessionalUser
-                ? undefined
-                : {
-                    value: resolvedMetrics.todayAppointmentsGrowthPercent ?? null,
-                    isPositive: (resolvedMetrics.todayAppointmentsGrowthPercent ?? 0) >= 0,
-                    unavailableLabel: 'Sem dados anteriores',
-                  }
-            }
-            iconClassName={isProfessionalUser ? 'bg-emerald-600' : 'bg-primary'}
-          />
-          <MetricCard
-            title={isProfessionalUser ? 'Faturamento no periodo' : 'Faturamento Hoje'}
-            value={formatCurrency(resolvedMetrics.todayRevenue)}
-            icon={DollarSign}
-            trend={
-              isProfessionalUser
-                ? undefined
-                : {
-                    value: resolvedMetrics.todayRevenueGrowthPercent ?? null,
-                    isPositive: (resolvedMetrics.todayRevenueGrowthPercent ?? 0) >= 0,
-                    unavailableLabel: 'Sem dados anteriores',
-                  }
-            }
-            iconClassName="bg-green-600"
-          />
-          <MetricCard
-            title={isProfessionalUser ? 'Clientes atendidos' : 'Clientes Ativos'}
-            value={resolvedMetrics.totalClients}
-            icon={Users}
-            trend={
-              isProfessionalUser
-                ? undefined
-                : {
-                    value: resolvedMetrics.totalClientsGrowthPercent ?? null,
-                    isPositive: (resolvedMetrics.totalClientsGrowthPercent ?? 0) >= 0,
-                    unavailableLabel: 'Sem dados anteriores',
-                  }
-            }
-            iconClassName="bg-primary"
-          />
-          <MetricCard
-            title={isProfessionalUser ? 'Comissao no periodo' : 'Faturamento Mensal'}
-            value={formatCurrency(resolvedMetrics.monthlyRevenue)}
-            icon={TrendingUp}
-            trend={
-              isProfessionalUser
-                ? undefined
-                : {
-                    value: resolvedMetrics.monthlyRevenueGrowthPercent ?? null,
-                    isPositive: (resolvedMetrics.monthlyRevenueGrowthPercent ?? 0) >= 0,
-                    unavailableLabel: 'Sem dados anteriores',
-                  }
-            }
-            iconClassName="bg-blue-600"
-          />
+        <DashboardSectionHeader
+          eyebrow="Operação"
+          title="O que exige atenção hoje"
+          description={
+            isProfessionalUser
+              ? 'Comece pelo seu volume concluído, pendências do dia e próxima agenda.'
+              : 'Priorize agenda, equipe disponível e gargalos do funil antes de entrar nos gráficos de análise.'
+          }
+        />
+
+        <div className="grid gap-3 sm:gap-4 xl:grid-cols-[minmax(0,1.8fr)_minmax(320px,1fr)]">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            <MetricCard
+              title={isProfessionalUser ? 'Servicos concluidos' : 'Agendamentos Hoje'}
+              value={resolvedMetrics.todayAppointments}
+              icon={isProfessionalUser ? CheckCircle : Calendar}
+              trend={
+                isProfessionalUser
+                  ? undefined
+                  : {
+                      value: resolvedMetrics.todayAppointmentsGrowthPercent ?? null,
+                      isPositive: (resolvedMetrics.todayAppointmentsGrowthPercent ?? 0) >= 0,
+                      unavailableLabel: 'Sem dados anteriores',
+                    }
+              }
+              iconClassName={isProfessionalUser ? 'bg-emerald-600' : 'bg-primary'}
+            />
+            <MetricCard
+              title={isProfessionalUser ? 'Faturamento no periodo' : 'Faturamento Hoje'}
+              value={formatCurrency(resolvedMetrics.todayRevenue)}
+              icon={DollarSign}
+              trend={
+                isProfessionalUser
+                  ? undefined
+                  : {
+                      value: resolvedMetrics.todayRevenueGrowthPercent ?? null,
+                      isPositive: (resolvedMetrics.todayRevenueGrowthPercent ?? 0) >= 0,
+                      unavailableLabel: 'Sem dados anteriores',
+                    }
+              }
+              iconClassName="bg-green-600"
+            />
+            <MetricCard
+              title={isProfessionalUser ? 'Clientes atendidos' : 'Clientes Ativos'}
+              value={resolvedMetrics.totalClients}
+              icon={Users}
+              trend={
+                isProfessionalUser
+                  ? undefined
+                  : {
+                      value: resolvedMetrics.totalClientsGrowthPercent ?? null,
+                      isPositive: (resolvedMetrics.totalClientsGrowthPercent ?? 0) >= 0,
+                      unavailableLabel: 'Sem dados anteriores',
+                    }
+              }
+              iconClassName="bg-primary"
+            />
+            <MetricCard
+              title={isProfessionalUser ? 'Comissao no periodo' : 'Faturamento Mensal'}
+              value={formatCurrency(resolvedMetrics.monthlyRevenue)}
+              icon={TrendingUp}
+              trend={
+                isProfessionalUser
+                  ? undefined
+                  : {
+                      value: resolvedMetrics.monthlyRevenueGrowthPercent ?? null,
+                      isPositive: (resolvedMetrics.monthlyRevenueGrowthPercent ?? 0) >= 0,
+                      unavailableLabel: 'Sem dados anteriores',
+                    }
+              }
+              iconClassName="bg-blue-600"
+            />
+          </div>
+
+          <Card className="border-border/60 bg-muted/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base sm:text-lg">Painel rapido do dia</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 shadow-none">
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
+                        <Clock className="h-5 w-5 text-amber-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-amber-700">Pendentes</p>
+                        <p className="text-xl font-bold text-amber-900">{resolvedMetrics.pendingAppointments}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 shadow-none">
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100">
+                        <CheckCircle className="h-5 w-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-emerald-700">Concluidos</p>
+                        <p className="text-xl font-bold text-emerald-900">{resolvedMetrics.completedToday}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {!isProfessionalUser ? (
+                <div className="rounded-xl border border-dashed bg-background/80 p-3">
+                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                    Sinais operacionais
+                  </p>
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                    <div className="rounded-lg bg-muted/40 p-2">
+                      <p className="text-muted-foreground">Nao concluidos</p>
+                      <p className="text-lg font-semibold text-foreground">
+                        {resolvedMetrics.notConcludedToday ?? 0}
+                      </p>
+                    </div>
+                    <div className="rounded-lg bg-muted/40 p-2">
+                      <p className="text-muted-foreground">WhatsApp em aberto</p>
+                      <p className="text-lg font-semibold text-foreground">
+                        {resolvedMetrics.whatsAppOpenFlowsToday ?? 0}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed bg-background/80 p-3 text-sm text-muted-foreground">
+                  Use este bloco para acompanhar entrega do dia e confirmar se sua agenda está convertendo em atendimento concluído.
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
-        {!isProfessionalUser ? <div className="grid grid-cols-2 gap-3 sm:gap-4">
-          <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
-            <CardContent className="p-3 sm:p-4 flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-amber-700">Pendentes</p>
-                <p className="text-lg sm:text-2xl font-bold text-amber-900">{resolvedMetrics.pendingAppointments}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200">
-            <CardContent className="p-3 sm:p-4 flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-emerald-700">Concluidos Hoje</p>
-                <p className="text-lg sm:text-2xl font-bold text-emerald-900">{resolvedMetrics.completedToday}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div> : null}
-
-        {!isProfessionalUser ? <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base sm:text-lg">
-              Fluxos Gerais Nao Concluidos Hoje
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Etapas do funil geral de agendamento que nao chegaram a conclusao hoje, independentemente do canal.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-xl bg-white/70 border border-orange-200 px-4 py-3">
-              <p className="text-xs sm:text-sm text-orange-700">Total nao concluido no funil geral hoje</p>
-              <p className="text-2xl sm:text-3xl font-bold text-orange-900">
-                {resolvedMetrics.notConcludedToday ?? 0}
-              </p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="rounded-xl bg-white/70 border border-orange-100 px-3 py-2">
-                <div className="flex items-center gap-2 text-orange-700">
-                  <Route className="w-4 h-4" />
-                  <span className="text-xs">Servico</span>
-                </div>
-                <p className="text-xl font-semibold text-orange-900">
-                  {resolvedMetrics.stoppedAtServiceSelection ?? 0}
-                </p>
-              </div>
-              <div className="rounded-xl bg-white/70 border border-orange-100 px-3 py-2">
-                <div className="flex items-center gap-2 text-orange-700">
-                  <UserCheck className="w-4 h-4" />
-                  <span className="text-xs">Profissional</span>
-                </div>
-                <p className="text-xl font-semibold text-orange-900">
-                  {resolvedMetrics.stoppedAtProfessionalSelection ?? 0}
-                </p>
-              </div>
-              <div className="rounded-xl bg-white/70 border border-orange-100 px-3 py-2">
-                <div className="flex items-center gap-2 text-orange-700">
-                  <CalendarClock className="w-4 h-4" />
-                  <span className="text-xs">Horario</span>
-                </div>
-                <p className="text-xl font-semibold text-orange-900">
-                  {resolvedMetrics.stoppedAtTimeSelection ?? 0}
-                </p>
-              </div>
-              <div className="rounded-xl bg-white/70 border border-orange-100 px-3 py-2">
-                <div className="flex items-center gap-2 text-orange-700">
-                  <ClipboardCheck className="w-4 h-4" />
-                  <span className="text-xs">Revisao final</span>
-                </div>
-                <p className="text-xl font-semibold text-orange-900">
-                  {resolvedMetrics.stoppedAtFinalReview ?? 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card> : null}
-
-        {!isProfessionalUser ? <Card className="border-sky-200 bg-gradient-to-br from-sky-50 to-cyan-50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base sm:text-lg">
-              Fluxos Pausados Hoje no WhatsApp
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Conversas do canal WhatsApp ainda em aberto hoje, antes da confirmacao formal de abandono.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-xl bg-white/70 border border-sky-200 px-4 py-3">
-              <p className="text-xs sm:text-sm text-sky-700">Total pausado hoje apenas no WhatsApp</p>
-              <p className="text-2xl sm:text-3xl font-bold text-sky-900">
-                {resolvedMetrics.whatsAppOpenFlowsToday ?? 0}
-              </p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="rounded-xl bg-white/70 border border-sky-100 px-3 py-2">
-                <div className="flex items-center gap-2 text-sky-700">
-                  <Route className="w-4 h-4" />
-                  <span className="text-xs">Servico</span>
-                </div>
-                <p className="text-xl font-semibold text-sky-900">
-                  {resolvedMetrics.whatsAppStoppedAtServiceSelection ?? 0}
-                </p>
-              </div>
-              <div className="rounded-xl bg-white/70 border border-sky-100 px-3 py-2">
-                <div className="flex items-center gap-2 text-sky-700">
-                  <UserCheck className="w-4 h-4" />
-                  <span className="text-xs">Profissional</span>
-                </div>
-                <p className="text-xl font-semibold text-sky-900">
-                  {resolvedMetrics.whatsAppStoppedAtProfessionalSelection ?? 0}
-                </p>
-              </div>
-              <div className="rounded-xl bg-white/70 border border-sky-100 px-3 py-2">
-                <div className="flex items-center gap-2 text-sky-700">
-                  <CalendarClock className="w-4 h-4" />
-                  <span className="text-xs">Horario</span>
-                </div>
-                <p className="text-xl font-semibold text-sky-900">
-                  {resolvedMetrics.whatsAppStoppedAtTimeSelection ?? 0}
-                </p>
-              </div>
-              <div className="rounded-xl bg-white/70 border border-sky-100 px-3 py-2">
-                <div className="flex items-center gap-2 text-sky-700">
-                  <ClipboardCheck className="w-4 h-4" />
-                  <span className="text-xs">Revisao final</span>
-                </div>
-                <p className="text-xl font-semibold text-sky-900">
-                  {resolvedMetrics.whatsAppStoppedAtFinalReview ?? 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card> : null}
-
-        {!isProfessionalUser ? <WhatsAppReactivationChart /> : null}
-        {!isProfessionalUser ? (
-          <NoShowInsights />
-        ) : null}
-
-        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
-          <div className="lg:col-span-2">
+        <div className="grid gap-4 sm:gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,1fr)]">
+          <div>
             <UpcomingAppointments appointments={enrichedAppointments} onUpdateStatus={updateAppointmentStatus} />
           </div>
 
@@ -498,7 +498,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="space-y-3 sm:space-y-4">
               {activeProfessionals.length === 0 ? (
-                <p className="text-center text-muted-foreground py-4 text-sm">
+                <p className="py-4 text-center text-sm text-muted-foreground">
                   Nenhum profissional cadastrado
                 </p>
               ) : (
@@ -516,37 +516,37 @@ export default function Dashboard() {
                   return (
                     <div
                       key={professional.id}
-                      className="flex items-center gap-3 p-2 sm:p-3 bg-muted/40 rounded-xl"
+                      className="flex items-center gap-3 rounded-xl bg-muted/40 p-2 sm:p-3"
                     >
-                      <Avatar className="w-9 h-9 sm:w-10 sm:h-10 flex-shrink-0">
+                      <Avatar className="h-9 w-9 flex-shrink-0 sm:h-10 sm:w-10">
                         <AvatarImage src={professional.avatar} />
-                        <AvatarFallback className="bg-primary/15 text-primary text-xs sm:text-sm">
+                        <AvatarFallback className="bg-primary/15 text-xs text-primary sm:text-sm">
                           {professional.name.slice(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground text-sm truncate">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-foreground">
                           {professional.name}
                         </p>
-                        <p className="text-xs text-muted-foreground truncate">
+                        <p className="truncate text-xs text-muted-foreground">
                           {professional.specialties.slice(0, 2).join(', ')}
                         </p>
                       </div>
                       <Badge
                         variant="outline"
-                        className={`text-[10px] sm:text-xs flex-shrink-0 ${
+                        className={`flex-shrink-0 text-[10px] sm:text-xs ${
                           currentAppointment
-                            ? 'bg-blue-50 text-blue-700 border-blue-200'
+                            ? 'border-blue-200 bg-blue-50 text-blue-700'
                             : nextAppointment
-                            ? 'bg-green-50 text-green-700 border-green-200'
-                            : 'bg-muted text-muted-foreground border-border'
+                              ? 'border-green-200 bg-green-50 text-green-700'
+                              : 'border-border bg-muted text-muted-foreground'
                         }`}
                       >
                         {currentAppointment
                           ? 'Ocupado'
                           : nextAppointment
-                          ? `Prox: ${nextAppointment.startTime}`
-                          : 'Livre'}
+                            ? `Prox: ${nextAppointment.startTime}`
+                            : 'Livre'}
                       </Badge>
                     </div>
                   );
@@ -556,52 +556,195 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {scopedAppointments.length === 0 ? (
-          <PageEmptyState
-            title="Nenhum agendamento encontrado"
-            description="Cadastre o primeiro agendamento para comecar a acompanhar as metricas."
-          />
-        ) : null}
-
         {!isProfessionalUser ? (
-          <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
-            <RevenueChart />
-            <MonthlyRevenueLineChart />
+          <>
+            <DashboardSectionHeader
+              eyebrow="Risco e conversao"
+              title="Onde a operacao perde oportunidade"
+              description="Use estes blocos para entender onde o funil trava hoje e quais sinais merecem intervenção imediata."
+            />
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base sm:text-lg">Fluxos nao concluidos hoje</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Etapas do funil geral que ficaram pelo caminho antes da conclusão.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="rounded-xl border border-orange-200 bg-white/80 px-4 py-3">
+                    <p className="text-xs text-orange-700">Total em risco hoje</p>
+                    <p className="text-3xl font-bold text-orange-900">
+                      {resolvedMetrics.notConcludedToday ?? 0}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <FlowStageCard
+                      icon={Route}
+                      label="Servico"
+                      value={resolvedMetrics.stoppedAtServiceSelection ?? 0}
+                      tone="amber"
+                    />
+                    <FlowStageCard
+                      icon={UserCheck}
+                      label="Profissional"
+                      value={resolvedMetrics.stoppedAtProfessionalSelection ?? 0}
+                      tone="amber"
+                    />
+                    <FlowStageCard
+                      icon={CalendarClock}
+                      label="Horario"
+                      value={resolvedMetrics.stoppedAtTimeSelection ?? 0}
+                      tone="amber"
+                    />
+                    <FlowStageCard
+                      icon={ClipboardCheck}
+                      label="Revisao"
+                      value={resolvedMetrics.stoppedAtFinalReview ?? 0}
+                      tone="amber"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-sky-200 bg-gradient-to-br from-sky-50 to-cyan-50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base sm:text-lg">WhatsApp em aberto hoje</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Conversas ainda não resolvidas antes de virarem abandono formal.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="rounded-xl border border-sky-200 bg-white/80 px-4 py-3">
+                    <p className="text-xs text-sky-700">Total pausado no canal</p>
+                    <p className="text-3xl font-bold text-sky-900">
+                      {resolvedMetrics.whatsAppOpenFlowsToday ?? 0}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <FlowStageCard
+                      icon={Route}
+                      label="Servico"
+                      value={resolvedMetrics.whatsAppStoppedAtServiceSelection ?? 0}
+                      tone="sky"
+                    />
+                    <FlowStageCard
+                      icon={UserCheck}
+                      label="Profissional"
+                      value={resolvedMetrics.whatsAppStoppedAtProfessionalSelection ?? 0}
+                      tone="sky"
+                    />
+                    <FlowStageCard
+                      icon={CalendarClock}
+                      label="Horario"
+                      value={resolvedMetrics.whatsAppStoppedAtTimeSelection ?? 0}
+                      tone="sky"
+                    />
+                    <FlowStageCard
+                      icon={ClipboardCheck}
+                      label="Revisao"
+                      value={resolvedMetrics.whatsAppStoppedAtFinalReview ?? 0}
+                      tone="sky"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
+              <WhatsAppReactivationChart />
+              <NoShowInsights />
+            </div>
+
+            <DashboardSectionHeader
+              eyebrow="Performance"
+              title="Receita e desempenho do mes"
+              description="Depois de tratar a operação do dia, use estes blocos para leitura de crescimento, receita e ranking."
+            />
+
+            <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
+              <RevenueChart />
+              <MonthlyRevenueLineChart />
+            </div>
+
+            <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
+              <RankedBarCard
+                title="Clientes com mais servicos no periodo"
+                icon={Users}
+                subtitle={customerRanking?.lastUpdatedAt ? `Atualizado em ${new Date(customerRanking.lastUpdatedAt).toLocaleString('pt-BR')}` : undefined}
+                items={(customerRanking?.items || []).map((item) => ({
+                  id: item.clientId,
+                  name: item.clientName,
+                  value: item.completedServices,
+                  badgeText: formatCurrency(item.revenueTotal),
+                  metaText: `${item.completedServices} servico(s) - ${item.completedAppointments} atendimento(s) - ultima: ${
+                    item.lastAppointmentDate ? new Date(`${item.lastAppointmentDate}T12:00:00`).toLocaleDateString('pt-BR') : '-'
+                  }`,
+                }))}
+                maxItems={5}
+                valueLabel="Servicos"
+                labelPrefix="Cliente"
+                emptyMessage="Nenhum ranking de clientes disponivel no periodo."
+              />
+
+              <RankedBarCard
+                title="Top profissionais no dashboard"
+                icon={TrendingUp}
+                subtitle={`Mes atual: ${new Date(`${monthStartIso}T12:00:00`).toLocaleDateString('pt-BR')} a ${new Date(`${monthEndIso}T12:00:00`).toLocaleDateString('pt-BR')}`}
+                items={topProfessionalItems}
+                maxItems={5}
+                valueLabel="Atendimentos concluidos"
+                labelPrefix="Profissional"
+                emptyMessage="Nenhum profissional com atendimento concluido no periodo."
+                valueFormatter={(value) => `${value} atendimento(s)`}
+              />
+            </div>
+          </>
+        ) : (
+          <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
+            <RankedBarCard
+              title="Clientes com mais servicos no periodo"
+              icon={Users}
+              subtitle={customerRanking?.lastUpdatedAt ? `Atualizado em ${new Date(customerRanking.lastUpdatedAt).toLocaleString('pt-BR')}` : undefined}
+              items={(customerRanking?.items || []).map((item) => ({
+                id: item.clientId,
+                name: item.clientName,
+                value: item.completedServices,
+                badgeText: formatCurrency(item.revenueTotal),
+                metaText: `${item.completedServices} servico(s) - ${item.completedAppointments} atendimento(s) - ultima: ${
+                  item.lastAppointmentDate ? new Date(`${item.lastAppointmentDate}T12:00:00`).toLocaleDateString('pt-BR') : '-'
+                }`,
+              }))}
+              maxItems={5}
+              valueLabel="Servicos"
+              labelPrefix="Cliente"
+              emptyMessage="Nenhum ranking de clientes disponivel no periodo."
+            />
+
+            <Card className="border-border/60 bg-muted/20">
+              <CardHeader>
+                <CardTitle className="text-base sm:text-lg">Resumo da sua operação</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <div className="rounded-xl border bg-background p-4">
+                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                    Leitura recomendada
+                  </p>
+                  <p className="mt-2">
+                    Use os cards do topo para acompanhar volume entregue, receita gerada e comissão acumulada no mês atual.
+                  </p>
+                </div>
+                <div className="rounded-xl border bg-background p-4">
+                  <p className="font-medium text-foreground">Próximo passo</p>
+                  <p className="mt-1">
+                    Priorize confirmação de pendências na agenda e mantenha o foco em converter atendimentos agendados em serviços concluídos.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        ) : null}
-
-        <RankedBarCard
-          title="Clientes com mais servicos no periodo"
-          icon={Users}
-          subtitle={customerRanking?.lastUpdatedAt ? `Atualizado em ${new Date(customerRanking.lastUpdatedAt).toLocaleString('pt-BR')}` : undefined}
-          items={(customerRanking?.items || []).map((item) => ({
-            id: item.clientId,
-            name: item.clientName,
-            value: item.completedServices,
-            badgeText: formatCurrency(item.revenueTotal),
-            metaText: `${item.completedServices} servico(s) - ${item.completedAppointments} atendimento(s) - ultima: ${
-              item.lastAppointmentDate ? new Date(`${item.lastAppointmentDate}T12:00:00`).toLocaleDateString('pt-BR') : '-'
-            }`,
-          }))}
-          maxItems={5}
-          valueLabel="Servicos"
-          labelPrefix="Cliente"
-          emptyMessage="Nenhum ranking de clientes disponivel no periodo."
-        />
-
-        {!isProfessionalUser ? (
-          <RankedBarCard
-            title="Top profissionais no dashboard"
-            icon={TrendingUp}
-            subtitle={`Mes atual: ${new Date(`${monthStartIso}T12:00:00`).toLocaleDateString('pt-BR')} a ${new Date(`${monthEndIso}T12:00:00`).toLocaleDateString('pt-BR')}`}
-            items={topProfessionalItems}
-            maxItems={5}
-            valueLabel="Atendimentos concluidos"
-            labelPrefix="Profissional"
-            emptyMessage="Nenhum profissional com atendimento concluido no periodo."
-            valueFormatter={(value) => `${value} atendimento(s)`}
-          />
-        ) : null}
+        )}
       </div>
     </MainLayout>
   );

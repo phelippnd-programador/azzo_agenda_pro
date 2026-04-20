@@ -1,5 +1,5 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { formatDateTime } from "@/lib/format";
+import { useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { formatDateLong, formatDateTime } from "@/lib/format";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,9 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageEmptyState, PageErrorState } from "@/components/ui/page-states";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MessageCircleMore, SendHorizontal, Smile } from "lucide-react";
+import { MessageCircleMore, Search, SendHorizontal, Smile } from "lucide-react";
 import { useChat } from "@/hooks/useChat";
-import type { ChatMessage } from "@/types/chat";
+import type { ChatMessage, ChatRealtimeEventPayload } from "@/types/chat";
 import { ChatConversationCard } from "@/components/chat/ChatConversationCard";
 import { chatMessageSchema, type ChatMessageForm } from "@/schemas/chat";
 
@@ -50,16 +50,43 @@ const EMOJI_OPTIONS = [
   "\u{1F485}",
 ];
 
+type ConversationFilter = "all" | "manual" | "unread";
+
+type TimelineItem =
+  | { type: "day"; key: string; label: string }
+  | { type: "message"; key: string; message: ChatMessage };
+
+const getDayKey = (value?: string | null) => {
+  if (!value) return "sem-data";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "sem-data";
+  return parsed.toISOString().slice(0, 10);
+};
+
+const formatTimeOnly = (value?: string | null) => {
+  if (!value) return "-";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "-";
+  return parsed.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 export default function ChatPage() {
   const navigate = useNavigate();
   const { conversationId } = useParams<{ conversationId?: string }>();
   const [error, setError] = useState<string | null>(null);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
+  const [conversationQuery, setConversationQuery] = useState("");
+  const [conversationFilter, setConversationFilter] = useState<ConversationFilter>("all");
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const activeConversationIdRef = useRef<string | undefined>(conversationId);
   const renderedConversationIdRef = useRef<string | undefined>(conversationId);
   const lastVisibleMessageIdRef = useRef<string | null>(null);
   const shouldAutoScrollRef = useRef(true);
+  const conversationsRefreshTimerRef = useRef<number | null>(null);
+  const messagesRefreshTimerRef = useRef<number | null>(null);
   const form = useForm<ChatMessageForm>({
     resolver: zodResolver(chatMessageSchema),
     defaultValues: {
@@ -76,11 +103,64 @@ export default function ChatPage() {
     loadMessages,
     sendMessage,
   } = useChat({ todayOnly: false, pageSize: 100 });
+  const defaultConversation = conversations[0];
+  const deferredConversationQuery = useDeferredValue(conversationQuery);
 
   const selectedConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === conversationId) ?? null,
     [conversations, conversationId]
   );
+
+  const filteredConversations = useMemo(() => {
+    const normalizedQuery = deferredConversationQuery.trim().toLowerCase();
+
+    return conversations.filter((conversation) => {
+      const matchesQuery =
+        !normalizedQuery ||
+        (conversation.clientName || "").toLowerCase().includes(normalizedQuery) ||
+        (conversation.clientPhoneMasked || "").toLowerCase().includes(normalizedQuery) ||
+        (conversation.lastMessagePreview || "").toLowerCase().includes(normalizedQuery);
+
+      if (!matchesQuery) return false;
+
+      if (conversationFilter === "manual") {
+        return Boolean(conversation.manualModeEnabled);
+      }
+
+      if (conversationFilter === "unread") {
+        return (conversation.unreadCount || 0) > 0;
+      }
+
+      return true;
+    });
+  }, [conversationFilter, conversations, deferredConversationQuery]);
+
+  const timelineItems = useMemo<TimelineItem[]>(() => {
+    const items: TimelineItem[] = [];
+    let previousDayKey: string | null = null;
+    let daySeparatorIndex = 0;
+
+    messages.forEach((message) => {
+      const dayKey = getDayKey(message.createdAt);
+      if (dayKey !== previousDayKey) {
+        daySeparatorIndex += 1;
+        items.push({
+          type: "day",
+          key: `day-${dayKey}-${daySeparatorIndex}`,
+          label: formatDateLong(message.createdAt),
+        });
+        previousDayKey = dayKey;
+      }
+
+      items.push({
+        type: "message",
+        key: message.id,
+        message,
+      });
+    });
+
+    return items;
+  }, [messages]);
 
   useEffect(() => {
     loadConversations().catch(() => {
@@ -121,25 +201,53 @@ export default function ChatPage() {
         "http://localhost:8080/api/v1");
     const streamUrl = `${apiBase}/chat/stream`;
     const eventSource = new EventSource(streamUrl, { withCredentials: true });
-    let refreshTimer: number | null = null;
 
-    const scheduleRefresh = (updatedConversationId?: string | null) => {
-      if (refreshTimer) window.clearTimeout(refreshTimer);
-      refreshTimer = window.setTimeout(() => {
-        loadConversations().catch(() => null);
-        const activeId = activeConversationIdRef.current;
-        if (activeId && (!updatedConversationId || updatedConversationId === activeId)) {
-          loadMessages(activeId).catch(() => null);
-        }
-      }, 250);
+    const scheduleConversationsRefresh = () => {
+      if (conversationsRefreshTimerRef.current) return;
+      conversationsRefreshTimerRef.current = window.setTimeout(() => {
+        conversationsRefreshTimerRef.current = null;
+        loadConversations({ background: true }).catch(() => null);
+      }, 600);
+    };
+
+    const scheduleMessagesRefresh = (updatedConversationId: string) => {
+      if (!updatedConversationId) return;
+      if (messagesRefreshTimerRef.current) window.clearTimeout(messagesRefreshTimerRef.current);
+      messagesRefreshTimerRef.current = window.setTimeout(() => {
+        messagesRefreshTimerRef.current = null;
+        loadMessages(updatedConversationId, { background: true }).catch(() => null);
+      }, 220);
     };
 
     const handleChatUpdate = (event: MessageEvent) => {
       try {
-        const payload = JSON.parse(event.data) as { conversationId?: string };
-        scheduleRefresh(payload.conversationId || null);
+        const payload = JSON.parse(event.data) as ChatRealtimeEventPayload;
+        const updatedConversationId = payload.conversationId || null;
+        const activeId = activeConversationIdRef.current || null;
+        const isActiveConversation = Boolean(updatedConversationId && updatedConversationId === activeId);
+
+        if (!updatedConversationId) {
+          scheduleConversationsRefresh();
+          return;
+        }
+
+        if (payload.type === "MARKER_UPDATED") {
+          scheduleConversationsRefresh();
+          return;
+        }
+
+        if (payload.type === "OUTBOUND_SENT" && isActiveConversation) {
+          return;
+        }
+
+        if (isActiveConversation) {
+          scheduleMessagesRefresh(updatedConversationId);
+          return;
+        }
+
+        scheduleConversationsRefresh();
       } catch {
-        scheduleRefresh();
+        scheduleConversationsRefresh();
       }
     };
 
@@ -149,7 +257,12 @@ export default function ChatPage() {
     };
 
     return () => {
-      if (refreshTimer) window.clearTimeout(refreshTimer);
+      if (conversationsRefreshTimerRef.current) {
+        window.clearTimeout(conversationsRefreshTimerRef.current);
+      }
+      if (messagesRefreshTimerRef.current) {
+        window.clearTimeout(messagesRefreshTimerRef.current);
+      }
       eventSource.removeEventListener("chat-update", handleChatUpdate);
       eventSource.close();
     };
@@ -224,16 +337,62 @@ export default function ChatPage() {
   }
 
   return (
-    <MainLayout title="Chat" subtitle="Historico completo de mensagens por cliente">
+      <MainLayout title="Chat" subtitle="Historico completo de mensagens por cliente">
       <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
         <Card className="h-[calc(100vh-13rem)]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <MessageCircleMore className="w-4 h-4" />
-              Todas as Conversas
-            </CardTitle>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <MessageCircleMore className="w-4 h-4" />
+                  Todas as Conversas
+                </CardTitle>
+                <Badge variant="outline" className="shrink-0">
+                  {filteredConversations.length}/{conversations.length}
+                </Badge>
+              </div>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={conversationQuery}
+                  onChange={(event) => setConversationQuery(event.target.value)}
+                  placeholder="Buscar por cliente, telefone ou ultima mensagem"
+                  className="pl-9"
+                  aria-label="Buscar conversas"
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={conversationFilter === "all" ? "default" : "outline"}
+                  onClick={() => setConversationFilter("all")}
+                >
+                  Todas
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={conversationFilter === "unread" ? "default" : "outline"}
+                  onClick={() => setConversationFilter("unread")}
+                >
+                  Nao lidas
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={conversationFilter === "manual" ? "default" : "outline"}
+                  onClick={() => setConversationFilter("manual")}
+                >
+                  Modo manual
+                </Button>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-2 overflow-y-auto h-[calc(100%-4.25rem)] pr-1">
+          <CardContent
+            className="space-y-2 overflow-y-auto h-[calc(100%-4.25rem)] pr-1"
+            aria-label="Lista de conversas"
+          >
             {isLoadingConversations ? (
               <>
                 <Skeleton className="h-20 w-full rounded-lg" />
@@ -242,11 +401,31 @@ export default function ChatPage() {
               </>
             ) : conversations.length === 0 ? (
               <PageEmptyState
-                title="Sem conversas"
-                description="Assim que houver mensagens no WhatsApp, elas aparecem aqui."
+                title="Inbox sem conversas ainda"
+                description="Assim que chegarem mensagens do WhatsApp, elas aparecem aqui. Se você esperava atendimento ativo, atualize o inbox."
+                action={{
+                  label: "Atualizar inbox",
+                  onClick: () => {
+                    loadConversations().catch(() => {
+                      setError("Nao foi possivel carregar o inbox do chat.");
+                    });
+                  },
+                }}
+              />
+            ) : filteredConversations.length === 0 ? (
+              <PageEmptyState
+                title="Nenhuma conversa encontrada"
+                description="Ajuste a busca ou troque o filtro para voltar ao inbox completo."
+                action={{
+                  label: "Limpar filtros",
+                  onClick: () => {
+                    setConversationQuery("");
+                    setConversationFilter("all");
+                  },
+                }}
               />
             ) : (
-              conversations.map((conversation) => {
+              filteredConversations.map((conversation) => {
                 const isSelected = conversation.id === selectedConversation?.id;
                 return (
                   <ChatConversationCard
@@ -266,7 +445,15 @@ export default function ChatPage() {
             <CardContent className="h-full flex items-center justify-center">
               <PageEmptyState
                 title="Selecione uma conversa"
-                description="Escolha um cliente no painel lateral para ver as mensagens."
+                description="Escolha um cliente no painel lateral para ver o historico completo e responder pelo inbox."
+                action={
+                  defaultConversation
+                    ? {
+                        label: "Abrir primeira conversa",
+                        onClick: () => navigate(`/chat/${defaultConversation.id}`),
+                      }
+                    : undefined
+                }
               />
             </CardContent>
           ) : (
@@ -281,11 +468,16 @@ export default function ChatPage() {
                       {selectedConversation.clientPhoneMasked || "Sem telefone"}
                     </p>
                   </div>
-                  {selectedConversation.manualModeEnabled ? (
-                    <Badge variant="outline" className="shrink-0 text-amber-600 border-amber-400">
-                      Modo Manual
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <Badge variant="outline" className="shrink-0">
+                      {messages.length} mensagens
                     </Badge>
-                  ) : null}
+                    {selectedConversation.manualModeEnabled ? (
+                      <Badge variant="outline" className="shrink-0 text-amber-600 border-amber-400">
+                        Modo Manual
+                      </Badge>
+                    ) : null}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="h-[calc(100%-9rem)] flex flex-col">
@@ -302,31 +494,78 @@ export default function ChatPage() {
                   ) : messages.length === 0 ? (
                     <PageEmptyState
                       title="Sem mensagens nesta conversa"
-                      description="Envie uma mensagem para iniciar o atendimento."
+                      description="Ainda nao existe historico nesta conversa. Envie a primeira mensagem para iniciar o atendimento manual."
+                      action={{
+                        label: "Escrever primeira mensagem",
+                        onClick: () => form.setFocus("message"),
+                      }}
                     />
                   ) : (
                     <>
-                      {messages.map((message) => {
+                      {timelineItems.map((item) => {
+                        if (item.type === "day") {
+                          return (
+                            <div key={item.key} className="sticky top-0 z-10 flex justify-center py-1">
+                              <Badge variant="outline" className="bg-background/95 backdrop-blur">
+                                {item.label}
+                              </Badge>
+                            </div>
+                          );
+                        }
+
+                        const { message } = item;
                         const isOutbound = message.direction === "OUTBOUND";
+                        const statusVariant = messageStatusVariant(message);
                         return (
                           <div
-                            key={message.id}
-                            className={`max-w-[80%] rounded-2xl p-3 border ${
+                            key={item.key}
+                            className={`max-w-[82%] rounded-2xl p-3 border shadow-sm ${
                               isOutbound
-                                ? "ml-auto bg-primary/10 border-primary/20"
-                                : "bg-muted/40 border-border"
+                                ? "ml-auto bg-primary text-primary-foreground border-primary/30"
+                                : "bg-background border-border"
                             }`}
                           >
+                            <div className="mb-2 flex items-center justify-between gap-3">
+                              <span
+                                className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${
+                                  isOutbound ? "text-primary-foreground/80" : "text-muted-foreground"
+                                }`}
+                              >
+                                {isOutbound ? "Saida manual" : "Cliente"}
+                              </span>
+                              <span
+                                className={`text-[11px] ${
+                                  isOutbound ? "text-primary-foreground/80" : "text-muted-foreground"
+                                }`}
+                              >
+                                {formatTimeOnly(message.createdAt)}
+                              </span>
+                            </div>
                             <p className="text-sm whitespace-pre-wrap">
                               {message.content || "[Conteudo expirado]"}
                             </p>
                             <div className="mt-2 flex items-center justify-between gap-2">
-                              <span className="text-[11px] text-muted-foreground">
+                              <span
+                                className={`text-[11px] ${
+                                  isOutbound ? "text-primary-foreground/70" : "text-muted-foreground"
+                                }`}
+                              >
                                 {formatDateTime(message.createdAt)}
                               </span>
-                              <Badge variant={messageStatusVariant(message)}>
-                                {MESSAGE_STATUS_LABELS[message.status] ?? message.status}
-                              </Badge>
+                              {isOutbound ? (
+                                <Badge
+                                  variant={statusVariant}
+                                  className={
+                                    statusVariant === "secondary"
+                                      ? "bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20 hover:bg-primary-foreground/15"
+                                      : undefined
+                                  }
+                                >
+                                  {MESSAGE_STATUS_LABELS[message.status] ?? message.status}
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline">Recebida</Badge>
+                              )}
                             </div>
                           </div>
                         );

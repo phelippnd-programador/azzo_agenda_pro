@@ -8,12 +8,12 @@ export const appointmentStatusCardToneMap: Record<string, string> = {
 };
 
 export const appointmentStatusBadgeToneMap: Record<string, string> = {
-  PENDING: 'border-amber-200 bg-amber-100 text-amber-700',
-  CONFIRMED: 'border-sky-200 bg-sky-100 text-sky-700',
-  IN_PROGRESS: 'border-primary/20 bg-primary/10 text-primary',
-  COMPLETED: 'border-green-200 bg-green-100 text-green-700',
-  CANCELLED: 'border-red-200 bg-red-100 text-red-700',
-  NO_SHOW: 'border-slate-200 bg-slate-100 text-slate-600',
+  PENDING: 'border-amber-300 bg-amber-100 text-amber-900',
+  CONFIRMED: 'border-sky-300 bg-sky-100 text-sky-900',
+  IN_PROGRESS: 'border-primary/30 bg-primary/12 text-primary',
+  COMPLETED: 'border-green-300 bg-green-100 text-green-900',
+  CANCELLED: 'border-red-300 bg-red-100 text-red-900',
+  NO_SHOW: 'border-slate-300 bg-slate-100 text-slate-800',
 };
 
 export const appointmentStatusLabelMap: Record<string, string> = {

@@ -163,23 +163,27 @@ describe("Dashboard", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("Periodo das metricas")).toBeInTheDocument();
+    expect(await screen.findByText("Visão executiva")).toBeInTheDocument();
     expect(screen.getByText("Agendamentos Hoje")).toBeInTheDocument();
     expect(screen.getByText("Faturamento Hoje")).toBeInTheDocument();
-    expect(screen.getByText("Fluxos Gerais Nao Concluidos Hoje")).toBeInTheDocument();
+    expect(screen.getByText("O que exige atenção hoje")).toBeInTheDocument();
+    expect(screen.getByText("Painel rapido do dia")).toBeInTheDocument();
+    expect(screen.getByText("Onde a operacao perde oportunidade")).toBeInTheDocument();
+    expect(screen.getByText("Fluxos nao concluidos hoje")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Etapas do funil geral de agendamento que nao chegaram a conclusao hoje, independentemente do canal."
+        "Etapas do funil geral que ficaram pelo caminho antes da conclusão."
       )
     ).toBeInTheDocument();
-    expect(screen.getByText("Fluxos Pausados Hoje no WhatsApp")).toBeInTheDocument();
+    expect(screen.getByText("WhatsApp em aberto hoje")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Conversas do canal WhatsApp ainda em aberto hoje, antes da confirmacao formal de abandono."
+        "Conversas ainda não resolvidas antes de virarem abandono formal."
       )
     ).toBeInTheDocument();
     expect(screen.getByText("WhatsAppReactivationChartMock")).toBeInTheDocument();
     expect(screen.getByText("No-show no periodo")).toBeInTheDocument();
+    expect(screen.getByText("Receita e desempenho do mes")).toBeInTheDocument();
     expect(screen.getByText("Top profissionais no dashboard")).toBeInTheDocument();
     expect(screen.getByText("RevenueChartMock")).toBeInTheDocument();
   });
