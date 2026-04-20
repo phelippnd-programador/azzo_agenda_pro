@@ -116,7 +116,7 @@ export function WhatsAppReactivationChart() {
           <Skeleton className="h-4 w-44" />
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2">
             {[1, 2, 3, 4].map((item) => (
               <div key={item} className="rounded-xl border p-4">
                 <Skeleton className="mb-2 h-4 w-24" />
@@ -181,20 +181,20 @@ export function WhatsAppReactivationChart() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl border border-amber-200 bg-white/85 p-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-amber-200 bg-white/85 p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-amber-700">Abandonos</p>
             <p className="mt-1 text-2xl font-bold text-amber-950">{metrics.totalAbandoned}</p>
           </div>
-          <div className="rounded-xl border border-emerald-200 bg-white/85 p-4">
+          <div className="rounded-2xl border border-emerald-200 bg-white/85 p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">Reativados</p>
             <p className="mt-1 text-2xl font-bold text-emerald-950">{metrics.totalReactivated}</p>
           </div>
-          <div className="rounded-xl border border-blue-200 bg-white/85 p-4">
+          <div className="rounded-2xl border border-blue-200 bg-white/85 p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-blue-700">Convertidos</p>
             <p className="mt-1 text-2xl font-bold text-blue-950">{metrics.totalConverted}</p>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-white/85 p-4">
+          <div className="rounded-2xl border border-slate-200 bg-white/85 p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-slate-700">Taxa de reativacao</p>
             <p className="mt-1 text-2xl font-bold text-slate-950">
               {Number(metrics.reactivationRate || 0).toFixed(1)}%
@@ -205,8 +205,14 @@ export function WhatsAppReactivationChart() {
           </div>
         </div>
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,1fr)]">
-          <div className="rounded-xl border bg-white/80 p-4">
+        <div className="space-y-4">
+          <div className="rounded-2xl border bg-white/80 p-4">
+            <div className="mb-3">
+              <p className="text-sm font-semibold text-foreground">Evolucao da reativacao no periodo</p>
+              <p className="text-xs text-muted-foreground">
+                A leitura fica mais clara quando o grafico usa largura total em vez de dividir espaco com as etapas.
+              </p>
+            </div>
             {hasData ? (
               <>
                 <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -249,7 +255,7 @@ export function WhatsAppReactivationChart() {
                 </div>
               </>
             ) : (
-              <div className="flex h-72 flex-col items-center justify-center rounded-xl border border-dashed border-emerald-200 bg-emerald-50/60 px-6 text-center">
+              <div className="flex h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/60 px-6 text-center">
                 <MessageCircleWarning className="mb-3 h-8 w-8 text-emerald-600" />
                 <p className="font-medium text-foreground">Sem abandonos capturados no periodo</p>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -259,7 +265,7 @@ export function WhatsAppReactivationChart() {
             )}
           </div>
 
-          <div className="space-y-3 rounded-xl border bg-white/80 p-4">
+          <div className="space-y-3 rounded-2xl border bg-white/80 p-4">
             <div>
               <p className="text-sm font-semibold text-foreground">Onde o fluxo para mais</p>
               <p className="text-xs text-muted-foreground">
@@ -267,11 +273,11 @@ export function WhatsAppReactivationChart() {
               </p>
             </div>
 
-            <div className="space-y-2">
+            <div className="grid gap-2 md:grid-cols-2">
               {stageCards.map(({ key, label, Icon, accentClass, bgClass }) => (
                 <div
                   key={key}
-                  className={`flex items-center justify-between rounded-xl border px-3 py-3 ${bgClass}`}
+                  className={`flex items-center justify-between rounded-2xl border px-3 py-3 ${bgClass}`}
                 >
                   <div className="flex items-center gap-3">
                     <div className="rounded-lg bg-white/80 p-2">

@@ -360,8 +360,8 @@ export default function Dashboard() {
           }
         />
 
-        <div className="grid gap-3 sm:gap-4 xl:grid-cols-[minmax(0,1.8fr)_minmax(320px,1fr)]">
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <div className="grid gap-3 sm:gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 min-[1700px]:grid-cols-4">
             <MetricCard
               title={isProfessionalUser ? 'Servicos concluidos' : 'Agendamentos Hoje'}
               value={resolvedMetrics.todayAppointments}
@@ -376,6 +376,7 @@ export default function Dashboard() {
                     }
               }
               iconClassName={isProfessionalUser ? 'bg-emerald-600' : 'bg-primary'}
+              compact
             />
             <MetricCard
               title={isProfessionalUser ? 'Faturamento no periodo' : 'Faturamento Hoje'}
@@ -391,6 +392,7 @@ export default function Dashboard() {
                     }
               }
               iconClassName="bg-green-600"
+              compact
             />
             <MetricCard
               title={isProfessionalUser ? 'Clientes atendidos' : 'Clientes Ativos'}
@@ -406,6 +408,7 @@ export default function Dashboard() {
                     }
               }
               iconClassName="bg-primary"
+              compact
             />
             <MetricCard
               title={isProfessionalUser ? 'Comissao no periodo' : 'Faturamento Mensal'}
@@ -421,6 +424,7 @@ export default function Dashboard() {
                     }
               }
               iconClassName="bg-blue-600"
+              compact
             />
           </div>
 

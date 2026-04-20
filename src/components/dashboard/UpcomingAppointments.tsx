@@ -32,9 +32,14 @@ export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingA
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2 sm:pb-4">
-        <CardTitle className="text-base sm:text-lg">Proximos Agendamentos</CardTitle>
+    <Card className="border-border/60 bg-background/95 shadow-sm">
+      <CardHeader className="flex flex-row items-start justify-between gap-3 pb-3">
+        <div className="space-y-1">
+          <CardTitle className="text-base sm:text-lg">Proximos Agendamentos</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Agenda do dia com acesso rapido para confirmacao e atendimento.
+          </p>
+        </div>
         <Button
           variant="ghost"
           size="sm"
@@ -46,12 +51,14 @@ export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingA
       </CardHeader>
       <CardContent className="space-y-3 sm:space-y-4">
         {appointments.length === 0 ? (
-          <p className="text-center text-muted-foreground py-6 sm:py-8 text-sm">Nenhum agendamento para hoje</p>
+          <div className="rounded-2xl border border-dashed border-border/70 bg-muted/15 px-4 py-8 text-center text-sm text-muted-foreground">
+            Nenhum agendamento para hoje
+          </div>
         ) : (
           appointments.map((appointment) => (
             <div
               key={appointment.id}
-              className="flex items-start sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-muted/40 rounded-xl hover:bg-muted/70 transition-colors"
+              className="flex items-start gap-3 rounded-2xl border border-border/60 bg-background/90 p-4 transition-colors hover:bg-muted/10 sm:items-center"
             >
               <Avatar className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
                 <AvatarImage src={appointment.professional?.avatar} />
@@ -61,8 +68,8 @@ export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingA
               </Avatar>
 
               <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-1">
-                  <p className="font-medium text-foreground text-sm sm:text-base truncate max-w-[120px] sm:max-w-none">
+                <div className="mb-1 flex flex-wrap items-center gap-2">
+                  <p className="truncate text-sm font-medium text-foreground sm:text-base">
                     {appointment.client?.name}
                   </p>
                   <StatusBadge
@@ -76,12 +83,14 @@ export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingA
                   {getServiceLabel(appointment)}
                   <span className="hidden sm:inline"> com {appointment.professional?.name}</span>
                 </p>
-                <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-1">
+                <div className="mt-2 flex flex-wrap items-center gap-3 sm:gap-4">
                   <span className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
                     <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                     {appointment.startTime}
                   </span>
-                  <span className="text-xs sm:text-sm font-medium text-primary">{formatCurrency(appointment.totalPrice)}</span>
+                  <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary sm:text-sm">
+                    {formatCurrency(appointment.totalPrice)}
+                  </span>
                 </div>
               </div>
 

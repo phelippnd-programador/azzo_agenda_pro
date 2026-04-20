@@ -13,6 +13,8 @@ interface MetricCardProps {
   };
   className?: string;
   iconClassName?: string;
+  compact?: boolean;
+  wrapValue?: boolean;
 }
 
 export function MetricCard({
@@ -22,40 +24,66 @@ export function MetricCard({
   trend,
   className,
   iconClassName,
+  compact = false,
+  wrapValue = false,
 }: MetricCardProps) {
   return (
     <Card className={cn('hover:shadow-md transition-shadow', className)}>
-      <CardContent className="p-4 sm:p-6">
+      <CardContent className={cn(compact ? 'p-4' : 'p-4 sm:p-6')}>
         <div className="flex items-start justify-between gap-2">
-          <div className="space-y-1 sm:space-y-2 min-w-0 flex-1">
-            <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{title}</p>
-            <p className="text-lg sm:text-2xl font-bold text-foreground truncate">{value}</p>
+          <div className={cn('min-w-0 flex-1', compact ? 'space-y-1' : 'space-y-1 sm:space-y-2')}>
+            <p
+              className={cn(
+                'font-medium text-muted-foreground',
+                compact ? 'line-clamp-2 text-xs' : 'truncate text-xs sm:text-sm'
+              )}
+            >
+              {title}
+            </p>
+            <p
+              className={cn(
+                'font-bold text-foreground',
+                compact ? 'text-lg' : 'text-lg sm:text-2xl',
+                wrapValue ? 'break-words whitespace-normal leading-tight' : 'truncate'
+              )}
+            >
+              {value}
+            </p>
             {trend && (
               trend.value == null ? (
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">
+                <p className={cn('font-medium text-muted-foreground', compact ? 'text-xs' : 'text-xs sm:text-sm')}>
                   {trend.unavailableLabel || 'Sem dados anteriores'}
                 </p>
               ) : (
                 <p
                   className={cn(
-                    'text-xs sm:text-sm font-medium',
+                    compact ? 'text-xs font-medium' : 'text-xs sm:text-sm font-medium',
                     trend.isPositive ? 'text-green-600' : 'text-red-600'
                   )}
                 >
                   {trend.isPositive ? '+' : '-'}
                   {Math.abs(trend.value).toFixed(1)}%
-                  <span className="text-muted-foreground ml-1 hidden sm:inline">vs. periodo anterior</span>
+                  <span className={cn('text-muted-foreground ml-1', compact ? 'inline' : 'hidden sm:inline')}>
+                    vs. periodo anterior
+                  </span>
                 </p>
               )
             )}
           </div>
           <div
             className={cn(
-              'w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0',
+              compact
+                ? 'h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0'
+                : 'w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0',
               iconClassName || 'bg-primary/10'
             )}
           >
-            <Icon className={cn('w-5 h-5 sm:w-6 sm:h-6', iconClassName ? 'text-white' : 'text-primary')} />
+            <Icon
+              className={cn(
+                compact ? 'h-5 w-5' : 'w-5 h-5 sm:w-6 sm:h-6',
+                iconClassName ? 'text-white' : 'text-primary'
+              )}
+            />
           </div>
         </div>
       </CardContent>

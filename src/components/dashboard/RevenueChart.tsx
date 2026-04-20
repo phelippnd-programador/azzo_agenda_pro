@@ -42,53 +42,64 @@ export function RevenueChart() {
   const maxValue = useMemo(() => Math.max(...weeklyData.map((d) => d.value), 0), [weeklyData]);
 
   return (
-    <Card>
-      <CardHeader className="pb-2 sm:pb-4">
+    <Card className="border-border/60 bg-background/95 shadow-sm">
+      <CardHeader className="pb-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle className="text-base sm:text-lg">Faturamento da Semana</CardTitle>
+          <div className="space-y-1">
+            <CardTitle className="text-base sm:text-lg">Faturamento da Semana</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Leitura rapida da semana atual com destaque para o dia em andamento.
+            </p>
+          </div>
           {rangeLabel ? <Badge variant="outline">{rangeLabel}</Badge> : null}
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex items-end justify-between gap-1 sm:gap-2 h-36 sm:h-48">
-          {weeklyData.map((item, index) => {
-            const height = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
-            const todayDow = new Date().getDay();
-            const isToday = index === (todayDow === 0 ? 6 : todayDow - 1);
+        <div className="rounded-2xl border border-border/70 bg-muted/15 p-4">
+          <div className="flex h-40 items-end justify-between gap-1 sm:h-48 sm:gap-2">
+            {weeklyData.map((item, index) => {
+              const height = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
+              const todayDow = new Date().getDay();
+              const isToday = index === (todayDow === 0 ? 6 : todayDow - 1);
 
-            return (
-              <div key={item.day} className="flex-1 flex flex-col items-center gap-1 sm:gap-2 min-w-0">
-                <span className="text-[9px] sm:text-xs text-muted-foreground truncate w-full text-center">
-                  {item.value > 0 ? <span className="hidden sm:inline">{formatCurrency(item.value)}</span> : '-'}
-                </span>
-                <div className="w-full h-24 sm:h-36 bg-muted rounded-t-lg relative overflow-hidden">
-                  <div
-                    className={`absolute bottom-0 left-0 right-0 rounded-t-lg transition-all duration-500 ${
-                      isToday
-                        ? 'bg-gradient-to-t from-primary to-primary/70'
-                        : 'bg-gradient-to-t from-primary/50 to-primary/25'
-                    }`}
-                    style={{ height: `${height}%` }}
-                  />
+              return (
+                <div key={item.day} className="flex min-w-0 flex-1 flex-col items-center gap-2">
+                  <span className="w-full truncate text-center text-[9px] text-muted-foreground sm:text-xs">
+                    {item.value > 0 ? (
+                      <span className="hidden sm:inline">{formatCurrency(item.value)}</span>
+                    ) : (
+                      '-'
+                    )}
+                  </span>
+                  <div className="relative h-24 w-full overflow-hidden rounded-t-xl bg-background sm:h-36">
+                    <div
+                      className={`absolute bottom-0 left-0 right-0 rounded-t-xl transition-all duration-500 ${
+                        isToday
+                          ? 'bg-gradient-to-t from-primary to-primary/70'
+                          : 'bg-gradient-to-t from-primary/50 to-primary/25'
+                      }`}
+                      style={{ height: `${height}%` }}
+                    />
+                  </div>
+                  <span className={`text-[10px] font-medium sm:text-sm ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
+                    {item.day}
+                  </span>
                 </div>
-                <span className={`text-[10px] sm:text-sm font-medium ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
-                  {item.day}
-                </span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-border gap-2 sm:gap-0">
-          <div>
-            <p className="text-xs sm:text-sm text-muted-foreground">Total da Semana</p>
-            <p className="text-lg sm:text-xl font-bold text-foreground">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-border/70 bg-background/85 p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Total da semana</p>
+            <p className="mt-1 text-lg font-bold text-foreground sm:text-xl">
               {formatCurrency(weeklyData.reduce((acc, d) => acc + d.value, 0))}
             </p>
           </div>
-          <div className="sm:text-right">
-            <p className="text-xs sm:text-sm text-muted-foreground">Media Diaria</p>
-            <p className="text-lg sm:text-xl font-bold text-primary">
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:text-right">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Media diaria</p>
+            <p className="mt-1 text-lg font-bold text-primary sm:text-xl">
               {formatCurrency(weeklyData.reduce((acc, d) => acc + d.value, 0) / weeklyData.length)}
             </p>
           </div>

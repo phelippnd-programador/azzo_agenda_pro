@@ -1,12 +1,25 @@
+import { CalendarDays, ChevronLeft, ChevronRight, Clock3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const timeSlots = [
-  '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-  '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
-  '17:00', '17:30', '18:00', '18:30',
+  '09:00',
+  '09:30',
+  '10:00',
+  '10:30',
+  '11:00',
+  '11:30',
+  '14:00',
+  '14:30',
+  '15:00',
+  '15:30',
+  '16:00',
+  '16:30',
+  '17:00',
+  '17:30',
+  '18:00',
+  '18:30',
 ];
 
 interface BookingDateTimeStepProps {
@@ -23,6 +36,13 @@ interface BookingDateTimeStepProps {
   onSelectTime: (time: string) => void;
 }
 
+const formatSelectedDate = (date: Date) =>
+  date.toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+  });
+
 export function BookingDateTimeStep({
   currentMonth,
   selectedDate,
@@ -36,35 +56,72 @@ export function BookingDateTimeStep({
   onSelectDate,
   onSelectTime,
 }: BookingDateTimeStepProps) {
+  const visibleSlots = slug ? availableSlots : timeSlots;
+
   return (
     <>
-      <CardHeader>
-        <CardTitle className="text-lg sm:text-xl">Escolha Data e Horário</CardTitle>
+      <CardHeader className="space-y-3">
+        <CardTitle className="text-lg sm:text-xl">Escolha data e horario</CardTitle>
         <CardDescription className="text-sm">
-          Selecione quando deseja ser atendido
+          Primeiro escolha a data. Depois selecione um horario realmente disponivel.
         </CardDescription>
+
+        <div className="rounded-2xl border border-border/70 bg-muted/20 p-3">
+          <div className="flex items-start gap-3">
+            <div className="rounded-xl bg-primary/10 p-2 text-primary">
+              <CalendarDays className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">
+                {selectedDate ? `Data escolhida: ${formatSelectedDate(selectedDate)}` : 'Escolha uma data para ver os horarios'}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {selectedDate
+                  ? selectedTime
+                    ? `Horario selecionado: ${selectedTime}`
+                    : 'Agora escolha o melhor horario para finalizar o agendamento.'
+                  : 'Datas indisponiveis aparecem desabilitadas.'}
+              </p>
+            </div>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4 sm:space-y-6">
-        {/* Calendar */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <Button variant="ghost" size="icon" onClick={() => navigateMonth('prev')} className="h-8 w-8">
-              <ChevronLeft className="w-4 h-4" />
+
+      <CardContent className="space-y-5 sm:space-y-6">
+        <div className="rounded-2xl border border-border/70 bg-background p-3 sm:p-4">
+          <div className="mb-4 flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigateMonth('prev')}
+              className="h-8 w-8"
+              aria-label="Mes anterior"
+            >
+              <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="font-medium text-sm sm:text-base capitalize">
+            <span className="text-sm font-medium capitalize text-foreground sm:text-base">
               {currentMonth.toLocaleDateString('pt-BR', {
                 month: 'long',
                 year: 'numeric',
               })}
             </span>
-            <Button variant="ghost" size="icon" onClick={() => navigateMonth('next')} className="h-8 w-8">
-              <ChevronRight className="w-4 h-4" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigateMonth('next')}
+              className="h-8 w-8"
+              aria-label="Proximo mes"
+            >
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
 
-          <div className="grid grid-cols-7 gap-1 text-center mb-2">
+          <div className="mb-2 grid grid-cols-7 gap-1 text-center">
             {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, i) => (
-              <span key={i} className="text-[10px] sm:text-xs font-medium text-muted-foreground py-1">
+              <span
+                key={i}
+                className="py-1 text-[10px] font-medium text-muted-foreground sm:text-xs"
+              >
                 {day}
               </span>
             ))}
@@ -76,14 +133,14 @@ export function BookingDateTimeStep({
                 key={i}
                 onClick={() => date && isDateSelectable(date) && onSelectDate(date)}
                 disabled={!date || !isDateSelectable(date)}
-                className={`aspect-square rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                className={`aspect-square rounded-xl text-xs font-medium transition-colors sm:text-sm ${
                   !date
                     ? 'invisible'
                     : !isDateSelectable(date)
-                    ? 'text-muted-foreground/50 cursor-not-allowed'
-                    : selectedDate?.toDateString() === date.toDateString()
-                    ? 'bg-primary text-primary-foreground'
-                    : 'hover:bg-primary/10 text-foreground'
+                      ? 'cursor-not-allowed text-muted-foreground/40'
+                      : selectedDate?.toDateString() === date.toDateString()
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'border border-transparent text-foreground hover:border-primary/30 hover:bg-primary/10'
                 }`}
               >
                 {date?.getDate()}
@@ -92,35 +149,58 @@ export function BookingDateTimeStep({
           </div>
         </div>
 
-        {/* Time Slots */}
-        {selectedDate && (
-          <div>
-            <Label className="text-sm font-medium mb-3 block">Horários Disponíveis</Label>
-            {isLoadingAvailability && slug && (
-              <p className="text-sm text-muted-foreground mb-2">Consultando disponibilidade...</p>
-            )}
-            {!isLoadingAvailability && slug && availableSlots.length === 0 && (
-              <p className="text-sm text-muted-foreground mb-2">
-                Nao ha horarios disponiveis para esta data.
+        <div className="rounded-2xl border border-border/70 bg-muted/15 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <Label className="flex items-center gap-2 text-sm font-medium">
+                <Clock3 className="h-4 w-4 text-primary" />
+                Horarios disponiveis
+              </Label>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {selectedDate
+                  ? isLoadingAvailability && slug
+                    ? 'Consultando disponibilidade em tempo real...'
+                    : visibleSlots.length > 0
+                      ? `${visibleSlots.length} horario(s) encontrado(s) para esta data.`
+                      : 'Nenhum horario livre para esta data. Tente outro dia.'
+                  : 'Selecione uma data para liberar os horarios.'}
               </p>
-            )}
-            <div className="grid grid-cols-4 gap-2">
-              {(slug ? availableSlots : timeSlots).map((time) => (
-                <Button
-                  key={time}
-                  variant={selectedTime === time ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => onSelectTime(time)}
-                  className={`text-xs sm:text-sm ${
-                    selectedTime === time ? 'bg-primary hover:bg-primary/90' : ''
-                  }`}
-                >
-                  {time}
-                </Button>
-              ))}
             </div>
+            {selectedTime ? (
+              <div className="rounded-xl bg-primary/10 px-3 py-2 text-sm font-medium text-primary">
+                {selectedTime}
+              </div>
+            ) : null}
           </div>
-        )}
+
+          {selectedDate ? (
+            visibleSlots.length > 0 ? (
+              <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                {visibleSlots.map((time) => (
+                  <Button
+                    key={time}
+                    variant={selectedTime === time ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => onSelectTime(time)}
+                    className={`text-xs sm:text-sm ${
+                      selectedTime === time ? 'bg-primary hover:bg-primary/90' : ''
+                    }`}
+                  >
+                    {time}
+                  </Button>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-4 rounded-2xl border border-dashed border-border/70 bg-background/80 px-4 py-6 text-center text-sm text-muted-foreground">
+                Escolha outra data para encontrar horarios disponiveis.
+              </div>
+            )
+          ) : (
+            <div className="mt-4 rounded-2xl border border-dashed border-border/70 bg-background/80 px-4 py-6 text-center text-sm text-muted-foreground">
+              Escolha uma data no calendario para continuar.
+            </div>
+          )}
+        </div>
       </CardContent>
     </>
   );

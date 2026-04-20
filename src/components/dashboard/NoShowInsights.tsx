@@ -51,7 +51,7 @@ export function NoShowInsights() {
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <MetricCard
             title="No-show no mes"
             value={isLoading ? "..." : data?.totalNoShows ?? 0}
@@ -63,6 +63,8 @@ export function NoShowInsights() {
             }}
             iconClassName="bg-rose-600"
             className="border-rose-200 bg-white/80"
+            compact
+            wrapValue
           />
           <MetricCard
             title="Taxa de no-show"
@@ -70,6 +72,8 @@ export function NoShowInsights() {
             icon={CalendarClock}
             iconClassName="bg-orange-500"
             className="border-orange-200 bg-white/80"
+            compact
+            wrapValue
           />
           <MetricCard
             title="Ultimos 7 dias"
@@ -77,6 +81,8 @@ export function NoShowInsights() {
             icon={CalendarClock}
             iconClassName="bg-amber-500"
             className="border-amber-200 bg-white/80"
+            compact
+            wrapValue
           />
           <MetricCard
             title="Receita em risco"
@@ -84,6 +90,8 @@ export function NoShowInsights() {
             icon={ReceiptText}
             iconClassName="bg-slate-700"
             className="border-slate-200 bg-white/80"
+            compact
+            wrapValue
           />
         </div>
 
