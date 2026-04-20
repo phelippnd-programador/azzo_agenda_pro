@@ -53,7 +53,7 @@ export function ChatInboxNotifier() {
         const pathname = pathnameRef.current;
         if (isOnChatScreen(pathname)) return;
         const response = await chatApi.listConversations({
-          todayOnly: true,
+          todayOnly: false,
           page: 1,
           pageSize: 100,
         });

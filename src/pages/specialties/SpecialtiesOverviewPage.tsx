@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Tag, Trash2 } from "lucide-react";
+import { Grid3X3, List, Pencil, Plus, Search, Tag, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { DeleteConfirmationDialog } from "@/components/common/DeleteConfirmationDialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -12,9 +12,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useSpecialties } from "@/hooks/useSpecialties";
 
@@ -22,6 +31,8 @@ export default function SpecialtiesOverviewPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [isNewSpecialtyOpen, setIsNewSpecialtyOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [specialtyToDelete, setSpecialtyToDelete] = useState<{
     id: string;
@@ -68,6 +79,11 @@ export default function SpecialtiesOverviewPage() {
     filtered.length > 0 &&
     filtered.every((specialty) => selectedSpecialtyIds.includes(specialty.id));
 
+  const resetCreateForm = () => {
+    setName("");
+    setDescription("");
+  };
+
   const handleCreate = async () => {
     const payload = name.trim();
     if (!payload) {
@@ -81,8 +97,8 @@ export default function SpecialtiesOverviewPage() {
         name: payload,
         description,
       });
-      setName("");
-      setDescription("");
+      resetCreateForm();
+      setIsNewSpecialtyOpen(false);
     } finally {
       setIsCreating(false);
     }
@@ -177,35 +193,91 @@ export default function SpecialtiesOverviewPage() {
   return (
     <>
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Nova especialidade</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Input
-                placeholder="Ex.: Corte, Coloracao, Escova..."
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <Button onClick={handleCreate} disabled={isCreating} className="gap-2">
-                <Plus className="h-4 w-4" />
-                {isCreating ? "Salvando..." : "Criar"}
-              </Button>
-            </div>
-            <Textarea
-              placeholder="Descricao opcional da especialidade (usada para detalhamento e contexto do assistente)."
-              value={description}
-              maxLength={500}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="relative w-full lg:max-w-xl">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Buscar especialidade ou descricao..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
             />
-          </CardContent>
-        </Card>
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex overflow-hidden rounded-lg border bg-background">
+              <Button
+                variant={viewMode === "grid" ? "secondary" : "ghost"}
+                size="icon"
+                onClick={() => setViewMode("grid")}
+                className="h-8 w-8 rounded-none sm:h-9 sm:w-9"
+                aria-label="Visualizar especialidades em cards"
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "table" ? "secondary" : "ghost"}
+                size="icon"
+                onClick={() => setViewMode("table")}
+                className="h-8 w-8 rounded-none sm:h-9 sm:w-9"
+                aria-label="Visualizar especialidades em lista"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <Dialog
+              open={isNewSpecialtyOpen}
+              onOpenChange={(open) => {
+                setIsNewSpecialtyOpen(open);
+                if (!open) resetCreateForm();
+              }}
+            >
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Nova Especialidade
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Nova especialidade</DialogTitle>
+                  <DialogDescription>
+                    Preencha os dados da nova especialidade.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-3 py-4">
+                  <Input
+                    placeholder="Ex.: Corte, Coloracao, Escova..."
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                  <Textarea
+                    placeholder="Descricao opcional da especialidade (usada para detalhamento e contexto do assistente)."
+                    value={description}
+                    maxLength={500}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsNewSpecialtyOpen(false);
+                      resetCreateForm();
+                    }}
+                    disabled={isCreating}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleCreate} disabled={isCreating}>
+                    {isCreating ? "Salvando..." : "Criar especialidade"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
 
         <div className="flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -215,7 +287,7 @@ export default function SpecialtiesOverviewPage() {
             />
             Selecionar todas da lista
           </label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               className="text-destructive hover:text-destructive"
@@ -256,6 +328,7 @@ export default function SpecialtiesOverviewPage() {
 
         {!isLoading && !error ? (
           filtered.length ? (
+            viewMode === "grid" ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((specialty) => (
                 <Card key={specialty.id}>
@@ -308,6 +381,84 @@ export default function SpecialtiesOverviewPage() {
                 </Card>
               ))}
             </div>
+            ) : (
+              <Card>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={allFilteredSelected}
+                            onCheckedChange={(checked) =>
+                              toggleSelectAllFiltered(checked === true)
+                            }
+                            aria-label="Selecionar todas as especialidades filtradas"
+                          />
+                        </TableHead>
+                        <TableHead>Especialidade</TableHead>
+                        <TableHead className="hidden md:table-cell">Descricao</TableHead>
+                        <TableHead className="w-24 text-right">Acoes</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filtered.map((specialty) => (
+                        <TableRow key={specialty.id}>
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedSpecialtyIds.includes(specialty.id)}
+                              onCheckedChange={() => toggleSpecialtySelection(specialty.id)}
+                              aria-label={`Selecionar especialidade ${specialty.name}`}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex min-w-0 items-center gap-2">
+                              <Tag className="h-4 w-4 flex-shrink-0 text-primary" />
+                              <span className="truncate font-medium">{specialty.name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden max-w-[420px] truncate text-sm text-muted-foreground md:table-cell">
+                            {specialty.description || "Sem descricao"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  openEditDialog({
+                                    id: specialty.id,
+                                    name: specialty.name,
+                                    description: specialty.description,
+                                  })
+                                }
+                                aria-label="Editar especialidade"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                onClick={() =>
+                                  setSpecialtyToDelete({
+                                    id: specialty.id,
+                                    name: specialty.name,
+                                  })
+                                }
+                                aria-label="Remover especialidade"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </Card>
+            )
           ) : (
             <Card>
               <CardContent className="py-10 text-center text-muted-foreground">
