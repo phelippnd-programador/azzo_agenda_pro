@@ -169,6 +169,15 @@ export function ProfessionalFormDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
+          <div className="rounded-2xl border border-border/70 bg-muted/15 p-4">
+            <p className="text-sm font-medium text-foreground">
+              {editingProfessional ? 'Ajuste dados operacionais, especialidades e disponibilidade.' : 'Cadastre o profissional com os dados minimos para liberar agenda, especialidades e horarios.'}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              E-mail, telefone e horario de trabalho ajudam a deixar o perfil pronto para operacao desde o primeiro acesso.
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label>Nome Completo *</Label>
             <Input
@@ -291,7 +300,7 @@ export function ProfessionalFormDialog({
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 {editingProfessional ? 'Salvando...' : 'Adicionando...'}
               </>
-            ) : editingProfessional ? 'Salvar' : 'Adicionar'}
+            ) : editingProfessional ? 'Salvar profissional' : 'Criar profissional'}
           </Button>
         </DialogFooter>
       </DialogContent>

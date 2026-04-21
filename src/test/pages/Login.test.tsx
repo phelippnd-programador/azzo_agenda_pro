@@ -2,6 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import Login from "@/pages/Login";
+import { ApiError } from "@/lib/api";
 
 const mocks = vi.hoisted(() => ({
   login: vi.fn().mockResolvedValue(undefined),
@@ -165,5 +166,23 @@ describe("Login", () => {
 
     expect(mocks.login).toHaveBeenCalledWith("prof@qa.local", "Pr14052019!", undefined);
     expect(mocks.navigate).toHaveBeenCalledWith("/agenda");
+  });
+
+  it("should request MFA code when backend requires additional verification", async () => {
+    const user = userEvent.setup();
+    mocks.login.mockRejectedValueOnce(new ApiError("MFA required", 428));
+
+    render(
+      <MemoryRouter initialEntries={["/login"]}>
+        <Login />
+      </MemoryRouter>
+    );
+
+    await user.type(screen.getByLabelText("E-mail"), "owner@qa.local");
+    await user.type(screen.getByLabelText("Senha"), "Pr14052019!");
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
+
+    expect(await screen.findByText("Verificacao adicional necessaria")).toBeInTheDocument();
+    expect(screen.getByLabelText(/Codigo MFA/i)).toBeInTheDocument();
   });
 });

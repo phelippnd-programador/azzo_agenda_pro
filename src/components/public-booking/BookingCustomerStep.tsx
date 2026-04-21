@@ -30,6 +30,13 @@ export function BookingCustomerStep({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
+          <p className="text-sm font-medium text-foreground">Falta pouco para concluir.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Usamos seus dados apenas para confirmar o agendamento e facilitar o contato sobre esse horario.
+          </p>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="name" className="text-sm">
             Nome completo *

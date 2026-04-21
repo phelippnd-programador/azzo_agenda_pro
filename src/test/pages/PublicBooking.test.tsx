@@ -110,7 +110,8 @@ describe('PublicBooking', () => {
 
     expect(await screen.findByText('Studio Azzo')).toBeInTheDocument();
     expect(screen.getByText('Resumo rapido')).toBeInTheDocument();
-    expect(screen.getByText('Resumo do agendamento')).toBeInTheDocument();
+    expect(screen.getAllByText('Resumo do agendamento').length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /Ver resumo/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Escolha os servicos/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/Buscar servicos/i)).toBeInTheDocument();
     expect(screen.getByText(/2 servico/i)).toBeInTheDocument();
@@ -151,5 +152,33 @@ describe('PublicBooking', () => {
 
     expect(screen.getAllByText('09:00').length).toBeGreaterThan(0);
     expect(screen.getByText(/Data escolhida:/i)).toBeInTheDocument();
+  });
+
+  it('should reduce abandonment on the final step with persistent summary and trust copy', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={['/agendar/test-salao']}>
+        <Routes>
+          <Route path="/agendar/:slug" element={<PublicBooking />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('Corte')).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole('checkbox')[0]);
+    await user.click(screen.getByRole('button', { name: /Continuar/i }));
+    await user.click(await screen.findByText('Ana Souza'));
+    await user.click(screen.getByRole('button', { name: /Continuar/i }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '09:00' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: '09:00' }));
+    await user.click(screen.getByRole('button', { name: /Continuar/i }));
+
+    expect(await screen.findByText(/Falta pouco para concluir/i)).toBeInTheDocument();
+    expect(screen.getByText(/Usamos seus dados apenas para confirmar o agendamento/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Confirmar agendamento agora/i })).toBeInTheDocument();
   });
 });

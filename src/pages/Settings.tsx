@@ -31,6 +31,7 @@ function SettingsDomainCard({
   statusTone = 'default',
   actionLabel,
   onAction,
+  compact = false,
 }: {
   icon: typeof PlugZap;
   title: string;
@@ -39,6 +40,7 @@ function SettingsDomainCard({
   statusTone?: 'default' | 'warning' | 'success';
   actionLabel: string;
   onAction: () => void;
+  compact?: boolean;
 }) {
   const badgeClassName =
     statusTone === 'success'
@@ -49,15 +51,21 @@ function SettingsDomainCard({
 
   return (
     <Card className="border-border/60">
-      <CardContent className="space-y-4 p-5">
+      <CardContent className={compact ? 'space-y-3 p-4' : 'space-y-4 p-5'}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Icon className="h-5 w-5" />
+            <div
+              className={`flex items-center justify-center rounded-xl bg-primary/10 text-primary ${
+                compact ? 'h-9 w-9' : 'h-10 w-10'
+              }`}
+            >
+              <Icon className={compact ? 'h-4.5 w-4.5' : 'h-5 w-5'} />
             </div>
             <div>
               <p className="font-medium text-foreground">{title}</p>
-              <p className="text-sm text-muted-foreground">{description}</p>
+              <p className={compact ? 'text-xs text-muted-foreground' : 'text-sm text-muted-foreground'}>
+                {description}
+              </p>
             </div>
           </div>
           <Badge variant="outline" className={badgeClassName}>
@@ -250,6 +258,33 @@ export default function Settings() {
     canAccessWhatsAppIntegration,
   ]);
 
+  const activeTabMeta = useMemo(() => {
+    const meta: Record<string, { label: string; description: string }> = {
+      notifications: {
+        label: 'Notificacoes',
+        description: 'Lembretes, reativacao e preferencias de contato da operacao.',
+      },
+      account: {
+        label: 'Conta',
+        description: 'Dados do usuario, senha e seguranca de acesso.',
+      },
+      integrations: {
+        label: 'Integracoes',
+        description: 'Canais externos e modulos operacionais conectados ao tenant.',
+      },
+      fiscal: {
+        label: 'Fiscal',
+        description: 'Impostos, certificado e emissao centralizados no mesmo fluxo.',
+      },
+      salon: {
+        label: 'Perfil do Salao',
+        description: 'Dados publicos e operacionais que impactam pagina e agenda online.',
+      },
+    };
+
+    return meta[activeTab] ?? meta.notifications;
+  }, [activeTab]);
+
   return (
     <MainLayout
       title="Configuracoes"
@@ -257,25 +292,27 @@ export default function Settings() {
     >
       <div className="space-y-6">
         <Card className="border-border/60 bg-gradient-to-r from-background via-muted/30 to-background">
-          <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Centro de controle
               </p>
               <p className="text-sm font-medium text-foreground">
-                Comece pelo dominio que exige atencao agora e depois aprofunde nas abas de detalhe.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                A pagina agora organiza status atual, pendencias e atalhos prioritarios no mesmo lugar.
+                Use os atalhos rapidos para escolher o dominio e siga direto para a configuracao detalhada.
               </p>
             </div>
-            <Badge variant="outline" className="w-fit bg-background/80">
-              {domainCards.length} dominios disponiveis
-            </Badge>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className="w-fit bg-background/80">
+                {domainCards.length} dominios disponiveis
+              </Badge>
+              <Button variant="outline" onClick={() => scrollToSettingsTabs()}>
+                Ir para configuracao detalhada
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(320px,1fr)]">
+        <div className="hidden grid gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(320px,1fr)]">
           <div className="space-y-4">
             <div className="space-y-1">
               <h2 className="text-lg font-semibold tracking-tight text-foreground">Status por dominio</h2>
@@ -321,6 +358,20 @@ export default function Settings() {
           </Card>
         </div>
 
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold tracking-tight text-foreground">Acesso rapido por dominio</h2>
+            <p className="text-sm text-muted-foreground">
+              Escolha o bloco que voce quer revisar e a pagina leva voce direto para a aba correta.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {domainCards.map(({ key, ...cardProps }) => (
+              <SettingsDomainCard key={key} {...cardProps} compact />
+            ))}
+          </div>
+        </div>
+
         <div ref={tabsSectionRef} className="scroll-mt-24 space-y-3">
           <div className="space-y-1">
             <h2 className="text-lg font-semibold tracking-tight text-foreground">Configuracao detalhada</h2>
@@ -329,8 +380,21 @@ export default function Settings() {
             </p>
           </div>
 
+          <div className="flex flex-col gap-2 rounded-2xl border bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Aba ativa
+              </p>
+              <p className="font-medium text-foreground">{activeTabMeta.label}</p>
+              <p className="text-sm text-muted-foreground">{activeTabMeta.description}</p>
+            </div>
+            <Badge variant="outline" className="w-fit bg-background/80">
+              Ajuste detalhado
+            </Badge>
+          </div>
+
           <Tabs value={activeTab} onValueChange={(tab) => handleTabChange(tab)} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-2 h-auto">
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-2 rounded-2xl border bg-muted/30 p-1.5 sm:grid-cols-5">
           {visibleTabs.includes('notifications') ? (
             <TabsTrigger value="notifications">Notificacoes</TabsTrigger>
           ) : null}
@@ -554,6 +618,36 @@ export default function Settings() {
         </TabsContent>
           </Tabs>
         </div>
+
+        <Card className="border-border/60">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <CircleAlert className="h-4 w-4 text-amber-600" />
+              Checklist prioritario
+            </CardTitle>
+            <CardDescription>
+              Ajustes mais provaveis depois que voce ja abriu a configuracao detalhada.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 lg:grid-cols-2">
+            {pendingItems.map((item) => (
+              <div key={item.title} className="rounded-xl border bg-muted/20 p-3">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <p className="font-medium text-foreground">{item.title}</p>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                    <Button variant="link" className="h-auto px-0" onClick={item.onAction}>
+                      {item.actionLabel}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </div>
     </MainLayout>
   );

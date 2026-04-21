@@ -183,7 +183,7 @@ describe("Settings", () => {
     );
 
     const integrationsTitle = (await screen.findAllByText("Integracoes"))[0];
-    const integrationsCard = integrationsTitle.closest('[class*="rounded-lg"]') as HTMLElement;
+    const integrationsCard = integrationsTitle.closest('[class*="rounded"]') as HTMLElement;
     await user.click(within(integrationsCard).getByRole("button", { name: /Abrir integracoes/i }));
 
     expect(await screen.findByRole("tab", { name: "Integracoes", selected: true })).toBeInTheDocument();

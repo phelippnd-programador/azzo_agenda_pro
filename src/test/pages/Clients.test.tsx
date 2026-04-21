@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import Clients from "@/pages/Clients";
 import ClientsOverviewPage from "@/pages/clients/ClientsOverviewPage";
@@ -18,7 +19,7 @@ vi.mock("@/hooks/useClients", () => ({
         lastVisit: "2026-03-12",
       },
     ],
-    pagination: { page: 1, limit: 20, total: 1, hasMore: false },
+    pagination: { page: 1, limit: 20, total: 41, hasMore: true },
     isLoading: false,
     error: null,
     refetch: vi.fn(),
@@ -73,5 +74,25 @@ describe("Clients", () => {
     expect(screen.getByText("Faturamento na pagina")).toBeInTheDocument();
     expect(screen.getAllByText("Maria Silva").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: /Novo Cliente/i })).toBeInTheDocument();
+    expect(screen.getByText("Pagina 1 de 3")).toBeInTheDocument();
   }, 10000);
+
+  it("should open the client create dialog from the shared crud toolbar", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/clientes"]}>
+        <Routes>
+          <Route path="/clientes" element={<Clients />}>
+            <Route index element={<ClientsOverviewPage />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole("button", { name: /Novo Cliente/i }));
+
+    expect(screen.getByText("Novo Cliente")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Criar cliente/i })).toBeInTheDocument();
+  });
 });

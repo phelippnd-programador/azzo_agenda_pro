@@ -273,6 +273,7 @@ export default function ServicesOverviewPage() {
           tableAriaLabel="Visualizar servicos em lista"
           actionLabel="Servico"
           actionLabelMobile="Novo"
+          actionLabelDesktop="Novo servico"
           actionIcon={Plus}
           onAction={() => {
             setEditingService(null);
@@ -288,6 +289,15 @@ export default function ServicesOverviewPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+                <div className="rounded-2xl border border-border/70 bg-muted/15 p-4">
+                  <p className="text-sm font-medium text-foreground">
+                    {editingService ? 'Revise nome, duracao, preco e disponibilidade antes de salvar.' : 'Cadastre o servico com nome claro, preco e duracao para manter o catalogo consistente.'}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Se nenhum profissional for marcado, o servico continua disponivel para toda a equipe.
+                  </p>
+                </div>
+
                 <div className="space-y-2">
                   <Label>Nome do Servico *</Label>
                   <Input
@@ -415,7 +425,7 @@ export default function ServicesOverviewPage() {
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   {editingService ? 'Salvando...' : 'Criando...'}
                 </>
-              ) : editingService ? 'Salvar' : 'Criar Servico'}
+              ) : editingService ? 'Salvar servico' : 'Criar servico'}
             </Button>
           </DialogFooter>
         </DialogContent>

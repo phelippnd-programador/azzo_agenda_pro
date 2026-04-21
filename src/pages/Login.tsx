@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { getCurrentBillingSubscription } from '@/services/billingService';
@@ -177,20 +177,53 @@ export default function Login() {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-card p-4">
-      <div className="w-full max-w-md">
-        <BrandLockup className="mb-6 sm:mb-8" />
+    <div className="auth-shell flex items-start justify-center sm:items-center">
+      <div className="relative z-10 w-full max-w-md pt-2 sm:pt-0">
+        <div className="mb-6 space-y-3 text-center sm:mb-8">
+          <p className="section-eyebrow">Acesso seguro</p>
+          <BrandLockup className="justify-center" />
+          <p className="mx-auto max-w-sm text-sm leading-6 text-muted-foreground">
+            Entre no mesmo ambiente usado para agenda, operacao, clientes e financeiro.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+            <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[11px] font-medium tracking-wide text-primary">
+              Acesso unico
+            </span>
+            <span className="rounded-full border border-border/70 bg-background/80 px-3 py-1 text-[11px] font-medium tracking-wide text-muted-foreground">
+              Sessao protegida
+            </span>
+            <span className="rounded-full border border-border/70 bg-background/80 px-3 py-1 text-[11px] font-medium tracking-wide text-muted-foreground">
+              Retomada rapida
+            </span>
+          </div>
+        </div>
 
-        <Card className="shadow-xl border-0">
+        <Card className="auth-panel border-border/80">
           <CardHeader className="text-center pb-2 sm:pb-4">
-            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-[2rem]">
+            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-[2.1rem]">
               Bem-vindo de volta!
             </CardTitle>
             <CardDescription className="text-sm leading-6 sm:text-[15px]">
-              Entre na sua conta para continuar
+              Acesse sua operacao sem perder contexto e retome de onde parou.
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="mb-4 rounded-2xl border border-border/70 bg-muted/15 p-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-xl bg-primary/10 p-2 text-primary">
+                  <ShieldCheck className="h-4 w-4" />
+                </div>
+                <div className="space-y-1 text-left">
+                  <p className="text-sm font-medium text-foreground">
+                    Login direto no ambiente operacional
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Agenda, clientes, financeiro e configuracoes ficam no mesmo acesso, sem trocar de ambiente.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <form onSubmit={onSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm">E-mail</Label>
@@ -259,6 +292,19 @@ export default function Login() {
 
               {mfaRequired ? (
                 <div className="space-y-2">
+                  <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3">
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-xl bg-primary/10 p-2 text-primary">
+                        <Sparkles className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Verificacao adicional necessaria</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Digite o codigo do aplicativo autenticador para concluir o acesso com seguranca.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                   <Label htmlFor="mfaCode" className="text-sm">Codigo MFA (6 digitos)</Label>
                   <Input
                     id="mfaCode"
@@ -304,7 +350,7 @@ export default function Login() {
 
               <Button
                 type="submit"
-                className="w-full h-10 sm:h-11"
+                className="h-10 w-full sm:h-11"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -316,6 +362,12 @@ export default function Login() {
                   'Entrar'
                 )}
               </Button>
+
+              <p className="text-center text-xs text-muted-foreground" aria-live="polite">
+                {isLoading
+                  ? 'Validando credenciais e preparando seu ambiente...'
+                  : 'Voce volta para o fluxo certo assim que o acesso for liberado.'}
+              </p>
             </form>
 
             <p className="text-center text-xs sm:text-sm text-muted-foreground mt-4 sm:mt-6">
@@ -327,7 +379,7 @@ export default function Login() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground mt-4 sm:mt-6">
+        <p className="mt-4 text-center text-xs text-muted-foreground sm:mt-6">
           Ao entrar, voce concorda com nossos{' '}
           <Link to="/termos-de-uso" className="text-primary hover:underline">Termos de Uso</Link>
           {' '}e{' '}

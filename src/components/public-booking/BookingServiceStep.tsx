@@ -79,14 +79,14 @@ export function BookingServiceStep({
             <p className="text-sm text-muted-foreground">Nenhum servico disponivel para esse filtro.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
             {services.map((service) => {
               const checked = selectedServiceIds.includes(service.id);
 
               return (
                 <label
                   key={service.id}
-                  className={`flex h-full cursor-pointer items-start gap-3 rounded-2xl border-2 p-4 transition-all ${
+                  className={`flex h-full cursor-pointer items-start gap-3 rounded-2xl border-2 p-3.5 transition-all sm:p-4 ${
                     checked
                       ? 'border-primary bg-primary/10 shadow-sm'
                       : 'border-border bg-background hover:border-primary/40 hover:bg-muted/10'
@@ -98,7 +98,7 @@ export function BookingServiceStep({
                     className="mt-1"
                   />
 
-                  <div className="flex min-w-0 flex-1 flex-col gap-3">
+                  <div className="flex min-w-0 flex-1 flex-col gap-2.5">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <h3 className="truncate text-sm font-semibold text-foreground sm:text-base">
@@ -117,17 +117,21 @@ export function BookingServiceStep({
                         </div>
                       </div>
                       {checked ? (
-                        <Badge className="gap-1 bg-primary/15 text-primary hover:bg-primary/15">
+                        <Badge className="gap-1 self-start bg-primary/15 text-primary hover:bg-primary/15">
                           <CheckCircle2 className="h-3 w-3" />
                           Selecionado
                         </Badge>
                       ) : null}
                     </div>
 
-                    <div className="flex items-end justify-between gap-3">
-                      <p className="line-clamp-2 text-xs text-muted-foreground sm:text-sm">
+                    <p className="line-clamp-2 text-xs text-muted-foreground sm:text-sm">
                         {service.description || 'Servico disponivel para agendamento publico.'}
-                      </p>
+                    </p>
+
+                    <div className="flex items-center justify-between gap-3 rounded-xl bg-muted/20 px-3 py-2">
+                      <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        Valor
+                      </span>
                       <span className="whitespace-nowrap text-base font-bold text-primary sm:text-lg">
                         {formatCurrencyCents(service.price)}
                       </span>

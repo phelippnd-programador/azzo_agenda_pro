@@ -211,6 +211,7 @@ export default function SpecialtiesOverviewPage() {
             tableAriaLabel="Visualizar especialidades em lista"
             actionLabel="Especialidade"
             actionLabelMobile="Nova"
+            actionLabelDesktop="Nova especialidade"
             actionIcon={Plus}
             searchMaxWidthClassName="lg:max-w-xl"
             onAction={() => setIsNewSpecialtyOpen(true)}
@@ -224,6 +225,15 @@ export default function SpecialtiesOverviewPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 py-4">
+              <div className="rounded-2xl border border-border/70 bg-muted/15 p-4">
+                <p className="text-sm font-medium text-foreground">
+                  Use especialidades para organizar catalogo, filtros e contexto operacional.
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Um nome claro e uma descricao curta ja ajudam a manter o sistema consistente.
+                </p>
+              </div>
+
               <Input
                 placeholder="Ex.: Corte, Coloracao, Escova..."
                 value={name}
@@ -511,6 +521,11 @@ export default function SpecialtiesOverviewPage() {
             <DialogDescription>Atualize nome e descricao da especialidade.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
+            <div className="rounded-2xl border border-border/70 bg-muted/15 p-4">
+              <p className="text-sm font-medium text-foreground">
+                Ajuste nome e descricao sem perder o padrao usado no catalogo.
+              </p>
+            </div>
             <Input
               placeholder="Nome da especialidade"
               value={editName}

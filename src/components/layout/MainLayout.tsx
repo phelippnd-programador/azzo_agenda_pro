@@ -12,28 +12,33 @@ interface MainLayoutProps {
   subtitle?: string;
 }
 
+function getInitialDesktopSidebarState() {
+  try {
+    return localStorage.getItem('desktop_sidebar_open') !== '0';
+  } catch {
+    return true;
+  }
+}
+
 export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(
+    getInitialDesktopSidebarState,
+  );
   const { status: licenseStatus, isBlocked: isPlanExpired, refreshStatus } = useLicenseAccess();
 
   const isLicenseRoute = location.pathname === '/financeiro/licenca';
 
   useEffect(() => {
-    try {
-      const cached = localStorage.getItem("desktop_sidebar_open");
-      if (cached === "0") {
-        setDesktopSidebarOpen(false);
-      }
-    } catch {
-      // ignore localStorage issues
+    if (
+      isLicenseRoute ||
+      licenseStatus === 'BLOCKED' ||
+      licenseStatus === 'ACTIVE'
+    ) {
+      return;
     }
-  }, []);
-
-  useEffect(() => {
-    if (isLicenseRoute || licenseStatus === 'BLOCKED' || licenseStatus === 'ACTIVE') return;
 
     const checkSubscription = async () => {
       try {
@@ -44,13 +49,13 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
     };
 
     void checkSubscription();
-  }, [isLicenseRoute, licenseStatus, location.pathname, refreshStatus]);
+  }, [isLicenseRoute, licenseStatus, refreshStatus]);
 
   const toggleDesktopSidebar = () => {
     setDesktopSidebarOpen((prev) => {
       const next = !prev;
       try {
-        localStorage.setItem("desktop_sidebar_open", next ? "1" : "0");
+        localStorage.setItem('desktop_sidebar_open', next ? '1' : '0');
       } catch {
         // ignore localStorage issues
       }
@@ -59,7 +64,7 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[hsl(var(--shell))]">
       <ChatInboxNotifier />
       <Sidebar
         isMobileOpen={mobileSidebarOpen}
@@ -75,7 +80,7 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
           isDesktopSidebarOpen={desktopSidebarOpen}
         />
 
-        <main className="p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+        <main className="overflow-x-hidden p-4 sm:p-6 lg:p-8">
           <div className="mx-auto max-w-screen-2xl">
           {!isLicenseRoute && isPlanExpired ? (
             <PageErrorState

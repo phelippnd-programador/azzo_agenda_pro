@@ -34,7 +34,7 @@ export const MENU_REGISTRY = {
   },
   [appRouteManifest.reports.root]: {
     icon: BarChart3,
-    label: "Relatorio",
+    label: "Relatorios",
     path: appRouteManifest.reports.root,
   },
   [appRouteManifest.shell.notifications]: {
@@ -84,7 +84,7 @@ export const MENU_REGISTRY = {
   },
   [appRouteManifest.finance.root]: {
     icon: DollarSign,
-    label: "Resumo Financeiro",
+    label: "Financeiro",
     path: appRouteManifest.finance.root,
   },
   [appRouteManifest.finance.commissions]: {
@@ -94,7 +94,7 @@ export const MENU_REGISTRY = {
   },
   [appRouteManifest.finance.professionals]: {
     icon: BarChart3,
-    label: "Financeiro Profissionais",
+    label: "Equipe",
     path: appRouteManifest.finance.professionals,
   },
   [appRouteManifest.finance.license]: {
@@ -109,12 +109,12 @@ export const MENU_REGISTRY = {
   },
   [appRouteManifest.audit.lgpd]: {
     icon: FileSearch,
-    label: "LGPD Titulares",
+    label: "LGPD",
     path: appRouteManifest.audit.lgpd,
   },
   [appRouteManifest.settings.systemAdmin]: {
     icon: ShieldCheck,
-    label: "Admin Sistema",
+    label: "Admin",
     path: appRouteManifest.settings.systemAdmin,
   },
   [appRouteManifest.fiscal.invoiceEmission]: {
@@ -124,7 +124,7 @@ export const MENU_REGISTRY = {
   },
   [appRouteManifest.fiscal.invoicePreview]: {
     icon: Eye,
-    label: "Pre-visualizacao de NF",
+    label: "Preview NF",
     path: appRouteManifest.fiscal.invoicePreview,
   },
   [appRouteManifest.fiscal.monthlyTaxStatement]: {
@@ -245,5 +245,43 @@ export const SIDEBAR_BOTTOM_ITEMS = [
     icon: Settings,
     isVisible: (_role: string | null | undefined, allowedSet: Set<string>) =>
       allowedSet.has(appRouteManifest.settings.root),
+  },
+] as const;
+
+export const SIDEBAR_SECTIONS = [
+  {
+    id: "hoje",
+    label: "Hoje",
+    paths: new Set([
+      appRouteManifest.shell.dashboard,
+      appRouteManifest.shell.agenda,
+      appRouteManifest.chat.root,
+      appRouteManifest.shell.notifications,
+      appRouteManifest.reports.root,
+    ]),
+  },
+  {
+    id: "base",
+    label: "Base do negocio",
+    paths: new Set([
+      appRouteManifest.clients.root,
+      appRouteManifest.services.root,
+      appRouteManifest.specialties.root,
+      appRouteManifest.professionals.root,
+    ]),
+  },
+  {
+    id: "gestao",
+    label: "Gestao",
+    paths: new Set([
+      appRouteManifest.finance.root,
+      appRouteManifest.stock.root,
+      appRouteManifest.shell.suggestions,
+      appRouteManifest.audit.root,
+      appRouteManifest.settings.systemAdmin,
+      appRouteManifest.fiscal.invoiceEmission,
+      appRouteManifest.fiscal.invoicePreview,
+      appRouteManifest.fiscal.monthlyTaxStatement,
+    ]),
   },
 ] as const;

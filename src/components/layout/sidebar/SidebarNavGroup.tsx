@@ -28,16 +28,19 @@ export function SidebarNavGroup({
   const activeChildPath = getActiveChildPath(entry, pathname);
   const isGroupActive = Boolean(activeChildPath);
   const parentIsAccessible = isSidebarGroupEntryAccessible(entry.path, allowedSet);
+  const contentId = `sidebar-group-${entry.id}`;
 
   return (
     <div className="space-y-0.5">
       <button
         type="button"
         onClick={onToggle}
+        aria-expanded={isOpen}
+        aria-controls={contentId}
         className={cn(
-          "w-full flex items-center gap-2.5 h-9 px-3 rounded-md text-sm cursor-pointer select-none transition-colors",
+          "w-full flex items-center gap-2.5 h-10 px-3.5 rounded-xl text-sm cursor-pointer select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           isGroupActive
-            ? "text-primary font-medium"
+            ? "bg-primary/8 text-primary font-medium ring-1 ring-primary/10"
             : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"
         )}
       >
@@ -51,7 +54,7 @@ export function SidebarNavGroup({
         />
       </button>
       {isOpen ? (
-        <div className="ml-3 pl-3 border-l border-border space-y-0.5 py-0.5">
+        <div id={contentId} className="ml-4 space-y-1 border-l border-border/80 pl-3 py-1">
           {parentIsAccessible ? (
             <SidebarNavLink
               path={entry.path}

@@ -25,14 +25,15 @@ export function SalesSection({
     <section
       id={id}
       aria-labelledby={headingId}
-      className={cn("py-12 md:py-16", className)}
+      className={cn("py-10 md:py-16", className)}
     >
       <div className="mx-auto w-full max-w-6xl px-4 md:px-6">
         {title ? (
-          <header className="mb-8 max-w-2xl">
+          <header className="mb-6 max-w-2xl md:mb-8">
+            <p className="section-eyebrow mb-3">Azzo Agenda Pro</p>
             <HeadingTag
               id={headingId}
-              className="text-2xl md:text-3xl font-bold tracking-tight text-foreground"
+              className="font-display text-2xl font-bold tracking-tight text-foreground md:text-3xl"
             >
               {title}
             </HeadingTag>

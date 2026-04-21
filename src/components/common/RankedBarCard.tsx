@@ -76,9 +76,9 @@ export function RankedBarCard({
 }: RankedBarCardProps) {
   const visibleItems = items.slice(0, maxItems);
   const chartHeight = Math.max(160, visibleItems.length * 58);
-  const shouldSplitLayout = visibleItems.length >= 3;
+  const shouldSplitLayout = visibleItems.length >= 4;
   const truncateChartLabel = (label: string) =>
-    label.length > 18 ? `${label.slice(0, 18).trimEnd()}...` : label;
+    label.length > 22 ? `${label.slice(0, 22).trimEnd()}...` : label;
 
   return (
     <Card>
@@ -93,7 +93,7 @@ export function RankedBarCard({
         {visibleItems.length ? (
           <div
             className={`grid gap-4 ${
-              shouldSplitLayout ? '2xl:grid-cols-[minmax(0,1.7fr)_minmax(360px,1fr)]' : ''
+              shouldSplitLayout ? 'min-[1650px]:grid-cols-[minmax(0,1.7fr)_minmax(360px,1fr)]' : ''
             }`}
           >
             <div className="rounded-xl border bg-muted/20 p-4">
@@ -109,7 +109,7 @@ export function RankedBarCard({
                     <YAxis
                       type="category"
                       dataKey="name"
-                      width={140}
+                      width={160}
                       tickLine={false}
                       axisLine={false}
                       tick={{ fontSize: 12 }}
@@ -147,9 +147,9 @@ export function RankedBarCard({
                       <div className="min-w-0 space-y-2">
                         <div className="flex flex-wrap items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-foreground">{item.name}</p>
+                            <p className="line-clamp-2 break-words text-sm font-medium text-foreground">{item.name}</p>
                             {item.metaText ? (
-                              <p className="mt-1 truncate text-xs text-muted-foreground">{item.metaText}</p>
+                              <p className="mt-1 line-clamp-2 break-words text-xs text-muted-foreground">{item.metaText}</p>
                             ) : null}
                           </div>
                           <span

@@ -158,22 +158,38 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-card p-4">
-      <div className="w-full max-w-md">
-        <BrandLockup className="mb-6 sm:mb-8" />
+    <div className="auth-shell flex items-start justify-center sm:items-center">
+      <div className="relative z-10 w-full max-w-md pt-2 sm:pt-0">
+        <div className="mb-6 space-y-3 text-center sm:mb-8">
+          <p className="section-eyebrow">Comeco guiado</p>
+          <BrandLockup className="justify-center" />
+          <p className="mx-auto max-w-sm text-sm leading-6 text-muted-foreground">
+            Crie sua conta em duas etapas e chegue rapido ao ambiente real de operacao.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+            <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[11px] font-medium tracking-wide text-primary">
+              Cadastro guiado
+            </span>
+            <span className="rounded-full border border-border/70 bg-background/80 px-3 py-1 text-[11px] font-medium tracking-wide text-muted-foreground">
+              Dados claros
+            </span>
+            <span className="rounded-full border border-border/70 bg-background/80 px-3 py-1 text-[11px] font-medium tracking-wide text-muted-foreground">
+              Termos visiveis
+            </span>
+          </div>
+        </div>
 
-        <Card className="shadow-xl border-0">
+        <Card className="auth-panel border-border/80">
           <CardHeader className="text-center pb-2 sm:pb-4">
-            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-[2rem]">
+            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-[2.1rem]">
               Crie sua conta
             </CardTitle>
             <CardDescription className="text-sm leading-6 sm:text-[15px]">
-              {step === 1 ? "Seus dados pessoais" : "Dados do seu salao"}
+              {step === 1 ? "Seus dados pessoais e termos legais" : "Dados do seu salao"}
             </CardDescription>
-            {/* Step indicator */}
-            <div className="flex items-center justify-center gap-2 mt-4">
+            <div className="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
                   step >= 1
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground"
@@ -181,9 +197,9 @@ export default function Register() {
               >
                 {step > 1 ? <Check className="w-4 h-4" /> : "1"}
               </div>
-              <div className={`w-12 h-1 rounded ${step >= 2 ? "bg-primary" : "bg-muted"}`} />
+              <div className={`h-1 w-16 rounded sm:w-12 ${step >= 2 ? "bg-primary" : "bg-muted"}`} />
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
                   step >= 2
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground"
@@ -197,6 +213,13 @@ export default function Register() {
           <CardContent>
             {step === 1 ? (
               <div className="space-y-4">
+                <div className="rounded-2xl border border-border/70 bg-muted/15 p-4">
+                  <p className="text-sm font-medium text-foreground">Primeiro configuramos seu acesso.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Depois voce informa os dados do salao e ja entra no ambiente principal com a conta pronta.
+                  </p>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-sm">
                     Nome completo
@@ -376,9 +399,29 @@ export default function Register() {
                   Continuar
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
+
+                <p className="text-center text-xs text-muted-foreground">
+                  Na proxima etapa voce informa apenas nome do salao, telefone e CPF/CNPJ.
+                </p>
               </div>
             ) : (
               <form onSubmit={onSubmit} className="space-y-4">
+                <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+                        Conta em preparacao
+                      </p>
+                      <p className="mt-1 text-sm font-medium text-foreground">
+                        {form.getValues("name") || "Responsavel"} · {form.getValues("email") || "E-mail"}
+                      </p>
+                    </div>
+                    <span className="rounded-full border border-primary/20 bg-background/80 px-3 py-1 text-[11px] font-medium text-primary">
+                      Etapa final
+                    </span>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="salonName" className="text-sm">
                     Nome do Salao
@@ -451,11 +494,11 @@ export default function Register() {
                   ) : null}
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row">
                   <Button
                     type="button"
                     variant="outline"
-                    className="flex-1 h-10 sm:h-11"
+                    className="h-10 w-full sm:h-11 sm:flex-1"
                     onClick={() => setStep(1)}
                     disabled={isLoading}
                   >
@@ -464,7 +507,7 @@ export default function Register() {
                   </Button>
                   <Button
                     type="submit"
-                    className="flex-1 h-10 sm:h-11"
+                    className="h-10 w-full sm:h-11 sm:flex-1"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -477,6 +520,12 @@ export default function Register() {
                     )}
                   </Button>
                 </div>
+
+                <p className="text-center text-xs text-muted-foreground" aria-live="polite">
+                  {isLoading
+                    ? "Criando sua conta e preparando o primeiro acesso..."
+                    : "Depois do envio, voce entra no fluxo principal sem precisar repetir o cadastro."}
+                </p>
               </form>
             )}
 
@@ -489,7 +538,7 @@ export default function Register() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground mt-4 sm:mt-6">
+        <p className="mt-4 text-center text-xs text-muted-foreground sm:mt-6">
           Ao criar sua conta, voce concorda com nossos{" "}
           <button
             type="button"

@@ -18,6 +18,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["Manrope", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       fontSize: {
         xs: ["12px", { lineHeight: "16px", fontWeight: "400" }],
@@ -34,6 +35,11 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        brand: {
+          accent: "hsl(var(--brand-accent))",
+          panel: "hsl(var(--panel))",
+          shell: "hsl(var(--shell))",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -77,6 +83,11 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      boxShadow: {
+        soft: "var(--shadow-soft)",
+        panel: "var(--shadow-panel)",
+        elevated: "var(--shadow-elevated)",
       },
       keyframes: {
         "accordion-down": {

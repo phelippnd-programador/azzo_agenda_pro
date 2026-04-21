@@ -164,7 +164,9 @@ describe("ChatPage", () => {
     expect(screen.getByText("Todas as Conversas")).toBeInTheDocument();
     expect(screen.getByText("Historico completo de mensagens por cliente")).toBeInTheDocument();
     expect(screen.getByLabelText("Buscar conversas")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Nao lidas" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Nao lidas" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: "Todas" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Abrir conversa com Maria Silva" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getAllByText("Maria Silva").length).toBeGreaterThan(0);
     expect(screen.getByText("Modo Manual")).toBeInTheDocument();
     expect(screen.getByText("Mensagem teste")).toBeInTheDocument();
@@ -172,6 +174,7 @@ describe("ChatPage", () => {
     expect(screen.getByText("Saida manual")).toBeInTheDocument();
     expect(screen.getByText("Cliente")).toBeInTheDocument();
     expect(screen.getByText("Recebida")).toBeInTheDocument();
+    expect(screen.getByLabelText("Mensagem para o cliente")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Enviar/i })).toBeInTheDocument();
   });
 
@@ -196,6 +199,9 @@ describe("ChatPage", () => {
 
     await user.clear(searchInput);
     await user.click(screen.getByRole("button", { name: "Modo manual" }));
+
+    expect(screen.getByRole("button", { name: "Modo manual" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Todas" })).toHaveAttribute("aria-pressed", "false");
 
     expect(within(conversationsList).getByText("Maria Silva")).toBeInTheDocument();
     expect(within(conversationsList).queryByText("Joao Souza")).not.toBeInTheDocument();

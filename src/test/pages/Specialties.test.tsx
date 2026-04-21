@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import Specialties from "@/pages/Specialties";
 import SpecialtiesOverviewPage from "@/pages/specialties/SpecialtiesOverviewPage";
@@ -72,5 +73,24 @@ describe("Specialties", () => {
     expect(
       screen.getByRole("button", { name: "Visualizar especialidades em lista" })
     ).toBeInTheDocument();
+  });
+
+  it("should open the specialty create dialog from the shared toolbar pattern", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/especialidades"]}>
+        <Routes>
+          <Route path="/especialidades" element={<Specialties />}>
+            <Route index element={<SpecialtiesOverviewPage />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole("button", { name: /Nova Especialidade/i }));
+
+    expect(screen.getByRole("heading", { name: "Nova especialidade" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Criar especialidade/i })).toBeInTheDocument();
   });
 });

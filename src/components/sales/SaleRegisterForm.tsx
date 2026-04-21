@@ -19,6 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ApiError, publicLegalApi } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
 import { maskCpfCnpj, maskPhoneBr } from '@/lib/input-masks';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { toast } from 'sonner';
 
 function getPasswordStrengthStatus(value: string) {
@@ -109,6 +110,10 @@ export function SaleRegisterForm() {
 
   const handleNextStep = () => {
     if (!validateStepOne()) return;
+    trackMarketingEvent('sale_signup_step_advanced', {
+      step: 1,
+      nextStep: 2,
+    });
     setStep(2);
   };
 
@@ -143,6 +148,10 @@ export function SaleRegisterForm() {
         privacyPolicyVersion,
       });
       toast.success('Conta criada! Continue com o pagamento do plano.');
+      trackMarketingEvent('sale_signup_completed', {
+        productId: effectiveProductId || null,
+        step: 2,
+      });
       const planQuery = effectiveProductId
         ? `?plan=${encodeURIComponent(effectiveProductId)}&mode=CHANGE`
         : '';
@@ -166,8 +175,8 @@ export function SaleRegisterForm() {
   return (
     <SalesSection id="cadastro" className="bg-card">
       <div className="mx-auto max-w-2xl">
-        <header className="mb-8 text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+        <header className="mb-6 text-center md:mb-8">
+          <span className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
             <Sparkles className="h-3.5 w-3.5" />
             Comece agora em 2 passos
           </span>
@@ -179,22 +188,22 @@ export function SaleRegisterForm() {
           </p>
         </header>
 
-        <Card className="border-2 border-emerald-200 shadow-lg">
-          <CardContent className="p-6">
+        <Card className="border-2 border-primary/15 shadow-panel">
+          <CardContent className="p-4 sm:p-6">
             <div className="mb-6 flex items-center justify-center gap-3">
-              <div className="flex items-center gap-3 rounded-full border border-emerald-100 bg-emerald-50 px-4 py-2">
+              <div className="flex w-full max-w-md flex-col items-center gap-3 rounded-[1.5rem] border border-primary/10 bg-primary/5 px-4 py-3 sm:w-auto sm:max-w-none sm:flex-row sm:rounded-full sm:py-2">
                 <div
                   className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
-                    step === 1 ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-700'
+                    step === 1 ? 'bg-primary text-white' : 'bg-primary/10 text-primary'
                   }`}
                 >
                   1
                 </div>
                 <span className="text-sm font-medium text-foreground">Acesso</span>
-                <div className={`h-1 w-10 rounded-full ${step === 2 ? 'bg-emerald-600' : 'bg-emerald-100'}`} />
+                <div className={`h-1 w-full max-w-[3.5rem] rounded-full ${step === 2 ? 'bg-primary' : 'bg-primary/10'}`} />
                 <div
                   className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
-                    step === 2 ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-700'
+                    step === 2 ? 'bg-primary text-white' : 'bg-primary/10 text-primary'
                   }`}
                 >
                   2
@@ -346,7 +355,7 @@ export function SaleRegisterForm() {
                 <Button
                   type={step === 1 ? 'button' : 'submit'}
                   size="lg"
-                  className="w-full bg-emerald-600 text-base text-white hover:bg-emerald-700 sm:flex-1"
+                  className="w-full text-base sm:flex-1"
                   disabled={isCreatingAccount}
                   onClick={step === 1 ? handleNextStep : undefined}
                 >
@@ -366,17 +375,17 @@ export function SaleRegisterForm() {
                 </Button>
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 pt-1 text-xs text-muted-foreground">
+              <div className="flex flex-col items-start gap-2 pt-1 text-xs text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-5 sm:gap-y-1.5">
                 <span className="inline-flex items-center gap-1.5">
                   <Lock className="h-3 w-3" />
                   Dados protegidos
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                  <CheckCircle2 className="h-3 w-3 text-primary" />
                   Sem cartao de credito agora
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <Shield className="h-3 w-3 text-emerald-500" />7 dias de garantia
+                  <Shield className="h-3 w-3 text-primary" />7 dias de garantia
                 </span>
               </div>
             </form>

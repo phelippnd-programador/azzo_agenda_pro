@@ -59,6 +59,7 @@ export function ClientCard({ client, onOpenProfile, onEdit, onDelete }: ClientCa
                 size="icon"
                 className="h-8 w-8 flex-shrink-0"
                 onClick={(event) => event.stopPropagation()}
+                aria-label={`Abrir acoes de ${client.name}`}
               >
                 <MoreVertical className="w-4 h-4" />
               </Button>

@@ -1,77 +1,17 @@
 import { useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { formatDateLong, formatDateTime } from "@/lib/format";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageEmptyState, PageErrorState } from "@/components/ui/page-states";
-import { Skeleton } from "@/components/ui/skeleton";
-import { MessageCircleMore, Search, SendHorizontal, Smile } from "lucide-react";
 import { useChat } from "@/hooks/useChat";
-import type { ChatMessage, ChatRealtimeEventPayload } from "@/types/chat";
-import { ChatConversationCard } from "@/components/chat/ChatConversationCard";
+import type { ChatRealtimeEventPayload } from "@/types/chat";
 import { chatMessageSchema, type ChatMessageForm } from "@/schemas/chat";
-
-const messageStatusVariant = (message: ChatMessage) => {
-  if (message.status === "FAILED") return "destructive" as const;
-  if (message.status === "READ") return "default" as const;
-  return "secondary" as const;
-};
-
-const MESSAGE_STATUS_LABELS: Record<ChatMessage["status"], string> = {
-  QUEUED: "Na fila",
-  SENT: "Enviado",
-  DELIVERED: "Entregue",
-  READ: "Lido",
-  FAILED: "Falhou",
-};
-
-const EMOJI_OPTIONS = [
-  "\u{1F600}",
-  "\u{1F601}",
-  "\u{1F602}",
-  "\u{1F609}",
-  "\u{1F60A}",
-  "\u{1F60D}",
-  "\u{1F91D}",
-  "\u{1F44F}",
-  "\u{1F64F}",
-  "\u{1F44D}",
-  "\u{2764}\u{FE0F}",
-  "\u{1F389}",
-  "\u{2728}",
-  "\u{1F4C5}",
-  "\u{1F487}\u{200D}\u{2640}\u{FE0F}",
-  "\u{1F485}",
-];
-
-type ConversationFilter = "all" | "manual" | "unread";
-
-type TimelineItem =
-  | { type: "day"; key: string; label: string }
-  | { type: "message"; key: string; message: ChatMessage };
-
-const getDayKey = (value?: string | null) => {
-  if (!value) return "sem-data";
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "sem-data";
-  return parsed.toISOString().slice(0, 10);
-};
-
-const formatTimeOnly = (value?: string | null) => {
-  if (!value) return "-";
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "-";
-  return parsed.toLocaleTimeString("pt-BR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
+import { ChatSidebar, type ConversationFilter } from "@/components/chat/ChatSidebar";
+import { ChatTimeline } from "@/components/chat/ChatTimeline";
+import { ChatMessageComposer } from "@/components/chat/ChatMessageComposer";
 
 export default function ChatPage() {
   const navigate = useNavigate();
@@ -103,8 +43,8 @@ export default function ChatPage() {
     loadMessages,
     sendMessage,
   } = useChat({ todayOnly: false, pageSize: 100 });
-  const defaultConversation = conversations[0];
   const deferredConversationQuery = useDeferredValue(conversationQuery);
+  const defaultConversation = conversations[0];
 
   const selectedConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === conversationId) ?? null,
@@ -135,33 +75,6 @@ export default function ChatPage() {
     });
   }, [conversationFilter, conversations, deferredConversationQuery]);
 
-  const timelineItems = useMemo<TimelineItem[]>(() => {
-    const items: TimelineItem[] = [];
-    let previousDayKey: string | null = null;
-    let daySeparatorIndex = 0;
-
-    messages.forEach((message) => {
-      const dayKey = getDayKey(message.createdAt);
-      if (dayKey !== previousDayKey) {
-        daySeparatorIndex += 1;
-        items.push({
-          type: "day",
-          key: `day-${dayKey}-${daySeparatorIndex}`,
-          label: formatDateLong(message.createdAt),
-        });
-        previousDayKey = dayKey;
-      }
-
-      items.push({
-        type: "message",
-        key: message.id,
-        message,
-      });
-    });
-
-    return items;
-  }, [messages]);
-
   useEffect(() => {
     loadConversations().catch(() => {
       setError("Nao foi possivel carregar o inbox do chat.");
@@ -175,14 +88,7 @@ export default function ChatPage() {
     const firstConversation = conversations[0];
     if (!firstConversation) return;
     navigate(`/chat/${firstConversation.id}`, { replace: true });
-  }, [
-    conversations,
-    conversationId,
-    isLoadingConversations,
-    loadMessages,
-    navigate,
-    selectedConversation,
-  ]);
+  }, [conversations, conversationId, isLoadingConversations, navigate, selectedConversation]);
 
   useEffect(() => {
     if (!conversationId || !selectedConversation) return;
@@ -285,8 +191,6 @@ export default function ChatPage() {
     lastVisibleMessageIdRef.current = latestMessageId;
   }, [conversationId, isLoadingMessages, messages]);
 
-  const watchedMessage = form.watch("message");
-
   const appendEmoji = (emoji: string) => {
     const current = form.getValues("message") || "";
     form.setValue("message", `${current}${emoji}`, {
@@ -316,6 +220,13 @@ export default function ChatPage() {
     shouldAutoScrollRef.current = distanceToBottom <= 48;
   };
 
+  const handleReloadConversations = () => {
+    setError(null);
+    loadConversations().catch(() => {
+      setError("Nao foi possivel carregar o inbox do chat.");
+    });
+  };
+
   if (error) {
     return (
       <MainLayout title="Chat" subtitle="Historico completo de conversas">
@@ -324,12 +235,7 @@ export default function ChatPage() {
           description={error}
           action={{
             label: "Tentar novamente",
-            onClick: () => {
-              setError(null);
-              loadConversations().catch(() => {
-                setError("Nao foi possivel carregar o inbox do chat.");
-              });
-            },
+            onClick: handleReloadConversations,
           }}
         />
       </MainLayout>
@@ -337,112 +243,28 @@ export default function ChatPage() {
   }
 
   return (
-      <MainLayout title="Chat" subtitle="Historico completo de mensagens por cliente">
+    <MainLayout title="Chat" subtitle="Historico completo de mensagens por cliente">
       <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
-        <Card className="h-[calc(100vh-13rem)]">
-          <CardHeader className="pb-2">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <MessageCircleMore className="w-4 h-4" />
-                  Todas as Conversas
-                </CardTitle>
-                <Badge variant="outline" className="shrink-0">
-                  {filteredConversations.length}/{conversations.length}
-                </Badge>
-              </div>
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={conversationQuery}
-                  onChange={(event) => setConversationQuery(event.target.value)}
-                  placeholder="Buscar por cliente, telefone ou ultima mensagem"
-                  className="pl-9"
-                  aria-label="Buscar conversas"
-                />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={conversationFilter === "all" ? "default" : "outline"}
-                  onClick={() => setConversationFilter("all")}
-                >
-                  Todas
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={conversationFilter === "unread" ? "default" : "outline"}
-                  onClick={() => setConversationFilter("unread")}
-                >
-                  Nao lidas
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={conversationFilter === "manual" ? "default" : "outline"}
-                  onClick={() => setConversationFilter("manual")}
-                >
-                  Modo manual
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent
-            className="space-y-2 overflow-y-auto h-[calc(100%-4.25rem)] pr-1"
-            aria-label="Lista de conversas"
-          >
-            {isLoadingConversations ? (
-              <>
-                <Skeleton className="h-20 w-full rounded-lg" />
-                <Skeleton className="h-20 w-full rounded-lg" />
-                <Skeleton className="h-20 w-full rounded-lg" />
-              </>
-            ) : conversations.length === 0 ? (
-              <PageEmptyState
-                title="Inbox sem conversas ainda"
-                description="Assim que chegarem mensagens do WhatsApp, elas aparecem aqui. Se você esperava atendimento ativo, atualize o inbox."
-                action={{
-                  label: "Atualizar inbox",
-                  onClick: () => {
-                    loadConversations().catch(() => {
-                      setError("Nao foi possivel carregar o inbox do chat.");
-                    });
-                  },
-                }}
-              />
-            ) : filteredConversations.length === 0 ? (
-              <PageEmptyState
-                title="Nenhuma conversa encontrada"
-                description="Ajuste a busca ou troque o filtro para voltar ao inbox completo."
-                action={{
-                  label: "Limpar filtros",
-                  onClick: () => {
-                    setConversationQuery("");
-                    setConversationFilter("all");
-                  },
-                }}
-              />
-            ) : (
-              filteredConversations.map((conversation) => {
-                const isSelected = conversation.id === selectedConversation?.id;
-                return (
-                  <ChatConversationCard
-                    key={conversation.id}
-                    conversation={conversation}
-                    selected={isSelected}
-                    onClick={() => navigate(`/chat/${conversation.id}`)}
-                  />
-                );
-              })
-            )}
-          </CardContent>
-        </Card>
+        <ChatSidebar
+          conversations={conversations}
+          filteredConversations={filteredConversations}
+          selectedConversationId={selectedConversation?.id}
+          isLoading={isLoadingConversations}
+          query={conversationQuery}
+          onQueryChange={setConversationQuery}
+          filter={conversationFilter}
+          onFilterChange={setConversationFilter}
+          onSelectConversation={(nextConversationId) => navigate(`/chat/${nextConversationId}`)}
+          onReload={handleReloadConversations}
+          onClearFilters={() => {
+            setConversationQuery("");
+            setConversationFilter("all");
+          }}
+        />
 
         <Card className="h-[calc(100vh-13rem)]">
           {!selectedConversation ? (
-            <CardContent className="h-full flex items-center justify-center">
+            <CardContent className="flex h-full items-center justify-center">
               <PageEmptyState
                 title="Selecione uma conversa"
                 description="Escolha um cliente no painel lateral para ver o historico completo e responder pelo inbox."
@@ -461,10 +283,10 @@ export default function ChatPage() {
               <CardHeader className="border-b">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <CardTitle className="text-base truncate">
+                    <CardTitle className="truncate text-base">
                       {selectedConversation.clientName || "Cliente"}
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground truncate">
+                    <p className="truncate text-sm text-muted-foreground">
                       {selectedConversation.clientPhoneMasked || "Sem telefone"}
                     </p>
                   </div>
@@ -473,141 +295,29 @@ export default function ChatPage() {
                       {messages.length} mensagens
                     </Badge>
                     {selectedConversation.manualModeEnabled ? (
-                      <Badge variant="outline" className="shrink-0 text-amber-600 border-amber-400">
+                      <Badge variant="outline" className="shrink-0 border-amber-400 text-amber-600">
                         Modo Manual
                       </Badge>
                     ) : null}
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="h-[calc(100%-9rem)] flex flex-col">
-                <div
-                  ref={messagesContainerRef}
+              <CardContent className="flex h-[calc(100%-9rem)] flex-col">
+                <ChatTimeline
+                  messages={messages}
+                  isLoading={isLoadingMessages}
+                  onFocusComposer={() => form.setFocus("message")}
+                  containerRef={messagesContainerRef}
                   onScroll={handleMessagesScroll}
-                  className="flex-1 overflow-y-auto pr-1 space-y-3 py-3"
-                >
-                  {isLoadingMessages && messages.length === 0 ? (
-                    <>
-                      <Skeleton className="h-14 w-2/3" />
-                      <Skeleton className="h-14 w-2/3 ml-auto" />
-                    </>
-                  ) : messages.length === 0 ? (
-                    <PageEmptyState
-                      title="Sem mensagens nesta conversa"
-                      description="Ainda nao existe historico nesta conversa. Envie a primeira mensagem para iniciar o atendimento manual."
-                      action={{
-                        label: "Escrever primeira mensagem",
-                        onClick: () => form.setFocus("message"),
-                      }}
-                    />
-                  ) : (
-                    <>
-                      {timelineItems.map((item) => {
-                        if (item.type === "day") {
-                          return (
-                            <div key={item.key} className="sticky top-0 z-10 flex justify-center py-1">
-                              <Badge variant="outline" className="bg-background/95 backdrop-blur">
-                                {item.label}
-                              </Badge>
-                            </div>
-                          );
-                        }
-
-                        const { message } = item;
-                        const isOutbound = message.direction === "OUTBOUND";
-                        const statusVariant = messageStatusVariant(message);
-                        return (
-                          <div
-                            key={item.key}
-                            className={`max-w-[82%] rounded-2xl p-3 border shadow-sm ${
-                              isOutbound
-                                ? "ml-auto bg-primary text-primary-foreground border-primary/30"
-                                : "bg-background border-border"
-                            }`}
-                          >
-                            <div className="mb-2 flex items-center justify-between gap-3">
-                              <span
-                                className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${
-                                  isOutbound ? "text-primary-foreground/80" : "text-muted-foreground"
-                                }`}
-                              >
-                                {isOutbound ? "Saida manual" : "Cliente"}
-                              </span>
-                              <span
-                                className={`text-[11px] ${
-                                  isOutbound ? "text-primary-foreground/80" : "text-muted-foreground"
-                                }`}
-                              >
-                                {formatTimeOnly(message.createdAt)}
-                              </span>
-                            </div>
-                            <p className="text-sm whitespace-pre-wrap">
-                              {message.content || "[Conteudo expirado]"}
-                            </p>
-                            <div className="mt-2 flex items-center justify-between gap-2">
-                              <span
-                                className={`text-[11px] ${
-                                  isOutbound ? "text-primary-foreground/70" : "text-muted-foreground"
-                                }`}
-                              >
-                                {formatDateTime(message.createdAt)}
-                              </span>
-                              {isOutbound ? (
-                                <Badge
-                                  variant={statusVariant}
-                                  className={
-                                    statusVariant === "secondary"
-                                      ? "bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20 hover:bg-primary-foreground/15"
-                                      : undefined
-                                  }
-                                >
-                                  {MESSAGE_STATUS_LABELS[message.status] ?? message.status}
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline">Recebida</Badge>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </>
-                  )}
-                </div>
-
-                <form onSubmit={onSend} className="pt-3 border-t flex gap-2">
-                  <Input
-                    {...form.register("message")}
-                    placeholder="Digite a mensagem para o cliente..."
-                    maxLength={2000}
-                    disabled={isSending}
-                  />
-                  <Popover open={isEmojiOpen} onOpenChange={setIsEmojiOpen}>
-                    <PopoverTrigger asChild>
-                      <Button type="button" size="icon" disabled={isSending} aria-label="Selecionar emoji">
-                        <Smile className="w-4 h-4" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="w-56 p-2">
-                      <div className="grid grid-cols-8 gap-1">
-                        {EMOJI_OPTIONS.map((emoji) => (
-                          <button
-                            key={emoji}
-                            type="button"
-                            className="h-7 w-7 rounded hover:bg-accent text-base"
-                            onClick={() => appendEmoji(emoji)}
-                            aria-label={`Inserir ${emoji}`}
-                          >
-                            {emoji}
-                          </button>
-                        ))}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                  <Button type="submit" disabled={isSending || !(watchedMessage || "").trim()}>
-                    <SendHorizontal className="w-4 h-4 mr-2" />
-                    Enviar
-                  </Button>
-                </form>
+                />
+                <ChatMessageComposer
+                  form={form}
+                  isSending={isSending}
+                  isEmojiOpen={isEmojiOpen}
+                  onEmojiOpenChange={setIsEmojiOpen}
+                  onAppendEmoji={appendEmoji}
+                  onSubmit={onSend}
+                />
               </CardContent>
             </>
           )}

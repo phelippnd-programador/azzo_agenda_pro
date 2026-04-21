@@ -165,6 +165,7 @@ export default function Professionals() {
           tableAriaLabel="Visualizar profissionais em lista"
           actionLabel="Profissional"
           actionLabelMobile="Novo"
+          actionLabelDesktop="Novo profissional"
           actionIcon={Plus}
           onAction={() => {
             setEditingProfessional(null);

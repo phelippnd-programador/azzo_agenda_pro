@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -21,6 +21,7 @@ import { BookingProfessionalStep } from '@/components/public-booking/BookingProf
 import { BookingServiceStep } from '@/components/public-booking/BookingServiceStep';
 import { BookingSuccessScreen } from '@/components/public-booking/BookingSuccessScreen';
 import { BookingSummaryCard } from '@/components/public-booking/BookingSummaryCard';
+import { BookingStickySummaryBar } from '@/components/public-booking/BookingStickySummaryBar';
 
 const BOOKING_STEPS = [
   {
@@ -75,6 +76,7 @@ export default function PublicBooking() {
   const [customerEmail, setCustomerEmail] = useState('');
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
+  const mobileSummaryRef = useRef<HTMLDivElement | null>(null);
 
   const servicePageSize = 10;
 
@@ -409,9 +411,9 @@ export default function PublicBooking() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#dbeafe,transparent_35%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-4 sm:p-6">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#dbeafe,transparent_35%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-3 pb-36 sm:p-6 sm:pb-6">
       <div className="mx-auto max-w-6xl space-y-6">
-        <section className="rounded-[2rem] border border-border/70 bg-background/90 p-5 shadow-sm backdrop-blur sm:p-6">
+        <section className="rounded-[2rem] border border-border/70 bg-background/90 p-4 shadow-sm backdrop-blur sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-4">
               {salonLogoUrl ? (
@@ -439,7 +441,7 @@ export default function PublicBooking() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3">
+            <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 lg:max-w-[19rem]">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Etapa atual</p>
               <p className="text-sm font-semibold text-foreground">{currentStepMeta.title}</p>
               <p className="mt-1 text-xs text-muted-foreground">{currentStepMeta.description}</p>
@@ -503,7 +505,7 @@ export default function PublicBooking() {
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="space-y-4">
-            <div className="lg:hidden">
+            <div ref={mobileSummaryRef} className="lg:hidden">
               <BookingSummaryCard
                 title="Resumo rapido"
                 description="Veja o essencial antes de seguir"
@@ -574,12 +576,12 @@ export default function PublicBooking() {
                 />
               ) : null}
 
-              <div className="flex flex-col gap-3 border-t border-border/60 bg-muted/10 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+                <div className="flex flex-col gap-3 border-t border-border/60 bg-muted/10 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
                 {currentStep > 1 ? (
-                  <Button variant="outline" onClick={() => setCurrentStep(currentStep - 1)}>
-                    <ChevronLeft className="mr-1 h-4 w-4" />
-                    Voltar
-                  </Button>
+                <Button variant="outline" className="w-full sm:w-auto" onClick={() => setCurrentStep(currentStep - 1)}>
+                  <ChevronLeft className="mr-1 h-4 w-4" />
+                  Voltar
+                </Button>
                 ) : (
                   <div />
                 )}
@@ -597,7 +599,7 @@ export default function PublicBooking() {
                       </>
                     ) : (
                       <>
-                        Continuar
+                        Continuar para {BOOKING_STEPS[currentStep]?.title ?? 'a proxima etapa'}
                         <ChevronRight className="ml-1 h-4 w-4" />
                       </>
                     )}
@@ -616,7 +618,7 @@ export default function PublicBooking() {
                     ) : (
                       <>
                         <Check className="mr-1 h-4 w-4" />
-                        Confirmar agendamento
+                        Confirmar agendamento agora
                       </>
                     )}
                   </Button>
@@ -643,6 +645,18 @@ export default function PublicBooking() {
           </aside>
         </div>
       </div>
+
+      <BookingStickySummaryBar
+        selectedServicesCount={selectedServicesData.length}
+        selectedTime={selectedTime}
+        selectedServiceDuration={selectedServiceDuration}
+        selectedServiceTotal={selectedServiceTotal}
+        currentStep={currentStep}
+        totalSteps={BOOKING_STEPS.length}
+        onOpenSummary={() => {
+          mobileSummaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }}
+      />
     </div>
   );
 }

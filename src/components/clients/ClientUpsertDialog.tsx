@@ -178,6 +178,15 @@ export function ClientUpsertDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
+          <div className="rounded-2xl border border-border/70 bg-muted/15 p-4">
+            <p className="text-sm font-medium text-foreground">
+              {initialClient ? 'Revise os dados principais e mantenha o cadastro atualizado.' : 'Comece com os dados essenciais e complemente o endereco se fizer sentido para a operacao.'}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Nome e telefone sao os campos minimos para criar o cadastro e seguir com o historico do cliente.
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label>Nome Completo *</Label>
             <Input
@@ -306,7 +315,7 @@ export function ClientUpsertDialog({
                 {initialClient ? 'Salvando...' : 'Cadastrando...'}
               </>
             ) : (
-              initialClient ? 'Salvar' : 'Cadastrar'
+              initialClient ? 'Salvar cliente' : 'Criar cliente'
             )}
           </Button>
         </DialogFooter>

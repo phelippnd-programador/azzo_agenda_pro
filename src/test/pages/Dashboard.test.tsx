@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+﻿import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import Dashboard from "@/pages/Index";
 
@@ -156,29 +156,29 @@ describe("Dashboard", () => {
     window.localStorage.setItem("auth_user", JSON.stringify({ id: "owner-1", role: "OWNER" }));
   });
 
-  it("should render fixed-period guidance and key metric cards", async () => {
+  it("should render compact first fold and key analytical blocks", async () => {
     render(
       <MemoryRouter initialEntries={["/dashboard"]}>
         <Dashboard />
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("Visão executiva")).toBeInTheDocument();
+    expect(await screen.findByText("Visao executiva")).toBeInTheDocument();
     expect(screen.getByText("Agendamentos Hoje")).toBeInTheDocument();
     expect(screen.getByText("Faturamento Hoje")).toBeInTheDocument();
-    expect(screen.getByText("O que exige atenção hoje")).toBeInTheDocument();
-    expect(screen.getByText("Painel rapido do dia")).toBeInTheDocument();
+    expect(screen.getByText("O que exige atencao hoje")).toBeInTheDocument();
+    expect(screen.getByText("Resumo rapido do dia")).toBeInTheDocument();
     expect(screen.getByText("Onde a operacao perde oportunidade")).toBeInTheDocument();
     expect(screen.getByText("Fluxos nao concluidos hoje")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Etapas do funil geral que ficaram pelo caminho antes da conclusão."
+        "Etapas do funil geral que ficaram pelo caminho antes da conclusao."
       )
     ).toBeInTheDocument();
     expect(screen.getByText("WhatsApp em aberto hoje")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Conversas ainda não resolvidas antes de virarem abandono formal."
+        "Conversas ainda nao resolvidas antes de virarem abandono formal."
       )
     ).toBeInTheDocument();
     expect(screen.getByText("WhatsAppReactivationChartMock")).toBeInTheDocument();
@@ -220,3 +220,6 @@ describe("Dashboard", () => {
     );
   });
 });
+
+
+

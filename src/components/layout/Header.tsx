@@ -49,8 +49,8 @@ export function Header({
   };
 
   return (
-    <header className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur-sm">
-      <div className="flex h-14 items-center justify-between px-3 sm:px-4 lg:px-6">
+    <header className="sticky top-0 z-20 border-b border-border/80 bg-background/72 backdrop-blur-xl">
+      <div className="flex h-16 items-center justify-between px-3 sm:px-4 lg:px-6">
         <div className="ml-10 flex min-w-0 flex-1 items-center gap-2 sm:ml-12 lg:ml-0">
           {onToggleDesktopSidebar ? (
             <Button
@@ -64,7 +64,7 @@ export function Header({
             </Button>
           ) : null}
           <div className="min-w-0">
-            <h1 className="truncate text-base font-semibold tracking-tight text-foreground sm:text-[1.05rem]">
+            <h1 className="truncate font-display text-base font-semibold tracking-tight text-foreground sm:text-[1.1rem]">
               {title}
             </h1>
             {subtitle ? (
@@ -87,9 +87,9 @@ export function Header({
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative h-8 w-8 text-muted-foreground hover:text-foreground"
-                aria-label="Abrir notificacoes"
-              >
+              className="relative h-9 w-9 rounded-xl border border-transparent text-muted-foreground hover:border-border/70 hover:bg-card/80 hover:text-foreground"
+              aria-label="Abrir notificacoes"
+            >
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 ? (
                   <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
@@ -131,7 +131,11 @@ export function Header({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 gap-2 px-1.5 text-muted-foreground hover:text-foreground">
+              <Button
+                variant="ghost"
+                className="h-10 gap-2 rounded-2xl border border-transparent px-2 text-muted-foreground hover:border-border/70 hover:bg-card/80 hover:text-foreground"
+                aria-label="Abrir menu da conta"
+              >
                 <Avatar className="h-6 w-6">
                   <AvatarImage src={avatarSrc} />
                   <AvatarFallback className="bg-primary/10 text-xs text-primary">{initials}</AvatarFallback>

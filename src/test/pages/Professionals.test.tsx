@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import Professionals from "@/pages/Professionals";
 
@@ -18,7 +19,7 @@ vi.mock("@/hooks/useProfessionals", () => ({
       },
     ],
     professionalLimits: { currentCount: 1, maxProfessionals: 3, canCreate: true },
-    pagination: { page: 1, limit: 20, total: 1, hasMore: false },
+    pagination: { page: 1, limit: 20, total: 41, hasMore: true },
     isLoading: false,
     isLimitsLoading: false,
     error: null,
@@ -84,6 +85,7 @@ describe("Professionals", () => {
     expect(screen.getByText(/Financeiro > Comissoes/i)).toBeInTheDocument();
     expect(screen.getAllByText("Ana Costa").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: /Novo Profissional/i })).toBeInTheDocument();
+    expect(screen.getByText("Pagina 1 de 3")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Visualizar profissionais em cards" })
     ).toBeInTheDocument();
@@ -104,5 +106,20 @@ describe("Professionals", () => {
     expect(await screen.findByText("Comissao por profissional")).toBeInTheDocument();
     expect(screen.queryByText(/Financeiro > Comissoes/i)).not.toBeInTheDocument();
     expect(screen.getByText(/Use o perfil do profissional/i)).toBeInTheDocument();
+  });
+
+  it("should open the professional create dialog with consistent action labels", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/profissionais"]}>
+        <Professionals />
+      </MemoryRouter>
+    );
+
+    await user.click(await screen.findByRole("button", { name: /Novo Profissional/i }));
+
+    expect(screen.getByText("Novo Profissional")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Criar profissional/i })).toBeInTheDocument();
   });
 });

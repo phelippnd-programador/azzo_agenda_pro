@@ -121,6 +121,7 @@ export default function ClientsOverviewPage() {
         tableAriaLabel="Visualizar clientes em lista"
         actionLabel="Cliente"
         actionLabelMobile="Novo"
+        actionLabelDesktop="Novo cliente"
         onAction={() => {
           setEditingClientId(null);
           setIsClientDialogOpen(true);

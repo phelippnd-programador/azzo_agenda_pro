@@ -47,8 +47,10 @@ export function ChatConversationCard({ conversation, selected, onClick }: Props)
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={selected}
+      aria-label={`Abrir conversa com ${conversation.clientName || "Cliente"}`}
       className={cn(
-        "w-full text-left p-2 rounded-lg transition-colors border",
+        "w-full rounded-lg border p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         selected
           ? "border-primary/30 bg-primary/5"
           : "border-transparent bg-muted/40 hover:bg-muted/70"
