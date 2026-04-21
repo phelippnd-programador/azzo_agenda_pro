@@ -42,9 +42,15 @@ export function NoShowInsights() {
   return (
     <Card className="border-rose-200 bg-gradient-to-br from-rose-50/80 to-orange-50/60">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-          <UserRoundX className="h-5 w-5 text-rose-700" />
-          No-show no periodo
+        <CardTitle className="flex justify-between gap-2 text-base sm:text-lg">
+          <div className="flex ">
+            <UserRoundX className="h-5 w-5 text-rose-700" />
+            No-show no periodo
+          </div>
+          <Button asChild size="sm" variant="outline" className="border-rose-200">
+            <Link to="/relatorio/no-show">Abrir pagina</Link>
+          </Button>
+
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           Visao analitica e operacional dos clientes que nao compareceram no mes atual.
@@ -95,7 +101,7 @@ export function NoShowInsights() {
           />
         </div>
 
-        <div className="rounded-2xl border border-rose-200 bg-white/80 p-4">
+        {/* <div className="rounded-2xl border border-rose-200 bg-white/80 p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-slate-900">Lista operacional de no-show</p>
@@ -107,9 +113,7 @@ export function NoShowInsights() {
               <Badge variant="outline" className="border-rose-200 bg-rose-50 text-rose-800">
                 {isLoading ? "..." : `${data?.totalNoShows ?? 0} no mes`}
               </Badge>
-              <Button asChild size="sm" variant="outline" className="border-rose-200">
-                <Link to="/relatorio/no-show">Abrir pagina</Link>
-              </Button>
+
             </div>
           </div>
 
@@ -144,7 +148,7 @@ export function NoShowInsights() {
               ))}
             </div>
           )}
-        </div>
+        </div> */}
       </CardContent>
     </Card>
   );

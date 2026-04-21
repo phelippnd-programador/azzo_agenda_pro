@@ -107,6 +107,7 @@ describe("Agenda", () => {
     );
 
     expect(await screen.findByRole("heading", { name: "Agenda" })).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Buscar...")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Hoje/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Novo Agendamento/i })).toBeInTheDocument();
   });
 });

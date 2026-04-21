@@ -151,7 +151,7 @@ export function WhatsAppReactivationChart() {
   const pendingRecovery = Math.max(metrics.totalAbandoned - metrics.totalConverted, 0);
 
   return (
-    <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50/70 to-cyan-50/60">
+    <Card className= "w-full border-emerald-200 bg-gradient-to-br from-emerald-50/70 to-cyan-50/60">
       <CardHeader className="pb-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
@@ -206,6 +206,42 @@ export function WhatsAppReactivationChart() {
         </div>
 
         <div className="space-y-4">
+            <div className="space-y-3 rounded-2xl border bg-white/80 p-4">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Onde o fluxo para mais</p>
+              <p className="text-xs text-muted-foreground">
+                Distribuicao dos abandonos por etapa do agendamento no WhatsApp.
+              </p>
+            </div>
+
+            <div className="grid gap-2 md:grid-cols-2">
+              {stageCards.map(({ key, label, Icon, accentClass, bgClass }) => (
+                <div
+                  key={key}
+                  className={`flex items-center justify-between rounded-2xl border px-3 py-3 ${bgClass}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-white/80 p-2">
+                      <Icon className={`h-4 w-4 ${accentClass}`} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{label}</p>
+                      <p className="text-xs text-muted-foreground">Clientes que travaram nesta etapa</p>
+                    </div>
+                  </div>
+                  <div className={`text-xl font-bold ${accentClass}`}>
+                    {metrics[key]}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {hasError ? (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                Nao foi possivel atualizar o painel agora. Os dados podem estar temporariamente indisponiveis.
+              </div>
+            ) : null}
+          </div>
           <div className="rounded-2xl border bg-white/80 p-4">
             <div className="mb-3">
               <p className="text-sm font-semibold text-foreground">Evolucao da reativacao no periodo</p>
@@ -265,42 +301,7 @@ export function WhatsAppReactivationChart() {
             )}
           </div>
 
-          <div className="space-y-3 rounded-2xl border bg-white/80 p-4">
-            <div>
-              <p className="text-sm font-semibold text-foreground">Onde o fluxo para mais</p>
-              <p className="text-xs text-muted-foreground">
-                Distribuicao dos abandonos por etapa do agendamento no WhatsApp.
-              </p>
-            </div>
-
-            <div className="grid gap-2 md:grid-cols-2">
-              {stageCards.map(({ key, label, Icon, accentClass, bgClass }) => (
-                <div
-                  key={key}
-                  className={`flex items-center justify-between rounded-2xl border px-3 py-3 ${bgClass}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-white/80 p-2">
-                      <Icon className={`h-4 w-4 ${accentClass}`} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{label}</p>
-                      <p className="text-xs text-muted-foreground">Clientes que travaram nesta etapa</p>
-                    </div>
-                  </div>
-                  <div className={`text-xl font-bold ${accentClass}`}>
-                    {metrics[key]}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {hasError ? (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                Nao foi possivel atualizar o painel agora. Os dados podem estar temporariamente indisponiveis.
-              </div>
-            ) : null}
-          </div>
+        
         </div>
       </CardContent>
     </Card>

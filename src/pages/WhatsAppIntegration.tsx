@@ -7,7 +7,7 @@ export default function WhatsAppIntegration() {
       title="Integrações"
       subtitle="Configure o WhatsApp Cloud API do seu tenant"
     >
-      <div className="max-w-3xl">
+      <div className="w-full">
         <WhatsAppIntegrationCard />
       </div>
     </MainLayout>

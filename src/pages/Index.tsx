@@ -73,15 +73,15 @@ function FlowStageCard({
   const toneClasses =
     tone === 'amber'
       ? {
-          wrapper: 'border-orange-100 bg-white/80',
-          text: 'text-orange-700',
-          value: 'text-orange-900',
-        }
+        wrapper: 'border-orange-100 bg-white/80',
+        text: 'text-orange-700',
+        value: 'text-orange-900',
+      }
       : {
-          wrapper: 'border-sky-100 bg-white/80',
-          text: 'text-sky-700',
-          value: 'text-sky-900',
-        };
+        wrapper: 'border-sky-100 bg-white/80',
+        text: 'text-sky-700',
+        value: 'text-sky-900',
+      };
 
   return (
     <div className={`rounded-xl border px-3 py-2 ${toneClasses.wrapper}`}>
@@ -202,41 +202,41 @@ export default function Dashboard() {
 
   const topProfessionalItems = !isProfessionalUser
     ? professionals
-        .map((professional) => {
-          const professionalAppointments = appointments.filter((appointment) => {
-            const iso = normalizeDateToIso(appointment.date);
-            return (
-              appointment.professionalId === professional.id &&
-              appointment.status === 'COMPLETED' &&
-              !!iso &&
-              iso >= monthStartIso &&
-              iso <= monthEndIso
-            );
-          });
-
-          const clientsServed = new Set(professionalAppointments.map((appointment) => appointment.clientId)).size;
-          const revenueTotal = professionalAppointments.reduce(
-            (sum, appointment) => sum + (appointment.totalPrice || 0),
-            0
+      .map((professional) => {
+        const professionalAppointments = appointments.filter((appointment) => {
+          const iso = normalizeDateToIso(appointment.date);
+          return (
+            appointment.professionalId === professional.id &&
+            appointment.status === 'COMPLETED' &&
+            !!iso &&
+            iso >= monthStartIso &&
+            iso <= monthEndIso
           );
+        });
 
-          return {
-            id: professional.id,
-            name: professional.name,
-            value: professionalAppointments.length,
-            badgeText:
-              professionalAppointments.length > 0 ? `${professionalAppointments.length} atendimento(s)` : undefined,
-            metaText:
-              professionalAppointments.length > 0
-                ? `${formatCurrency(revenueTotal)} • ${clientsServed} cliente(s)`
-                : undefined,
-          };
-        })
-        .filter((item) => item.value > 0)
-        .sort((a, b) => {
-          if (b.value !== a.value) return b.value - a.value;
-          return a.name.localeCompare(b.name);
-        })
+        const clientsServed = new Set(professionalAppointments.map((appointment) => appointment.clientId)).size;
+        const revenueTotal = professionalAppointments.reduce(
+          (sum, appointment) => sum + (appointment.totalPrice || 0),
+          0
+        );
+
+        return {
+          id: professional.id,
+          name: professional.name,
+          value: professionalAppointments.length,
+          badgeText:
+            professionalAppointments.length > 0 ? `${professionalAppointments.length} atendimento(s)` : undefined,
+          metaText:
+            professionalAppointments.length > 0
+              ? `${formatCurrency(revenueTotal)} • ${clientsServed} cliente(s)`
+              : undefined,
+        };
+      })
+      .filter((item) => item.value > 0)
+      .sort((a, b) => {
+        if (b.value !== a.value) return b.value - a.value;
+        return a.name.localeCompare(b.name);
+      })
     : [];
 
   const professionalScopedMetrics = {
@@ -370,10 +370,10 @@ export default function Dashboard() {
                 isProfessionalUser
                   ? undefined
                   : {
-                      value: resolvedMetrics.todayAppointmentsGrowthPercent ?? null,
-                      isPositive: (resolvedMetrics.todayAppointmentsGrowthPercent ?? 0) >= 0,
-                      unavailableLabel: 'Sem dados anteriores',
-                    }
+                    value: resolvedMetrics.todayAppointmentsGrowthPercent ?? null,
+                    isPositive: (resolvedMetrics.todayAppointmentsGrowthPercent ?? 0) >= 0,
+                    unavailableLabel: 'Sem dados anteriores',
+                  }
               }
               iconClassName={isProfessionalUser ? 'bg-emerald-600' : 'bg-primary'}
               compact
@@ -386,10 +386,10 @@ export default function Dashboard() {
                 isProfessionalUser
                   ? undefined
                   : {
-                      value: resolvedMetrics.todayRevenueGrowthPercent ?? null,
-                      isPositive: (resolvedMetrics.todayRevenueGrowthPercent ?? 0) >= 0,
-                      unavailableLabel: 'Sem dados anteriores',
-                    }
+                    value: resolvedMetrics.todayRevenueGrowthPercent ?? null,
+                    isPositive: (resolvedMetrics.todayRevenueGrowthPercent ?? 0) >= 0,
+                    unavailableLabel: 'Sem dados anteriores',
+                  }
               }
               iconClassName="bg-green-600"
               compact
@@ -402,10 +402,10 @@ export default function Dashboard() {
                 isProfessionalUser
                   ? undefined
                   : {
-                      value: resolvedMetrics.totalClientsGrowthPercent ?? null,
-                      isPositive: (resolvedMetrics.totalClientsGrowthPercent ?? 0) >= 0,
-                      unavailableLabel: 'Sem dados anteriores',
-                    }
+                    value: resolvedMetrics.totalClientsGrowthPercent ?? null,
+                    isPositive: (resolvedMetrics.totalClientsGrowthPercent ?? 0) >= 0,
+                    unavailableLabel: 'Sem dados anteriores',
+                  }
               }
               iconClassName="bg-primary"
               compact
@@ -418,10 +418,10 @@ export default function Dashboard() {
                 isProfessionalUser
                   ? undefined
                   : {
-                      value: resolvedMetrics.monthlyRevenueGrowthPercent ?? null,
-                      isPositive: (resolvedMetrics.monthlyRevenueGrowthPercent ?? 0) >= 0,
-                      unavailableLabel: 'Sem dados anteriores',
-                    }
+                    value: resolvedMetrics.monthlyRevenueGrowthPercent ?? null,
+                    isPositive: (resolvedMetrics.monthlyRevenueGrowthPercent ?? 0) >= 0,
+                    unavailableLabel: 'Sem dados anteriores',
+                  }
               }
               iconClassName="bg-blue-600"
               compact
@@ -538,13 +538,12 @@ export default function Dashboard() {
                       </div>
                       <Badge
                         variant="outline"
-                        className={`flex-shrink-0 text-[10px] sm:text-xs ${
-                          currentAppointment
+                        className={`flex-shrink-0 text-[10px] sm:text-xs ${currentAppointment
                             ? 'border-blue-200 bg-blue-50 text-blue-700'
                             : nextAppointment
                               ? 'border-green-200 bg-green-50 text-green-700'
                               : 'border-border bg-muted text-muted-foreground'
-                        }`}
+                          }`}
                       >
                         {currentAppointment
                           ? 'Ocupado'
@@ -655,10 +654,11 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </div>
-
-            <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
-              <WhatsAppReactivationChart />
+            <div>
               <NoShowInsights />
+            </div>
+            <div className="w-full ">
+              <WhatsAppReactivationChart />
             </div>
 
             <DashboardSectionHeader
@@ -682,9 +682,8 @@ export default function Dashboard() {
                   name: item.clientName,
                   value: item.completedServices,
                   badgeText: formatCurrency(item.revenueTotal),
-                  metaText: `${item.completedServices} servico(s) - ${item.completedAppointments} atendimento(s) - ultima: ${
-                    item.lastAppointmentDate ? new Date(`${item.lastAppointmentDate}T12:00:00`).toLocaleDateString('pt-BR') : '-'
-                  }`,
+                  metaText: `${item.completedServices} servico(s) - ${item.completedAppointments} atendimento(s) - ultima: ${item.lastAppointmentDate ? new Date(`${item.lastAppointmentDate}T12:00:00`).toLocaleDateString('pt-BR') : '-'
+                    }`,
                 }))}
                 maxItems={5}
                 valueLabel="Servicos"
@@ -716,9 +715,8 @@ export default function Dashboard() {
                 name: item.clientName,
                 value: item.completedServices,
                 badgeText: formatCurrency(item.revenueTotal),
-                metaText: `${item.completedServices} servico(s) - ${item.completedAppointments} atendimento(s) - ultima: ${
-                  item.lastAppointmentDate ? new Date(`${item.lastAppointmentDate}T12:00:00`).toLocaleDateString('pt-BR') : '-'
-                }`,
+                metaText: `${item.completedServices} servico(s) - ${item.completedAppointments} atendimento(s) - ultima: ${item.lastAppointmentDate ? new Date(`${item.lastAppointmentDate}T12:00:00`).toLocaleDateString('pt-BR') : '-'
+                  }`,
               }))}
               maxItems={5}
               valueLabel="Servicos"
