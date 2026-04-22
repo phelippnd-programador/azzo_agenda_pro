@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { chatApi } from "@/lib/api";
+import { chatApi } from "@/lib/api/chat";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMenuPermissions } from "@/contexts/MenuPermissionsContext";
 import type { ChatConversation } from "@/types/chat";

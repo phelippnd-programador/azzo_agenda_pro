@@ -8,7 +8,8 @@
     "lint": "eslint --quiet ./src",
     "preview": "vite preview",
     "test": "vitest --config vitest.config.ts",
-    "test:run": "vitest run --config vitest.config.ts"
+    "test:run": "vitest run --config vitest.config.ts",
+    "test:viewport": "playwright test e2e/viewport-validation.spec.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -78,6 +79,7 @@
   "devDependencies": {
     "@eslint/js": "^9.9.0",
     "@metagptx/vite-plugin-source-locator": "latest",
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/typography": "^0.5.15",
     "@testing-library/jest-dom": "^6.9.1",

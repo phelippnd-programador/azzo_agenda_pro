@@ -112,7 +112,7 @@ export default function Professionals() {
         <div className="space-y-4">
           <ProfessionalLimitMeter limits={null} isLoading />
           <Skeleton className="h-12 w-full" />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => <Skeleton key={i} className="h-64" />)}
           </div>
         </div>
@@ -196,7 +196,7 @@ export default function Professionals() {
           />
         ) : (
           viewMode === 'grid' ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid gap-3 md:grid-cols-2 sm:gap-4 lg:grid-cols-3">
               {filteredProfessionals.map((professional) => (
                 <ProfessionalCard
                   key={professional.id}

@@ -34,8 +34,8 @@ export function BookingStickySummaryBar({
             </p>
           </div>
 
-          <div className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
-            <div className="col-span-2 min-w-0 sm:col-span-1">
+          <div className="mt-2 grid grid-cols-1 gap-2 text-xs min-[360px]:grid-cols-2 sm:grid-cols-3">
+            <div className="min-w-0 min-[360px]:col-span-2 sm:col-span-1">
               <div className="flex items-center gap-1 text-muted-foreground">
                 <Scissors className="h-3.5 w-3.5" />
                 <span>Servicos</span>

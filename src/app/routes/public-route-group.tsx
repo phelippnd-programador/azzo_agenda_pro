@@ -1,15 +1,15 @@
 import type { ComponentType, ReactNode } from "react";
 import { Route } from "react-router-dom";
 import { appRouteManifest } from "@/app/route-manifest";
-import ForgotPassword from "@/pages/ForgotPassword";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import ResetPassword from "@/pages/ResetPassword";
-import PublicBooking from "@/pages/appointments/PublicBooking";
 import {
   CheckoutError,
   CheckoutSuccess,
+  ForgotPasswordPage,
   LegalDocument,
+  LoginPage,
+  PublicBookingPage,
+  RegisterPage,
+  ResetPasswordPage,
   SalePage,
 } from "@/app/routes/lazy-pages";
 
@@ -35,7 +35,7 @@ export function PublicRouteGroup({
         path={appRouteManifest.public.login}
         element={
           <PublicRoute>
-            <Login />
+            <LoginPage />
           </PublicRoute>
         }
       />
@@ -43,20 +43,34 @@ export function PublicRouteGroup({
         path={appRouteManifest.public.forgotPassword}
         element={
           <PublicRoute>
-            <ForgotPassword />
+            <ForgotPasswordPage />
           </PublicRoute>
         }
       />
-      <Route path={appRouteManifest.public.resetPassword} element={<ResetPassword />} />
+      <Route
+        path={appRouteManifest.public.resetPassword}
+        element={
+          <PublicLazyRoute>
+            <ResetPasswordPage />
+          </PublicLazyRoute>
+        }
+      />
       <Route
         path={appRouteManifest.public.register}
         element={
           <PublicRoute>
-            <Register />
+            <RegisterPage />
           </PublicRoute>
         }
       />
-      <Route path={appRouteManifest.public.publicBooking} element={<PublicBooking />} />
+      <Route
+        path={appRouteManifest.public.publicBooking}
+        element={
+          <PublicLazyRoute>
+            <PublicBookingPage />
+          </PublicLazyRoute>
+        }
+      />
       <Route
         path={appRouteManifest.public.termsOfUse}
         element={

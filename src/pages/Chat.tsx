@@ -245,7 +245,8 @@ export default function ChatPage() {
   return (
     <MainLayout title="Chat" subtitle="Historico completo de mensagens por cliente">
       <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
-        <ChatSidebar
+        <div className="order-2 lg:order-1">
+          <ChatSidebar
           conversations={conversations}
           filteredConversations={filteredConversations}
           selectedConversationId={selectedConversation?.id}
@@ -261,8 +262,9 @@ export default function ChatPage() {
             setConversationFilter("all");
           }}
         />
+        </div>
 
-        <Card className="h-[calc(100vh-13rem)]">
+        <Card className="order-1 min-h-[28rem] lg:order-2 lg:h-[calc(100vh-13rem)]">
           {!selectedConversation ? (
             <CardContent className="flex h-full items-center justify-center">
               <PageEmptyState
@@ -281,7 +283,7 @@ export default function ChatPage() {
           ) : (
             <>
               <CardHeader className="border-b">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
                     <CardTitle className="truncate text-base">
                       {selectedConversation.clientName || "Cliente"}
@@ -290,7 +292,7 @@ export default function ChatPage() {
                       {selectedConversation.clientPhoneMasked || "Sem telefone"}
                     </p>
                   </div>
-                  <div className="flex flex-wrap justify-end gap-2">
+                  <div className="flex flex-wrap gap-2 sm:justify-end">
                     <Badge variant="outline" className="shrink-0">
                       {messages.length} mensagens
                     </Badge>
@@ -302,7 +304,7 @@ export default function ChatPage() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="flex h-[calc(100%-9rem)] flex-col">
+              <CardContent className="flex h-[calc(100%-9rem)] min-h-[22rem] flex-col lg:h-[calc(100%-9rem)]">
                 <ChatTimeline
                   messages={messages}
                   isLoading={isLoadingMessages}

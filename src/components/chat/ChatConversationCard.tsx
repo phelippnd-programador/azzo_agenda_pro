@@ -64,24 +64,28 @@ export function ChatConversationCard({ conversation, selected, onClick }: Props)
             </AvatarFallback>
           </Avatar>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <p className="font-medium text-foreground text-sm truncate max-w-[125px] sm:max-w-[170px]">
-              {conversation.clientName || "Cliente"}
-            </p>
-            <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
-              {marker}
-            </Badge>
-            {conversation.unreadCount > 0 ? (
-              <Badge className="text-[10px] h-4 min-w-4 px-1 bg-green-600 text-white shrink-0 flex items-center justify-center">
-                {conversation.unreadCount}
+          <div className="flex min-w-0 flex-col gap-1">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <p className="font-medium text-foreground text-sm truncate max-w-[150px] sm:max-w-[170px]">
+                {conversation.clientName || "Cliente"}
+              </p>
+              {conversation.unreadCount > 0 ? (
+                <Badge className="text-[10px] h-4 min-w-4 px-1 bg-green-600 text-white shrink-0 flex items-center justify-center">
+                  {conversation.unreadCount}
+                </Badge>
+              ) : null}
+              <span className="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground shrink-0">
+                <Clock className="w-3 h-3" />
+                {formatDateTime(conversation.lastMessageAt)}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
+                {marker}
               </Badge>
-            ) : null}
-            <span className="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground shrink-0">
-              <Clock className="w-3 h-3" />
-              {formatDateTime(conversation.lastMessageAt)}
-            </span>
+            </div>
           </div>
-          <p className="text-[12px] text-muted-foreground truncate mt-0.5">
+          <p className="mt-0.5 truncate text-[12px] text-muted-foreground">
             {preview}
           </p>
         </div>

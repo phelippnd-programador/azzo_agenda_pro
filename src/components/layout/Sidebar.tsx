@@ -98,19 +98,21 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
         )}
       >
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between h-16 px-4 border-b border-sidebar-border/80">
-            <Link to={appRouteManifest.shell.dashboard} className="min-w-0">
-              <BrandLockup compact className="justify-start" />
-            </Link>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden flex-shrink-0 h-7 w-7"
-              onClick={onToggleMobile}
-              aria-label="Fechar menu"
-            >
-              <X className="w-4 h-4" />
-            </Button>
+          <div className="border-b border-sidebar-border/80 px-4 py-4">
+            <div className="flex items-center justify-between gap-3">
+              <Link to={appRouteManifest.shell.dashboard} className="min-w-0">
+                <BrandLockup compact className="justify-start" caption="Operating System" />
+              </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden flex-shrink-0 h-7 w-7"
+                onClick={onToggleMobile}
+                aria-label="Fechar menu"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto py-3">

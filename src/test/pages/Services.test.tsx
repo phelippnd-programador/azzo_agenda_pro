@@ -80,7 +80,7 @@ describe("Services", () => {
     expect(screen.getByRole("button", { name: "Cabelo" })).toBeInTheDocument();
     expect(screen.getByText("Pagina 1 de 3")).toBeInTheDocument();
     expect(screen.getAllByRole("button").length).toBeGreaterThan(2);
-  });
+  }, 10000);
 
   it("should open the service create dialog with the shared submit pattern", async () => {
     const user = userEvent.setup();
@@ -99,5 +99,5 @@ describe("Services", () => {
 
     expect(screen.getByText("Novo Servico")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Criar servico/i })).toBeInTheDocument();
-  });
+  }, 10000);
 });

@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LegalDocumentDialog } from "@/components/register/LegalDocumentDialog";
 import { useAuth } from "@/contexts/AuthContext";
-import { ApiError, publicLegalApi } from "@/lib/api";
+import { ApiError } from "@/lib/api/core";
+import { publicLegalApi } from "@/lib/api/legal";
 import { resolveUiError } from "@/lib/error-utils";
 import { maskCpfCnpj, maskPhoneBr } from "@/lib/input-masks";
 import { registerSchema, type RegisterForm } from "@/schemas/auth";
@@ -161,8 +162,14 @@ export default function Register() {
     <div className="auth-shell flex items-start justify-center sm:items-center">
       <div className="relative z-10 w-full max-w-md pt-2 sm:pt-0">
         <div className="mb-6 space-y-3 text-center sm:mb-8">
+          <div className="flex justify-center">
+            <span className="brand-orbit-badge">
+              <span className="brand-orbit-dot" />
+              Implantacao guiada Azzo
+            </span>
+          </div>
           <p className="section-eyebrow">Comeco guiado</p>
-          <BrandLockup className="justify-center" />
+          <BrandLockup className="justify-center" caption="Operating System" />
           <p className="mx-auto max-w-sm text-sm leading-6 text-muted-foreground">
             Crie sua conta em duas etapas e chegue rapido ao ambiente real de operacao.
           </p>

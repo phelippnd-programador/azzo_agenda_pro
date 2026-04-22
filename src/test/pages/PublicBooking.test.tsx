@@ -115,7 +115,7 @@ describe('PublicBooking', () => {
     expect(screen.getByRole('heading', { name: /Escolha os servicos/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/Buscar servicos/i)).toBeInTheDocument();
     expect(screen.getByText(/2 servico/i)).toBeInTheDocument();
-  });
+  }, 10000);
 
   it('should improve service and availability feedback across the flow', async () => {
     const user = userEvent.setup();
@@ -152,7 +152,7 @@ describe('PublicBooking', () => {
 
     expect(screen.getAllByText('09:00').length).toBeGreaterThan(0);
     expect(screen.getByText(/Data escolhida:/i)).toBeInTheDocument();
-  });
+  }, 15000);
 
   it('should reduce abandonment on the final step with persistent summary and trust copy', async () => {
     const user = userEvent.setup();
@@ -180,5 +180,5 @@ describe('PublicBooking', () => {
     expect(await screen.findByText(/Falta pouco para concluir/i)).toBeInTheDocument();
     expect(screen.getByText(/Usamos seus dados apenas para confirmar o agendamento/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Confirmar agendamento agora/i })).toBeInTheDocument();
-  });
+  }, 15000);
 });

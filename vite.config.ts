@@ -44,6 +44,33 @@ export default defineConfig(({ command }) => ({
         manualChunks(id) {
           if (!id.includes("node_modules")) return undefined;
 
+          if (id.includes("react-router-dom")) return "vendor-router";
+          if (id.includes("@tanstack/react-query") || id.includes("zustand")) {
+            return "vendor-data";
+          }
+          if (id.includes("@radix-ui")) return "vendor-radix";
+          if (id.includes("lucide-react")) return "vendor-icons";
+          if (
+            id.includes("framer-motion") ||
+            id.includes("embla-carousel-react") ||
+            id.includes("vaul")
+          ) {
+            return "vendor-motion";
+          }
+          if (
+            id.includes("react-hook-form") ||
+            id.includes("@hookform/resolvers") ||
+            id.includes("zod")
+          ) {
+            return "vendor-forms";
+          }
+          if (id.includes("react-day-picker") || id.includes("date-fns")) {
+            return "vendor-calendar";
+          }
+          if (id.includes("sonner")) return "vendor-feedback";
+          if (id.includes("axios")) return "vendor-network";
+          if (id.includes("@supabase/supabase-js")) return "vendor-supabase";
+
           if (id.includes("recharts")) return "vendor-charts";
           if (id.includes("qrcode")) return "vendor-qrcode";
           if (

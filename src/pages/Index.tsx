@@ -359,7 +359,7 @@ export default function Dashboard() {
     return (
       <MainLayout title="Dashboard" subtitle={formattedDate}>
         <div className="space-y-4 sm:space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+          <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:gap-4 lg:grid-cols-4 lg:gap-6">
             {[1, 2, 3, 4].map(i => (
               <Card key={i}>
                 <CardContent className="p-4 sm:p-6">
@@ -491,7 +491,7 @@ export default function Dashboard() {
               </p>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
                 <QuickSignalCard
                   label="Pendentes"
                   value={resolvedMetrics.pendingAppointments}

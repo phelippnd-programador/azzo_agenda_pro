@@ -50,7 +50,7 @@ export function Header({
 
   return (
     <header className="sticky top-0 z-20 border-b border-border/80 bg-background/72 backdrop-blur-xl">
-      <div className="flex h-16 items-center justify-between px-3 sm:px-4 lg:px-6">
+      <div className="flex min-h-[4.5rem] items-center justify-between gap-4 px-3 py-3 sm:px-4 lg:px-6">
         <div className="ml-10 flex min-w-0 flex-1 items-center gap-2 sm:ml-12 lg:ml-0">
           {onToggleDesktopSidebar ? (
             <Button
@@ -63,19 +63,21 @@ export function Header({
               <PanelLeft className="h-4 w-4" />
             </Button>
           ) : null}
-          <div className="min-w-0">
-            <h1 className="truncate font-display text-base font-semibold tracking-tight text-foreground sm:text-[1.1rem]">
-              {title}
-            </h1>
+          <div className="min-w-0 space-y-1">
+            <div className="flex min-w-0 items-center gap-3">
+              <h1 className="truncate font-display text-base font-semibold tracking-tight text-foreground sm:text-[1.1rem]">
+                {title}
+              </h1>
+            </div>
             {subtitle ? (
-              <p className="hidden truncate text-xs leading-5 text-muted-foreground sm:block sm:text-sm">
+              <p className="hidden truncate text-xs leading-5 text-muted-foreground md:block md:text-sm">
                 {subtitle}
               </p>
             ) : null}
           </div>
         </div>
 
-        <div className="flex flex-shrink-0 items-center gap-1 sm:gap-2">
+        <div className="flex flex-shrink-0 items-center gap-2">
           <DropdownMenu
             onOpenChange={(open) => {
               if (open) {

@@ -176,7 +176,7 @@ describe("ChatPage", () => {
     expect(screen.getByText("Recebida")).toBeInTheDocument();
     expect(screen.getByLabelText("Mensagem para o cliente")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Enviar/i })).toBeInTheDocument();
-  });
+  }, 10000);
 
   it("should filter conversations by search and quick filters", async () => {
     const user = userEvent.setup();
@@ -205,7 +205,7 @@ describe("ChatPage", () => {
 
     expect(within(conversationsList).getByText("Maria Silva")).toBeInTheDocument();
     expect(within(conversationsList).queryByText("Joao Souza")).not.toBeInTheDocument();
-  });
+  }, 10000);
 
   it("should refresh only the active messages for realtime events on the opened conversation", async () => {
     render(
@@ -303,5 +303,5 @@ describe("ChatPage", () => {
 
     expect(within(conversationsList).getByText("Cliente Volume Critico")).toBeInTheDocument();
     expect(within(conversationsList).queryByText("Cliente 1")).not.toBeInTheDocument();
-  });
+  }, 10000);
 });

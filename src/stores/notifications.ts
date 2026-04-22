@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { ApiError, notificationsApi } from "@/lib/api";
+import { ApiError } from "@/lib/api/core";
+import { notificationsApi } from "@/lib/api/notifications";
 import type { AppNotification, NotificationsFilters } from "@/types/notification";
 
 const POLLING_MS = 20 * 60 * 1000;

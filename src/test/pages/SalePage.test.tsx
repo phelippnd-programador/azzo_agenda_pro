@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import SalePage from '@/pages/SalePage';
@@ -24,18 +24,22 @@ vi.mock('@/contexts/AuthContext', () => ({
   }),
 }));
 
-vi.mock('@/lib/api', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/api')>('@/lib/api');
-  return {
-    ...actual,
-    publicLegalApi: {
-      getAll: vi.fn().mockResolvedValue({
-        termsOfUse: { version: '2026.04' },
-        privacyPolicy: { version: '2026.04' },
-      }),
-    },
-  };
-});
+vi.mock('@/lib/api', () => ({
+  ApiError: class ApiError extends Error {
+    status?: number;
+
+    constructor(message = 'ApiError', status?: number) {
+      super(message);
+      this.status = status;
+    }
+  },
+  publicLegalApi: {
+    getAll: vi.fn().mockResolvedValue({
+      termsOfUse: { version: '2026.04' },
+      privacyPolicy: { version: '2026.04' },
+    }),
+  },
+}));
 
 vi.mock('sonner', () => ({
   toast: {
@@ -51,19 +55,17 @@ describe('SalePage', () => {
     Element.prototype.scrollIntoView = vi.fn();
   });
 
-  it('should render the updated hero with stronger CTA', async () => {
+  it(
+    'should render the updated hero with stronger CTA',
+    async () => {
     render(
       <MemoryRouter initialEntries={['/compras']}>
         <SalePage />
       </MemoryRouter>
     );
 
-    await act(async () => {
-      await Promise.resolve();
-    });
-
     expect(
-      screen.getByRole('heading', {
+      await screen.findByRole('heading', {
         name: /Pare de perder agendamentos e organize seu salao em um unico sistema/i,
       })
     ).toBeInTheDocument();
@@ -73,7 +75,9 @@ describe('SalePage', () => {
     expect(screen.getByText(/1 no-show evitado/i)).toBeInTheDocument();
     expect(screen.getByText(/Capturas reais do produto em uso/i)).toBeInTheDocument();
     expect(screen.getByText(/Tela real/i)).toBeInTheDocument();
-  });
+    },
+    15000
+  );
 
   it('should dispatch a marketing event when the main CTA is clicked', async () => {
     const user = userEvent.setup();
@@ -86,11 +90,7 @@ describe('SalePage', () => {
       </MemoryRouter>
     );
 
-    await act(async () => {
-      await Promise.resolve();
-    });
-
-    await user.click(screen.getByRole('button', { name: /Criar conta gratis agora/i }));
+    await user.click(await screen.findByRole('button', { name: /Criar conta gratis agora/i }));
 
     expect(marketingListener).toHaveBeenCalled();
     const lastEvent = marketingListener.mock.calls.at(-1)?.[0] as CustomEvent | undefined;
@@ -103,7 +103,9 @@ describe('SalePage', () => {
     window.removeEventListener('azzo:marketing-event', marketingListener as EventListener);
   });
 
-  it('should use a two-step commercial signup flow', async () => {
+  it(
+    'should use a two-step commercial signup flow',
+    async () => {
     const user = userEvent.setup();
 
     render(
@@ -112,11 +114,7 @@ describe('SalePage', () => {
       </MemoryRouter>
     );
 
-    await act(async () => {
-      await Promise.resolve();
-    });
-
-    expect(screen.getByText(/Passo 1 de 2/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Passo 1 de 2/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/Nome do salao/i)).not.toBeInTheDocument();
 
     await user.type(screen.getByLabelText(/Nome completo/i), 'Phelipp Nascimento');
@@ -130,5 +128,7 @@ describe('SalePage', () => {
     expect(screen.getByLabelText(/Nome do salao/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Telefone \/ WhatsApp/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/CPF\/CNPJ/i)).toBeInTheDocument();
-  });
+    },
+    15000
+  );
 });

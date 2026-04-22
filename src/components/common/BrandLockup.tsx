@@ -8,6 +8,7 @@ type BrandLockupProps = {
   nameClassName?: string;
   subtitleClassName?: string;
   compact?: boolean;
+  caption?: string;
 };
 
 export function BrandLockup({
@@ -16,6 +17,7 @@ export function BrandLockup({
   nameClassName,
   subtitleClassName,
   compact = false,
+  caption,
 }: BrandLockupProps) {
   return (
     <div className={cn("flex items-center justify-center gap-3", compact && "gap-2.5", className)}>
@@ -45,7 +47,7 @@ export function BrandLockup({
             subtitleClassName
           )}
         >
-          Agenda Pro
+          {caption || "Agenda Pro"}
         </div>
       </div>
     </div>

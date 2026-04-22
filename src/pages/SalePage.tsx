@@ -254,7 +254,7 @@ export default function SalePage() {
         <header className="sticky top-0 z-30 border-b border-border/80 bg-background/78 backdrop-blur-xl">
           <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 md:px-6">
             <Link to="/compras" className="inline-flex items-center text-foreground">
-              <BrandLockup compact className="justify-start" />
+              <BrandLockup compact className="justify-start" caption="Operating System" />
             </Link>
             <nav
               aria-label="Navegação principal da página de vendas"
@@ -308,6 +308,10 @@ export default function SalePage() {
 
             <div className="relative mx-auto flex min-h-[560px] w-full max-w-6xl items-center px-4 py-16 md:min-h-[640px] md:px-6 md:py-20">
               <header className="max-w-2xl">
+                <span className="brand-orbit-badge">
+                  <span className="brand-orbit-dot" />
+                  Plataforma operacional para saloes
+                </span>
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90">
                   <Star className="h-3.5 w-3.5 fill-white text-white" />
                   Teste gratis e configuracao em minutos
@@ -817,59 +821,46 @@ export default function SalePage() {
 
           <SalesSection
             id="depoimentos"
-            title="O que donos de salão dizem sobre o Azzo"
-            subtitle="Resultados reais de quem já usa no dia a dia."
+            title="Sinais concretos de confianca antes da compra"
+            subtitle="Sem inventar cliente. Esta area agora reforca como o produto se apresenta e o que o comprador pode validar."
           >
             <div className="grid gap-4 md:grid-cols-3">
               {[
                 {
-                  name: 'Marina Silva',
-                  salon: 'Studio Aurora · São Paulo, SP',
-                  result: 'Aumentei meus agendamentos em 40% no primeiro mês',
-                  text: 'Antes eu dependia de mensagem manual para tudo. Hoje minha agenda fica muito mais organizada.',
-                  avatar: 'MS',
-                  color: 'bg-emerald-100 text-emerald-700',
+                  label: 'Fluxo comercial honesto',
+                  title: 'Capturas reais do produto no lugar de mock bonito',
+                  text: 'A página mostra telas reais do sistema para reduzir a distância entre promessa comercial e experiência entregue.',
+                  icon: <CheckCircle2 className="h-4 w-4 text-emerald-600" />,
+                  tone: 'bg-emerald-50 border-emerald-100',
                 },
                 {
-                  name: 'Carlos Mendes',
-                  salon: 'Salão Prime · Belo Horizonte, MG',
-                  result: 'Reduzi o tempo administrativo da equipe',
-                  text: 'O financeiro e a agenda em um painel só mudaram minha rotina. Fica muito mais fácil decidir.',
-                  avatar: 'CM',
-                  color: 'bg-blue-100 text-blue-700',
+                  label: 'Seguranca comercial',
+                  title: 'Garantia, suporte e fluxo de cadastro preservados',
+                  text: 'O comprador entende como entra, como recebe suporte e como testa a plataforma sem cair em promessa vaga.',
+                  icon: <Shield className="h-4 w-4 text-blue-600" />,
+                  tone: 'bg-blue-50 border-blue-100',
                 },
                 {
-                  name: 'Beatriz Costa',
-                  salon: 'Bella Estética · Curitiba, PR',
-                  result: 'Zero conflito de horário desde a implantação',
-                  text: 'Minha equipe finalmente trabalha com a mesma visão do dia. Isso tirou muito ruído da operação.',
-                  avatar: 'BC',
-                  color: 'bg-purple-100 text-purple-700',
+                  label: 'O que ainda falta',
+                  title: 'Prova social real continua pendente',
+                  text: 'Enquanto nao houver logos, estudos de caso ou depoimentos verificaveis, esta pagina nao deve fingir autoridade que ainda nao foi documentada.',
+                  icon: <BellRing className="h-4 w-4 text-amber-600" />,
+                  tone: 'bg-amber-50 border-amber-100',
                 },
               ].map((item) => (
-                <article key={item.name}>
+                <article key={item.title}>
                   <Card className="h-full border-border bg-card">
                     <CardContent className="flex h-full flex-col p-5">
-                      <div className="flex gap-0.5">
-                        {Array.from({ length: 5 }).map((_, index) => (
-                          <Star key={index} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                        ))}
+                      <div
+                        className={`inline-flex h-10 w-10 items-center justify-center rounded-2xl border ${item.tone}`}
+                      >
+                        {item.icon}
                       </div>
-                      <p className="mt-3 text-sm font-semibold text-primary">{item.result}</p>
-                      <blockquote className="mt-2 flex-1 text-sm text-muted-foreground">
-                        <p>"{item.text}"</p>
-                      </blockquote>
-                      <footer className="mt-4 flex items-center gap-2">
-                        <span
-                          className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${item.color}`}
-                        >
-                          {item.avatar}
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{item.name}</p>
-                          <p className="text-xs text-muted-foreground">{item.salon}</p>
-                        </div>
-                      </footer>
+                      <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                        {item.label}
+                      </p>
+                      <h3 className="mt-2 text-lg font-semibold text-foreground">{item.title}</h3>
+                      <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">{item.text}</p>
                     </CardContent>
                   </Card>
                 </article>
@@ -947,7 +938,7 @@ export default function SalePage() {
           <footer className="border-t border-slate-800 bg-slate-950 text-slate-300">
             <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 md:grid-cols-4 md:px-6">
               <div>
-                <BrandLockup compact className="justify-start" nameClassName="text-white" subtitleClassName="text-slate-400" />
+                <BrandLockup compact className="justify-start" nameClassName="text-white" subtitleClassName="text-slate-400" caption="Operating System" />
                 <p className="mt-2 text-sm text-slate-400">
                   Sistema de gestão completo para salões de beleza, barbearias e estéticas.
                 </p>

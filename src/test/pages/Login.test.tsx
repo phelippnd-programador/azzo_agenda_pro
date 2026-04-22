@@ -2,7 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import Login from "@/pages/Login";
-import { ApiError } from "@/lib/api";
+import { ApiError } from "@/lib/api/core";
 
 const mocks = vi.hoisted(() => ({
   login: vi.fn().mockResolvedValue(undefined),
@@ -33,8 +33,8 @@ vi.mock("@/services/billingService", () => ({
   getCurrentBillingSubscription: mocks.getCurrentBillingSubscription,
 }));
 
-vi.mock("@/lib/api", async () => {
-  const actual = await vi.importActual<typeof import("@/lib/api")>("@/lib/api");
+vi.mock("@/lib/api/auth", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/api/auth")>("@/lib/api/auth");
   return {
     ...actual,
     authApi: {

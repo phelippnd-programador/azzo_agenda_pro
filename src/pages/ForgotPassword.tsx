@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { authApi } from "@/lib/api";
+import { authApi } from "@/lib/api/auth";
 import { resolveUiError } from "@/lib/error-utils";
 import { forgotPasswordSchema, type ForgotPasswordForm } from "@/schemas/auth";
 
@@ -41,11 +41,23 @@ export default function ForgotPassword() {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-card p-4">
-      <div className="w-full max-w-md">
-        <BrandLockup className="mb-6 sm:mb-8" />
+    <div className="auth-shell flex items-start justify-center sm:items-center">
+      <div className="relative z-10 w-full max-w-md pt-2 sm:pt-0">
+        <div className="mb-6 space-y-3 text-center sm:mb-8">
+          <div className="flex justify-center">
+            <span className="brand-orbit-badge">
+              <span className="brand-orbit-dot" />
+              Recuperacao segura
+            </span>
+          </div>
+          <p className="section-eyebrow">Acesso protegido</p>
+          <BrandLockup className="justify-center" caption="Operating System" />
+          <p className="mx-auto max-w-sm text-sm leading-6 text-muted-foreground">
+            Informe seu e-mail e receba um caminho seguro para voltar ao ambiente operacional.
+          </p>
+        </div>
 
-        <Card className="shadow-xl border-0">
+        <Card className="auth-panel border-border/80">
           <CardHeader className="text-center pb-2 sm:pb-4">
             <CardTitle className="text-2xl font-semibold tracking-tight sm:text-[2rem]">
               Recuperar senha

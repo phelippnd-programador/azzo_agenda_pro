@@ -50,9 +50,9 @@ export function CrudListToolbar({
         />
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex w-full items-center gap-2 sm:w-auto sm:gap-3">
         {viewMode && onViewModeChange ? (
-          <div className="flex overflow-hidden rounded-lg border bg-background">
+          <div className="flex flex-shrink-0 overflow-hidden rounded-lg border bg-background">
             <Button
               variant={viewMode === "grid" ? "secondary" : "ghost"}
               size="icon"
@@ -75,7 +75,7 @@ export function CrudListToolbar({
         ) : null}
 
         <Button
-          className="gap-2"
+          className="w-full gap-2 sm:w-auto"
           onClick={onAction}
           aria-label={desktopActionLabel}
         >

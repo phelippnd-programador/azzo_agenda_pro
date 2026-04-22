@@ -1,10 +1,15 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { ChatInboxNotifier } from '@/components/chat/ChatInboxNotifier';
 import { PageErrorState } from '@/components/ui/page-states';
 import { useLicenseAccess } from '@/hooks/useLicenseAccess';
+
+const ChatInboxNotifier = lazy(() =>
+  import('@/components/chat/ChatInboxNotifier').then((module) => ({
+    default: module.ChatInboxNotifier,
+  }))
+);
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -65,7 +70,9 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
 
   return (
     <div className="min-h-screen bg-[hsl(var(--shell))]">
-      <ChatInboxNotifier />
+      <Suspense fallback={null}>
+        <ChatInboxNotifier />
+      </Suspense>
       <Sidebar
         isMobileOpen={mobileSidebarOpen}
         onToggleMobile={() => setMobileSidebarOpen(!mobileSidebarOpen)}

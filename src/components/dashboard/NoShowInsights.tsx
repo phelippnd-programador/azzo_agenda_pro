@@ -42,15 +42,14 @@ export function NoShowInsights() {
   return (
     <Card className="border-rose-200 bg-gradient-to-br from-rose-50/80 to-orange-50/60">
       <CardHeader className="pb-3">
-        <CardTitle className="flex justify-between gap-2 text-base sm:text-lg">
-          <div className="flex ">
+        <CardTitle className="flex flex-col gap-3 text-base sm:flex-row sm:items-start sm:justify-between sm:text-lg">
+          <div className="flex items-center gap-2">
             <UserRoundX className="h-5 w-5 text-rose-700" />
             No-show no periodo
           </div>
-          <Button asChild size="sm" variant="outline" className="border-rose-200">
+          <Button asChild size="sm" variant="outline" className="w-full border-rose-200 sm:w-auto">
             <Link to="/relatorio/no-show">Abrir pagina</Link>
           </Button>
-
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           Visao analitica e operacional dos clientes que nao compareceram no mes atual.

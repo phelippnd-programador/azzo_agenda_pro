@@ -68,7 +68,10 @@ function SettingsDomainCard({
               </p>
             </div>
           </div>
-          <Badge variant="outline" className={badgeClassName}>
+          <Badge
+            variant="outline"
+            className={`shrink-0 whitespace-nowrap text-xs ${badgeClassName}`}
+          >
             {statusLabel}
           </Badge>
         </div>
@@ -301,18 +304,18 @@ export default function Settings() {
                 Use os atalhos rapidos para escolher o dominio e siga direto para a configuracao detalhada.
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center">
               <Badge variant="outline" className="w-fit bg-background/80">
                 {domainCards.length} dominios disponiveis
               </Badge>
-              <Button variant="outline" onClick={() => scrollToSettingsTabs()}>
+              <Button variant="outline" className="w-full sm:w-auto" onClick={() => scrollToSettingsTabs()}>
                 Ir para configuracao detalhada
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        <div className="hidden grid gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(320px,1fr)]">
+        <div className="hidden gap-4 lg:grid lg:grid-cols-[minmax(0,1.7fr)_minmax(320px,1fr)]">
           <div className="space-y-4">
             <div className="space-y-1">
               <h2 className="text-lg font-semibold tracking-tight text-foreground">Status por dominio</h2>
@@ -365,7 +368,7 @@ export default function Settings() {
               Escolha o bloco que voce quer revisar e a pagina leva voce direto para a aba correta.
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {domainCards.map(({ key, ...cardProps }) => (
               <SettingsDomainCard key={key} {...cardProps} compact />
             ))}
@@ -394,7 +397,7 @@ export default function Settings() {
           </div>
 
           <Tabs value={activeTab} onValueChange={(tab) => handleTabChange(tab)} className="space-y-6">
-        <TabsList className="grid h-auto w-full grid-cols-2 gap-2 rounded-2xl border bg-muted/30 p-1.5 sm:grid-cols-5">
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-2 rounded-2xl border bg-muted/30 p-1.5 lg:grid-cols-5">
           {visibleTabs.includes('notifications') ? (
             <TabsTrigger value="notifications">Notificacoes</TabsTrigger>
           ) : null}

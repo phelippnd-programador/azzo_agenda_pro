@@ -235,7 +235,7 @@ export default function ServicesOverviewPage() {
     return (
       <div className="space-y-4">
         <Skeleton className="h-12 w-full" />
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <Skeleton key={i} className="h-48" />
           ))}
@@ -281,7 +281,7 @@ export default function ServicesOverviewPage() {
           }}
         />
 
-        <DialogContent className="max-w-md mx-4 sm:mx-auto sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[85vh] max-w-md overflow-y-auto mx-4 sm:mx-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editingService ? 'Editar Servico' : 'Novo Servico'}</DialogTitle>
             <DialogDescription>
@@ -317,7 +317,7 @@ export default function ServicesOverviewPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Duracao (min) *</Label>
                     <Input
@@ -431,29 +431,29 @@ export default function ServicesOverviewPage() {
         </DialogContent>
       </Dialog>
 
-      <div className="flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
-        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
           <Checkbox
             checked={allFilteredSelected}
             onCheckedChange={(checked) => toggleSelectAllFiltered(checked === true)}
           />
           Selecionar todos da lista
         </label>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            className="text-destructive hover:text-destructive"
-            disabled={!selectedServiceIds.length}
-            onClick={() => setIsRemoveSelectedOpen(true)}
-          >
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <Button
+              variant="outline"
+              className="w-full text-destructive hover:text-destructive sm:w-auto"
+              disabled={!selectedServiceIds.length}
+              onClick={() => setIsRemoveSelectedOpen(true)}
+            >
             Remover selecionados ({selectedServiceIds.length})
           </Button>
-          <Button
-            variant="outline"
-            className="text-destructive hover:text-destructive"
-            disabled={!services.length}
-            onClick={() => setIsRemoveAllOpen(true)}
-          >
+            <Button
+              variant="outline"
+              className="w-full text-destructive hover:text-destructive sm:w-auto"
+              disabled={!services.length}
+              onClick={() => setIsRemoveAllOpen(true)}
+            >
             Remover todos
           </Button>
         </div>
@@ -500,7 +500,7 @@ export default function ServicesOverviewPage() {
           }}
         />
       ) : viewMode === 'grid' ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid gap-3 md:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {filteredServices.map((service) => (
             <Card
               key={service.id}

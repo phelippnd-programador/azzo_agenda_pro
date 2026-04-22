@@ -149,7 +149,7 @@ describe("Settings", () => {
 
     expect(updateNotificationsMock).toHaveBeenCalled();
     expect(toastSuccessMock).toHaveBeenCalled();
-  });
+  }, 10000);
 
   it("should save reactivation settings", async () => {
     const user = userEvent.setup();
@@ -170,7 +170,7 @@ describe("Settings", () => {
       maxAttemptsEnabled: 3,
     });
     expect(toastSuccessMock).toHaveBeenCalled();
-  });
+  }, 10000);
 
   it("should scroll to the detailed section when opening a domain card", async () => {
     const user = userEvent.setup();

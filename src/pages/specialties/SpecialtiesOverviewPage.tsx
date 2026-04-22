@@ -272,10 +272,10 @@ export default function SpecialtiesOverviewPage() {
             />
             Selecionar todas da lista
           </label>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center">
             <Button
               variant="outline"
-              className="text-destructive hover:text-destructive"
+              className="w-full text-destructive hover:text-destructive sm:w-auto"
               disabled={!selectedSpecialtyIds.length}
               onClick={() => setIsDeleteSelectedOpen(true)}
             >
@@ -283,7 +283,7 @@ export default function SpecialtiesOverviewPage() {
             </Button>
             <Button
               variant="outline"
-              className="text-destructive hover:text-destructive"
+              className="w-full text-destructive hover:text-destructive sm:w-auto"
               disabled={!specialties.length}
               onClick={() => setIsDeleteAllOpen(true)}
             >
@@ -293,7 +293,7 @@ export default function SpecialtiesOverviewPage() {
         </div>
 
         {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
               <Skeleton key={i} className="h-24" />
             ))}
@@ -311,7 +311,7 @@ export default function SpecialtiesOverviewPage() {
         {!isLoading && !error ? (
           filtered.length ? (
             viewMode === "grid" ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filtered.map((specialty) => (
                 <Card key={specialty.id}>
                   <CardContent className="flex items-start justify-between gap-3 py-4">

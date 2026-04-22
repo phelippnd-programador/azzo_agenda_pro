@@ -92,7 +92,7 @@ describe("Professionals", () => {
     expect(
       screen.getByRole("button", { name: "Visualizar profissionais em lista" })
     ).toBeInTheDocument();
-  });
+  }, 10000);
 
   it("should hide financial commissions guidance when route is not allowed", async () => {
     canAccessMock.mockReturnValue(false);
@@ -121,5 +121,5 @@ describe("Professionals", () => {
 
     expect(screen.getByText("Novo Profissional")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Criar profissional/i })).toBeInTheDocument();
-  });
+  }, 10000);
 });

@@ -12,7 +12,8 @@ import { Eye, EyeOff, Loader2, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { getCurrentBillingSubscription } from '@/services/billingService';
-import { ApiError, authApi } from '@/lib/api';
+import { ApiError } from '@/lib/api/core';
+import { authApi } from '@/lib/api/auth';
 import { resolveUiError } from '@/lib/error-utils';
 import { setLicenseAccessStatus } from '@/lib/license-access';
 import { loginSchema, type LoginForm } from '@/schemas/auth';
@@ -180,8 +181,14 @@ export default function Login() {
     <div className="auth-shell flex items-start justify-center sm:items-center">
       <div className="relative z-10 w-full max-w-md pt-2 sm:pt-0">
         <div className="mb-6 space-y-3 text-center sm:mb-8">
+          <div className="flex justify-center">
+            <span className="brand-orbit-badge">
+              <span className="brand-orbit-dot" />
+              Console de operacao Azzo
+            </span>
+          </div>
           <p className="section-eyebrow">Acesso seguro</p>
-          <BrandLockup className="justify-center" />
+          <BrandLockup className="justify-center" caption="Operating System" />
           <p className="mx-auto max-w-sm text-sm leading-6 text-muted-foreground">
             Entre no mesmo ambiente usado para agenda, operacao, clientes e financeiro.
           </p>

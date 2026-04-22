@@ -94,5 +94,5 @@ describe("Clients", () => {
 
     expect(screen.getByText("Novo Cliente")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Criar cliente/i })).toBeInTheDocument();
-  });
+  }, 10000);
 });

@@ -90,7 +90,7 @@ export default function ClientsOverviewPage() {
     return (
       <div className="space-y-4">
         <Skeleton className="h-12 w-full" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <Skeleton key={i} className="h-48" />
           ))}
@@ -128,7 +128,7 @@ export default function ClientsOverviewPage() {
         }}
       />
 
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 sm:gap-4">
         <HighlightMetricCard
           title="Total de Clientes"
           value={String(pagination.total)}
@@ -183,7 +183,7 @@ export default function ClientsOverviewPage() {
           }}
         />
       ) : viewMode === 'grid' ? (
-        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {filteredClients.map((client) => (
             <ClientCard
               key={client.id}

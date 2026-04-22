@@ -153,7 +153,7 @@ export function WhatsAppReactivationChart() {
   return (
     <Card className= "w-full border-emerald-200 bg-gradient-to-br from-emerald-50/70 to-cyan-50/60">
       <CardHeader className="pb-3">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
           <div className="space-y-1">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <RefreshCcw className="h-5 w-5 text-emerald-600" />
@@ -163,10 +163,12 @@ export function WhatsAppReactivationChart() {
               Clientes que pararam no fluxo e quantos voltaram para concluir o agendamento.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline">{rangeLabel}</Badge>
+          <div className="flex flex-col gap-2 min-[420px]:flex-row min-[420px]:items-center">
+            <Badge variant="outline" className="w-fit">
+              {rangeLabel}
+            </Badge>
             <Select value={days} onValueChange={setDays}>
-              <SelectTrigger className="w-[120px] bg-white/80">
+              <SelectTrigger className="w-full bg-white/80 min-[420px]:w-[120px]">
                 <SelectValue placeholder="Periodo" />
               </SelectTrigger>
               <SelectContent>
@@ -218,18 +220,18 @@ export function WhatsAppReactivationChart() {
               {stageCards.map(({ key, label, Icon, accentClass, bgClass }) => (
                 <div
                   key={key}
-                  className={`flex items-center justify-between rounded-2xl border px-3 py-3 ${bgClass}`}
+                  className={`flex items-center justify-between gap-3 rounded-2xl border px-3 py-3 ${bgClass}`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
                     <div className="rounded-lg bg-white/80 p-2">
                       <Icon className={`h-4 w-4 ${accentClass}`} />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground">{label}</p>
                       <p className="text-xs text-muted-foreground">Clientes que travaram nesta etapa</p>
                     </div>
                   </div>
-                  <div className={`text-xl font-bold ${accentClass}`}>
+                  <div className={`shrink-0 text-xl font-bold ${accentClass}`}>
                     {metrics[key]}
                   </div>
                 </div>

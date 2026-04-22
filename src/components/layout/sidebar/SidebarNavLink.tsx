@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
+import { prefetchRouteModule } from "@/app/routes/route-prefetch";
 
 type SidebarNavLinkProps = {
   path: string;
@@ -23,6 +24,9 @@ export function SidebarNavLink({
     <Link
       to={path}
       onClick={onNavigate}
+      onMouseEnter={() => prefetchRouteModule(path)}
+      onFocus={() => prefetchRouteModule(path)}
+      onTouchStart={() => prefetchRouteModule(path)}
       aria-current={isActive ? "page" : undefined}
       className={cn(
         compact
