@@ -61,8 +61,8 @@ interface ProfessionalFormDialogProps {
   isLoadingSpecialties: boolean;
   specialtiesError: string | null;
   refetchSpecialties: () => void;
-  onCreate: (data: FormPayload) => Promise<void>;
-  onUpdate: (id: string, data: Partial<FormPayload>) => Promise<void>;
+  onCreate: (data: FormPayload) => Promise<unknown>;
+  onUpdate: (id: string, data: Partial<FormPayload>) => Promise<unknown>;
 }
 
 export function ProfessionalFormDialog({

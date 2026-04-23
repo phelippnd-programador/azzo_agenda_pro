@@ -16,7 +16,7 @@ import {
 
 interface UpcomingAppointmentsProps {
   appointments: Appointment[];
-  onUpdateStatus?: (id: string, status: Appointment["status"]) => Promise<void>;
+  onUpdateStatus?: (id: string, status: Appointment["status"]) => void | Promise<unknown>;
 }
 
 export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingAppointmentsProps) {

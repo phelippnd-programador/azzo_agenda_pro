@@ -23,12 +23,20 @@ import {
   toDateTimeLocal,
 } from "@/lib/audit-helpers";
 import { AuditEventDetailDialog } from "@/components/auditoria/AuditEventDetailDialog";
+import { AUDIT_MODULES, AUDIT_STATUSES } from "@/types/auditoria";
 import type {
   AuditFiltersOptionsDto,
+  AuditModule,
   AuditRetentionEventDto,
   AuditSearchQueryDto,
   AuditStatus,
 } from "@/types/auditoria";
+
+const isAuditModule = (value: string): value is AuditModule =>
+  (AUDIT_MODULES as readonly string[]).includes(value);
+
+const isAuditStatus = (value: string): value is AuditStatus =>
+  (AUDIT_STATUSES as readonly string[]).includes(value);
 
 export default function Auditoria() {
   const {
@@ -55,8 +63,8 @@ export default function Auditoria() {
 
   const [fromInput, setFromInput] = useState(toDateTimeLocal(filters.from));
   const [toInput, setToInput] = useState(toDateTimeLocal(filters.to));
-  const [moduleInput, setModuleInput] = useState("");
-  const [statusInput, setStatusInput] = useState("");
+  const [moduleInput, setModuleInput] = useState<AuditModule | "">("");
+  const [statusInput, setStatusInput] = useState<AuditStatus | "">("");
   const [actionInput, setActionInput] = useState("");
   const [entityTypeInput, setEntityTypeInput] = useState("");
   const [requestIdInput, setRequestIdInput] = useState("");
@@ -133,7 +141,7 @@ export default function Auditoria() {
       from: fromDate.toISOString(),
       to: toDate.toISOString(),
       modules: moduleInput ? [moduleInput] : undefined,
-      statuses: statusInput ? [statusInput as AuditStatus] : undefined,
+      statuses: statusInput ? [statusInput] : undefined,
       actions: actionInput ? [actionInput] : undefined,
       entityTypes: entityTypeInput ? [entityTypeInput] : undefined,
       requestId: requestIdInput || undefined,
@@ -184,7 +192,10 @@ export default function Auditoria() {
                 <select
                   className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
                   value={moduleInput}
-                  onChange={(e) => setModuleInput(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setModuleInput(value === "" || isAuditModule(value) ? value : "");
+                  }}
                 >
                   <option value="">Todos</option>
                   {filterOptions?.modules.map((module) => (
@@ -199,7 +210,10 @@ export default function Auditoria() {
                 <select
                   className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
                   value={statusInput}
-                  onChange={(e) => setStatusInput(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setStatusInput(value === "" || isAuditStatus(value) ? value : "");
+                  }}
                 >
                   <option value="">Todos</option>
                   {filterOptions?.statuses.map((status) => (

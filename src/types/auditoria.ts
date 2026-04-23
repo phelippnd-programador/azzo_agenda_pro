@@ -89,11 +89,11 @@ export type AuditExportRequestDto = Omit<AuditSearchQueryDto, "cursor"> & {
 };
 
 export type AuditFiltersOptionsDto = {
-  modules: string[];
-  statuses: string[];
+  modules: AuditModule[];
+  statuses: AuditStatus[];
   actions: string[];
   entityTypes: string[];
-  sourceChannels: string[];
+  sourceChannels: AuditSourceChannel[];
 };
 
 export type AuditRetentionEventDto = {

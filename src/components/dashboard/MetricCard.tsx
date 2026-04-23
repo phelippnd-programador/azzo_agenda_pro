@@ -30,7 +30,7 @@ export function MetricCard({
   return (
     <Card
       className={cn(
-        'border-border/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,249,252,0.92))] shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-panel dark:bg-[linear-gradient(180deg,rgba(17,24,39,0.96),rgba(15,23,42,0.92))]',
+        'border-border/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,249,252,0.92))] shadow-[0_8px_24px_-22px_rgba(15,23,42,0.22)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-22px_rgba(15,23,42,0.24)] dark:bg-[linear-gradient(180deg,rgba(17,24,39,0.96),rgba(15,23,42,0.92))]',
         className
       )}
     >
@@ -78,8 +78,8 @@ export function MetricCard({
           <div
             className={cn(
               compact
-                ? 'h-10 w-10 rounded-2xl flex items-center justify-center flex-shrink-0 ring-1 ring-white/60 shadow-soft'
-                : 'w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ring-1 ring-white/60 shadow-soft',
+                ? 'h-10 w-10 rounded-2xl flex items-center justify-center flex-shrink-0 ring-1 ring-white/60 shadow-[0_8px_18px_-16px_rgba(15,23,42,0.22)]'
+                : 'w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ring-1 ring-white/60 shadow-[0_8px_18px_-16px_rgba(15,23,42,0.22)]',
               iconClassName || 'bg-primary/12'
             )}
           >
