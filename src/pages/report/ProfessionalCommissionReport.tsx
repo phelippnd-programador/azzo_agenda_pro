@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Settings2 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { commissionApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import type { CommissionProfessionalReportResponse } from "@/types/commission";
-import { formatCurrencyCents as formatCurrency } from "@/lib/format";
+import { formatCurrencyCents as formatCurrency, toDateKey } from "@/lib/format";
 
 const getOriginLabel = (originType: string) => {
   if (originType === "SERVICE") return "Servico";
@@ -34,8 +34,8 @@ const getMonthRange = () => {
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
   return {
-    from: start.toISOString().slice(0, 10),
-    to: end.toISOString().slice(0, 10),
+    from: toDateKey(start),
+    to: toDateKey(end),
   };
 };
 
@@ -48,7 +48,7 @@ export default function ProfessionalCommissionReport() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!professionalId) {
       setError("Profissional nao informado.");
       setIsLoading(false);
@@ -64,11 +64,11 @@ export default function ProfessionalCommissionReport() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [from, professionalId, to]);
 
   useEffect(() => {
     void load();
-  }, [professionalId, from, to]);
+  }, [load]);
 
   if (isLoading) {
     return (

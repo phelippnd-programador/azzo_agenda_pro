@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { commissionApi, servicesApi, stockApi } from "@/lib/api";
 import { useProfessionals } from "@/hooks/useProfessionals";
 import { resolveUiError } from "@/lib/error-utils";
-import { formatCurrencyCents as formatCurrency } from "@/lib/format";
+import { formatCurrencyCents as formatCurrency, toDateKey } from "@/lib/format";
 import type { Service } from "@/types";
 import type { StockItem } from "@/types/stock";
 import type {
@@ -33,8 +33,7 @@ const getMonthRange = () => {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  const toDate = (value: Date) => value.toISOString().slice(0, 10);
-  return { from: toDate(start), to: toDate(end) };
+  return { from: toDateKey(start), to: toDateKey(end) };
 };
 
 export default function FinancialCommissions() {

@@ -5,6 +5,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -27,6 +35,15 @@ import { resolveUiError } from '@/lib/error-utils';
 import { toDateKey } from '@/lib/format';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import type { PaymentMethod } from '@/types';
+
+const APPOINTMENT_PAYMENT_METHODS: Array<{ value: PaymentMethod; label: string }> = [
+  { value: 'PIX', label: 'Pix' },
+  { value: 'CREDIT_CARD', label: 'Cartao de credito' },
+  { value: 'DEBIT_CARD', label: 'Cartao de debito' },
+  { value: 'CASH', label: 'Dinheiro' },
+  { value: 'OTHER', label: 'Outro' },
+];
 
 export default function Agenda() {
   const navigate = useNavigate();
@@ -50,6 +67,8 @@ export default function Agenda() {
   const [appointmentToDeleteId, setAppointmentToDeleteId] = useState<string | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeletingAppointment, setIsDeletingAppointment] = useState(false);
+  const [completionAppointmentId, setCompletionAppointmentId] = useState<string | null>(null);
+  const [completionPaymentMethod, setCompletionPaymentMethod] = useState<PaymentMethod | ''>('');
 
   // ── Métricas mensais ──────────────────────────────────────────────────────
   const [monthlyMetrics, setMonthlyMetrics] = useState<Array<{ dia: number; quantidadeAgendamentos: number }>>([]);
@@ -252,17 +271,41 @@ export default function Agenda() {
   };
 
   const handleStatusChange = async (appointmentId: string, newStatus: Appointment['status']) => {
+    if (newStatus === 'COMPLETED') {
+      setCompletionAppointmentId(appointmentId);
+      setCompletionPaymentMethod('');
+      return;
+    }
+
     try {
       await updateAppointmentStatus(appointmentId, newStatus);
       if (selectedAppointment?.id === appointmentId) {
         setSelectedAppointment((prev) => (prev ? { ...prev, status: newStatus } : null));
       }
-      if (newStatus === 'COMPLETED') {
-        const apt =
-          appointments.find((a) => a.id === appointmentId) ??
-          (selectedAppointment?.id === appointmentId ? selectedAppointment : null);
-        if (apt) await handleNfseOnAppointmentCompleted(apt);
+    } catch {
+      // tratado no hook
+    }
+  };
+
+  const handleConfirmCompletion = async () => {
+    if (!completionAppointmentId || !completionPaymentMethod) {
+      toast.error('Selecione a forma de pagamento para concluir o atendimento.');
+      return;
+    }
+
+    try {
+      await updateAppointmentStatus(completionAppointmentId, 'COMPLETED', {
+        paymentMethod: completionPaymentMethod,
+      });
+      if (selectedAppointment?.id === completionAppointmentId) {
+        setSelectedAppointment((prev) => (prev ? { ...prev, status: 'COMPLETED' } : null));
       }
+      const apt =
+        appointments.find((a) => a.id === completionAppointmentId) ??
+        (selectedAppointment?.id === completionAppointmentId ? selectedAppointment : null);
+      if (apt) await handleNfseOnAppointmentCompleted(apt);
+      setCompletionAppointmentId(null);
+      setCompletionPaymentMethod('');
     } catch {
       // tratado no hook
     }
@@ -517,6 +560,56 @@ export default function Agenda() {
           }}
           onConfirm={handleConfirmDelete}
         />
+
+        <Dialog
+          open={!!completionAppointmentId}
+          onOpenChange={(open) => {
+            if (!open) {
+              setCompletionAppointmentId(null);
+              setCompletionPaymentMethod('');
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Concluir atendimento</DialogTitle>
+              <DialogDescription>
+                Selecione a forma de pagamento para registrar a receita automatica deste atendimento.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-2">
+              <Select
+                value={completionPaymentMethod || undefined}
+                onValueChange={(value) => setCompletionPaymentMethod(value as PaymentMethod)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a forma de pagamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  {APPOINTMENT_PAYMENT_METHODS.map((method) => (
+                    <SelectItem key={method.value} value={method.value}>
+                      {method.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setCompletionAppointmentId(null);
+                  setCompletionPaymentMethod('');
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={() => void handleConfirmCompletion()} disabled={!completionPaymentMethod}>
+                Concluir atendimento
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );

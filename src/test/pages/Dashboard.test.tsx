@@ -211,6 +211,8 @@ describe("Dashboard", () => {
     expect(screen.getByText("Faturamento no periodo")).toBeInTheDocument();
     expect(screen.getByText("Clientes atendidos")).toBeInTheDocument();
     expect(screen.getByText("Comissao no periodo")).toBeInTheDocument();
+    expect(screen.getByText("R$ 18,00")).toBeInTheDocument();
+    expect(screen.getByText("R$ 5,40")).toBeInTheDocument();
     expect(screen.queryByText("WhatsAppReactivationChartMock")).not.toBeInTheDocument();
     expect(screen.queryByText("No-show no periodo")).not.toBeInTheDocument();
     expect(getProfessionalMetricsMock).toHaveBeenCalledWith(

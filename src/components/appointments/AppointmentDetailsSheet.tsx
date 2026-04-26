@@ -1,14 +1,4 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { StatusBadge } from '@/components/common/StatusBadge';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useEffect, useState } from 'react';
 import {
   Calendar as CalendarIcon,
   DollarSign,
@@ -22,17 +12,39 @@ import {
   User,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { clientsApi, appointmentsApi } from '@/lib/api';
+import { StatusBadge } from '@/components/common/StatusBadge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
+import { appointmentsApi, clientsApi } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
-import { formatCurrency, toDateKey } from '@/lib/format';
+import { formatCurrencyCents, toDateKey } from '@/lib/format';
 import {
   appointmentStatusBadgeToneMap,
   appointmentStatusLabelMap,
-  getServiceFlowMeta,
   getAppointmentItems,
+  getServiceFlowMeta,
 } from '@/lib/appointment-status';
 import type { Appointment } from '@/hooks/useAppointments';
-import type { Professional, Client, Service, AppointmentCustomerNote, ClientAppointmentHistoryItem } from '@/types';
+import type {
+  AppointmentCustomerNote,
+  Client,
+  ClientAppointmentHistoryItem,
+  Professional,
+  Service,
+} from '@/types';
 
 interface AppointmentDetailsSheetProps {
   open: boolean;
@@ -63,7 +75,8 @@ export function AppointmentDetailsSheet({
   onReassignRequest,
   onViewInvoice,
 }: AppointmentDetailsSheetProps) {
-  const [historyItem, setHistoryItem] = useState<ClientAppointmentHistoryItem | null>(null);
+  const [historyItem, setHistoryItem] =
+    useState<ClientAppointmentHistoryItem | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [serviceExecutionNotes, setServiceExecutionNotes] = useState('');
@@ -77,28 +90,54 @@ export function AppointmentDetailsSheet({
   };
 
   const selectedClient =
-    appointment?.client ?? clients.find((c) => c.id === appointment?.clientId) ?? null;
+    appointment?.client ??
+    clients.find((client) => client.id === appointment?.clientId) ??
+    null;
 
   const selectedProfessional = appointment
-    ? professionals.find((p) => p.id === appointment.professionalId) ?? null
+    ? professionals.find(
+        (professional) => professional.id === appointment.professionalId,
+      ) ?? null
     : null;
 
-  const selectedServices = appointment
-    ? getAppointmentItems(appointment)
-        .map((item) => item.service ?? services.find((s) => s.id === item.serviceId) ?? null)
-        .filter((s): s is NonNullable<typeof s> => !!s)
-    : [];
+  const appointmentItems = appointment ? getAppointmentItems(appointment) : [];
+
+  const appointmentItemsWithService = appointmentItems.map((item) => ({
+    item,
+    service:
+      item.service ??
+      services.find((service) => service.id === item.serviceId) ??
+      null,
+  }));
 
   const totalPrice = appointment
     ? Number(
         appointment.totalPrice ||
-          getAppointmentItems(appointment).reduce((sum, item) => sum + Number(item.totalPrice || 0), 0),
+          appointmentItems.reduce(
+            (sum, item) => sum + Number(item.totalPrice || 0),
+            0,
+          ),
+      )
+    : 0;
+
+  const totalGrossPrice = appointment
+    ? appointmentItems.reduce(
+        (sum, item) => sum + Number(item.grossAmount ?? item.totalPrice ?? 0),
+        0,
+      )
+    : 0;
+
+  const totalDiscountPrice = appointment
+    ? appointmentItems.reduce(
+        (sum, item) => sum + Number(item.discountAmount ?? 0),
+        0,
       )
     : 0;
 
   const flowMeta = appointment ? getServiceFlowMeta(appointment.status) : null;
   const careNotes = historyItem?.careNotes ?? [];
-  const canRegisterNotes = !!appointment && !['CANCELLED', 'NO_SHOW'].includes(appointment.status);
+  const canRegisterNotes =
+    !!appointment && !['CANCELLED', 'NO_SHOW'].includes(appointment.status);
 
   useEffect(() => {
     if (!open || !appointment || !selectedClient?.id) {
@@ -109,38 +148,61 @@ export function AppointmentDetailsSheet({
 
     let active = true;
     setIsLoadingHistory(true);
+
     clientsApi
       .getAppointmentHistory(selectedClient.id, 0, 50)
       .then((history) => {
         if (!active) return;
-        const item = history.items.find((i) => i.appointmentId === appointment.id) ?? null;
-        setHistoryItem(item);
+        const matchedItem =
+          history.items.find((item) => item.appointmentId === appointment.id) ??
+          null;
+        setHistoryItem(matchedItem);
       })
-      .catch((err) => {
+      .catch((error) => {
         if (!active) return;
-        toast.error(resolveUiError(err, 'Não foi possível carregar o histórico deste cliente.').message);
+        toast.error(
+          resolveUiError(
+            error,
+            'Nao foi possivel carregar o historico deste cliente.',
+          ).message,
+        );
       })
-      .finally(() => { if (active) setIsLoadingHistory(false); });
+      .finally(() => {
+        if (active) setIsLoadingHistory(false);
+      });
 
-    return () => { active = false; };
-  }, [open, appointment?.id, selectedClient?.id]);
+    return () => {
+      active = false;
+    };
+  }, [appointment, open, selectedClient?.id]);
 
   const handleSaveCareNote = async () => {
     if (!appointment) return;
+
     const payload = {
       serviceExecutionNotes: serviceExecutionNotes.trim() || undefined,
       clientFeedbackNotes: clientFeedbackNotes.trim() || undefined,
       internalFollowupNotes: internalFollowupNotes.trim() || undefined,
     };
-    if (!payload.serviceExecutionNotes && !payload.clientFeedbackNotes && !payload.internalFollowupNotes) {
+
+    if (
+      !payload.serviceExecutionNotes &&
+      !payload.clientFeedbackNotes &&
+      !payload.internalFollowupNotes
+    ) {
       toast.error('Preencha ao menos um detalhe do atendimento.');
       return;
     }
+
     setIsSaving(true);
     try {
-      const createdNote = await appointmentsApi.addCustomerNote(appointment.id, payload);
-      setHistoryItem((prev) => {
-        if (!prev) {
+      const createdNote = await appointmentsApi.addCustomerNote(
+        appointment.id,
+        payload,
+      );
+
+      setHistoryItem((previous) => {
+        if (!previous) {
           return {
             appointmentId: appointment.id,
             date: toDateKey(appointment.date),
@@ -148,16 +210,26 @@ export function AppointmentDetailsSheet({
             professionalId: appointment.professionalId,
             professionalName: selectedProfessional?.name,
             notes: appointment.notes,
-            services: getAppointmentItems(appointment),
+            services: appointmentItems,
             careNotes: [createdNote],
           };
         }
-        return { ...prev, careNotes: [createdNote, ...(prev.careNotes || [])] };
+
+        return {
+          ...previous,
+          careNotes: [createdNote, ...(previous.careNotes || [])],
+        };
       });
+
       resetForm();
       toast.success('Registro operacional salvo com sucesso.');
-    } catch (err) {
-      toast.error(resolveUiError(err, 'Não foi possível salvar o registro operacional.').message);
+    } catch (error) {
+      toast.error(
+        resolveUiError(
+          error,
+          'Nao foi possivel salvar o registro operacional.',
+        ).message,
+      );
     } finally {
       setIsSaving(false);
     }
@@ -168,18 +240,22 @@ export function AppointmentDetailsSheet({
       open={open}
       onOpenChange={(isOpen) => {
         onOpenChange(isOpen);
-        if (!isOpen) { setHistoryItem(null); resetForm(); }
+        if (!isOpen) {
+          setHistoryItem(null);
+          resetForm();
+        }
       }}
     >
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+      <SheetContent className="w-full overflow-y-auto sm:max-w-md">
         <SheetHeader>
           <SheetTitle>Detalhes do Agendamento</SheetTitle>
-          <SheetDescription>Informações completas do agendamento</SheetDescription>
+          <SheetDescription>
+            Informacoes completas do agendamento
+          </SheetDescription>
         </SheetHeader>
 
-        {appointment && (
+        {appointment ? (
           <div className="mt-6 space-y-6">
-            {/* Status */}
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Status</span>
               <StatusBadge
@@ -190,52 +266,59 @@ export function AppointmentDetailsSheet({
               />
             </div>
 
-            {flowMeta && (
+            {flowMeta ? (
               <Alert className="border-primary/20 bg-primary/5">
                 <Info className="h-4 w-4" />
-                <AlertTitle>Etapa {flowMeta.currentStep} de {flowMeta.totalSteps}</AlertTitle>
+                <AlertTitle>
+                  Etapa {flowMeta.currentStep} de {flowMeta.totalSteps}
+                </AlertTitle>
                 <AlertDescription>
                   {flowMeta.nextLabel
-                    ? `Próximo passo esperado: ${flowMeta.nextLabel}.`
+                    ? `Proximo passo esperado: ${flowMeta.nextLabel}.`
                     : 'Atendimento finalizado no fluxo operacional.'}
                 </AlertDescription>
               </Alert>
-            )}
+            ) : null}
 
             <Separator />
 
-            {/* Data e Horário */}
             <div className="space-y-3">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <CalendarIcon className="w-4 h-4 text-primary" /> Data e Horário
+              <h4 className="flex items-center gap-2 text-sm font-medium">
+                <CalendarIcon className="h-4 w-4 text-primary" /> Data e horario
               </h4>
-              <div className="bg-muted/40 rounded-lg p-4 space-y-2">
+              <div className="space-y-2 rounded-lg bg-muted/40 p-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Data:</span>
                   <span className="font-medium">
-                    {new Date(appointment.date + 'T12:00:00').toLocaleDateString('pt-BR', {
-                      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+                    {new Date(
+                      `${toDateKey(appointment.date)}T12:00:00`,
+                    ).toLocaleDateString('pt-BR', {
+                      weekday: 'long',
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
                     })}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Horário:</span>
-                  <span className="font-medium">{appointment.startTime} - {appointment.endTime}</span>
+                  <span className="text-muted-foreground">Horario:</span>
+                  <span className="font-medium">
+                    {appointment.startTime} - {appointment.endTime}
+                  </span>
                 </div>
               </div>
             </div>
 
             <Separator />
 
-            {/* Cliente */}
             <div className="space-y-3">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <User className="w-4 h-4 text-primary" /> Cliente
+              <h4 className="flex items-center gap-2 text-sm font-medium">
+                <User className="h-4 w-4 text-primary" /> Cliente
               </h4>
-              {selectedClient && (
-                <div className="bg-muted/40 rounded-lg p-4 space-y-3">
+              {selectedClient ? (
+                <div className="space-y-3 rounded-lg bg-muted/40 p-4">
                   <div className="flex items-center gap-3">
-                    <Avatar className="w-10 h-10">
+                    <Avatar className="h-10 w-10">
                       <AvatarFallback className="bg-primary/15 text-primary">
                         {selectedClient.name.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
@@ -243,69 +326,119 @@ export function AppointmentDetailsSheet({
                     <div>
                       <p className="font-medium">{selectedClient.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        Cliente desde {new Date(selectedClient.createdAt).toLocaleDateString('pt-BR')}
+                        Cliente desde{' '}
+                        {new Date(selectedClient.createdAt).toLocaleDateString(
+                          'pt-BR',
+                        )}
                       </p>
                     </div>
                   </div>
-                  {selectedClient.phone && (
+
+                  {selectedClient.phone ? (
                     <div className="flex items-center gap-2 text-sm">
-                      <Phone className="w-4 h-4 text-muted-foreground" />
+                      <Phone className="h-4 w-4 text-muted-foreground" />
                       <span>{selectedClient.phone}</span>
                     </div>
-                  )}
-                  {selectedClient.email && (
+                  ) : null}
+
+                  {selectedClient.email ? (
                     <div className="flex items-center gap-2 text-sm">
-                      <Mail className="w-4 h-4 text-muted-foreground" />
+                      <Mail className="h-4 w-4 text-muted-foreground" />
                       <span>{selectedClient.email}</span>
                     </div>
-                  )}
+                  ) : null}
                 </div>
-              )}
+              ) : null}
             </div>
 
             <Separator />
 
-            {/* Serviços */}
             <div className="space-y-3">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <Scissors className="w-4 h-4 text-primary" /> Serviços
+              <h4 className="flex items-center gap-2 text-sm font-medium">
+                <Scissors className="h-4 w-4 text-primary" /> Servicos
               </h4>
-              {selectedServices.length > 0 && (
-                <div className="bg-muted/40 rounded-lg p-4 space-y-3">
-                  {selectedServices.map((svc) => (
-                    <div key={svc.id} className="space-y-2 rounded-md border bg-background/80 p-3">
-                      <div className="flex justify-between gap-2">
-                        <span className="font-medium">{svc.name}</span>
-                        <Badge variant="outline">{svc.category}</Badge>
+              {appointmentItemsWithService.length ? (
+                <div className="space-y-3 rounded-lg bg-muted/40 p-4">
+                  {appointmentItemsWithService.map(({ item, service }, index) => {
+                    const itemGrossAmount = Number(
+                      item.grossAmount ?? item.totalPrice ?? 0,
+                    );
+                    const itemDiscountAmount = Number(item.discountAmount ?? 0);
+                    const itemNetAmount = Number(
+                      item.totalPrice ?? itemGrossAmount,
+                    );
+                    const itemDuration = Number(
+                      item.durationMinutes || service?.duration || 0,
+                    );
+
+                    return (
+                      <div
+                        key={item.id ?? `${item.serviceId}-${index}`}
+                        className="space-y-2 rounded-md border bg-background/80 p-3"
+                      >
+                        <div className="flex justify-between gap-2">
+                          <span className="font-medium">
+                            {service?.name || item.service?.name || 'Servico'}
+                          </span>
+                          {service?.category ? (
+                            <Badge variant="outline">{service.category}</Badge>
+                          ) : null}
+                        </div>
+
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Duracao:</span>
+                          <span>{itemDuration} minutos</span>
+                        </div>
+
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            Valor bruto:
+                          </span>
+                          <span>{formatCurrencyCents(itemGrossAmount)}</span>
+                        </div>
+
+                        {itemDiscountAmount > 0 ? (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">
+                              Desconto aplicado:
+                            </span>
+                            <span>
+                              - {formatCurrencyCents(itemDiscountAmount)}
+                            </span>
+                          </div>
+                        ) : null}
+
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            Liquido do item:
+                          </span>
+                          <span className="font-medium">
+                            {formatCurrencyCents(itemNetAmount)}
+                          </span>
+                        </div>
+
+                        {service?.description ? (
+                          <p className="text-sm text-muted-foreground">
+                            {service.description}
+                          </p>
+                        ) : null}
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Duração:</span>
-                        <span>{svc.duration} minutos</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Valor:</span>
-                        <span>{formatCurrency(svc.price)}</span>
-                      </div>
-                      {svc.description && (
-                        <p className="text-sm text-muted-foreground">{svc.description}</p>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
-              )}
+              ) : null}
             </div>
 
             <Separator />
 
-            {/* Profissional */}
             <div className="space-y-3">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <User className="w-4 h-4 text-primary" /> Profissional
+              <h4 className="flex items-center gap-2 text-sm font-medium">
+                <User className="h-4 w-4 text-primary" /> Profissional
               </h4>
-              {selectedProfessional && (
-                <div className="bg-muted/40 rounded-lg p-4">
+              {selectedProfessional ? (
+                <div className="rounded-lg bg-muted/40 p-4">
                   <div className="flex items-center gap-3">
-                    <Avatar className="w-10 h-10">
+                    <Avatar className="h-10 w-10">
                       <AvatarImage src={selectedProfessional.avatar} />
                       <AvatarFallback className="bg-primary/15 text-primary">
                         {selectedProfessional.name.slice(0, 2).toUpperCase()}
@@ -313,111 +446,164 @@ export function AppointmentDetailsSheet({
                     </Avatar>
                     <div>
                       <p className="font-medium">{selectedProfessional.name}</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {selectedProfessional.specialties.slice(0, 3).map((spec, i) => (
-                          <Badge key={i} variant="outline" className="text-xs">{spec}</Badge>
-                        ))}
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {selectedProfessional.specialties
+                          .slice(0, 3)
+                          .map((specialty, index) => (
+                            <Badge
+                              key={index}
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              {specialty}
+                            </Badge>
+                          ))}
                       </div>
                     </div>
                   </div>
                 </div>
-              )}
+              ) : null}
             </div>
 
             <Separator />
 
-            {/* Valor */}
             <div className="space-y-3">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-primary" /> Valor
+              <h4 className="flex items-center gap-2 text-sm font-medium">
+                <DollarSign className="h-4 w-4 text-primary" /> Valor
               </h4>
-              <div className="bg-primary/5 rounded-lg p-4 border border-primary/10">
-                <div className="flex justify-between items-center">
+              <div className="rounded-lg border border-primary/10 bg-primary/5 p-4">
+                {totalDiscountPrice > 0 ? (
+                  <>
+                    <div className="mb-2 flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Bruto:</span>
+                      <span>{formatCurrencyCents(totalGrossPrice)}</span>
+                    </div>
+                    <div className="mb-2 flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Desconto:</span>
+                      <span>- {formatCurrencyCents(totalDiscountPrice)}</span>
+                    </div>
+                  </>
+                ) : null}
+                <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Total:</span>
-                  <span className="text-2xl font-bold text-primary">{formatCurrency(totalPrice)}</span>
+                  <span className="text-2xl font-bold text-primary">
+                    {formatCurrencyCents(totalPrice)}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Observações */}
-            {appointment.notes && (
+            {appointment.notes ? (
               <>
                 <Separator />
                 <div className="space-y-3">
-                  <h4 className="font-medium text-sm flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-primary" /> Observações
+                  <h4 className="flex items-center gap-2 text-sm font-medium">
+                    <FileText className="h-4 w-4 text-primary" /> Observacoes
                   </h4>
-                  <div className="bg-muted/40 rounded-lg p-4">
-                    <p className="text-sm text-muted-foreground">{appointment.notes}</p>
+                  <div className="rounded-lg bg-muted/40 p-4">
+                    <p className="text-sm text-muted-foreground">
+                      {appointment.notes}
+                    </p>
                   </div>
                 </div>
               </>
-            )}
+            ) : null}
 
             <Separator />
 
-            {/* Rastro operacional */}
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-3">
-                <h4 className="font-medium text-sm flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-primary" /> Rastro operacional do atendimento
+                <h4 className="flex items-center gap-2 text-sm font-medium">
+                  <FileText className="h-4 w-4 text-primary" /> Rastro
+                  operacional do atendimento
                 </h4>
                 {isLoadingHistory ? (
                   <Badge variant="outline">Carregando</Badge>
                 ) : (
-                  <Badge variant="secondary">{careNotes.length} registro(s)</Badge>
+                  <Badge variant="secondary">
+                    {careNotes.length} registro(s)
+                  </Badge>
                 )}
               </div>
 
-              <div className="rounded-lg border bg-muted/20 p-4 space-y-3">
+              <div className="space-y-3 rounded-lg border bg-muted/20 p-4">
                 <div className="space-y-2">
-                  <Label htmlFor="serviceExecutionNotes">Execução do serviço</Label>
+                  <Label htmlFor="serviceExecutionNotes">
+                    Execucao do servico
+                  </Label>
                   <Textarea
                     id="serviceExecutionNotes"
-                    placeholder="Descreva técnicas aplicadas, variações do serviço e ocorrências relevantes."
+                    placeholder="Descreva tecnicas aplicadas, variacoes do servico e ocorrencias relevantes."
                     value={serviceExecutionNotes}
-                    onChange={(e) => setServiceExecutionNotes(e.target.value)}
+                    onChange={(event) =>
+                      setServiceExecutionNotes(event.target.value)
+                    }
                     rows={3}
                     disabled={!canRegisterNotes || isSaving}
                   />
                 </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="clientFeedbackNotes">Feedback do cliente</Label>
+                  <Label htmlFor="clientFeedbackNotes">
+                    Feedback do cliente
+                  </Label>
                   <Textarea
                     id="clientFeedbackNotes"
-                    placeholder="Registre percepções, preferências, sensibilidade e retorno do cliente."
+                    placeholder="Registre percepcoes, preferencias, sensibilidade e retorno do cliente."
                     value={clientFeedbackNotes}
-                    onChange={(e) => setClientFeedbackNotes(e.target.value)}
+                    onChange={(event) =>
+                      setClientFeedbackNotes(event.target.value)
+                    }
                     rows={3}
                     disabled={!canRegisterNotes || isSaving}
                   />
                 </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="internalFollowupNotes">Próximo passo / acompanhamento</Label>
+                  <Label htmlFor="internalFollowupNotes">
+                    Proximo passo / acompanhamento
+                  </Label>
                   <Textarea
                     id="internalFollowupNotes"
-                    placeholder="Informe recomendações, manutenção, pendências ou abordagem sugerida para o próximo atendimento."
+                    placeholder="Informe recomendacoes, manutencao, pendencias ou abordagem sugerida para o proximo atendimento."
                     value={internalFollowupNotes}
-                    onChange={(e) => setInternalFollowupNotes(e.target.value)}
+                    onChange={(event) =>
+                      setInternalFollowupNotes(event.target.value)
+                    }
                     rows={3}
                     disabled={!canRegisterNotes || isSaving}
                   />
                 </div>
+
                 <div className="flex flex-wrap gap-2">
-                  <Button onClick={handleSaveCareNote} disabled={!canRegisterNotes || isSaving}>
+                  <Button
+                    onClick={handleSaveCareNote}
+                    disabled={!canRegisterNotes || isSaving}
+                  >
                     {isSaving ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Salvando...</>
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Salvando...
+                      </>
                     ) : (
                       'Salvar registro operacional'
                     )}
                   </Button>
-                  <Button variant="outline" onClick={resetForm} disabled={isSaving}>Limpar</Button>
+                  <Button
+                    variant="outline"
+                    onClick={resetForm}
+                    disabled={isSaving}
+                  >
+                    Limpar
+                  </Button>
                 </div>
-                {!canRegisterNotes && (
+
+                {!canRegisterNotes ? (
                   <p className="text-xs text-muted-foreground">
-                    Registros operacionais ficam bloqueados para agendamentos cancelados ou marcados como não compareceu.
+                    Registros operacionais ficam bloqueados para agendamentos
+                    cancelados ou marcados como nao compareceu.
                   </p>
-                )}
+                ) : null}
               </div>
 
               <div className="space-y-3">
@@ -428,70 +614,95 @@ export function AppointmentDetailsSheet({
                   </div>
                 ) : careNotes.length > 0 ? (
                   careNotes.map((note: AppointmentCustomerNote) => (
-                    <div key={note.noteId} className="rounded-lg border p-3 space-y-2">
+                    <div
+                      key={note.noteId}
+                      className="space-y-2 rounded-lg border p-3"
+                    >
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-sm font-medium">
-                          Registro em {new Date(note.recordedAt).toLocaleString('pt-BR')}
+                          Registro em{' '}
+                          {new Date(note.recordedAt).toLocaleString('pt-BR')}
                         </p>
                         <Badge variant="outline">Atendimento</Badge>
                       </div>
-                      {note.serviceExecutionNotes && (
+
+                      {note.serviceExecutionNotes ? (
                         <p className="text-sm text-muted-foreground">
-                          <span className="font-medium text-foreground">Execução:</span> {note.serviceExecutionNotes}
+                          <span className="font-medium text-foreground">
+                            Execucao:
+                          </span>{' '}
+                          {note.serviceExecutionNotes}
                         </p>
-                      )}
-                      {note.clientFeedbackNotes && (
+                      ) : null}
+
+                      {note.clientFeedbackNotes ? (
                         <p className="text-sm text-muted-foreground">
-                          <span className="font-medium text-foreground">Feedback:</span> {note.clientFeedbackNotes}
+                          <span className="font-medium text-foreground">
+                            Feedback:
+                          </span>{' '}
+                          {note.clientFeedbackNotes}
                         </p>
-                      )}
-                      {note.internalFollowupNotes && (
+                      ) : null}
+
+                      {note.internalFollowupNotes ? (
                         <p className="text-sm text-muted-foreground">
-                          <span className="font-medium text-foreground">Próximo passo:</span> {note.internalFollowupNotes}
+                          <span className="font-medium text-foreground">
+                            Proximo passo:
+                          </span>{' '}
+                          {note.internalFollowupNotes}
                         </p>
-                      )}
+                      ) : null}
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground">Nenhum registro operacional foi salvo para este atendimento.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum registro operacional foi salvo para este atendimento.
+                  </p>
                 )}
               </div>
 
-              {appointment.status === 'IN_PROGRESS' && careNotes.length === 0 && (
+              {appointment.status === 'IN_PROGRESS' && careNotes.length === 0 ? (
                 <Alert className="border-amber-200 bg-amber-50">
                   <Info className="h-4 w-4" />
-                  <AlertTitle>Registro obrigatório antes da conclusão</AlertTitle>
+                  <AlertTitle>Registro obrigatorio antes da conclusao</AlertTitle>
                   <AlertDescription>
-                    Salve ao menos um detalhe operacional do cliente para habilitar a conclusão do atendimento.
+                    Salve ao menos um detalhe operacional do cliente para
+                    habilitar a conclusao do atendimento.
                   </AlertDescription>
                 </Alert>
-              )}
+              ) : null}
             </div>
 
-            {/* Nota fiscal */}
-            {appointment.status === 'COMPLETED' && (
+            {appointment.status === 'COMPLETED' ? (
               <>
                 <Separator />
                 <Button className="w-full" onClick={() => onViewInvoice(appointment)}>
-                  <Receipt className="w-4 h-4 mr-2" /> Ver Pré-visualização da Nota Fiscal
+                  <Receipt className="mr-2 h-4 w-4" /> Ver pre-visualizacao da
+                  Nota Fiscal
                 </Button>
               </>
-            )}
+            ) : null}
 
-            {/* Ações */}
-            <div className="pt-4 space-y-2">
+            <div className="space-y-2 pt-4">
               <div className="grid grid-cols-2 gap-2">
-                {appointment.status === 'PENDING' && (
-                  <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => onStatusChange(appointment.id, 'CONFIRMED')}>
+                {appointment.status === 'PENDING' ? (
+                  <Button
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={() => onStatusChange(appointment.id, 'CONFIRMED')}
+                  >
                     Confirmar agendamento
                   </Button>
-                )}
-                {appointment.status === 'CONFIRMED' && (
-                  <Button onClick={() => onStatusChange(appointment.id, 'IN_PROGRESS')}>
+                ) : null}
+
+                {appointment.status === 'CONFIRMED' ? (
+                  <Button
+                    onClick={() => onStatusChange(appointment.id, 'IN_PROGRESS')}
+                  >
                     Iniciar atendimento
                   </Button>
-                )}
-                {appointment.status === 'IN_PROGRESS' && (
+                ) : null}
+
+                {appointment.status === 'IN_PROGRESS' ? (
                   <Button
                     className="bg-green-600 hover:bg-green-700"
                     disabled={careNotes.length === 0}
@@ -499,28 +710,41 @@ export function AppointmentDetailsSheet({
                   >
                     Concluir atendimento
                   </Button>
-                )}
-                {!['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(appointment.status) && (
+                ) : null}
+
+                {!['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(
+                  appointment.status,
+                ) ? (
                   <Button
                     variant="outline"
-                    className="text-red-600 border-red-200 hover:bg-red-50"
+                    className="border-red-200 text-red-600 hover:bg-red-50"
                     onClick={() => onStatusChange(appointment.id, 'CANCELLED')}
                   >
                     Cancelar
                   </Button>
-                )}
+                ) : null}
               </div>
-              {!isProfessionalUser && canReassignAppointments && (
-                <Button variant="outline" className="w-full" onClick={() => onReassignRequest(appointment)}>
+
+              {!isProfessionalUser && canReassignAppointments ? (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => onReassignRequest(appointment)}
+                >
                   Realocar profissional
                 </Button>
-              )}
-              <Button variant="destructive" className="w-full" onClick={() => onDeleteRequest(appointment.id)}>
+              ) : null}
+
+              <Button
+                variant="destructive"
+                className="w-full"
+                onClick={() => onDeleteRequest(appointment.id)}
+              >
                 Excluir Agendamento
               </Button>
             </div>
           </div>
-        )}
+        ) : null}
       </SheetContent>
     </Sheet>
   );

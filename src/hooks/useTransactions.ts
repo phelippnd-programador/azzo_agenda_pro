@@ -4,9 +4,11 @@ import {
   transactionCategoriesApi,
   isPlanExpiredApiError,
   type TransactionListParams,
+  type TransactionMutationInput,
 } from "@/lib/api";
 import type { Transaction, TransactionCategory } from "@/types";
 import { resolveUiError } from "@/lib/error-utils";
+import { toDateKey } from "@/lib/format";
 import { toast } from "sonner";
 
 // ─── Calcula o range de datas a partir do filtro de período ─────────────────
@@ -15,25 +17,19 @@ export function getDateRangeFromFilter(filter: string): { from?: string; to?: st
   const now = new Date();
 
   if (filter === "today") {
-    const start = new Date(now);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(now);
-    end.setHours(23, 59, 59, 999);
-    return { from: start.toISOString(), to: end.toISOString() };
+    return { from: toDateKey(now), to: toDateKey(now) };
   }
 
   if (filter === "week") {
     const start = new Date(now);
     start.setDate(start.getDate() - 7);
-    start.setHours(0, 0, 0, 0);
-    return { from: start.toISOString(), to: now.toISOString() };
+    return { from: toDateKey(start), to: toDateKey(now) };
   }
 
   if (filter === "month") {
     const start = new Date(now);
     start.setMonth(start.getMonth() - 1);
-    start.setHours(0, 0, 0, 0);
-    return { from: start.toISOString(), to: now.toISOString() };
+    return { from: toDateKey(start), to: toDateKey(now) };
   }
 
   return {}; // "all" — sem filtro
@@ -72,7 +68,15 @@ export function useTransactions(filters?: TransactionListParams & { dateFilter?:
 
       const [listData, summaryData] = await Promise.all([
         transactionsApi.getAll(apiParams),
-        transactionsApi.getSummary({ from: dateRange.from, to: dateRange.to }),
+        transactionsApi.getSummary({
+          from: dateRange.from,
+          to: dateRange.to,
+          type: filters?.type,
+          categoryId: filters?.categoryId,
+          paymentMethod: filters?.paymentMethod,
+          professionalId: filters?.professionalId,
+          reconciled: filters?.reconciled,
+        }),
       ]);
 
       setTransactions(listData.items);
@@ -100,6 +104,7 @@ export function useTransactions(filters?: TransactionListParams & { dateFilter?:
     filters?.categoryId,
     filters?.paymentMethod,
     filters?.professionalId,
+    filters?.reconciled,
   ]);
 
   useEffect(() => {
@@ -117,22 +122,11 @@ export function useTransactions(filters?: TransactionListParams & { dateFilter?:
     filters?.categoryId,
     filters?.paymentMethod,
     filters?.professionalId,
+    filters?.reconciled,
   ]);
 
   const createTransaction = async (
-    data: Pick<
-      Transaction,
-      | "appointmentId"
-      | "professionalId"
-      | "productId"
-      | "productCategory"
-      | "type"
-      | "category"
-      | "description"
-      | "amount"
-      | "paymentMethod"
-      | "date"
-    >
+    data: TransactionMutationInput
   ) => {
     try {
       const newTransaction = await transactionsApi.create(data);
@@ -149,19 +143,7 @@ export function useTransactions(filters?: TransactionListParams & { dateFilter?:
 
   const updateTransaction = async (
     id: string,
-    data: Pick<
-      Transaction,
-      | "appointmentId"
-      | "professionalId"
-      | "productId"
-      | "productCategory"
-      | "type"
-      | "category"
-      | "description"
-      | "amount"
-      | "paymentMethod"
-      | "date"
-    >
+    data: TransactionMutationInput
   ) => {
     try {
       const updated = await transactionsApi.update(id, data);

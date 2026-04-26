@@ -73,6 +73,8 @@ export interface AppointmentItem {
   orderIndex?: number;
   durationMinutes: number;
   unitPrice: number;
+  grossAmount?: number;
+  discountAmount?: number;
   totalPrice: number;
 }
 
@@ -80,6 +82,8 @@ export interface AppointmentCreateItemInput {
   serviceId: string;
   durationMinutes?: number;
   unitPrice?: number;
+  grossAmount?: number;
+  discountAmount?: number;
   totalPrice?: number;
 }
 

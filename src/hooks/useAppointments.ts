@@ -4,6 +4,7 @@ import {
   appointmentsApi,
   isPlanExpiredApiError,
   type Appointment,
+  type AppointmentStatusUpdatePayload,
   type AppointmentCreateRequest,
 } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
@@ -61,9 +62,13 @@ export function useAppointments(
     }
   };
 
-  const updateAppointmentStatus = async (id: string, status: Appointment["status"]) => {
+  const updateAppointmentStatus = async (
+    id: string,
+    status: Appointment["status"],
+    payload?: AppointmentStatusUpdatePayload,
+  ) => {
     try {
-      const result = await appointmentsApi.updateStatus(id, status);
+      const result = await appointmentsApi.updateStatus(id, status, payload);
       await _fetch({ page: pagination.page, limit: pagination.limit });
       toast.success(STATUS_MESSAGES[status] ?? "Status atualizado!");
       return result;

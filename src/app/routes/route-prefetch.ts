@@ -45,6 +45,10 @@ const routePrefetchers: Array<{
     load: () => import("@/pages/Professionals"),
   },
   {
+    prefix: "/configuracoes/estoque",
+    load: () => import("@/pages/stock/StockSettingsPage"),
+  },
+  {
     prefix: "/configuracoes",
     load: () => import("@/pages/Settings"),
   },

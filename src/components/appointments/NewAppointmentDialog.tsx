@@ -44,12 +44,29 @@ export function NewAppointmentDialog({
   activeProfessionals,
   createAppointment,
 }: NewAppointmentDialogProps) {
+  const parseCurrencyInputToCents = (rawValue: string) => {
+    const compact = rawValue.trim().replace(/\s/g, "");
+    if (!compact) return 0;
+
+    let normalized = compact;
+    if (normalized.includes(",") && normalized.includes(".")) {
+      normalized = normalized.replace(/\./g, "").replace(",", ".");
+    } else if (normalized.includes(",")) {
+      normalized = normalized.replace(",", ".");
+    }
+
+    const numeric = Number(normalized);
+    if (!Number.isFinite(numeric) || numeric < 0) return 0;
+    return Math.round(numeric * 100);
+  };
+
   const [currentStep, setCurrentStep] = useState(1);
   const [newClientId, setNewClientId] = useState('');
   const [newClientSearch, setNewClientSearch] = useState('');
   const [isNewClientDialogOpen, setIsNewClientDialogOpen] = useState(false);
   const [newProfessionalId, setNewProfessionalId] = useState('');
   const [newServiceId, setNewServiceId] = useState('');
+  const [newDiscountInput, setNewDiscountInput] = useState('0,00');
   const [newDate, setNewDate] = useState(toDateKey(currentDate));
   const [newStartTime, setNewStartTime] = useState('');
   const [newEndTime, setNewEndTime] = useState('');
@@ -160,6 +177,9 @@ export function NewAppointmentDialog({
     [newServiceId],
   );
   const selectedServiceDuration = Number(selectedNewService?.duration || 0);
+  const selectedServicePrice = Number(selectedNewService?.price || 0);
+  const discountAmountCents = Math.min(parseCurrencyInputToCents(newDiscountInput), selectedServicePrice);
+  const netServicePriceCents = Math.max(0, selectedServicePrice - discountAmountCents);
 
   const {
     slots,
@@ -236,6 +256,10 @@ export function NewAppointmentDialog({
   }, [activeServices, newServiceId]);
 
   useEffect(() => {
+    setNewDiscountInput('0,00');
+  }, [newServiceId]);
+
+  useEffect(() => {
     if (isProfessionalUser || !newProfessionalId) return;
     if (
       !availableNewProfessionals.some(
@@ -280,6 +304,7 @@ export function NewAppointmentDialog({
       isProfessionalUser && loggedProfessional?.id ? loggedProfessional.id : '',
     );
     setNewServiceId('');
+    setNewDiscountInput('0,00');
     setNewStartTime('');
     setNewEndTime('');
     setSlotMode('suggested');
@@ -306,13 +331,15 @@ export function NewAppointmentDialog({
       startTime: newStartTime,
       endTime: newEndTime,
       status: 'PENDING',
-      totalPrice: Number(selectedNewService.price),
+      totalPrice: netServicePriceCents,
       items: [
         {
           serviceId: selectedNewService.id,
           durationMinutes: selectedNewService.duration,
           unitPrice: selectedNewService.price,
-          totalPrice: selectedNewService.price,
+          grossAmount: selectedServicePrice,
+          discountAmount: discountAmountCents,
+          totalPrice: netServicePriceCents,
         },
       ],
       origin: 'INTERNAL_MANUAL',
@@ -466,6 +493,10 @@ export function NewAppointmentDialog({
             canChooseDate={canChooseDate}
             canChooseSlot={canChooseSlot}
             selectedServiceDuration={selectedServiceDuration}
+            selectedServicePrice={selectedServicePrice}
+            discountInput={newDiscountInput}
+            discountAmountCents={discountAmountCents}
+            netServicePriceCents={netServicePriceCents}
             onOpenNewClientDialog={() => setIsNewClientDialogOpen(true)}
             onClientSearchChange={setNewClientSearch}
             onClientSelect={setNewClientId}
@@ -483,6 +514,7 @@ export function NewAppointmentDialog({
               setSlotMode('manual');
               applyStartTime(value);
             }}
+            onDiscountChange={setNewDiscountInput}
           />
 
           <DialogFooter className="flex-row items-center justify-between gap-2 sm:justify-between">

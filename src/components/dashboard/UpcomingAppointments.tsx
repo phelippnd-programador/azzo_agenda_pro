@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Clock, MoreVertical } from 'lucide-react';
 import { Appointment } from '@/types';
-import { formatCurrency } from '@/lib/mockData';
+import { formatCurrencyCents } from '@/lib/format';
 import { appointmentStatusBadgeToneMap, appointmentStatusLabelMap } from '@/lib/appointment-status';
 import {
   DropdownMenu,
@@ -89,7 +89,7 @@ export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingA
                     {appointment.startTime}
                   </span>
                   <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary sm:text-sm">
-                    {formatCurrency(appointment.totalPrice)}
+                    {formatCurrencyCents(appointment.totalPrice)}
                   </span>
                 </div>
               </div>

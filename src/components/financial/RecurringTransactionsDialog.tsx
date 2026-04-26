@@ -21,7 +21,7 @@ import {
 import { Loader2, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { recurringTransactionsApi, type RecurringTransaction } from '@/lib/api';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrencyCents } from '@/lib/format';
 
 const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -202,7 +202,7 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
                     <div className={`w-2 h-2 rounded-full flex-shrink-0 ${r.type === 'INCOME' ? 'bg-green-500' : 'bg-red-500'}`} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{r.description}</p>
-                      <p className="text-[11px] text-muted-foreground">{scheduleLabel} · {formatCurrency(r.amount / 100)}</p>
+                      <p className="text-[11px] text-muted-foreground">{scheduleLabel} · {formatCurrencyCents(r.amount)}</p>
                     </div>
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex-shrink-0">
                       {r.frequency === 'MONTHLY' ? 'Mensal' : 'Semanal'}

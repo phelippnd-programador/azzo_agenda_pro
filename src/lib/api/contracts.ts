@@ -40,6 +40,7 @@ export type DashboardProfessionalMetricsResponse = {
   startDate: string;
   endDate: string;
   professionalId: string;
+  // Monetary values from dashboard/report endpoints are currently returned in cents.
   revenueTotal: number;
   commissionTotal: number;
   completedServices: number;
@@ -52,6 +53,7 @@ export type DashboardServiceMetricItem = {
   totalAppointments: number;
   completedAppointments: number;
   canceledAppointments: number;
+  // Monetary values from dashboard/report endpoints are currently returned in cents.
   revenueTotal: number;
   completionRate: number;
   cancellationRate: number;

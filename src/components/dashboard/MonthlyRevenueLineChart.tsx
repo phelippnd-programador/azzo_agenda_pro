@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrencyCents } from "@/lib/format";
 
 type RevenuePoint = {
   label: string;
@@ -97,7 +97,7 @@ export function MonthlyRevenueLineChart() {
                     }).format(Number(value))
                   }
                 />
-                <Tooltip formatter={(value) => formatCurrency(Number(value))} labelFormatter={(label) => `Dia ${label}`} />
+                <Tooltip formatter={(value) => formatCurrencyCents(Number(value))} labelFormatter={(label) => `Dia ${label}`} />
                 <Line
                   type="monotone"
                   dataKey="value"
@@ -114,11 +114,11 @@ export function MonthlyRevenueLineChart() {
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-border/70 bg-background/85 p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Total do mes</p>
-            <p className="mt-1 text-lg font-bold text-foreground sm:text-xl">{formatCurrency(monthlyTotal)}</p>
+            <p className="mt-1 text-lg font-bold text-foreground sm:text-xl">{formatCurrencyCents(monthlyTotal)}</p>
           </div>
           <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:text-right">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Media diaria</p>
-            <p className="mt-1 text-lg font-bold text-primary sm:text-xl">{formatCurrency(monthlyAverage)}</p>
+            <p className="mt-1 text-lg font-bold text-primary sm:text-xl">{formatCurrencyCents(monthlyAverage)}</p>
           </div>
         </div>
       </CardContent>

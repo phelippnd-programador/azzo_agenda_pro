@@ -32,6 +32,7 @@ export const StockPurchaseOrdersPage = lazy(() => import("@/pages/stock/StockPur
 export const StockTransfersPage = lazy(() => import("@/pages/stock/StockTransfersPage"));
 export const StockSettingsPage = lazy(() => import("@/pages/stock/StockSettingsPage"));
 export const FinancialCommissions = lazy(() => import("@/pages/FinancialCommissions"));
+export const FinancialCashClosing = lazy(() => import("@/pages/FinancialCashClosing"));
 export const ProfessionalFinancial = lazy(() => import("@/pages/ProfessionalFinancial"));
 export const ProfessionalCommissionReport = lazy(() => import("@/pages/report/ProfessionalCommissionReport"));
 export const Auditoria = lazy(() => import("@/pages/Auditoria"));

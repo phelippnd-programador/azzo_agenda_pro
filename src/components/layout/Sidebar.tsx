@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ExternalLink, LogOut, Menu, X } from "lucide-react";
 import { BrandLockup } from "@/components/common/BrandLockup";
 import { Button } from "@/components/ui/button";
@@ -18,11 +18,26 @@ interface SidebarProps {
   isDesktopOpen: boolean;
 }
 
+const SIDEBAR_SCROLL_STORAGE_KEY = "sidebar_scroll_top";
+const SIDEBAR_GROUPS_STORAGE_KEY = "sidebar_expanded_groups";
+
+function getInitialExpandedGroups() {
+  try {
+    const raw = sessionStorage.getItem(SIDEBAR_GROUPS_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
 export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const { allowedRoutes, menuItems } = useMenuPermissions();
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const allowedSet = useMemo(() => new Set(allowedRoutes ?? []), [allowedRoutes]);
   const visibleMenuEntries = useMemo(
     () => getVisibleSidebarEntries(menuItems, allowedSet),
@@ -48,17 +63,28 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
 
     return mapped;
   }, [visibleMenuEntries]);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(getInitialExpandedGroups);
   const [salonSlug, setSalonSlug] = useState("meu-salao");
 
-  const handleNavigate = () => {
+  const persistScrollPosition = useCallback(() => {
+    try {
+      const value = scrollContainerRef.current?.scrollTop ?? 0;
+      sessionStorage.setItem(SIDEBAR_SCROLL_STORAGE_KEY, String(value));
+    } catch {
+      // ignore sessionStorage issues
+    }
+  }, []);
+
+  const handleNavigate = useCallback(() => {
+    persistScrollPosition();
     if (window.innerWidth < 1024) {
       onToggleMobile();
     }
-  };
+  }, [onToggleMobile, persistScrollPosition]);
 
   useEffect(() => {
     const matchingGroup = visibleMenuEntries.find((entry) =>
+      isSidebarEntryActive(location.pathname, entry.path) ||
       entry.children.some((child) => isSidebarEntryActive(location.pathname, child.path))
     );
     if (!matchingGroup) {
@@ -70,6 +96,27 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
   }, [location.pathname, visibleMenuEntries]);
 
   useEffect(() => {
+    try {
+      sessionStorage.setItem(SIDEBAR_GROUPS_STORAGE_KEY, JSON.stringify(expandedGroups));
+    } catch {
+      // ignore sessionStorage issues
+    }
+  }, [expandedGroups]);
+
+  useLayoutEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(SIDEBAR_SCROLL_STORAGE_KEY);
+      if (!raw || !scrollContainerRef.current) return;
+      const parsed = Number(raw);
+      if (Number.isFinite(parsed)) {
+        scrollContainerRef.current.scrollTop = parsed;
+      }
+    } catch {
+      // ignore sessionStorage issues
+    }
+  }, [sectionedEntries.length]);
+
+  useEffect(() => {
     const cachedSlug = localStorage.getItem("salon_public_slug");
     if (cachedSlug?.trim()) {
       setSalonSlug(cachedSlug.trim());
@@ -77,6 +124,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
   }, []);
 
   const handleLogout = async () => {
+    persistScrollPosition();
     await logout();
     navigate(appRouteManifest.public.login);
   };
@@ -115,7 +163,11 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto py-3">
+          <div
+            ref={scrollContainerRef}
+            className="flex-1 overflow-y-auto py-3"
+            onScroll={persistScrollPosition}
+          >
             <nav className="px-2">
               {sectionedEntries.map((section) => (
                 <div key={section.id} className="mb-4 last:mb-0">

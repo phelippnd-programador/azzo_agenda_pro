@@ -79,6 +79,7 @@ export const appRouteManifest = {
   },
   finance: {
     root: "/financeiro",
+    cashClosing: "/financeiro/fechamento-caixa",
     commissions: "/financeiro/comissoes",
     professionalCommission: "/financeiro/comissoes/:professionalId",
     professionals: "/financeiro/profissionais",

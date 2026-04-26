@@ -16,6 +16,8 @@ export type CreateAppointmentPayload = {
     serviceId: string;
     durationMinutes: number;
     unitPrice: number;
+    grossAmount: number;
+    discountAmount: number;
     totalPrice: number;
   }>;
   origin?: string;

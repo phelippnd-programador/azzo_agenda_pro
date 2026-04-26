@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "vitest --config vitest.config.ts",
     "test:run": "vitest run --config vitest.config.ts",
+    "test:finance-regression": "vitest run --config vitest.config.ts src/test/pages/Agenda.test.tsx src/test/pages/Financial.test.tsx src/test/pages/FinancialCommissions.test.tsx src/test/pages/FinancialCashClosing.test.tsx src/test/components/Sidebar.test.tsx src/test/components/appointments/NewAppointmentDialog.test.tsx src/test/components/appointments/AppointmentDetailsSheet.test.tsx",
     "test:viewport": "playwright test e2e/viewport-validation.spec.ts"
   },
   "dependencies": {

@@ -5,6 +5,7 @@ import type {
   AppointmentDetailResponse,
   AppointmentManagementReportResponse,
   NoShowReportPageResponse,
+  PaymentMethod,
 } from "@/types";
 import type {
   AppointmentSchedulingSettings,
@@ -50,6 +51,10 @@ export type AppointmentManagementReportParams = {
   serviceId?: string;
   status?: string;
   limit?: number;
+};
+
+export type AppointmentStatusUpdatePayload = {
+  paymentMethod?: PaymentMethod;
 };
 
 export const appointmentsApi = {
@@ -173,9 +178,10 @@ export const appointmentsApi = {
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return requestBlob(`/appointments/no-show/export${suffix}`);
   },
-  updateStatus: (id: string, status: string) =>
+  updateStatus: (id: string, status: string, payload?: AppointmentStatusUpdatePayload) =>
     request<Appointment>(`/appointments/${id}/status?value=${status}`, {
       method: "PATCH",
+      body: payload ? JSON.stringify(payload) : undefined,
     }),
   addCustomerNote: (appointmentId: string, payload: AppointmentCustomerNoteRequest) =>
     request<AppointmentCustomerNote>(`/appointments/${appointmentId}/customer-notes`, {

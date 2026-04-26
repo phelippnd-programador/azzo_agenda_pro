@@ -56,6 +56,10 @@ type NewAppointmentDialogFlowProps = {
   canChooseDate: boolean;
   canChooseSlot: boolean;
   selectedServiceDuration: number;
+  selectedServicePrice: number;
+  discountInput: string;
+  discountAmountCents: number;
+  netServicePriceCents: number;
   onOpenNewClientDialog: () => void;
   onClientSearchChange: (value: string) => void;
   onClientSelect: (clientId: string) => void;
@@ -65,6 +69,7 @@ type NewAppointmentDialogFlowProps = {
   onSlotModeChange: (mode: SlotMode) => void;
   onSuggestedSlotSelect: (slot: ManualTimeSlotResponse) => void;
   onManualStartTimeChange: (value: string) => void;
+  onDiscountChange: (value: string) => void;
 };
 
 export function NewAppointmentDialogFlow({
@@ -98,6 +103,10 @@ export function NewAppointmentDialogFlow({
   canChooseDate,
   canChooseSlot,
   selectedServiceDuration,
+  selectedServicePrice,
+  discountInput,
+  discountAmountCents,
+  netServicePriceCents,
   onOpenNewClientDialog,
   onClientSearchChange,
   onClientSelect,
@@ -107,6 +116,7 @@ export function NewAppointmentDialogFlow({
   onSlotModeChange,
   onSuggestedSlotSelect,
   onManualStartTimeChange,
+  onDiscountChange,
 }: NewAppointmentDialogFlowProps) {
   return (
     <>
@@ -298,9 +308,25 @@ export function NewAppointmentDialogFlow({
                 <span>{selectedNewService.duration} min</span>
               </div>
               <div className="mt-1 flex items-center justify-between">
-                <span className="text-muted-foreground">Valor</span>
+                <span className="text-muted-foreground">Valor bruto</span>
                 <span className="font-medium text-primary">
                   {formatCurrencyCents(Number(selectedNewService.price))}
+                </span>
+              </div>
+              <div className="mt-3 space-y-2">
+                <Label htmlFor="appointment-discount">Desconto opcional</Label>
+                <Input
+                  id="appointment-discount"
+                  inputMode="decimal"
+                  value={discountInput}
+                  onChange={(event) => onDiscountChange(event.target.value)}
+                  placeholder="0,00"
+                />
+              </div>
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-muted-foreground">Liquido do item</span>
+                <span className="font-medium text-foreground">
+                  {formatCurrencyCents(netServicePriceCents)}
                 </span>
               </div>
             </div>
@@ -420,9 +446,21 @@ export function NewAppointmentDialogFlow({
                 <span className="font-medium">{selectedServiceDuration} min</span>
               </div>
               <div className="mt-1 flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Valor</span>
+                <span className="text-muted-foreground">Valor bruto</span>
                 <span className="font-medium text-primary">
-                  {formatCurrencyCents(Number(selectedNewService?.price || 0))}
+                  {formatCurrencyCents(selectedServicePrice)}
+                </span>
+              </div>
+              <div className="mt-1 flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Desconto</span>
+                <span className="font-medium">
+                  {formatCurrencyCents(discountAmountCents)}
+                </span>
+              </div>
+              <div className="mt-1 flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Liquido</span>
+                <span className="font-medium text-foreground">
+                  {formatCurrencyCents(netServicePriceCents)}
                 </span>
               </div>
             </div>
@@ -565,7 +603,7 @@ export function NewAppointmentDialogFlow({
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {selectedServiceDuration} min {" - "}
-                {formatCurrencyCents(Number(selectedNewService?.price || 0))}
+                {formatCurrencyCents(selectedServicePrice)}
               </p>
             </div>
             <div className="rounded-lg border bg-muted/20 p-4">
@@ -574,6 +612,18 @@ export function NewAppointmentDialogFlow({
               </p>
               <p className="mt-2 font-medium">
                 {selectedProfessional?.name || "Nao selecionado"}
+              </p>
+            </div>
+            <div className="rounded-lg border bg-muted/20 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Valores
+              </p>
+              <p className="mt-2 font-medium">Bruto: {formatCurrencyCents(selectedServicePrice)}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Desconto: {formatCurrencyCents(discountAmountCents)}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Liquido: {formatCurrencyCents(netServicePriceCents)}
               </p>
             </div>
             <div className="rounded-lg border bg-muted/20 p-4">

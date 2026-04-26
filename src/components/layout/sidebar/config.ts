@@ -22,6 +22,7 @@ import {
   User,
   UserCircle,
   Users,
+  Wallet,
 } from "lucide-react";
 import { appRouteManifest } from "@/app/route-manifest";
 import type { SidebarMenuItem } from "./types";
@@ -86,6 +87,11 @@ export const MENU_REGISTRY = {
     icon: DollarSign,
     label: "Financeiro",
     path: appRouteManifest.finance.root,
+  },
+  [appRouteManifest.finance.cashClosing]: {
+    icon: Wallet,
+    label: "Fechamento de Caixa",
+    path: appRouteManifest.finance.cashClosing,
   },
   [appRouteManifest.finance.commissions]: {
     icon: Receipt,
@@ -162,6 +168,7 @@ export const MAIN_MENU_ORDER = [
   appRouteManifest.chat.root,
   appRouteManifest.stock.root,
   appRouteManifest.finance.root,
+  appRouteManifest.finance.cashClosing,
   appRouteManifest.finance.commissions,
   appRouteManifest.finance.professionals,
   appRouteManifest.finance.license,
@@ -175,6 +182,7 @@ export const MAIN_MENU_ORDER = [
 
 export const FINANCIAL_GROUP_PATHS = [
   appRouteManifest.finance.root,
+  appRouteManifest.finance.cashClosing,
   appRouteManifest.finance.commissions,
   appRouteManifest.finance.professionals,
 ] as const;
@@ -202,6 +210,7 @@ export const ICON_REGISTRY: Record<string, LucideIcon> = {
   User,
   MessageCircleMore,
   Lightbulb,
+  Wallet,
 };
 
 export const DYNAMIC_BOTTOM_ROUTES = new Set([

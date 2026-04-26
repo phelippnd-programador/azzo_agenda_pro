@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { formatCurrency } from '@/lib/mockData';
+import { formatCurrencyCents } from '@/lib/format';
 import { dashboardApi } from '@/lib/api';
 
 const fallbackWeeklyData = [
@@ -66,7 +66,7 @@ export function RevenueChart() {
                 <div key={item.day} className="flex min-w-0 flex-1 flex-col items-center gap-2">
                   <span className="w-full truncate text-center text-[9px] text-muted-foreground sm:text-xs">
                     {item.value > 0 ? (
-                      <span className="hidden sm:inline">{formatCurrency(item.value)}</span>
+                      <span className="hidden sm:inline">{formatCurrencyCents(item.value)}</span>
                     ) : (
                       '-'
                     )}
@@ -94,13 +94,13 @@ export function RevenueChart() {
           <div className="rounded-2xl border border-border/70 bg-background/85 p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Total da semana</p>
             <p className="mt-1 text-lg font-bold text-foreground sm:text-xl">
-              {formatCurrency(weeklyData.reduce((acc, d) => acc + d.value, 0))}
+              {formatCurrencyCents(weeklyData.reduce((acc, d) => acc + d.value, 0))}
             </p>
           </div>
           <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:text-right">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Media diaria</p>
             <p className="mt-1 text-lg font-bold text-primary sm:text-xl">
-              {formatCurrency(weeklyData.reduce((acc, d) => acc + d.value, 0) / weeklyData.length)}
+              {formatCurrencyCents(weeklyData.reduce((acc, d) => acc + d.value, 0) / weeklyData.length)}
             </p>
           </div>
         </div>

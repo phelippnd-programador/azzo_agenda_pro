@@ -22,7 +22,7 @@ import { dashboardApi } from '@/lib/api';
 import { shouldForceLogoutOnDashboardRetry } from '@/lib/dashboard-auth-retry';
 import type { DashboardCustomerRankingResponse } from '@/types';
 import type { DashboardProfessionalMetricsResponse } from '@/lib/api';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, formatCurrencyCents } from '@/lib/format';
 
 const normalizeDateToIso = (value: unknown) => {
   if (!value) return '';
@@ -288,7 +288,7 @@ export default function Dashboard() {
             professionalAppointments.length > 0 ? `${professionalAppointments.length} atendimento(s)` : undefined,
           metaText:
             professionalAppointments.length > 0
-              ? `${formatCurrency(revenueTotal)} â€¢ ${clientsServed} cliente(s)`
+              ? `${formatCurrencyCents(revenueTotal)} â€¢ ${clientsServed} cliente(s)`
               : undefined,
         };
       })
@@ -436,7 +436,7 @@ export default function Dashboard() {
             />
             <MetricCard
               title={isProfessionalUser ? 'Faturamento no periodo' : 'Faturamento Hoje'}
-              value={formatCurrency(resolvedMetrics.todayRevenue)}
+              value={isProfessionalUser ? formatCurrencyCents(resolvedMetrics.todayRevenue) : formatCurrency(resolvedMetrics.todayRevenue)}
               icon={DollarSign}
               trend={
                 isProfessionalUser
@@ -468,7 +468,7 @@ export default function Dashboard() {
             />
             <MetricCard
               title={isProfessionalUser ? 'Comissao no periodo' : 'Faturamento Mensal'}
-              value={formatCurrency(resolvedMetrics.monthlyRevenue)}
+              value={isProfessionalUser ? formatCurrencyCents(resolvedMetrics.monthlyRevenue) : formatCurrency(resolvedMetrics.monthlyRevenue)}
               icon={TrendingUp}
               trend={
                 isProfessionalUser
@@ -735,7 +735,7 @@ export default function Dashboard() {
                   id: item.clientId,
                   name: item.clientName,
                   value: item.completedServices,
-                  badgeText: formatCurrency(item.revenueTotal),
+                  badgeText: formatCurrencyCents(item.revenueTotal),
                   metaText: `${item.completedServices} servico(s) - ${item.completedAppointments} atendimento(s) - ultima: ${item.lastAppointmentDate ? new Date(`${item.lastAppointmentDate}T12:00:00`).toLocaleDateString('pt-BR') : '-'
                     }`,
                 }))}
@@ -768,7 +768,7 @@ export default function Dashboard() {
                 id: item.clientId,
                 name: item.clientName,
                 value: item.completedServices,
-                badgeText: formatCurrency(item.revenueTotal),
+                badgeText: formatCurrencyCents(item.revenueTotal),
                 metaText: `${item.completedServices} servico(s) - ${item.completedAppointments} atendimento(s) - ultima: ${item.lastAppointmentDate ? new Date(`${item.lastAppointmentDate}T12:00:00`).toLocaleDateString('pt-BR') : '-'
                   }`,
               }))}

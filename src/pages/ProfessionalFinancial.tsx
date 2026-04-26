@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrencyCents } from "@/lib/format";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useProfessionals } from "@/hooks/useProfessionals";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +9,7 @@ import {
   type DashboardServicesMetricsResponse,
 } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,7 +31,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { DollarSign, Scissors, Users } from "lucide-react";
+import { DollarSign, Loader2, RefreshCw, Scissors, Users } from "lucide-react";
 
 type DatePreset = "day" | "week" | "month" | "year" | "range";
 
@@ -104,6 +105,7 @@ export default function ProfessionalFinancial() {
   const [servicesMetrics, setServicesMetrics] =
     useState<DashboardServicesMetricsResponse | null>(null);
   const [isLoadingServicesMetrics, setIsLoadingServicesMetrics] = useState(false);
+  const [refreshVersion, setRefreshVersion] = useState(0);
 
   const loggedProfessional = useMemo(
     () => professionals.find((professional) => professional.userId === user?.id) ?? null,
@@ -183,7 +185,16 @@ export default function ProfessionalFinancial() {
     return () => {
       isMounted = false;
     };
-  }, [effectiveProfessionalId, end, isLoadingProfessionals, isProfessional, loggedProfessionalId, professionals, start]);
+  }, [
+    effectiveProfessionalId,
+    end,
+    isLoadingProfessionals,
+    isProfessional,
+    loggedProfessionalId,
+    professionals,
+    refreshVersion,
+    start,
+  ]);
 
   useEffect(() => {
     if (!start || !end || isLoadingProfessionals) {
@@ -233,7 +244,15 @@ export default function ProfessionalFinancial() {
     return () => {
       isMounted = false;
     };
-  }, [effectiveProfessionalId, end, isLoadingProfessionals, isProfessional, loggedProfessionalId, start]);
+  }, [
+    effectiveProfessionalId,
+    end,
+    isLoadingProfessionals,
+    isProfessional,
+    loggedProfessionalId,
+    refreshVersion,
+    start,
+  ]);
 
   const visibleStatsByProfessional = useMemo(
     () =>
@@ -311,6 +330,7 @@ export default function ProfessionalFinancial() {
   const isOwnerView = !isProfessional;
 
   const isLoadingMetrics = isLoadingProfessionalMetrics || isLoadingServicesMetrics;
+  const canRefresh = Boolean(start && end) && !(preset === "range" && (!customStart || !customEnd));
 
   if (isLoadingProfessionals) {
     return (
@@ -403,6 +423,23 @@ export default function ProfessionalFinancial() {
           </CardContent>
         </Card>
 
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setRefreshVersion((current) => current + 1)}
+            disabled={!canRefresh || isLoadingMetrics}
+            className="gap-2"
+          >
+            {isLoadingMetrics ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            Atualizar agora
+          </Button>
+        </div>
+
         {preset === "range" && (!customStart || !customEnd) ? (
           <p className="text-sm text-muted-foreground">
             Selecione as datas de inicio e fim para filtrar.
@@ -414,14 +451,14 @@ export default function ProfessionalFinancial() {
             <Card>
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground">Faturamento</p>
-                <p className="text-xl font-bold text-foreground">{formatCurrency(totals.revenue)}</p>
+                <p className="text-xl font-bold text-foreground">{formatCurrencyCents(totals.revenue)}</p>
               </CardContent>
             </Card>
           ) : null}
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Comissao total</p>
-              <p className="text-xl font-bold text-primary">{formatCurrency(totals.commission)}</p>
+              <p className="text-xl font-bold text-primary">{formatCurrencyCents(totals.commission)}</p>
             </CardContent>
           </Card>
           <Card>
@@ -461,7 +498,7 @@ export default function ProfessionalFinancial() {
                             }).format(Number(value))
                           }
                         />
-                        <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                        <Tooltip formatter={(value) => formatCurrencyCents(Number(value))} />
                         <Legend />
                         <Bar dataKey="revenue" fill="#7c3aed" name="Faturamento" radius={[6, 6, 0, 0]} />
                         <Bar dataKey="commission" fill="#0ea5e9" name="Comissao" radius={[6, 6, 0, 0]} />
@@ -559,7 +596,7 @@ export default function ProfessionalFinancial() {
                             | (typeof servicesChartData)[number]
                             | undefined;
                           if (!item) return label;
-                          return `${label} - Total ${item.totalAppointments} - ${formatCurrency(
+                          return `${label} - Total ${item.totalAppointments} - ${formatCurrencyCents(
                             item.revenueTotal
                           )}`;
                         }}
@@ -651,11 +688,11 @@ export default function ProfessionalFinancial() {
                   <div className="font-medium text-foreground">{item.name}</div>
                   {isOwnerView ? (
                     <div className="text-sm text-muted-foreground">
-                      <span className="text-muted-foreground">Faturamento:</span> {formatCurrency(item.revenue)}
+                      <span className="text-muted-foreground">Faturamento:</span> {formatCurrencyCents(item.revenue)}
                     </div>
                   ) : null}
                   <div className="text-sm text-muted-foreground">
-                    <span className="text-muted-foreground">Comissao:</span> {formatCurrency(item.commission)}
+                    <span className="text-muted-foreground">Comissao:</span> {formatCurrencyCents(item.commission)}
                   </div>
                   <div className="text-sm text-muted-foreground">
                     <span className="text-muted-foreground">Servicos:</span> {item.servicesCount}

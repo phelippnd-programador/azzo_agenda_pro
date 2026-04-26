@@ -98,7 +98,7 @@ export function buildDynamicSidebarMenu(
     });
   });
 
-  const roots: Array<SidebarMenuNode & { displayOrder?: number }> = [];
+  const roots: Array<{ node: SidebarMenuNode; displayOrder?: number }> = [];
   sortMenuNodes(visibleItems.filter((item) => includedIds.has(item.id))).forEach((item) => {
     const node = nodeMap.get(item.id);
     if (!node) {
@@ -121,11 +121,11 @@ export function buildDynamicSidebarMenu(
       return;
     }
 
-    roots.push({ ...node, displayOrder: item.displayOrder });
+    roots.push({ node, displayOrder: item.displayOrder });
   });
 
   return moveStandaloneRoutesToEnd(
-    sortMenuNodes(roots).map(({ displayOrder: _displayOrder, ...node }) => node)
+    sortMenuNodes(roots).map(({ node }) => node)
   );
 }
 

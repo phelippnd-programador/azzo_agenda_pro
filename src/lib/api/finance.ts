@@ -36,6 +36,20 @@ export type TransactionPagedResponse = {
   totalPages: number;
 };
 
+export type TransactionMutationInput = {
+  appointmentId?: string;
+  professionalId?: string;
+  productId?: string;
+  productCategory?: string;
+  type: "INCOME" | "EXPENSE";
+  category: string;
+  description: string;
+  amount?: number;
+  amountCents?: number;
+  paymentMethod: "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "PIX" | "OTHER";
+  date: string;
+};
+
 export type RecurringTransaction = {
   id: string;
   type: "INCOME" | "EXPENSE";
@@ -62,6 +76,43 @@ export type RecurringTransactionCreateInput = {
   dayOfWeek?: number;
 };
 
+export type LegacyCommissionReportResponse = {
+  professionalId: string;
+  from: string;
+  to: string;
+  totalRevenue: number;
+  commissionRate?: number | null;
+  commissionValue: number;
+};
+
+export type CashClosingPaymentMethod =
+  | "CASH"
+  | "CREDIT_CARD"
+  | "DEBIT_CARD"
+  | "PIX"
+  | "OTHER";
+
+export type CashClosingStatus = "OPEN" | "CLOSED";
+
+export type CashClosing = {
+  id: string;
+  tenantId: string;
+  businessDate: string;
+  status: CashClosingStatus;
+  openedAt: string;
+  openedBy?: string | null;
+  openingNotes?: string | null;
+  closedAt?: string | null;
+  closedBy?: string | null;
+  closingNotes?: string | null;
+  expectedTotals: Record<CashClosingPaymentMethod, number>;
+  countedTotals: Record<CashClosingPaymentMethod, number>;
+  differenceTotals: Record<CashClosingPaymentMethod, number>;
+  totalExpected: number;
+  totalCounted: number;
+  totalDifference: number;
+};
+
 export const transactionsApi = {
   getAll: (params?: TransactionListParams) => {
     const query = new URLSearchParams();
@@ -77,21 +128,26 @@ export const transactionsApi = {
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return request<TransactionPagedResponse>(`/finance/transactions${suffix}`);
   },
-  getSummary: (params?: { from?: string; to?: string }) => {
+  getSummary: (params?: Omit<TransactionListParams, "page" | "limit">) => {
     const query = new URLSearchParams();
     if (params?.from) query.set("from", params.from);
     if (params?.to) query.set("to", params.to);
+    if (params?.type) query.set("type", params.type);
+    if (params?.categoryId) query.set("categoryId", params.categoryId);
+    if (params?.paymentMethod) query.set("paymentMethod", params.paymentMethod);
+    if (params?.professionalId) query.set("professionalId", params.professionalId);
+    if (params?.reconciled) query.set("reconciled", params.reconciled);
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return request<{ totalIncome: number; totalExpenses: number; balance: number }>(
       `/finance/transactions/summary${suffix}`
     );
   },
-  create: (data: Partial<Transaction>) =>
+  create: (data: TransactionMutationInput) =>
     request<Transaction>("/finance/transactions", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  update: (id: string, data: Partial<Transaction>) =>
+  update: (id: string, data: Partial<TransactionMutationInput>) =>
     request<Transaction>(`/finance/transactions/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -104,11 +160,15 @@ export const transactionsApi = {
     request<void>(`/finance/transactions/${id}`, {
       method: "DELETE",
     }),
-  exportCsv: (params?: { from?: string; to?: string; type?: string }) => {
+  exportCsv: (params?: Omit<TransactionListParams, "page" | "limit">) => {
     const query = new URLSearchParams();
     if (params?.from) query.set("from", params.from);
     if (params?.to) query.set("to", params.to);
     if (params?.type) query.set("type", params.type);
+    if (params?.categoryId) query.set("categoryId", params.categoryId);
+    if (params?.paymentMethod) query.set("paymentMethod", params.paymentMethod);
+    if (params?.professionalId) query.set("professionalId", params.professionalId);
+    if (params?.reconciled) query.set("reconciled", params.reconciled);
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return requestBlob(`/finance/transactions/export${suffix}`);
   },
@@ -161,11 +221,32 @@ export const recurringTransactionsApi = {
     request<void>(`/finance/transactions/recurring/${id}`, { method: "DELETE" }),
 };
 
+export const cashClosingsApi = {
+  getAll: () => request<CashClosing[]>("/finance/cash-closings"),
+  getById: (id: string) => request<CashClosing>(`/finance/cash-closings/${id}`),
+  open: (payload: { businessDate?: string; notes?: string }) =>
+    request<CashClosing>("/finance/cash-closings/open", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  close: (
+    id: string,
+    payload: { countedTotals: Partial<Record<CashClosingPaymentMethod, number>>; notes?: string }
+  ) =>
+    request<CashClosing>(`/finance/cash-closings/${id}/close`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+};
+
 export const reportsApi = {
-  getDaily: (date: string) => request(`/reports/daily?date=${date}`),
-  getCommissions: (from: string, to: string, professionalUserId: string) =>
-    request(
-      `/reports/commissions?from=${from}&to=${to}&professionalUserId=${professionalUserId}`
+  getDaily: (date: string) =>
+    request<{ date: string; totalAppointments: number; totalRevenue: number; totalExpenses: number; balance: number }>(
+      `/reports/daily?date=${date}`
+    ),
+  getCommissions: (from: string, to: string, professionalId: string) =>
+    request<LegacyCommissionReportResponse>(
+      `/reports/commissions?from=${from}&to=${to}&professionalId=${professionalId}`
     ),
   getAbandonment: (params?: {
     from?: string;

@@ -13,7 +13,7 @@ import {
 } from 'recharts';
 import { transactionsApi } from '@/lib/api';
 import { getDateRangeFromFilter } from '@/hooks/useTransactions';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrencyCents } from '@/lib/format';
 
 interface CashFlowChartProps {
   dateFilter: string;
@@ -72,7 +72,7 @@ export function CashFlowChart({ dateFilter }: CashFlowChartProps) {
                 />
                 <Tooltip
                   formatter={(value: number, name: string) => [
-                    formatCurrency(value / 100),
+                    formatCurrencyCents(value),
                     name === 'income' ? 'Entradas' : name === 'expenses' ? 'Saídas' : 'Saldo',
                   ]}
                   labelFormatter={(label) => `Data: ${String(label).split('-').reverse().join('/')}`}

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
@@ -12,7 +13,7 @@ type SidebarNavLinkProps = {
   onNavigate: () => void;
 };
 
-export function SidebarNavLink({
+export const SidebarNavLink = memo(function SidebarNavLink({
   path,
   label,
   icon: Icon,
@@ -45,4 +46,6 @@ export function SidebarNavLink({
       <span className="truncate">{label}</span>
     </Link>
   );
-}
+});
+
+SidebarNavLink.displayName = "SidebarNavLink";

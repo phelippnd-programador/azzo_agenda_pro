@@ -64,6 +64,8 @@ export const getAppointmentItems = (appointment: {
     service?: { name?: string } | null;
     durationMinutes: number;
     unitPrice: number;
+    grossAmount?: number;
+    discountAmount?: number;
     totalPrice: number;
   }> | null;
   serviceId?: string | null;
@@ -80,6 +82,8 @@ export const getAppointmentItems = (appointment: {
       service: appointment.service,
       durationMinutes: 0,
       unitPrice: Number(appointment.totalPrice || 0),
+      grossAmount: Number(appointment.totalPrice || 0),
+      discountAmount: 0,
       totalPrice: Number(appointment.totalPrice || 0),
     },
   ];

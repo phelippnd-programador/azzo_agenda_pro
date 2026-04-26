@@ -36,7 +36,7 @@ import { FinancialFiltersPanel, type FinancialFilters } from '@/components/finan
 import { useTransactions, useTransactionCategories, getDateRangeFromFilter } from '@/hooks/useTransactions';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { transactionsApi } from '@/lib/api';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrencyCents } from '@/lib/format';
 import { toast } from 'sonner';
 import type { Transaction } from '@/types';
 
@@ -87,6 +87,7 @@ export default function Financial() {
     categoryId: filters.categoryId || undefined,
     paymentMethod: filters.paymentMethod || undefined,
     professionalId: filters.professionalId || undefined,
+    reconciled: filters.reconciled || undefined,
   });
 
   const { categories, isLoading: isLoadingCategories, createCategory, updateCategory, deleteCategory } = useTransactionCategories();
@@ -131,7 +132,15 @@ export default function Financial() {
     setIsExporting(true);
     try {
       const { from, to } = getDateRangeFromFilter(dateFilter);
-      const blob = await transactionsApi.exportCsv({ from, to, type: filters.type || undefined });
+      const blob = await transactionsApi.exportCsv({
+        from,
+        to,
+        type: filters.type || undefined,
+        categoryId: filters.categoryId || undefined,
+        paymentMethod: filters.paymentMethod || undefined,
+        professionalId: filters.professionalId || undefined,
+        reconciled: filters.reconciled || undefined,
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -179,7 +188,7 @@ export default function Financial() {
         <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
           <HighlightMetricCard
             title="Entradas"
-            value={formatCurrency(summary.totalIncome)}
+            value={formatCurrencyCents(summary.totalIncome)}
             icon={TrendingUp}
             className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200"
             titleClassName="text-green-700"
@@ -189,7 +198,7 @@ export default function Financial() {
           />
           <HighlightMetricCard
             title="Saídas"
-            value={formatCurrency(summary.totalExpenses)}
+            value={formatCurrencyCents(summary.totalExpenses)}
             icon={TrendingDown}
             className="bg-gradient-to-br from-red-50 to-rose-50 border-red-200"
             titleClassName="text-red-700"
@@ -199,7 +208,7 @@ export default function Financial() {
           />
           <HighlightMetricCard
             title="Saldo"
-            value={formatCurrency(summary.balance)}
+            value={formatCurrencyCents(summary.balance)}
             icon={Wallet}
             className={summary.balance >= 0
               ? 'bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20'

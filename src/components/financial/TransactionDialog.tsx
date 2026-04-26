@@ -19,7 +19,8 @@ import {
 } from '@/components/ui/select';
 import { Loader2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { stockApi } from '@/lib/api';
+import { stockApi, type TransactionMutationInput } from '@/lib/api';
+import { toDateKey } from '@/lib/format';
 import type { Transaction } from '@/types';
 import type { Professional } from '@/lib/api';
 import type { StockItem } from '@/types/stock';
@@ -37,12 +38,25 @@ interface TransactionDialogProps {
   onOpenChange: (open: boolean) => void;
   defaultType: 'INCOME' | 'EXPENSE';
   editingTransaction: Transaction | null;
+  initialDate?: string;
   categories: Array<{ id: string; name: string }>;
   isLoadingCategories: boolean;
   professionals: Professional[];
-  createTransaction: (payload: Omit<Transaction, 'id' | 'createdAt' | 'reconciled' | 'source'>) => Promise<void>;
-  updateTransaction: (id: string, payload: Partial<Transaction>) => Promise<void>;
+  createTransaction: (payload: TransactionMutationInput) => Promise<unknown>;
+  updateTransaction: (id: string, payload: TransactionMutationInput) => Promise<unknown>;
   createCategory: (name: string) => Promise<{ id: string; name: string } | undefined>;
+}
+
+function formatAmountInput(amountCents?: number | null) {
+  if (amountCents == null) return '';
+  return (amountCents / 100).toFixed(2);
+}
+
+function parseAmountToCents(input: string) {
+  const normalized = input.replace(',', '.').trim();
+  const amountValue = Number(normalized);
+  if (!Number.isFinite(amountValue) || amountValue <= 0) return null;
+  return Math.round(amountValue * 100);
 }
 
 export function TransactionDialog({
@@ -50,6 +64,7 @@ export function TransactionDialog({
   onOpenChange,
   defaultType,
   editingTransaction,
+  initialDate,
   categories,
   isLoadingCategories,
   professionals,
@@ -64,13 +79,14 @@ export function TransactionDialog({
   const [formNewCategory, setFormNewCategory] = useState('');
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [formPaymentMethod, setFormPaymentMethod] = useState('PIX');
-  const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0]);
+  const [formDate, setFormDate] = useState(toDateKey(new Date()));
   const [formProfessionalId, setFormProfessionalId] = useState('');
   const [formProductId, setFormProductId] = useState('');
   const [formProductCategory, setFormProductCategory] = useState('');
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [isLoadingStock, setIsLoadingStock] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const resolvedInitialDate = initialDate || toDateKey(new Date());
 
   const isProductIncome = transactionType === 'INCOME' && formCategory === 'Produto';
 
@@ -79,15 +95,21 @@ export function TransactionDialog({
     if (!editingTransaction) setTransactionType(defaultType);
   }, [defaultType, editingTransaction]);
 
+  useEffect(() => {
+    if (!editingTransaction && open) {
+      setFormDate(resolvedInitialDate);
+    }
+  }, [editingTransaction, open, resolvedInitialDate]);
+
   // Populate form when editing
   useEffect(() => {
     if (editingTransaction) {
       setTransactionType(editingTransaction.type);
       setFormDescription(editingTransaction.description);
-      setFormAmount(String(editingTransaction.amount));
+      setFormAmount(formatAmountInput(editingTransaction.amount));
       setFormCategory(editingTransaction.category);
       setFormPaymentMethod(editingTransaction.paymentMethod);
-      setFormDate(new Date(editingTransaction.date).toISOString().split('T')[0]);
+      setFormDate(toDateKey(editingTransaction.date));
       setFormProfessionalId(editingTransaction.professionalId ?? '');
       setFormProductId(editingTransaction.productId ?? '');
       setFormProductCategory(editingTransaction.productCategory ?? '');
@@ -112,7 +134,7 @@ export function TransactionDialog({
     setFormNewCategory('');
     setIsCreatingCategory(false);
     setFormPaymentMethod('PIX');
-    setFormDate(new Date().toISOString().split('T')[0]);
+    setFormDate(resolvedInitialDate);
     setFormProfessionalId('');
     setFormProductId('');
     setFormProductCategory('');
@@ -139,8 +161,8 @@ export function TransactionDialog({
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
-    const amountValue = parseFloat(formAmount);
-    if (isNaN(amountValue) || amountValue <= 0) {
+    const amountCents = parseAmountToCents(formAmount);
+    if (amountCents == null) {
       toast.error('Informe um valor maior que zero');
       return;
     }
@@ -156,10 +178,10 @@ export function TransactionDialog({
     const payload = {
       type: transactionType,
       description: formDescription,
-      amount: amountValue,
+      amountCents,
       category: formCategory,
       paymentMethod: formPaymentMethod as 'PIX' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'CASH' | 'OTHER',
-      date: new Date(formDate).toISOString(),
+      date: formDate,
       professionalId: formProfessionalId || undefined,
       productId: formProductId || undefined,
       productCategory: formProductCategory || undefined,
@@ -170,7 +192,7 @@ export function TransactionDialog({
       if (editingTransaction) {
         await updateTransaction(editingTransaction.id, payload);
       } else {
-        await createTransaction(payload as Omit<Transaction, 'id' | 'createdAt' | 'reconciled' | 'source'>);
+        await createTransaction(payload);
       }
       handleClose();
     } catch {

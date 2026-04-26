@@ -14,6 +14,7 @@ import {
   Clients,
   ClientsOverviewPage,
   Financial,
+  FinancialCashClosing,
   FinancialCommissions,
   FiscalCertificatesSettings,
   Index,
@@ -138,6 +139,7 @@ export function ProtectedRouteGroup({
       </Route>
 
       <Route path={appRouteManifest.finance.root} element={<ProtectedRoute><Financial /></ProtectedRoute>} />
+      <Route path={appRouteManifest.finance.cashClosing} element={<ProtectedRoute><FinancialCashClosing /></ProtectedRoute>} />
       <Route path={appRouteManifest.finance.commissions} element={<ProtectedRoute><FinancialCommissions /></ProtectedRoute>} />
       <Route path={appRouteManifest.finance.professionalCommission} element={<ProtectedRoute><ProfessionalCommissionReport /></ProtectedRoute>} />
       <Route path={appRouteManifest.finance.professionals} element={<ProtectedRoute><ProfessionalFinancial /></ProtectedRoute>} />
@@ -147,7 +149,7 @@ export function ProtectedRouteGroup({
       <Route path={appRouteManifest.audit.lgpd} element={<ProtectedRoute><LgpdRequests /></ProtectedRoute>} />
 
       <Route path={appRouteManifest.settings.root} element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-      <Route path={appRouteManifest.settings.stock} element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+      <Route path={appRouteManifest.settings.stock} element={<ProtectedRoute><StockSettingsPage /></ProtectedRoute>} />
       <Route path={appRouteManifest.profiles.user} element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
       <Route path={appRouteManifest.profiles.salon} element={<ProtectedRoute><SalonProfile /></ProtectedRoute>} />
       <Route path={appRouteManifest.settings.fiscalTaxes} element={<ProtectedRoute><TaxConfig /></ProtectedRoute>} />
