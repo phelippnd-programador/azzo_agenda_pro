@@ -5,6 +5,7 @@
 
 @layer base {
   :root {
+    color-scheme: light;
     --background: 214 29% 97%;
     --foreground: 222 33% 14%;
     --card: 0 0% 100%;
@@ -44,6 +45,7 @@
   }
 
   .dark {
+    color-scheme: dark;
     --background: 222 39% 8%;
     --foreground: 210 36% 96%;
     --card: 222 34% 10%;
@@ -127,6 +129,34 @@
   .surface-shell {
     @apply rounded-[calc(var(--radius-lg)+0.25rem)] border border-border/70 bg-gradient-to-br from-background via-card to-muted/40;
     box-shadow: var(--shadow-elevated);
+  }
+
+  .tone-amber-panel {
+    @apply border-amber-200/80 bg-gradient-to-br from-amber-50/90 to-orange-50/75 dark:border-amber-500/20 dark:from-amber-500/10 dark:to-orange-500/5;
+  }
+
+  .tone-sky-panel {
+    @apply border-sky-200/80 bg-gradient-to-br from-sky-50/90 to-cyan-50/75 dark:border-sky-500/20 dark:from-sky-500/10 dark:to-cyan-500/5;
+  }
+
+  .tone-emerald-panel {
+    @apply border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 to-green-50/75 dark:border-emerald-500/20 dark:from-emerald-500/10 dark:to-green-500/5;
+  }
+
+  .tone-rose-panel {
+    @apply border-rose-200/80 bg-gradient-to-br from-rose-50/90 to-orange-50/75 dark:border-rose-500/20 dark:from-rose-500/10 dark:to-orange-500/5;
+  }
+
+  .tone-surface {
+    @apply border-border/70 bg-card/85 dark:bg-card/80;
+  }
+
+  .tone-subtle {
+    @apply border-border/70 bg-muted/45 dark:bg-muted/35;
+  }
+
+  .theme-toggle-shell {
+    @apply rounded-xl border border-border/70 bg-card/85 text-foreground shadow-soft backdrop-blur;
   }
 
   .brand-orbit-badge {

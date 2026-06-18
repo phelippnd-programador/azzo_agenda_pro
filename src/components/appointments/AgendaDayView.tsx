@@ -242,41 +242,41 @@ export function AgendaDayView({
           <CollapsibleTrigger asChild>
             <button
               type="button"
-              className="flex w-full flex-col gap-2 rounded-lg border border-amber-200 bg-amber-100/70 px-3 py-2 text-left transition-colors hover:bg-amber-100"
+            className="flex w-full flex-col gap-2 rounded-lg border border-amber-200 bg-amber-100/70 px-3 py-2 text-left transition-colors hover:bg-amber-100 dark:border-amber-500/25 dark:bg-amber-500/15 dark:hover:bg-amber-500/20"
             >
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-start gap-2">
-                  <div className="rounded-full bg-amber-500/15 p-1.5 text-amber-700">
+                  <div className="rounded-full bg-amber-500/15 p-1.5 text-amber-700 dark:text-amber-300">
                     <TriangleAlert className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-900">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-100">
                       Conflito de agenda
                     </p>
-                    <p className="text-xs text-amber-800 sm:text-sm">
+                    <p className="text-xs text-amber-800 dark:text-amber-200 sm:text-sm">
                       {getOverlapLabel(appointmentsAtSameTime.length)}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 self-start sm:self-auto">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-medium text-amber-900">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-medium text-amber-900 dark:bg-slate-900/70 dark:text-amber-100">
                     <Layers3 className="h-3.5 w-3.5" />
                     Sobrepostos
                   </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-medium text-amber-900">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-medium text-amber-900 dark:bg-slate-900/70 dark:text-amber-100">
                     {isOpen ? 'Recolher' : 'Expandir'}
                     <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between gap-2 text-[11px] text-amber-800">
+              <div className="flex items-center justify-between gap-2 text-[11px] text-amber-800 dark:text-amber-200">
                 <span>
                   {isOpen
                     ? 'Compare os atendimentos lado a lado para decidir o proximo passo.'
                     : 'Grupo recolhido. Abra para comparar os atendimentos deste horario.'}
                 </span>
-                <span className="hidden sm:inline text-amber-700">
+                <span className="hidden sm:inline text-amber-700 dark:text-amber-300">
                   {isOpen ? 'Arraste horizontalmente se precisar' : 'Toque para expandir'}
                 </span>
               </div>
@@ -292,12 +292,12 @@ export function AgendaDayView({
                 return (
                   <div
                     key={appointment.id}
-                    className={`min-w-[280px] max-w-[360px] flex-1 snap-start rounded-xl border border-white/80 p-3 sm:min-w-[320px] sm:p-4 lg:min-w-[340px] ${getStatusColor(appointment.status)} cursor-pointer hover:shadow-md hover:-translate-y-px transition-all duration-150`}
+                    className={`min-w-[280px] max-w-[360px] flex-1 snap-start rounded-xl border border-white/80 p-3 sm:min-w-[320px] sm:p-4 lg:min-w-[340px] dark:border-slate-700/70 ${getStatusColor(appointment.status)} cursor-pointer hover:shadow-md hover:-translate-y-px transition-all duration-150`}
                     onClick={() => onAppointmentClick(appointment)}
                   >
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <div className="flex flex-wrap items-center gap-2">
-                        <div className="inline-flex items-center gap-1 rounded-full bg-white/75 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-foreground/80">
+                        <div className="inline-flex items-center gap-1 rounded-full bg-white/75 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-foreground/80 dark:bg-slate-900/55 dark:text-slate-200">
                           #{index + 1} de {appointmentsAtSameTime.length}
                         </div>
                         <StatusBadge
@@ -310,7 +310,7 @@ export function AgendaDayView({
                     </div>
 
                     <div className="flex items-start gap-3 min-w-0">
-                      <Avatar className="w-10 h-10 flex-shrink-0 ring-1 ring-white/80">
+                      <Avatar className="w-10 h-10 flex-shrink-0 ring-1 ring-white/80 dark:ring-slate-700">
                         <AvatarImage src={professional?.avatar} />
                         <AvatarFallback className="text-xs font-medium">
                           {client?.name?.slice(0, 2).toUpperCase() ?? '??'}

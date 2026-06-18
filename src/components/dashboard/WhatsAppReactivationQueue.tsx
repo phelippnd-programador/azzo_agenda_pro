@@ -94,9 +94,9 @@ const getStatusBadgeClass = (status?: string | null) => {
     case "CANCELLED":
       return "border-rose-200 bg-rose-50 text-rose-800";
     case "EXHAUSTED":
-      return "border-slate-200 bg-slate-100 text-slate-700";
+      return "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200";
     default:
-      return "border-slate-200 bg-slate-100 text-slate-700";
+      return "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200";
   }
 };
 
@@ -111,7 +111,7 @@ const getStageBadgeClass = (stage?: string | null) => {
     case "FINAL_REVIEW":
       return "border-emerald-200 bg-emerald-50 text-emerald-800";
     default:
-      return "border-slate-200 bg-slate-100 text-slate-700";
+      return "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200";
   }
 };
 
@@ -239,12 +239,12 @@ export function WhatsAppReactivationQueue() {
   };
 
   return (
-    <Card className="border-slate-200 bg-white">
+    <Card className="tone-surface border-slate-200 dark:border-slate-700">
       <CardHeader className="gap-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-1">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <MessageSquareText className="h-5 w-5 text-slate-700" />
+              <MessageSquareText className="h-5 w-5 text-slate-700 dark:text-slate-200" />
               Fila operacional de abandonos
             </CardTitle>
             <CardDescription>
@@ -357,8 +357,8 @@ export function WhatsAppReactivationQueue() {
             ))}
           </div>
         ) : queue.items.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-6 py-10 text-center">
-            <RefreshCcw className="mx-auto mb-3 h-8 w-8 text-slate-500" />
+          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-6 py-10 text-center dark:border-slate-700 dark:bg-slate-900/40">
+            <RefreshCcw className="mx-auto mb-3 h-8 w-8 text-slate-500 dark:text-slate-300" />
             <p className="font-medium text-foreground">Nenhum ciclo encontrado neste filtro</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Ajuste periodo, busca, etapa ou status para revisar outros abandonos do WhatsApp.
@@ -369,7 +369,7 @@ export function WhatsAppReactivationQueue() {
             {queue.exceptionItems.length > 0 ? (
               <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
                 <div className="mb-3 flex items-start gap-3">
-                  <div className="rounded-xl bg-white/80 p-2">
+                  <div className="rounded-xl bg-background/85 p-2 dark:bg-background/60">
                     <AlertCircle className="h-5 w-5 text-amber-700" />
                   </div>
                   <div>
@@ -381,9 +381,9 @@ export function WhatsAppReactivationQueue() {
                 </div>
                 <div className="grid gap-3 xl:grid-cols-2">
                   {queue.exceptionItems.map((item) => (
-                    <div key={`exception-${item.cycleId}`} className="rounded-xl border border-amber-200 bg-white/90 p-3">
+                    <div key={`exception-${item.cycleId}`} className="rounded-xl border border-amber-200 bg-background/90 p-3 dark:border-amber-500/20 dark:bg-background/70">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium text-slate-900">{item.customerName || "Cliente nao identificado"}</p>
+                        <p className="font-medium text-slate-900 dark:text-slate-50">{item.customerName || "Cliente nao identificado"}</p>
                         <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-800">
                           {Boolean(item.manualInterventionSuggested)
                             ? getManualInterventionLabel(item.manualInterventionReason)
@@ -392,7 +392,7 @@ export function WhatsAppReactivationQueue() {
                             : item.latestAttemptStatusLabel || "Excecao"}
                         </Badge>
                       </div>
-                      <p className="mt-2 text-sm text-slate-700">{buildContextSummary(item)}</p>
+                      <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{buildContextSummary(item)}</p>
                       <p className="mt-2 text-xs text-muted-foreground">
                         {Boolean(item.manualInterventionSuggested)
                           ? `Usuario preso no mesmo passo${item.manualInterventionAttempts ? ` (${item.manualInterventionAttempts} tentativas)` : ""}.`
@@ -419,7 +419,7 @@ export function WhatsAppReactivationQueue() {
             {queue.items.map((item) => (
               <div
                 key={item.cycleId}
-                className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50/70 p-4 shadow-sm"
+                className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50/70 p-4 shadow-sm dark:border-slate-700 dark:from-slate-900 dark:to-slate-800/70"
               >
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                   <div className="space-y-3">
@@ -463,9 +463,9 @@ export function WhatsAppReactivationQueue() {
 
                 <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
                   <div className="space-y-3">
-                    <div className="rounded-xl border border-slate-200 bg-white/80 px-3 py-3">
-                      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Contexto salvo</p>
-                      <p className="mt-1 text-sm font-medium text-slate-900">{buildContextSummary(item)}</p>
+                    <div className="rounded-xl border border-slate-200 bg-white/80 px-3 py-3 dark:border-slate-700 dark:bg-slate-900/50">
+                      <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Contexto salvo</p>
+                      <p className="mt-1 text-sm font-medium text-slate-900 dark:text-slate-50">{buildContextSummary(item)}</p>
                       {Boolean(item.manualInterventionSuggested) ? (
                         <div className="mt-2">
                           <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-800">
@@ -486,7 +486,7 @@ export function WhatsAppReactivationQueue() {
                           <span>Sem tentativa registrada ainda</span>
                         )}
                         {item.latestAttemptStatusLabel ? (
-                          <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-700">
+                          <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
                             {item.latestAttemptStatusLabel}
                           </Badge>
                         ) : null}
@@ -494,19 +494,19 @@ export function WhatsAppReactivationQueue() {
                     </div>
 
                     <div className="grid gap-3 md:grid-cols-2">
-                      <div className="rounded-xl border border-slate-200 bg-white/80 px-3 py-3">
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      <div className="rounded-xl border border-slate-200 bg-white/80 px-3 py-3 dark:border-slate-700 dark:bg-slate-900/50">
+                        <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                           Ultima mensagem do cliente
                         </p>
-                        <p className="mt-2 text-sm text-slate-800">
+                        <p className="mt-2 text-sm text-slate-800 dark:text-slate-200">
                           {item.customerLastMessage || "Nao capturada"}
                         </p>
                       </div>
-                      <div className="rounded-xl border border-slate-200 bg-white/80 px-3 py-3">
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      <div className="rounded-xl border border-slate-200 bg-white/80 px-3 py-3 dark:border-slate-700 dark:bg-slate-900/50">
+                        <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                           Ultimo contexto do assistente
                         </p>
-                        <p className="mt-2 text-sm text-slate-800">
+                        <p className="mt-2 text-sm text-slate-800 dark:text-slate-200">
                           {item.assistantLastPrompt || "Nao capturado"}
                         </p>
                       </div>
@@ -514,26 +514,26 @@ export function WhatsAppReactivationQueue() {
                   </div>
 
                   <div className="space-y-3">
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-3">
-                      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Sinais operacionais</p>
-                      <div className="mt-2 space-y-2 text-sm text-slate-700">
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-3 dark:border-slate-700 dark:bg-slate-900/40">
+                      <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Sinais operacionais</p>
+                      <div className="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
                         <div className="flex items-center justify-between gap-3">
                           <span>Servico</span>
-                          <span className="font-medium text-slate-900">{item.lastServiceName || "-"}</span>
+                          <span className="font-medium text-slate-900 dark:text-slate-50">{item.lastServiceName || "-"}</span>
                         </div>
                         <div className="flex items-center justify-between gap-3">
                           <span>Profissional</span>
-                          <span className="font-medium text-slate-900">{item.lastProfessionalName || "-"}</span>
+                          <span className="font-medium text-slate-900 dark:text-slate-50">{item.lastProfessionalName || "-"}</span>
                         </div>
                         <div className="flex items-center justify-between gap-3">
                           <span>Data pretendida</span>
-                          <span className="font-medium text-slate-900">
+                          <span className="font-medium text-slate-900 dark:text-slate-50">
                             {item.lastRequestedDate ? formatDateOnly(item.lastRequestedDate) : "-"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between gap-3">
                           <span>Horario pretendido</span>
-                          <span className="font-medium text-slate-900">{item.lastRequestedTime || "-"}</span>
+                          <span className="font-medium text-slate-900 dark:text-slate-50">{item.lastRequestedTime || "-"}</span>
                         </div>
                       </div>
                     </div>

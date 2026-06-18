@@ -831,21 +831,21 @@ export default function SalePage() {
                   title: 'Capturas reais do produto no lugar de mock bonito',
                   text: 'A página mostra telas reais do sistema para reduzir a distância entre promessa comercial e experiência entregue.',
                   icon: <CheckCircle2 className="h-4 w-4 text-emerald-600" />,
-                  tone: 'bg-emerald-50 border-emerald-100',
+                  tone: 'bg-emerald-50 border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/20',
                 },
                 {
                   label: 'Seguranca comercial',
                   title: 'Garantia, suporte e fluxo de cadastro preservados',
                   text: 'O comprador entende como entra, como recebe suporte e como testa a plataforma sem cair em promessa vaga.',
                   icon: <Shield className="h-4 w-4 text-blue-600" />,
-                  tone: 'bg-blue-50 border-blue-100',
+                  tone: 'bg-blue-50 border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/20',
                 },
                 {
                   label: 'O que ainda falta',
                   title: 'Prova social real continua pendente',
                   text: 'Enquanto nao houver logos, estudos de caso ou depoimentos verificaveis, esta pagina nao deve fingir autoridade que ainda nao foi documentada.',
                   icon: <BellRing className="h-4 w-4 text-amber-600" />,
-                  tone: 'bg-amber-50 border-amber-100',
+                  tone: 'bg-amber-50 border-amber-100 dark:bg-amber-500/10 dark:border-amber-500/20',
                 },
               ].map((item) => (
                 <article key={item.title}>

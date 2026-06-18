@@ -40,7 +40,7 @@ export function NoShowInsights() {
   const items = data?.recentItems ?? [];
 
   return (
-    <Card className="border-rose-200 bg-gradient-to-br from-rose-50/80 to-orange-50/60">
+    <Card className="tone-rose-panel">
       <CardHeader className="pb-3">
         <CardTitle className="flex flex-col gap-3 text-base sm:flex-row sm:items-start sm:justify-between sm:text-lg">
           <div className="flex items-center gap-2">
@@ -67,7 +67,7 @@ export function NoShowInsights() {
               unavailableLabel: "Sem comparativo anterior",
             }}
             iconClassName="bg-rose-600"
-            className="border-rose-200 bg-white/80"
+            className="tone-surface border-rose-200/80 dark:border-rose-500/20 dark:bg-rose-500/10"
             compact
             wrapValue
           />
@@ -76,7 +76,7 @@ export function NoShowInsights() {
             value={isLoading ? "..." : `${(data?.noShowRate ?? 0).toFixed(1)}%`}
             icon={CalendarClock}
             iconClassName="bg-orange-500"
-            className="border-orange-200 bg-white/80"
+            className="tone-surface border-orange-200/80 dark:border-orange-500/20 dark:bg-orange-500/10"
             compact
             wrapValue
           />
@@ -85,7 +85,7 @@ export function NoShowInsights() {
             value={isLoading ? "..." : data?.lastSevenDaysNoShows ?? 0}
             icon={CalendarClock}
             iconClassName="bg-amber-500"
-            className="border-amber-200 bg-white/80"
+            className="tone-surface border-amber-200/80 dark:border-amber-500/20 dark:bg-amber-500/10"
             compact
             wrapValue
           />
@@ -93,8 +93,8 @@ export function NoShowInsights() {
             title="Receita em risco"
             value={isLoading ? "..." : formatCurrencyCents(data?.revenueAtRisk ?? 0)}
             icon={ReceiptText}
-            iconClassName="bg-slate-700"
-            className="border-slate-200 bg-white/80"
+            iconClassName="bg-slate-700 dark:bg-slate-200"
+            className="tone-surface border-slate-200 dark:border-slate-700"
             compact
             wrapValue
           />

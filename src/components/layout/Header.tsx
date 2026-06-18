@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 interface HeaderProps {
   title: string;
@@ -78,6 +79,8 @@ export function Header({
         </div>
 
         <div className="flex flex-shrink-0 items-center gap-2">
+          <ThemeToggle className="theme-toggle-shell h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground" />
+
           <DropdownMenu
             onOpenChange={(open) => {
               if (open) {

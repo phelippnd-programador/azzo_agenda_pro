@@ -7,24 +7,27 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NotificationsProvider } from "@/providers/NotificationsProvider";
 import { AppRoutes } from "@/app/AppRoutes";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <MenuPermissionsProvider>
-        <TooltipProvider>
-          <Toaster />
-          <BrowserRouter>
-            <NotificationsProvider>
-              <AppRoutes />
-              <CookieConsentBanner />
-            </NotificationsProvider>
-          </BrowserRouter>
-        </TooltipProvider>
-      </MenuPermissionsProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <MenuPermissionsProvider>
+          <TooltipProvider>
+            <Toaster />
+            <BrowserRouter>
+              <NotificationsProvider>
+                <AppRoutes />
+                <CookieConsentBanner />
+              </NotificationsProvider>
+            </BrowserRouter>
+          </TooltipProvider>
+        </MenuPermissionsProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

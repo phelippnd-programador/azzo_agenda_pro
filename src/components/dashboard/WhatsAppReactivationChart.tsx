@@ -36,29 +36,29 @@ const stageCards = [
     key: "stoppedAtServiceSelection",
     label: "Servico",
     Icon: Route,
-    accentClass: "text-amber-700",
-    bgClass: "bg-amber-50 border-amber-100",
+    accentClass: "text-amber-700 dark:text-amber-300",
+    bgClass: "border-amber-200/80 bg-amber-50/85 dark:border-amber-500/20 dark:bg-amber-500/10",
   },
   {
     key: "stoppedAtProfessionalSelection",
     label: "Profissional",
     Icon: UserCheck,
-    accentClass: "text-orange-700",
-    bgClass: "bg-orange-50 border-orange-100",
+    accentClass: "text-orange-700 dark:text-orange-300",
+    bgClass: "border-orange-200/80 bg-orange-50/85 dark:border-orange-500/20 dark:bg-orange-500/10",
   },
   {
     key: "stoppedAtTimeSelection",
     label: "Horario",
     Icon: CalendarClock,
-    accentClass: "text-blue-700",
-    bgClass: "bg-blue-50 border-blue-100",
+    accentClass: "text-blue-700 dark:text-blue-300",
+    bgClass: "border-blue-200/80 bg-blue-50/85 dark:border-blue-500/20 dark:bg-blue-500/10",
   },
   {
     key: "stoppedAtFinalReview",
     label: "Revisao final",
     Icon: ClipboardCheck,
-    accentClass: "text-emerald-700",
-    bgClass: "bg-emerald-50 border-emerald-100",
+    accentClass: "text-emerald-700 dark:text-emerald-300",
+    bgClass: "border-emerald-200/80 bg-emerald-50/85 dark:border-emerald-500/20 dark:bg-emerald-500/10",
   },
 ] as const;
 
@@ -151,7 +151,7 @@ export function WhatsAppReactivationChart() {
   const pendingRecovery = Math.max(metrics.totalAbandoned - metrics.totalConverted, 0);
 
   return (
-    <Card className= "w-full border-emerald-200 bg-gradient-to-br from-emerald-50/70 to-cyan-50/60">
+    <Card className="tone-emerald-panel w-full">
       <CardHeader className="pb-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
           <div className="space-y-1">
@@ -168,7 +168,7 @@ export function WhatsAppReactivationChart() {
               {rangeLabel}
             </Badge>
             <Select value={days} onValueChange={setDays}>
-              <SelectTrigger className="w-full bg-white/80 min-[420px]:w-[120px]">
+              <SelectTrigger className="tone-surface w-full min-[420px]:w-[120px]">
                 <SelectValue placeholder="Periodo" />
               </SelectTrigger>
               <SelectContent>
@@ -184,21 +184,21 @@ export function WhatsAppReactivationChart() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl border border-amber-200 bg-white/85 p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-amber-700">Abandonos</p>
-            <p className="mt-1 text-2xl font-bold text-amber-950">{metrics.totalAbandoned}</p>
+          <div className="tone-surface rounded-2xl border border-amber-200/80 p-4 dark:border-amber-500/20 dark:bg-amber-500/10">
+            <p className="text-xs font-medium uppercase tracking-wide text-amber-700 dark:text-amber-300">Abandonos</p>
+            <p className="mt-1 text-2xl font-bold text-amber-950 dark:text-amber-100">{metrics.totalAbandoned}</p>
           </div>
-          <div className="rounded-2xl border border-emerald-200 bg-white/85 p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">Reativados</p>
-            <p className="mt-1 text-2xl font-bold text-emerald-950">{metrics.totalReactivated}</p>
+          <div className="tone-surface rounded-2xl border border-emerald-200/80 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+            <p className="text-xs font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Reativados</p>
+            <p className="mt-1 text-2xl font-bold text-emerald-950 dark:text-emerald-100">{metrics.totalReactivated}</p>
           </div>
-          <div className="rounded-2xl border border-blue-200 bg-white/85 p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-blue-700">Convertidos</p>
-            <p className="mt-1 text-2xl font-bold text-blue-950">{metrics.totalConverted}</p>
+          <div className="tone-surface rounded-2xl border border-blue-200/80 p-4 dark:border-blue-500/20 dark:bg-blue-500/10">
+            <p className="text-xs font-medium uppercase tracking-wide text-blue-700 dark:text-blue-300">Convertidos</p>
+            <p className="mt-1 text-2xl font-bold text-blue-950 dark:text-blue-100">{metrics.totalConverted}</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white/85 p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-700">Taxa de reativacao</p>
-            <p className="mt-1 text-2xl font-bold text-slate-950">
+          <div className="tone-surface rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-700 dark:text-slate-300">Taxa de reativacao</p>
+            <p className="mt-1 text-2xl font-bold text-slate-950 dark:text-slate-50">
               {Number(metrics.reactivationRate || 0).toFixed(1)}%
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -208,7 +208,7 @@ export function WhatsAppReactivationChart() {
         </div>
 
         <div className="space-y-4">
-            <div className="space-y-3 rounded-2xl border bg-white/80 p-4">
+            <div className="tone-surface space-y-3 rounded-2xl border p-4">
             <div>
               <p className="text-sm font-semibold text-foreground">Onde o fluxo para mais</p>
               <p className="text-xs text-muted-foreground">
@@ -223,7 +223,7 @@ export function WhatsAppReactivationChart() {
                   className={`flex items-center justify-between gap-3 rounded-2xl border px-3 py-3 ${bgClass}`}
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="rounded-lg bg-white/80 p-2">
+                    <div className="rounded-lg bg-background/85 p-2 dark:bg-background/60">
                       <Icon className={`h-4 w-4 ${accentClass}`} />
                     </div>
                     <div className="min-w-0">
@@ -239,12 +239,12 @@ export function WhatsAppReactivationChart() {
             </div>
 
             {hasError ? (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
                 Nao foi possivel atualizar o painel agora. Os dados podem estar temporariamente indisponiveis.
               </div>
             ) : null}
           </div>
-          <div className="rounded-2xl border bg-white/80 p-4">
+          <div className="tone-surface rounded-2xl border p-4">
             <div className="mb-3">
               <p className="text-sm font-semibold text-foreground">Evolucao da reativacao no periodo</p>
               <p className="text-xs text-muted-foreground">
@@ -274,7 +274,7 @@ export function WhatsAppReactivationChart() {
                       <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
                       <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
                       <Tooltip
-                        cursor={{ fill: "rgba(15, 23, 42, 0.04)" }}
+                        cursor={{ fill: "rgba(148, 163, 184, 0.10)" }}
                         formatter={(value: number, name: string) => {
                           const labelMap: Record<string, string> = {
                             abandonedCount: "Abandonos",
@@ -293,8 +293,8 @@ export function WhatsAppReactivationChart() {
                 </div>
               </>
             ) : (
-              <div className="flex h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/60 px-6 text-center">
-                <MessageCircleWarning className="mb-3 h-8 w-8 text-emerald-600" />
+              <div className="flex h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/60 px-6 text-center dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                <MessageCircleWarning className="mb-3 h-8 w-8 text-emerald-600 dark:text-emerald-300" />
                 <p className="font-medium text-foreground">Sem abandonos capturados no periodo</p>
                 <p className="mt-1 text-sm text-muted-foreground">
                   O grafico aparece assim que o fluxo de reativacao comecar a registrar eventos.

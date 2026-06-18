@@ -11,19 +11,19 @@ interface InvoiceViewerProps {
 
 const getStatusColor = (status: InvoiceStatus) => {
   const colors = {
-    ISSUED: 'bg-green-100 text-green-700 border-green-200',
-    DRAFT: 'bg-amber-100 text-amber-700 border-amber-200',
-    GENERATED: 'bg-blue-100 text-blue-700 border-blue-200',
-    SIGNED: 'bg-blue-100 text-blue-700 border-blue-200',
-    SUBMITTED: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-    CONTINGENCY_PENDING: 'bg-orange-100 text-orange-700 border-orange-200',
-    REJECTED: 'bg-red-100 text-red-700 border-red-200',
-    CANCEL_PENDING: 'bg-zinc-100 text-zinc-700 border-zinc-200',
-    CANCELLED: 'bg-red-100 text-red-700 border-red-200',
-    INUTILIZED: 'bg-zinc-100 text-zinc-700 border-zinc-200',
-    ERROR_FINAL: 'bg-rose-100 text-rose-700 border-rose-200',
+    ISSUED: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-500/15 dark:text-green-300 dark:border-green-500/25',
+    DRAFT: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/25',
+    GENERATED: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/25',
+    SIGNED: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/25',
+    SUBMITTED: 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/25',
+    CONTINGENCY_PENDING: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-500/15 dark:text-orange-300 dark:border-orange-500/25',
+    REJECTED: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/25',
+    CANCEL_PENDING: 'bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-500/15 dark:text-zinc-200 dark:border-zinc-500/25',
+    CANCELLED: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/25',
+    INUTILIZED: 'bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-500/15 dark:text-zinc-200 dark:border-zinc-500/25',
+    ERROR_FINAL: 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/25',
   };
-  return colors[status] || 'bg-zinc-100 text-zinc-700 border-zinc-200';
+  return colors[status] || 'bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-500/15 dark:text-zinc-200 dark:border-zinc-500/25';
 };
 
 const getStatusLabel = (status: InvoiceStatus) => {
@@ -196,11 +196,11 @@ export function InvoiceViewer({ invoice }: InvoiceViewerProps) {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-3 gap-4 text-sm">
-            <div className="p-3 bg-blue-50 rounded-lg">
+            <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-500/10">
               <p className="text-muted-foreground mb-1">ICMS</p>
               <p className="font-bold text-blue-700">{formatCurrency(invoice.taxBreakdown.icms)}</p>
             </div>
-            <div className="p-3 bg-green-50 rounded-lg">
+            <div className="rounded-lg bg-green-50 p-3 dark:bg-green-500/10">
               <p className="text-muted-foreground mb-1">PIS</p>
               <p className="font-bold text-green-700">{formatCurrency(invoice.taxBreakdown.pis)}</p>
             </div>

@@ -73,14 +73,14 @@ function FlowStageCard({
   const toneClasses =
     tone === 'amber'
       ? {
-        wrapper: 'border-orange-100 bg-white/80',
-        text: 'text-orange-700',
-        value: 'text-orange-900',
+        wrapper: 'tone-surface border-orange-200/80 dark:border-orange-500/20 dark:bg-orange-500/10',
+        text: 'text-orange-700 dark:text-orange-300',
+        value: 'text-orange-900 dark:text-orange-100',
       }
       : {
-        wrapper: 'border-sky-100 bg-white/80',
-        text: 'text-sky-700',
-        value: 'text-sky-900',
+        wrapper: 'tone-surface border-sky-200/80 dark:border-sky-500/20 dark:bg-sky-500/10',
+        text: 'text-sky-700 dark:text-sky-300',
+        value: 'text-sky-900 dark:text-sky-100',
       };
 
   return (
@@ -124,10 +124,10 @@ function QuickSignalCard({
       value: 'text-emerald-950',
     },
     slate: {
-      wrapper: 'border-slate-200 bg-gradient-to-br from-slate-50 to-white',
-      icon: 'bg-slate-100 text-slate-700',
-      label: 'text-slate-600',
-      value: 'text-slate-950',
+      wrapper: 'border-slate-200 bg-gradient-to-br from-slate-50 to-white dark:border-slate-700 dark:from-slate-900 dark:to-slate-800/70',
+      icon: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
+      label: 'text-slate-600 dark:text-slate-300',
+      value: 'text-slate-950 dark:text-slate-50',
     },
     blue: {
       wrapper: 'border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50',
@@ -630,9 +630,9 @@ export default function Dashboard() {
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="rounded-xl border border-orange-200 bg-white/80 px-4 py-3">
-                    <p className="text-xs text-orange-700">Total em risco hoje</p>
-                    <p className="text-3xl font-bold text-orange-900">
+                  <div className="tone-surface rounded-xl border border-orange-200/80 px-4 py-3 dark:border-orange-500/20 dark:bg-orange-500/10">
+                    <p className="text-xs text-orange-700 dark:text-orange-300">Total em risco hoje</p>
+                    <p className="text-3xl font-bold text-orange-900 dark:text-orange-100">
                       {resolvedMetrics.notConcludedToday ?? 0}
                     </p>
                   </div>
@@ -673,9 +673,9 @@ export default function Dashboard() {
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="rounded-xl border border-sky-200 bg-white/80 px-4 py-3">
-                    <p className="text-xs text-sky-700">Total pausado no canal</p>
-                    <p className="text-3xl font-bold text-sky-900">
+                  <div className="tone-surface rounded-xl border border-sky-200/80 px-4 py-3 dark:border-sky-500/20 dark:bg-sky-500/10">
+                    <p className="text-xs text-sky-700 dark:text-sky-300">Total pausado no canal</p>
+                    <p className="text-3xl font-bold text-sky-900 dark:text-sky-100">
                       {resolvedMetrics.whatsAppOpenFlowsToday ?? 0}
                     </p>
                   </div>

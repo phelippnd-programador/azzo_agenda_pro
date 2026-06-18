@@ -402,7 +402,7 @@ export function UserProfileContent() {
                     {mfaQrCodeDataUrl ? (
                       <div className="space-y-2">
                         <Label>QR Code</Label>
-                        <div className="inline-flex rounded-md border bg-white p-2">
+                        <div className="inline-flex rounded-md border bg-white p-2 dark:bg-slate-50">
                           <img src={mfaQrCodeDataUrl} alt="QR Code MFA" className="h-[180px] w-[180px]" />
                         </div>
                       </div>

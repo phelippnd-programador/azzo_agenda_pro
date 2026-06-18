@@ -25,6 +25,23 @@
   <meta name="twitter:description" content="Organize agenda, clientes, equipe e financeiro do seu salao com o Azzo Agenda Pro." />
   <meta name="twitter:image" content="https://www.azzoholding.com.br/images/hero_salon_system.png" />
   <meta name="twitter:image:alt" content="Sistema para salao de beleza Azzo Agenda Pro" />
+  <script>
+    (function () {
+      const storageKey = "azzo-theme";
+      const root = document.documentElement;
+      const storedTheme = localStorage.getItem(storageKey);
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const theme = storedTheme === "light" || storedTheme === "dark"
+        ? storedTheme
+        : prefersDark
+          ? "dark"
+          : "light";
+
+      root.classList.remove("light", "dark");
+      root.classList.add(theme);
+      root.style.colorScheme = theme;
+    })();
+  </script>
 
 </head>
 

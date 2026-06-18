@@ -43,9 +43,9 @@ const rankTiers = [
   {
     label: "Prata",
     Icon: Medal,
-    accentClass: "bg-slate-50 text-slate-700 border-slate-200",
-    iconClass: "text-slate-500",
-    tagClass: "bg-slate-200 text-slate-700",
+    accentClass: "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700",
+    iconClass: "text-slate-500 dark:text-slate-300",
+    tagClass: "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-100",
   },
   {
     label: "Bronze",
@@ -57,9 +57,9 @@ const rankTiers = [
   {
     label: "Lata",
     Icon: Circle,
-    accentClass: "bg-zinc-50 text-zinc-700 border-zinc-200",
-    iconClass: "text-zinc-500",
-    tagClass: "bg-zinc-200 text-zinc-700",
+    accentClass: "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700",
+    iconClass: "text-zinc-500 dark:text-zinc-300",
+    tagClass: "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-100",
   },
 ] as const;
 
