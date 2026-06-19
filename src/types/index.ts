@@ -97,6 +97,8 @@ export interface Client {
   avatarUrl?: string | null;
   birthDate?: Date | string;
   notes?: string;
+  cpfCnpj?: string;
+  clientType?: 'PF' | 'PJ';
   address?: ClientAddress;
   topServices?: ClientTopService[];
   totalVisits: number;

@@ -100,8 +100,8 @@ export function ClientUpsertDialog({
     setFormPhone(initialClient?.phone || '');
     setFormBirthDate((initialClient?.birthDate as string) || '');
     setFormNotes(initialClient?.notes || '');
-    setFormCpfCnpj((initialClient as { cpfCnpj?: string })?.cpfCnpj || '');
-    setFormClientType(((initialClient as { clientType?: string })?.clientType as 'PF' | 'PJ') || 'PF');
+    setFormCpfCnpj(initialClient?.cpfCnpj || '');
+    setFormClientType(initialClient?.clientType || 'PF');
     setFormZipCode(initialClient?.address?.zipCode || '');
     setFormStreet(initialClient?.address?.street || '');
     setFormNumber(initialClient?.address?.number || '');
