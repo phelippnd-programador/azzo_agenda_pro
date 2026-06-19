@@ -78,17 +78,15 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
         onToggleMobile={() => setMobileSidebarOpen(!mobileSidebarOpen)}
         isDesktopOpen={desktopSidebarOpen}
       />
-
-      <div className={desktopSidebarOpen ? "lg:pl-60" : "lg:pl-0"}>
+      <div className={desktopSidebarOpen ? "lg:pl-60" : "lg:pl-20"}>
         <Header
           title={title}
           subtitle={subtitle}
           onToggleDesktopSidebar={toggleDesktopSidebar}
           isDesktopSidebarOpen={desktopSidebarOpen}
         />
-
-        <main className="overflow-x-hidden p-4 sm:p-6 lg:p-8">
-          <div className="mx-auto max-w-screen-2xl">
+        <main className="overflow-x-hidden px-4 pb-6 pt-4 sm:px-6 sm:pb-8 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-6">
+          <div className="mx-auto max-w-[1680px]">
           {!isLicenseRoute && isPlanExpired ? (
             <PageErrorState
               title="Plano vencido"

@@ -146,11 +146,11 @@ export default function StockOverview() {
         />
       </div>
 
-      <Card>
+      <Card className="border-border/80">
         <CardHeader>
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>Ultimas movimentacoes</CardTitle>
-            <div className="text-right">
+            <div className="text-left sm:text-right">
               <p className="text-xs text-muted-foreground">{updatedAt ? `Atualizado em ${formatDateTime(updatedAt)}` : "Sem data de atualizacao"}</p>
               <Badge variant={staleBadgeClass}>{staleText}</Badge>
             </div>
@@ -167,7 +167,7 @@ export default function StockOverview() {
               return (
                 <div
                   key={movement.id}
-                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-muted/40 rounded-xl hover:bg-muted/70 transition-colors"
+                  className="flex flex-col gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 transition-colors hover:bg-muted/35 sm:flex-row sm:items-center sm:gap-4 sm:p-4"
                 >
                   <div
                     className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
@@ -193,7 +193,7 @@ export default function StockOverview() {
                     </div>
                   </div>
 
-                  <div className="text-right flex-shrink-0">
+                  <div className="w-full flex-shrink-0 text-left sm:w-auto sm:text-right">
                     <p
                       className={`font-semibold text-sm sm:text-base ${
                         isEntrada ? "text-green-600 dark:text-green-300" : isSaida ? "text-red-600 dark:text-red-300" : "text-indigo-600 dark:text-indigo-300"
@@ -213,9 +213,12 @@ export default function StockOverview() {
       </Card>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <Card>
+        <Card className="border-border/80">
           <CardHeader>
             <CardTitle>Saldo por item (top 8)</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Itens com maior saldo atual para leitura rapida da distribuicao do estoque.
+            </p>
           </CardHeader>
           <CardContent>
             {estoqueByItem.length ? (
@@ -235,9 +238,12 @@ export default function StockOverview() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-border/80">
           <CardHeader>
             <CardTitle>Movimentacoes por tipo</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Panorama entre entradas, saidas e ajustes registrados recentemente.
+            </p>
           </CardHeader>
           <CardContent>
             {movementByType.some((item) => item.value > 0) ? (

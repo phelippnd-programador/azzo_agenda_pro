@@ -185,7 +185,7 @@ export default function StockInventoriesPage() {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="border-border/80">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle>Inventarios de estoque</CardTitle>
@@ -193,6 +193,9 @@ export default function StockInventoriesPage() {
               <Link to="/estoque/inventarios/novo">Novo inventario</Link>
             </Button>
           </div>
+          <p className="text-sm text-muted-foreground">
+            Acompanhe contagens abertas, registre divergencias e feche o inventario quando o ciclo terminar.
+          </p>
         </CardHeader>
         <CardContent className="space-y-2">
           {!inventories.length ? (
@@ -206,10 +209,10 @@ export default function StockInventoriesPage() {
               <Link
                 key={inventory.id}
                 to={`/estoque/inventarios/${inventory.id}`}
-                className="block rounded-md border p-3 transition-colors hover:bg-muted/40"
+                className="block rounded-xl border border-border/70 bg-card p-4 transition-colors hover:bg-muted/20"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-medium">{inventory.nome}</p>
+                  <p className="font-medium text-foreground">{inventory.nome}</p>
                   <Badge variant={getStatusVariant(inventory.status)}>{INVENTORY_STATUS_LABELS[inventory.status] ?? inventory.status}</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -230,7 +233,7 @@ export default function StockInventoriesPage() {
       </Card>
 
       {selectedInventory ? (
-        <Card>
+        <Card className="border-border/80">
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <CardTitle>{selectedInventory.nome}</CardTitle>
@@ -241,6 +244,24 @@ export default function StockInventoriesPage() {
             <p className="text-sm text-muted-foreground">
               {selectedInventory.observacao || "Sem observacoes para este inventario."}
             </p>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Status</p>
+                <p className="mt-1 font-semibold text-foreground">
+                  {INVENTORY_STATUS_LABELS[selectedInventory.status] ?? selectedInventory.status}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Abertura</p>
+                <p className="mt-1 font-semibold text-foreground">{formatDateTime(selectedInventory.dataAbertura)}</p>
+              </div>
+              <div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Fechamento</p>
+                <p className="mt-1 font-semibold text-foreground">
+                  {selectedInventory.dataFechamento ? formatDateTime(selectedInventory.dataFechamento) : "Em aberto"}
+                </p>
+              </div>
+            </div>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               <div className="space-y-1 md:col-span-2">
                 <Label>Item para contagem</Label>

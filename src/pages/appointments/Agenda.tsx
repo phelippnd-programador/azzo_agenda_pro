@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -19,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, Info, Plus } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Clock3, Info, Plus, Users } from 'lucide-react';
 import { PageErrorState } from '@/components/ui/page-states';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { NewAppointmentDialog } from '@/components/appointments/NewAppointmentDialog';
@@ -49,16 +50,16 @@ export default function Agenda() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // ── Navegação e view ──────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ NavegaÃƒÂ§ÃƒÂ£o e view Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'month'>('day');
   const [dayAppointmentsFallback, setDayAppointmentsFallback] = useState<Appointment[] | null>(null);
 
-  // ── Filtros ───────────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Filtros Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const [selectedProfessional, setSelectedProfessional] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
-  // ── Dialogs ───────────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Dialogs Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -70,11 +71,11 @@ export default function Agenda() {
   const [completionAppointmentId, setCompletionAppointmentId] = useState<string | null>(null);
   const [completionPaymentMethod, setCompletionPaymentMethod] = useState<PaymentMethod | ''>('');
 
-  // ── Métricas mensais ──────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ MÃƒÂ©tricas mensais Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const [monthlyMetrics, setMonthlyMetrics] = useState<Array<{ dia: number; quantidadeAgendamentos: number }>>([]);
   const [isLoadingMonthlyMetrics, setIsLoadingMonthlyMetrics] = useState(false);
 
-  // ── Data hooks ────────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Data hooks Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const dateString = toDateKey(currentDate);
   const dateFilter = viewMode === 'day' ? dateString : undefined;
 
@@ -112,13 +113,13 @@ export default function Agenda() {
     ? loggedProfessional?.id || ''
     : selectedProfessional;
 
-  // Forçar filtro de profissional para usuário do tipo PROFESSIONAL
+  // ForÃƒÂ§ar filtro de profissional para usuÃƒÂ¡rio do tipo PROFESSIONAL
   useEffect(() => {
     if (!isProfessionalUser || !loggedProfessional?.id) return;
     setSelectedProfessional(loggedProfessional.id);
   }, [isProfessionalUser, loggedProfessional?.id]);
 
-  // ── Navegação de data ────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ NavegaÃƒÂ§ÃƒÂ£o de data Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const navigateDate = (direction: 'prev' | 'next') => {
     const next = new Date(currentDate);
     if (viewMode === 'day') {
@@ -141,7 +142,7 @@ export default function Agenda() {
     setDayAppointmentsFallback(fallback?.length ? fallback : null);
   };
 
-  // ── Métricas mensais ──────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ MÃƒÂ©tricas mensais Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   useEffect(() => {
     if (viewMode !== 'month') return;
     let active = true;
@@ -149,12 +150,12 @@ export default function Agenda() {
     appointmentsApi
       .getMonthlyMetric(currentDate.getMonth() + 1, currentDate.getFullYear())
       .then((data) => { if (active) setMonthlyMetrics(data); })
-      .catch(() => { if (active) { toast.error('Não foi possível carregar os totais mensais.'); setMonthlyMetrics([]); } })
+      .catch(() => { if (active) { toast.error('Nao foi possivel carregar os totais mensais.'); setMonthlyMetrics([]); } })
       .finally(() => { if (active) setIsLoadingMonthlyMetrics(false); });
     return () => { active = false; };
   }, [currentDate, viewMode]);
 
-  // ── Cálculos do calendário mensal ────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ CÃƒÂ¡lculos do calendÃƒÂ¡rio mensal Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const monthCalendarDays = useMemo(() => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -187,7 +188,7 @@ export default function Agenda() {
     [monthlyMetrics],
   );
 
-  // ── Appointments filtrados para o dia ────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Appointments filtrados para o dia Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const filteredAppointments = useMemo(() => {
     if (viewMode === 'month') {
       return appointments.filter((apt) =>
@@ -201,7 +202,17 @@ export default function Agenda() {
       : [];
   }, [appointments, viewMode, monthCalendarDays, dateString, dayAppointmentsFallback, currentDate]);
 
-  // ── Handlers de status / NFS-e ───────────────────────────────────────────
+  const daySummary = useMemo(() => {
+    const source = filteredAppointments;
+    return {
+      total: source.length,
+      pending: source.filter((appointment) => appointment.status === 'PENDING' || appointment.status === 'CONFIRMED').length,
+      inProgress: source.filter((appointment) => appointment.status === 'IN_PROGRESS').length,
+      completed: source.filter((appointment) => appointment.status === 'COMPLETED').length,
+    };
+  }, [filteredAppointments]);
+
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Handlers de status / NFS-e Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const handleNfseOnAppointmentCompleted = async (appointment: Appointment) => {
     try {
       const config = await nfseApi.getConfig('HOMOLOGACAO');
@@ -244,7 +255,7 @@ export default function Agenda() {
           const itemTotal = Number(item.totalPrice || item.unitPrice || 0);
           return {
             lineNumber: index + 1,
-            descricaoServico: item.service?.name || `Serviço ${index + 1}`,
+            descricaoServico: item.service?.name || `Servico ${index + 1}`,
             quantidade: 1,
             valorUnitario: itemTotal,
             valorTotal: itemTotal,
@@ -258,14 +269,14 @@ export default function Agenda() {
       sessionStorage.setItem('nfseDraftPrefill', JSON.stringify(prefill));
 
       if (config.emissionMode === 'ASK_ON_CLOSE') {
-        const shouldOpen = window.confirm('Atendimento concluído. Deseja abrir a emissão da NFS-e agora?');
+        const shouldOpen = window.confirm('Atendimento concluido. Deseja abrir a emissao da NFS-e agora?');
         if (!shouldOpen) return;
       }
 
-      toast.info('Fluxo NFS-e preparado a partir do agendamento concluído.');
+      toast.info('Fluxo NFS-e preparado a partir do agendamento concluido.');
       navigate(`/fiscal/nfse/nova?appointmentId=${encodeURIComponent(appointment.id)}`);
     } catch (err) {
-      const uiError = resolveUiError(err, 'Não foi possível preparar a emissão automática de NFS-e.');
+      const uiError = resolveUiError(err, 'Nao foi possivel preparar a emissao automatica de NFS-e.');
       toast.warning(`${uiError.code ? `[${uiError.code}] ` : ''}${uiError.message}`);
     }
   };
@@ -311,7 +322,7 @@ export default function Agenda() {
     }
   };
 
-  // ── Handlers de delete ────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Handlers de delete Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const handleDeleteRequest = (id: string) => {
     setAppointmentToDeleteId(id);
     setIsDeleteOpen(true);
@@ -333,7 +344,7 @@ export default function Agenda() {
     }
   };
 
-  // ── Handlers de reassign ──────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Handlers de reassign Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const handleReassignRequest = (appointment: Appointment) => {
     if (isProfessionalUser || !canReassignAppointments) return;
     setAppointmentToReassign(appointment);
@@ -347,13 +358,13 @@ export default function Agenda() {
     setAppointmentToReassign(null);
   };
 
-  // ── Handler de nota fiscal ────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Handler de nota fiscal Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const handleViewInvoice = (appointment: Appointment) => {
     sessionStorage.setItem('invoiceAppointment', JSON.stringify({ appointment }));
     navigate('/nota-fiscal');
   };
 
-  // ── Profissionais para reassign (exclui o atual) ─────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Profissionais para reassign (exclui o atual) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const reassignTargetProfessionals = useMemo(
     () => activeProfessionals.filter((p) => p.id !== appointmentToReassign?.professionalId),
     [activeProfessionals, appointmentToReassign?.professionalId],
@@ -364,7 +375,7 @@ export default function Agenda() {
       ? currentDate.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
       : currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
 
-  // ── Loading / Error states ────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Loading / Error states Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   if (isLoading) {
     return (
       <MainLayout title="Agenda" subtitle="Gerencie seus agendamentos">
@@ -380,7 +391,7 @@ export default function Agenda() {
     return (
       <MainLayout title="Agenda" subtitle="Gerencie seus agendamentos">
         <PageErrorState
-          title="Não foi possível carregar a agenda"
+          title="Nao foi possivel carregar a agenda"
           description={error}
           action={{ label: 'Tentar novamente', onClick: refetch }}
         />
@@ -391,34 +402,102 @@ export default function Agenda() {
   return (
     <MainLayout title="Agenda" subtitle="Gerencie seus agendamentos">
       <div className="space-y-4 sm:space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
-          {/* Navegação de data */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => navigateDate('prev')}
-              className="h-8 w-8 sm:h-9 sm:w-9"
-              aria-label={viewMode === 'day' ? 'Ir para o dia anterior' : 'Ir para o mes anterior'}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <Button variant="outline" size="sm" onClick={goToToday} className="text-xs sm:text-sm">Hoje</Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => navigateDate('next')}
-              className="h-8 w-8 sm:h-9 sm:w-9"
-              aria-label={viewMode === 'day' ? 'Ir para o proximo dia' : 'Ir para o proximo mes'}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-            <span className="text-xs sm:text-base font-medium text-foreground capitalize truncate">{formattedDate}</span>
-          </div>
+        <Card className="border-border/70 bg-card/90 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.16)]">
+          <CardContent className="space-y-4 py-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Operacao do dia
+                </p>
+                <p className="text-sm font-medium text-foreground">
+                  Leia a agenda em duas etapas: primeiro o volume do dia, depois os horarios e conflitos.
+                </p>
+                <p className="max-w-3xl text-sm text-muted-foreground">
+                  Use a visao diaria para execucao e a mensal para distribuicao de carga e concentracao de demanda.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="bg-background/80">
+                  {viewMode === 'day' ? 'Visao diaria' : 'Visao mensal'}
+                </Badge>
+                <Badge variant="outline" className="bg-background/80">
+                  {formattedDate}
+                </Badge>
+              </div>
+            </div>
 
-          {/* Filtros e ações */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <div className="rounded-2xl border border-border/70 bg-muted/20 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Agendados</p>
+                    <p className="mt-1 text-2xl font-semibold text-foreground">{viewMode === 'day' ? daySummary.total : totalAppointmentsInMonth}</p>
+                  </div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+                    <Clock3 className="h-5 w-5" />
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-amber-200/70 bg-amber-50/70 p-3 dark:border-amber-500/20 dark:bg-amber-500/10">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-amber-700 dark:text-amber-300">Pendentes</p>
+                    <p className="mt-1 text-2xl font-semibold text-amber-950 dark:text-amber-50">{daySummary.pending}</p>
+                  </div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                    <Info className="h-5 w-5" />
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-blue-200/70 bg-blue-50/70 p-3 dark:border-blue-500/20 dark:bg-blue-500/10">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-blue-700 dark:text-blue-300">Em atendimento</p>
+                    <p className="mt-1 text-2xl font-semibold text-blue-950 dark:text-blue-50">{daySummary.inProgress}</p>
+                  </div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+                    <Users className="h-5 w-5" />
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-emerald-200/70 bg-emerald-50/70 p-3 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-emerald-700 dark:text-emerald-300">Concluidos</p>
+                    <p className="mt-1 text-2xl font-semibold text-emerald-950 dark:text-emerald-50">{daySummary.completed}</p>
+                  </div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                    <Calendar className="h-5 w-5" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => navigateDate('prev')}
+                  className="h-8 w-8 sm:h-9 sm:w-9"
+                  aria-label={viewMode === 'day' ? 'Ir para o dia anterior' : 'Ir para o mes anterior'}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={goToToday} className="text-xs sm:text-sm">Hoje</Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => navigateDate('next')}
+                  className="h-8 w-8 sm:h-9 sm:w-9"
+                  aria-label={viewMode === 'day' ? 'Ir para o proximo dia' : 'Ir para o proximo mes'}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+                <span className="text-xs sm:text-base font-medium text-foreground capitalize truncate">{formattedDate}</span>
+              </div>
+
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             {!isProfessionalUser ? (
               <Select value={effectiveSelectedProfessional || selectedProfessional} onValueChange={setSelectedProfessional}>
                 <SelectTrigger className="w-36 sm:w-44 h-8 sm:h-9 text-xs sm:text-sm">
@@ -446,9 +525,9 @@ export default function Agenda() {
                 <SelectItem value="PENDING">Pendente</SelectItem>
                 <SelectItem value="CONFIRMED">Confirmado</SelectItem>
                 <SelectItem value="IN_PROGRESS">Em atendimento</SelectItem>
-                <SelectItem value="COMPLETED">Concluído</SelectItem>
+                <SelectItem value="COMPLETED">Concluido</SelectItem>
                 <SelectItem value="CANCELLED">Cancelado</SelectItem>
-                <SelectItem value="NO_SHOW">Não compareceu</SelectItem>
+                <SelectItem value="NO_SHOW">Nao compareceu</SelectItem>
               </SelectContent>
             </Select>
 
@@ -475,14 +554,16 @@ export default function Agenda() {
               <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">Novo</span> Agendamento
             </Button>
-          </div>
-        </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <Alert className="border-primary/20 bg-primary/5">
           <Info className="h-4 w-4" />
           <AlertTitle>Fluxo de atendimento</AlertTitle>
           <AlertDescription>
-            Para concluir um atendimento, siga sempre esta sequência: Confirmado → Em atendimento → Concluído.
+            {"Para concluir um atendimento, siga sempre esta sequencia: Confirmado -> Em atendimento -> Concluido."}
           </AlertDescription>
         </Alert>
 
@@ -549,9 +630,9 @@ export default function Agenda() {
           open={isDeleteOpen}
           isLoading={isDeletingAppointment}
           title="Excluir agendamento?"
-          description="Você tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita."
+          description="Voce tem certeza que deseja excluir este agendamento? Esta acao nao pode ser desfeita."
           cancelLabel="Cancelar"
-          confirmLabel="Confirmar exclusão"
+          confirmLabel="Confirmar exclusao"
           loadingLabel="Excluindo..."
           onOpenChange={(open) => {
             if (isDeletingAppointment) return;

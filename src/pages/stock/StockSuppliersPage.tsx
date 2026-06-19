@@ -116,12 +116,15 @@ export default function StockSuppliersPage() {
   }
 
   return (
-    <Card>
+    <Card className="border-border/80">
       <CardHeader className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle>Fornecedores</CardTitle>
           <Button onClick={openCreate}>Novo fornecedor</Button>
         </div>
+        <p className="text-sm text-muted-foreground">
+          Centralize contatos, documentos e status dos parceiros usados em compras e reposicao.
+        </p>
         <Input
           placeholder="Buscar por nome, documento ou email"
           value={search}
@@ -137,9 +140,9 @@ export default function StockSuppliersPage() {
           />
         ) : (
           pagedSuppliers.map((supplier) => (
-            <div key={supplier.id} className="rounded-md border p-3">
+            <div key={supplier.id} className="rounded-xl border border-border/70 bg-card p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-medium">{supplier.nome}</p>
+                <p className="font-medium text-foreground">{supplier.nome}</p>
                 <div className="flex items-center gap-2">
                   <Badge variant={supplier.ativo ? "secondary" : "outline"}>
                     {supplier.ativo ? "Ativo" : "Inativo"}
@@ -149,10 +152,20 @@ export default function StockSuppliersPage() {
                   </Button>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Documento: {supplier.documento || "-"} | Email: {supplier.email || "-"} | Telefone:{" "}
-                {supplier.telefone || "-"}
-              </p>
+              <div className="mt-3 grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
+                <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                  <p className="uppercase tracking-wide text-muted-foreground">Documento</p>
+                  <p className="mt-1 font-medium text-foreground">{supplier.documento || "-"}</p>
+                </div>
+                <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                  <p className="uppercase tracking-wide text-muted-foreground">Email</p>
+                  <p className="mt-1 font-medium text-foreground">{supplier.email || "-"}</p>
+                </div>
+                <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                  <p className="uppercase tracking-wide text-muted-foreground">Telefone</p>
+                  <p className="mt-1 font-medium text-foreground">{supplier.telefone || "-"}</p>
+                </div>
+              </div>
             </div>
           ))
         )}

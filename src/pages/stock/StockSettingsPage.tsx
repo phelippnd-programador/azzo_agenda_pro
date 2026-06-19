@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -65,47 +66,66 @@ export default function StockSettingsPage() {
       title="Configuracoes de estoque"
       subtitle="Parametros de alerta e politicas operacionais do modulo de estoque."
     >
-      <Card>
+      <Card className="border-border/80">
         <CardHeader>
           <CardTitle>Configuracoes de estoque</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Defina alertas e travas operacionais para manter a rotina de estoque consistente.
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={settings.alertaEstoqueMinimoAtivo}
-              onChange={(e) =>
-                setSettings((prev) =>
-                  prev ? { ...prev, alertaEstoqueMinimoAtivo: e.target.checked } : prev
-                )
-              }
-            />
-            Ativar alerta de estoque minimo
-          </label>
+          <div className="grid gap-3">
+            <label className="flex items-start gap-3 rounded-xl border border-border/70 bg-muted/20 px-4 py-3">
+              <Checkbox
+                checked={settings.alertaEstoqueMinimoAtivo}
+                onCheckedChange={(checked) =>
+                  setSettings((prev) =>
+                    prev ? { ...prev, alertaEstoqueMinimoAtivo: checked === true } : prev
+                  )
+                }
+              />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-foreground">Ativar alerta de estoque minimo</p>
+                <p className="text-xs text-muted-foreground">
+                  Sinaliza itens com saldo abaixo do nivel configurado.
+                </p>
+              </div>
+            </label>
 
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={settings.bloquearSaidaSemSaldo}
-              onChange={(e) =>
-                setSettings((prev) => (prev ? { ...prev, bloquearSaidaSemSaldo: e.target.checked } : prev))
-              }
-            />
-            Bloquear saida sem saldo
-          </label>
+            <label className="flex items-start gap-3 rounded-xl border border-border/70 bg-muted/20 px-4 py-3">
+              <Checkbox
+                checked={settings.bloquearSaidaSemSaldo}
+                onCheckedChange={(checked) =>
+                  setSettings((prev) =>
+                    prev ? { ...prev, bloquearSaidaSemSaldo: checked === true } : prev
+                  )
+                }
+              />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-foreground">Bloquear saida sem saldo</p>
+                <p className="text-xs text-muted-foreground">
+                  Evita movimentacoes que levem o item para saldo indisponivel.
+                </p>
+              </div>
+            </label>
 
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={settings.permitirAjusteNegativoComPermissao}
-              onChange={(e) =>
-                setSettings((prev) =>
-                  prev ? { ...prev, permitirAjusteNegativoComPermissao: e.target.checked } : prev
-                )
-              }
-            />
-            Permitir ajuste negativo com permissao
-          </label>
+            <label className="flex items-start gap-3 rounded-xl border border-border/70 bg-muted/20 px-4 py-3">
+              <Checkbox
+                checked={settings.permitirAjusteNegativoComPermissao}
+                onCheckedChange={(checked) =>
+                  setSettings((prev) =>
+                    prev ? { ...prev, permitirAjusteNegativoComPermissao: checked === true } : prev
+                  )
+                }
+              />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-foreground">Permitir ajuste negativo com permissao</p>
+                <p className="text-xs text-muted-foreground">
+                  Libera ajustes excepcionais mediante autorizacao apropriada.
+                </p>
+              </div>
+            </label>
+          </div>
 
           <div className="space-y-1">
             <Label>Dias de cobertura meta</Label>
@@ -117,6 +137,9 @@ export default function StockSettingsPage() {
                 setSettings((prev) => (prev ? { ...prev, diasCoberturaMeta: Number(e.target.value || 0) } : prev))
               }
             />
+            <p className="text-xs text-muted-foreground">
+              Referencia usada para acompanhar previsao de cobertura dos itens.
+            </p>
           </div>
 
           <Button onClick={() => void handleSave()} disabled={isSaving}>

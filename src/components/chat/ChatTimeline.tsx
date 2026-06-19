@@ -118,7 +118,7 @@ export function ChatTimeline({
                 key={item.key}
                 className={`max-w-[82%] rounded-2xl border p-3 shadow-sm ${
                   isOutbound
-                    ? "ml-auto border-primary/30 bg-primary text-primary-foreground"
+                    ? "ml-auto border-primary/30 bg-primary text-primary-foreground dark:border-primary/40"
                     : "border-border bg-background"
                 }`}
               >

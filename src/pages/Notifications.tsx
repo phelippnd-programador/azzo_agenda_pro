@@ -89,7 +89,7 @@ export default function Notifications() {
     }
   }, [searchParams, markNotificationAsRead]);
 
-  // Ao entrar na pagina de notificacao, busca no backend.
+  // Ao entrar na pagina de notificacoes, busca no backend.
   useEffect(() => {
     void fetchAll(filters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -156,8 +156,12 @@ export default function Notifications() {
   );
 
   const getStatusBadgeClass = (status?: AppNotification["status"]) => {
-    if (status === "FAILED") return "border-red-300 bg-red-100 text-red-900";
-    if (status === "PENDING") return "border-amber-300 bg-amber-100 text-amber-900";
+    if (status === "FAILED") {
+      return "border-red-300/80 bg-red-100 text-red-900 dark:border-red-900/70 dark:bg-red-950/50 dark:text-red-200";
+    }
+    if (status === "PENDING") {
+      return "border-amber-300/80 bg-amber-100 text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-200";
+    }
     return "bg-primary/10 text-primary border-primary/30";
   };
 
@@ -199,7 +203,7 @@ export default function Notifications() {
             </div>
             <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading}>
               <RefreshCw className="w-4 h-4 mr-2" />
-              Refresh
+              Atualizar
             </Button>
           </CardContent>
         </Card>
@@ -270,7 +274,49 @@ export default function Notifications() {
               />
             ) : (
               <>
-                <div className="overflow-x-auto">
+                <div className="space-y-3 md:hidden">
+                  {notifications.map((item) => (
+                    <article
+                      key={item.id}
+                      className={`rounded-xl border border-border/70 p-4 shadow-sm ${isUnread(item) ? "bg-primary/5" : "bg-card"}`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <div className="flex items-center gap-2">
+                            {isUnread(item) ? <span className="inline-block h-2 w-2 rounded-full bg-primary" /> : null}
+                            <p className="truncate text-sm font-medium text-foreground">
+                              {CHANNEL_LABELS[item.channel] ?? item.channel ?? "-"}
+                            </p>
+                            {isUnread(item) ? (
+                              <Badge className="border-primary/30 bg-primary/10 text-primary">Nova</Badge>
+                            ) : null}
+                          </div>
+                          <p className="text-xs text-muted-foreground">{formatDate(item.sentAt || item.createdAt)}</p>
+                          <p className="text-sm text-muted-foreground">{item.message}</p>
+                        </div>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-9 w-9 shrink-0 text-primary hover:bg-primary/10 hover:text-primary"
+                          aria-label="Ver detalhe da notificacao"
+                          onClick={() => void openDetails(item.id)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <Badge className={getStatusBadgeClass(item.status)}>
+                          {STATUS_LABELS[item.status] ?? item.status}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          Destino: {maskDestination(item.destination)}
+                        </span>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+                <div className="hidden overflow-x-auto md:block">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b text-left text-muted-foreground">
@@ -291,9 +337,9 @@ export default function Notifications() {
                           <td className="py-2">{formatDate(item.sentAt || item.createdAt)}</td>
                           <td className="py-2">{CHANNEL_LABELS[item.channel] ?? item.channel ?? "-"}</td>
                           <td className="py-2 max-w-[360px]">
-                            <div className="flex items-center gap-2">
+                            <div className="flex min-w-0 items-center gap-2">
                               {isUnread(item) ? <span className="h-2 w-2 rounded-full bg-primary inline-block" /> : null}
-                              <span className="truncate">{item.message}</span>
+                              <span className="min-w-0 flex-1 truncate">{item.message}</span>
                               {isUnread(item) ? (
                                 <Badge className="bg-primary/10 text-primary border-primary/30">Nova</Badge>
                               ) : null}
@@ -310,7 +356,7 @@ export default function Notifications() {
                                   <Button
                                     size="icon"
                                     variant="outline"
-                                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                    className="text-primary hover:bg-primary/10 hover:text-primary"
                                     aria-label="Ver detalhe da notificacao"
                                     onClick={() => void openDetails(item.id)}
                                   >

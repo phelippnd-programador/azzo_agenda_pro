@@ -22,23 +22,27 @@ export function CookieConsentBanner() {
   if (consent) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-[80] rounded-xl border bg-card p-4 shadow-lg lg:left-auto lg:max-w-xl">
-      <p className="text-sm text-foreground">
-        Utilizamos cookies estritamente necessarios para funcionamento e, quando
-        aplicavel, cookies nao essenciais com seu consentimento.
+    <div className="fixed inset-x-3 bottom-3 z-[80] rounded-2xl border border-border/70 bg-background/95 p-3 shadow-[0_20px_48px_-30px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:bottom-4 sm:left-auto sm:right-4 sm:max-w-[320px]">
+      <p className="text-sm font-medium leading-5 text-foreground">
+        Usamos cookies necessarios e, com sua permissao, cookies nao essenciais.
       </p>
-      <p className="mt-1 text-xs text-muted-foreground">
+      <p className="mt-1 text-xs leading-5 text-muted-foreground">
         Consulte nossa{" "}
-        <Link to="/politica-privacidade" className="underline">
+        <Link to="/politica-privacidade" className="font-medium text-foreground underline underline-offset-4">
           Politica de Privacidade
         </Link>
         .
       </p>
-      <div className="mt-3 flex gap-2">
-        <Button size="sm" onClick={() => persistConsent("accepted")}>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button size="sm" className="h-8 px-3 text-xs" onClick={() => persistConsent("accepted")}>
           Aceitar
         </Button>
-        <Button size="sm" variant="outline" onClick={() => persistConsent("rejected")}>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 px-3 text-xs"
+          onClick={() => persistConsent("rejected")}
+        >
           Rejeitar nao essenciais
         </Button>
       </div>

@@ -22,7 +22,7 @@ export default function Specialties() {
   return (
     <MainLayout
       title="Especialidades"
-      subtitle="Gerencie as especialidades usadas no cadastro de profissionais e suas importacoes"
+      subtitle="Mantenha especialidades bem organizadas para cadastro de profissionais, filtros e importacoes."
     >
       <div className="space-y-4 sm:space-y-6">
         <ModuleTabs items={tabs} pathname={location.pathname} />

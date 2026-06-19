@@ -316,7 +316,7 @@ export default function LicensePage() {
     >
       <div className="space-y-6">
         {fetchError ? (
-          <Alert className="border-red-200 bg-red-50">
+          <Alert className="border-red-200 bg-red-50 dark:border-red-900/70 dark:bg-red-950/40">
             <AlertTitle>Nao foi possivel carregar sua assinatura</AlertTitle>
             <AlertDescription>{fetchError}</AlertDescription>
           </Alert>
@@ -357,7 +357,7 @@ export default function LicensePage() {
                       onSelect={(code) => form.setValue('planCode', code, { shouldValidate: true })}
                     />
                     {scheduledPlanStartDate ? (
-                      <Alert className="border-blue-200 bg-blue-50">
+                      <Alert className="border-primary/25 bg-primary/5 dark:border-primary/20 dark:bg-primary/10">
                         <AlertTitle>Inicio programado do novo plano</AlertTitle>
                         <AlertDescription>
                           O novo plano iniciara em <strong>{formatDate(scheduledPlanStartDate.toISOString())}</strong>,

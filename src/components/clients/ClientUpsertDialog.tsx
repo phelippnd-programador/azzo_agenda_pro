@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogHeader, DialogSection, DialogStickyFooter, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -170,141 +170,155 @@ export function ClientUpsertDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md mx-4 sm:mx-auto sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="mx-4 max-h-[85vh] max-w-md overflow-y-auto sm:mx-auto sm:max-w-2xl">
+        <DialogHeader className="border-b border-border/70 pb-4 pr-10">
           <DialogTitle>{initialClient ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
           <DialogDescription>
             {initialClient ? 'Atualize os dados do cliente' : 'Cadastre um novo cliente'}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="rounded-2xl border border-border/70 bg-muted/15 p-4">
+        <DialogBody>
+          <DialogSection>
             <p className="text-sm font-medium text-foreground">
               {initialClient ? 'Revise os dados principais e mantenha o cadastro atualizado.' : 'Comece com os dados essenciais e complemente o endereco se fizer sentido para a operacao.'}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               Nome e telefone sao os campos minimos para criar o cadastro e seguir com o historico do cliente.
             </p>
-          </div>
+          </DialogSection>
 
-          <div className="space-y-2">
-            <Label>Nome Completo *</Label>
-            <Input
-              placeholder="Nome do cliente"
-              value={formName}
-              onChange={(e) => setFormName(e.target.value)}
-            />
-          </div>
+          <DialogSection className="bg-transparent">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Dados principais</p>
+              <p className="text-sm text-muted-foreground">Informacoes basicas para identificar o cliente e manter o relacionamento organizado.</p>
+            </div>
 
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Telefone *</Label>
+              <Label>Nome Completo *</Label>
               <Input
-                placeholder="(11) 99999-0000"
-                value={formPhone}
-                onChange={(e) => setFormPhone(maskPhoneBr(e.target.value))}
+                placeholder="Nome do cliente"
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
               />
             </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Telefone *</Label>
+                <Input
+                  placeholder="(11) 99999-0000"
+                  value={formPhone}
+                  onChange={(e) => setFormPhone(maskPhoneBr(e.target.value))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>E-mail</Label>
+                <Input
+                  type="email"
+                  placeholder="email@exemplo.com"
+                  value={formEmail}
+                  onChange={(e) => setFormEmail(e.target.value)}
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <Label>E-mail</Label>
+              <Label>Data de Nascimento</Label>
               <Input
-                type="email"
-                placeholder="email@exemplo.com"
-                value={formEmail}
-                onChange={(e) => setFormEmail(e.target.value)}
+                type="date"
+                value={formBirthDate}
+                onChange={(e) => setFormBirthDate(e.target.value)}
               />
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label>Data de Nascimento</Label>
-            <Input
-              type="date"
-              value={formBirthDate}
-              onChange={(e) => setFormBirthDate(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Observacoes</Label>
-            <Textarea
-              placeholder="Preferencias, alergias, etc."
-              value={formNotes}
-              onChange={(e) => setFormNotes(e.target.value)}
-              rows={2}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>CEP</Label>
-            <Input
-              placeholder="00000-000"
-              value={formZipCode}
-              onChange={(e) => setFormZipCode(formatCep(e.target.value))}
-            />
-            <p className="text-xs text-muted-foreground">
-              {isAddressLoading ? 'Buscando endereco pelo CEP...' : 'Ao informar um CEP valido, o endereco sera sugerido automaticamente.'}
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Logradouro</Label>
-            <Input
-              placeholder="Rua, avenida..."
-              value={formStreet}
-              onChange={(e) => setFormStreet(e.target.value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Numero</Label>
-              <Input
-                placeholder="123"
-                value={formNumber}
-                onChange={(e) => setFormNumber(e.target.value)}
+              <Label>Observacoes</Label>
+              <Textarea
+                placeholder="Preferencias, alergias, etc."
+                value={formNotes}
+                onChange={(e) => setFormNotes(e.target.value)}
+                rows={3}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Complemento</Label>
-              <Input
-                placeholder="Apto, sala..."
-                value={formComplement}
-                onChange={(e) => setFormComplement(e.target.value)}
-              />
-            </div>
-          </div>
+          </DialogSection>
 
-          <div className="space-y-2">
-            <Label>Bairro</Label>
-            <Input
-              placeholder="Bairro"
-              value={formNeighborhood}
-              onChange={(e) => setFormNeighborhood(e.target.value)}
-            />
-          </div>
+          <DialogSection className="bg-transparent">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Endereco</p>
+              <p className="text-sm text-muted-foreground">Opcional, mas util para operacao, segmentacao e contexto de atendimento.</p>
+            </div>
 
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Cidade</Label>
+              <Label>CEP</Label>
               <Input
-                placeholder="Cidade"
-                value={formCity}
-                onChange={(e) => setFormCity(e.target.value)}
+                placeholder="00000-000"
+                value={formZipCode}
+                onChange={(e) => setFormZipCode(formatCep(e.target.value))}
+              />
+              <p className="text-xs text-muted-foreground">
+                {isAddressLoading ? 'Buscando endereco pelo CEP...' : 'Ao informar um CEP valido, o endereco sera sugerido automaticamente.'}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Logradouro</Label>
+              <Input
+                placeholder="Rua, avenida..."
+                value={formStreet}
+                onChange={(e) => setFormStreet(e.target.value)}
               />
             </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Numero</Label>
+                <Input
+                  placeholder="123"
+                  value={formNumber}
+                  onChange={(e) => setFormNumber(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Complemento</Label>
+                <Input
+                  placeholder="Apto, sala..."
+                  value={formComplement}
+                  onChange={(e) => setFormComplement(e.target.value)}
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <Label>UF</Label>
+              <Label>Bairro</Label>
               <Input
-                placeholder="SP"
-                value={formState}
-                onChange={(e) => setFormState(e.target.value.toUpperCase())}
-                maxLength={2}
+                placeholder="Bairro"
+                value={formNeighborhood}
+                onChange={(e) => setFormNeighborhood(e.target.value)}
               />
             </div>
-          </div>
-        </div>
-        <DialogFooter>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Cidade</Label>
+                <Input
+                  placeholder="Cidade"
+                  value={formCity}
+                  onChange={(e) => setFormCity(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>UF</Label>
+                <Input
+                  placeholder="SP"
+                  value={formState}
+                  onChange={(e) => setFormState(e.target.value.toUpperCase())}
+                  maxLength={2}
+                />
+              </div>
+            </div>
+          </DialogSection>
+        </DialogBody>
+        <DialogStickyFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
@@ -318,7 +332,7 @@ export function ClientUpsertDialog({
               initialClient ? 'Salvar cliente' : 'Criar cliente'
             )}
           </Button>
-        </DialogFooter>
+        </DialogStickyFooter>
       </DialogContent>
     </Dialog>
   );

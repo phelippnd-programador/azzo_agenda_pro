@@ -61,7 +61,7 @@ export default function Login() {
 
   useEffect(() => {
     const showSessionExpiredToast = (message?: string) => {
-      toast.error(message || "Sessao expirada. Faca login novamente.");
+      toast.error(message || "Sessão expirada. Faça login novamente.");
     };
 
     const consumeReason = () => {
@@ -137,7 +137,7 @@ export default function Login() {
     try {
       const mfaCode = values.mfaCode?.trim();
       if (mfaRequired && (!mfaCode || mfaCode.length !== 6)) {
-        toast.error('Digite o codigo de 6 digitos do seu aplicativo autenticador.');
+      toast.error('Digite o código de 6 dígitos do seu aplicativo autenticador.');
         return;
       }
 
@@ -163,10 +163,10 @@ export default function Login() {
     } catch (error) {
       if (error instanceof ApiError && error.status === 428) {
         setMfaRequired(true);
-        toast.error('Digite o codigo de 6 digitos do seu aplicativo autenticador.');
+        toast.error('Digite o código de 6 dígitos do seu aplicativo autenticador.');
         return;
       }
-      const uiError = resolveUiError(error, 'Credenciais invalidas.');
+      const uiError = resolveUiError(error, 'Credenciais inválidas.');
       toast.error(uiError.message);
     } finally {
       setIsLoading(false);
@@ -194,17 +194,17 @@ export default function Login() {
           <p className="section-eyebrow">Acesso seguro</p>
           <BrandLockup className="justify-center" caption="Operating System" />
           <p className="mx-auto max-w-sm text-sm leading-6 text-muted-foreground">
-            Entre no mesmo ambiente usado para agenda, operacao, clientes e financeiro.
+            Entre no mesmo ambiente usado para agenda, operação, clientes e financeiro.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
             <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[11px] font-medium tracking-wide text-primary">
-              Acesso unico
+              Acesso único
             </span>
             <span className="rounded-full border border-border/70 bg-background/80 px-3 py-1 text-[11px] font-medium tracking-wide text-muted-foreground">
-              Sessao protegida
+              Sessão protegida
             </span>
             <span className="rounded-full border border-border/70 bg-background/80 px-3 py-1 text-[11px] font-medium tracking-wide text-muted-foreground">
-              Retomada rapida
+              Retomada rápida
             </span>
           </div>
         </div>
@@ -215,7 +215,7 @@ export default function Login() {
               Bem-vindo de volta!
             </CardTitle>
             <CardDescription className="text-sm leading-6 sm:text-[15px]">
-              Acesse sua operacao sem perder contexto e retome de onde parou.
+              Acesse sua operação sem perder contexto e retome de onde parou.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -229,7 +229,7 @@ export default function Login() {
                     Login direto no ambiente operacional
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Agenda, clientes, financeiro e configuracoes ficam no mesmo acesso, sem trocar de ambiente.
+                    Agenda, clientes, financeiro e configurações ficam no mesmo acesso, sem trocar de ambiente.
                   </p>
                 </div>
               </div>
@@ -309,14 +309,14 @@ export default function Login() {
                         <Sparkles className="h-4 w-4" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-foreground">Verificacao adicional necessaria</p>
+                        <p className="text-sm font-medium text-foreground">Verificação adicional necessária</p>
                         <p className="mt-1 text-sm text-muted-foreground">
-                          Digite o codigo do aplicativo autenticador para concluir o acesso com seguranca.
+                          Digite o código do aplicativo autenticador para concluir o acesso com segurança.
                         </p>
                       </div>
                     </div>
                   </div>
-                  <Label htmlFor="mfaCode" className="text-sm">Codigo MFA (6 digitos)</Label>
+                  <Label htmlFor="mfaCode" className="text-sm">Código MFA (6 dígitos)</Label>
                   <Input
                     id="mfaCode"
                     type="text"
@@ -356,7 +356,7 @@ export default function Login() {
               </div>
 
               <p className="text-xs text-muted-foreground">
-                Apenas seu e-mail pode ser lembrado neste navegador. Sua senha nunca e salva localmente.
+                Apenas seu e-mail pode ser lembrado neste navegador. Sua senha nunca é salva localmente.
               </p>
 
               <Button
@@ -377,12 +377,12 @@ export default function Login() {
               <p className="text-center text-xs text-muted-foreground" aria-live="polite">
                 {isLoading
                   ? 'Validando credenciais e preparando seu ambiente...'
-                  : 'Voce volta para o fluxo certo assim que o acesso for liberado.'}
+                  : 'Você volta para o fluxo certo assim que o acesso for liberado.'}
               </p>
             </form>
 
             <p className="text-center text-xs sm:text-sm text-muted-foreground mt-4 sm:mt-6">
-              Nao tem uma conta?{' '}
+              Não tem uma conta?{' '}
               <Link to="/cadastro" className="text-primary hover:opacity-90 font-medium">
                 Cadastre-se gratis
               </Link>
@@ -391,10 +391,10 @@ export default function Login() {
         </Card>
 
         <p className="mt-4 text-center text-xs text-muted-foreground sm:mt-6">
-          Ao entrar, voce concorda com nossos{' '}
+          Ao entrar, você concorda com nossos{' '}
           <Link to="/termos-de-uso" className="text-primary hover:underline">Termos de Uso</Link>
           {' '}e{' '}
-          <Link to="/politica-privacidade" className="text-primary hover:underline">Politica de Privacidade</Link>
+          <Link to="/politica-privacidade" className="text-primary hover:underline">Política de Privacidade</Link>
         </p>
       </div>
     </div>

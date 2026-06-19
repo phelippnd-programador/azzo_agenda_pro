@@ -150,9 +150,14 @@ export default function ServiceImportsPage() {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="border-border/80">
         <CardHeader>
-          <CardTitle>Nova importacao de servicos</CardTitle>
+          <div className="flex flex-col gap-1">
+            <CardTitle>Nova importacao de servicos</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Envie a planilha, escolha o modo de tratamento e acompanhe o processamento pelo historico abaixo.
+            </p>
+          </div>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -215,7 +220,7 @@ export default function ServiceImportsPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-border/80">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle>Historico de importacoes</CardTitle>
@@ -237,7 +242,7 @@ export default function ServiceImportsPage() {
               const errors = errorsByJob[job.jobId] || [];
               const canCancel = ["RECEBIDO", "EM_VALIDACAO", "PROCESSANDO"].includes(job.status);
               return (
-                <div key={job.jobId} className="rounded-md border p-3">
+                <div key={job.jobId} className="rounded-xl border border-border/70 bg-card p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">{IMPORT_MODE_LABELS[job.modoImportacao]}</Badge>
@@ -245,9 +250,22 @@ export default function ServiceImportsPage() {
                     </div>
                     <p className="text-xs text-muted-foreground">Criado em: {formatDateTime(job.createdAt)}</p>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Processadas: {job.linhasProcessadas}/{job.linhasRecebidas} | Sucesso: {job.linhasSucesso} | Erros: {job.linhasErro}
-                  </p>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Processadas</p>
+                      <p className="mt-1 text-sm font-semibold text-foreground">
+                        {job.linhasProcessadas}/{job.linhasRecebidas}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Sucesso</p>
+                      <p className="mt-1 text-sm font-semibold text-foreground">{job.linhasSucesso}</p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Erros</p>
+                      <p className="mt-1 text-sm font-semibold text-foreground">{job.linhasErro}</p>
+                    </div>
+                  </div>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <Button variant="outline" size="sm" asChild>
                       <Link to={`/servicos/importacoes/${job.jobId}`}>Detalhes</Link>
@@ -258,7 +276,7 @@ export default function ServiceImportsPage() {
                     </Button>
                   </div>
                   {!!errors.length && (
-                    <div className="mt-2 rounded-md bg-muted p-2 text-xs">
+                    <div className="mt-2 rounded-lg border border-border/60 bg-muted/30 p-3 text-xs">
                       {errors.slice(0, 5).map((line, index) => (
                         <p key={`${line.linha}-${line.coluna}-${index}`}>
                           Linha {line.linha} / {line.coluna || "-"}: {line.mensagem}

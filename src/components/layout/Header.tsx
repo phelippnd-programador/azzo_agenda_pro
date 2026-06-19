@@ -50,8 +50,8 @@ export function Header({
   };
 
   return (
-    <header className="sticky top-0 z-20 border-b border-border/80 bg-background/72 backdrop-blur-xl">
-      <div className="flex min-h-[4.5rem] items-center justify-between gap-4 px-3 py-3 sm:px-4 lg:px-6">
+    <header className="sticky top-0 z-20 border-b border-border/70 bg-background/78 backdrop-blur-xl">
+      <div className="flex min-h-[4.75rem] items-center justify-between gap-4 px-3 py-3 sm:px-4 lg:px-6">
         <div className="ml-10 flex min-w-0 flex-1 items-center gap-2 sm:ml-12 lg:ml-0">
           {onToggleDesktopSidebar ? (
             <Button

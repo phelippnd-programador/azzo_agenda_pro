@@ -116,12 +116,15 @@ export default function StockTransfersPage() {
   }
 
   return (
-    <Card>
+    <Card className="border-border/80">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle>Transferencias</CardTitle>
           <Button onClick={() => setIsDialogOpen(true)}>Nova transferencia</Button>
         </div>
+        <p className="text-sm text-muted-foreground">
+          Organize envios entre unidades e acompanhe o status de cada transferencia em um unico fluxo.
+        </p>
       </CardHeader>
       <CardContent className="space-y-2">
         {!transfers.length ? (
@@ -132,16 +135,23 @@ export default function StockTransfersPage() {
           />
         ) : (
           pagedTransfers.map((transfer) => (
-            <div key={transfer.id} className="rounded-md border p-3">
+            <div key={transfer.id} className="rounded-xl border border-border/70 bg-card p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-medium">
+                <p className="font-medium text-foreground">
                   {transfer.origem} {"->"} {transfer.destino}
                 </p>
                 <Badge variant={getStatusVariant(transfer.status)}>{transfer.status}</Badge>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Item: {transfer.itemNome} | Quantidade: {transfer.quantidade}
-              </p>
+              <div className="mt-3 grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
+                <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                  <p className="uppercase tracking-wide text-muted-foreground">Item</p>
+                  <p className="mt-1 font-medium text-foreground">{transfer.itemNome}</p>
+                </div>
+                <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                  <p className="uppercase tracking-wide text-muted-foreground">Quantidade</p>
+                  <p className="mt-1 font-medium text-foreground">{transfer.quantidade}</p>
+                </div>
+              </div>
               <div className="mt-2 flex flex-wrap gap-2">
                 <Button
                   variant="outline"

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import { prefetchRouteModule } from "@/app/routes/route-prefetch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type SidebarNavLinkProps = {
   path: string;
@@ -21,7 +22,7 @@ export const SidebarNavLink = memo(function SidebarNavLink({
   compact = false,
   onNavigate,
 }: SidebarNavLinkProps) {
-  return (
+  const link = (
     <Link
       to={path}
       onClick={onNavigate}
@@ -29,9 +30,10 @@ export const SidebarNavLink = memo(function SidebarNavLink({
       onFocus={() => prefetchRouteModule(path)}
       onTouchStart={() => prefetchRouteModule(path)}
       aria-current={isActive ? "page" : undefined}
+      aria-label={compact ? label : undefined}
       className={cn(
         compact
-          ? "flex items-center gap-2.5 h-8.5 px-2.5 rounded-lg text-sm select-none transition-colors"
+          ? "flex h-10 w-10 items-center justify-center rounded-xl text-sm select-none transition-colors"
           : "relative flex items-center gap-2.5 h-10 px-3.5 rounded-xl text-sm select-none transition-colors",
         isActive
           ? "bg-primary/10 text-primary font-medium shadow-soft ring-1 ring-primary/10"
@@ -42,9 +44,20 @@ export const SidebarNavLink = memo(function SidebarNavLink({
       {isActive && !compact ? (
         <span className="absolute left-1 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-primary" />
       ) : null}
-      <Icon className={cn(compact ? "w-3.5 h-3.5" : "w-4 h-4", "flex-shrink-0 opacity-80")} />
-      <span className="truncate">{label}</span>
+      <Icon className={cn(compact ? "h-4 w-4" : "w-4 h-4", "flex-shrink-0 opacity-80")} />
+      {compact ? <span className="sr-only">{label}</span> : <span className="truncate">{label}</span>}
     </Link>
+  );
+
+  if (!compact) {
+    return link;
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{link}</TooltipTrigger>
+      <TooltipContent side="right">{label}</TooltipContent>
+    </Tooltip>
   );
 });
 

@@ -1,8 +1,9 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ExternalLink, LogOut, Menu, X } from "lucide-react";
+import { CircleDot, ExternalLink, LogOut, Menu, X } from "lucide-react";
 import { BrandLockup } from "@/components/common/BrandLockup";
 import { Button } from "@/components/ui/button";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMenuPermissions } from "@/contexts/MenuPermissionsContext";
 import { cn } from "@/lib/utils";
@@ -64,7 +65,8 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
     return mapped;
   }, [visibleMenuEntries]);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(getInitialExpandedGroups);
-  const [salonSlug, setSalonSlug] = useState("meu-salao");
+  const [salonSlug, setSalonSlug] = useState<string | null>(null);
+  const isCompactDesktop = !isDesktopOpen;
 
   const persistScrollPosition = useCallback(() => {
     try {
@@ -140,112 +142,181 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 h-full w-60 bg-sidebar border-r border-sidebar-border shadow-sm transition-transform duration-300",
+          "fixed left-0 top-0 z-50 h-full border-r border-sidebar-border bg-sidebar/95 shadow-[0_10px_40px_-28px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-[width,transform] duration-300",
+          isCompactDesktop ? "lg:w-20" : "lg:w-60",
+          "w-60",
           isMobileOpen ? "translate-x-0" : "-translate-x-full",
-          isDesktopOpen ? "lg:translate-x-0" : "lg:-translate-x-full"
+          "lg:translate-x-0"
         )}
       >
-        <div className="flex flex-col h-full">
-          <div className="border-b border-sidebar-border/80 px-4 py-4">
-            <div className="flex items-center justify-between gap-3">
-              <Link to={appRouteManifest.shell.dashboard} className="min-w-0">
-                <BrandLockup compact className="justify-start" caption="Operating System" />
-              </Link>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden flex-shrink-0 h-7 w-7"
-                onClick={onToggleMobile}
-                aria-label="Fechar menu"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-
-          <div
-            ref={scrollContainerRef}
-            className="flex-1 overflow-y-auto py-3"
-            onScroll={persistScrollPosition}
-          >
-            <nav className="px-2">
-              {sectionedEntries.map((section) => (
-                <div key={section.id} className="mb-4 last:mb-0">
-                  <div className="px-3 pb-2 pt-1">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/65">
-                      {section.label}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    {section.items.map((entry) =>
-                      entry.children.length === 0 ? (
-                        <SidebarNavLink
-                          key={entry.path}
-                          path={entry.path}
-                          label={entry.label}
-                          icon={entry.icon}
-                          isActive={
-                            isSidebarEntryActive(location.pathname, entry.path) &&
-                            !(entry.path === appRouteManifest.audit.root &&
-                              location.pathname.startsWith(appRouteManifest.audit.lgpd))
-                          }
-                          onNavigate={handleNavigate}
-                        />
-                      ) : (
-                        <SidebarNavGroup
-                          key={entry.id}
-                          entry={entry}
-                          pathname={location.pathname}
-                          isOpen={expandedGroups[entry.id] ?? false}
-                          allowedSet={allowedSet}
-                          onNavigate={handleNavigate}
-                          onToggle={() =>
-                            setExpandedGroups((prev) => ({ ...prev, [entry.id]: !prev[entry.id] }))
-                          }
-                        />
-                      )
-                    )}
+        <TooltipProvider delayDuration={120}>
+          <div className="flex h-full flex-col">
+            <div className={cn("border-b border-sidebar-border/80 py-4", isCompactDesktop ? "px-3" : "px-4")}>
+              <div className={cn("flex items-center gap-3", isCompactDesktop ? "justify-center" : "justify-between")}>
+                <Link
+                  to={appRouteManifest.shell.dashboard}
+                  className={cn("min-w-0", isCompactDesktop && "flex justify-center")}
+                  aria-label="Ir para o dashboard"
+                >
+                  <BrandLockup
+                    compact
+                    className={cn(isCompactDesktop ? "justify-center gap-0" : "justify-start")}
+                    caption={isCompactDesktop ? undefined : "Operating System"}
+                    nameClassName={isCompactDesktop ? "hidden" : undefined}
+                    subtitleClassName={isCompactDesktop ? "hidden" : undefined}
+                    iconClassName={isCompactDesktop ? "h-10 w-10 rounded-2xl" : undefined}
+                  />
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="lg:hidden flex-shrink-0 h-7 w-7"
+                  onClick={onToggleMobile}
+                  aria-label="Fechar menu"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              {isCompactDesktop ? (
+                <div className="mt-4 hidden lg:flex justify-center">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-sidebar-border/70 bg-background/70 text-sidebar-foreground/70">
+                    <CircleDot className="h-4 w-4" />
                   </div>
                 </div>
-              ))}
-            </nav>
+              ) : (
+                <div className="mt-4 hidden lg:block rounded-2xl border border-sidebar-border/70 bg-background/55 px-3 py-2.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/60">
+                    Navegacao
+                  </p>
+                  <p className="mt-1 text-xs text-sidebar-foreground/80">
+                    Operacao, cadastro e gestao no mesmo fluxo.
+                  </p>
+                </div>
+              )}
+            </div>
 
-            <div className="px-2 mt-4">
-              <Link
-                to={`/agendar/${salonSlug}`}
-                aria-label="Abrir site de agendamento"
-                className="flex items-center gap-2.5 h-10 px-3.5 rounded-xl text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            <div
+              ref={scrollContainerRef}
+              className={cn("flex-1 overflow-y-auto py-3", isCompactDesktop && "lg:px-0")}
+              onScroll={persistScrollPosition}
+            >
+              <nav className={cn(isCompactDesktop ? "px-2" : "px-2")}>
+                {sectionedEntries.map((section) => (
+                  <div key={section.id} className="mb-4 last:mb-0">
+                    {isCompactDesktop ? (
+                      <div className="px-3 pb-2 pt-1 lg:flex lg:justify-center">
+                        <div className="h-px w-8 bg-sidebar-border/80" />
+                      </div>
+                    ) : (
+                      <div className="px-3 pb-2 pt-1">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/65">
+                          {section.label}
+                        </p>
+                      </div>
+                    )}
+                    <div className={cn("space-y-1", isCompactDesktop && "lg:flex lg:flex-col lg:items-center")}>
+                      {section.items.map((entry) =>
+                        isCompactDesktop || entry.children.length === 0 ? (
+                          <SidebarNavLink
+                            key={entry.path}
+                            path={entry.path}
+                            label={entry.label}
+                            icon={entry.icon}
+                            compact={isCompactDesktop}
+                            isActive={
+                              isSidebarEntryActive(location.pathname, entry.path) &&
+                              !(entry.path === appRouteManifest.audit.root &&
+                                location.pathname.startsWith(appRouteManifest.audit.lgpd))
+                            }
+                            onNavigate={handleNavigate}
+                          />
+                        ) : (
+                          <SidebarNavGroup
+                            key={entry.id}
+                            entry={entry}
+                            pathname={location.pathname}
+                            isOpen={expandedGroups[entry.id] ?? false}
+                            allowedSet={allowedSet}
+                            onNavigate={handleNavigate}
+                            onToggle={() =>
+                              setExpandedGroups((prev) => ({ ...prev, [entry.id]: !prev[entry.id] }))
+                            }
+                          />
+                        )
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </nav>
+
+              <div className={cn("mt-4", isCompactDesktop ? "px-2 lg:flex lg:justify-center" : "px-2")}>
+                {salonSlug ? (
+                  <Link
+                    to={`/agendar/${salonSlug}`}
+                    aria-label="Abrir site de agendamento"
+                    className={cn(
+                      "text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                      isCompactDesktop
+                        ? "flex h-10 w-10 items-center justify-center rounded-xl"
+                        : "flex items-center gap-2.5 h-10 px-3.5 rounded-xl text-sm"
+                    )}
+                  >
+                    <ExternalLink className="w-4 h-4 flex-shrink-0 opacity-70" />
+                    {isCompactDesktop ? <span className="sr-only">Site de agendamento</span> : <span className="truncate">Site de agendamento</span>}
+                  </Link>
+                ) : (
+                  <span
+                    aria-disabled="true"
+                    className={cn(
+                      "cursor-not-allowed text-muted-foreground/45",
+                      isCompactDesktop
+                        ? "flex h-10 w-10 items-center justify-center rounded-xl"
+                        : "flex items-center gap-2.5 h-10 px-3.5 rounded-xl text-sm"
+                    )}
+                  >
+                    <ExternalLink className="w-4 h-4 flex-shrink-0 opacity-50" />
+                    {isCompactDesktop ? <span className="sr-only">Site de agendamento indisponivel</span> : <span className="truncate">Site de agendamento indisponivel</span>}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div
+              className={cn(
+                "border-t border-sidebar-border pt-2 pb-3",
+                isCompactDesktop ? "px-2 space-y-1 lg:flex lg:flex-col lg:items-center" : "px-2 space-y-0.5"
+              )}
+            >
+              {SIDEBAR_BOTTOM_ITEMS.filter((item) => item.isVisible(user?.role, allowedSet)).map(
+                (item) => (
+                  <SidebarNavLink
+                    key={item.path}
+                    path={item.path}
+                    label={item.label}
+                    icon={item.icon}
+                    compact={isCompactDesktop}
+                    isActive={location.pathname === item.path}
+                    onNavigate={handleNavigate}
+                  />
+                )
+              )}
+              <button
+                type="button"
+                className={cn(
+                  "text-red-500 transition-colors cursor-pointer hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 dark:hover:bg-red-950/30",
+                  isCompactDesktop
+                    ? "flex h-10 w-10 items-center justify-center rounded-xl hover:bg-red-50"
+                    : "w-full flex items-center gap-2.5 h-10 px-3.5 rounded-xl text-sm hover:bg-red-50"
+                )}
+                onClick={handleLogout}
+                aria-label="Sair da conta"
               >
-                <ExternalLink className="w-4 h-4 flex-shrink-0 opacity-70" />
-                <span className="truncate">Site de agendamento</span>
-              </Link>
+                <LogOut className="w-4 h-4 flex-shrink-0" />
+                {isCompactDesktop ? <span className="sr-only">Sair</span> : <span className="truncate">Sair</span>}
+              </button>
             </div>
           </div>
-
-          <div className="px-2 pb-3 pt-2 border-t border-sidebar-border space-y-0.5">
-            {SIDEBAR_BOTTOM_ITEMS.filter((item) => item.isVisible(user?.role, allowedSet)).map(
-              (item) => (
-                <SidebarNavLink
-                  key={item.path}
-                  path={item.path}
-                  label={item.label}
-                  icon={item.icon}
-                  isActive={location.pathname === item.path}
-                  onNavigate={handleNavigate}
-                />
-              )
-            )}
-            <button
-              type="button"
-              className="w-full flex items-center gap-2.5 h-10 px-3.5 rounded-xl text-sm text-red-500 transition-colors cursor-pointer hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 dark:hover:bg-red-950/30"
-              onClick={handleLogout}
-              aria-label="Sair da conta"
-            >
-              <LogOut className="w-4 h-4 flex-shrink-0" />
-              <span className="truncate">Sair</span>
-            </button>
-          </div>
-        </div>
+        </TooltipProvider>
       </aside>
 
       <button

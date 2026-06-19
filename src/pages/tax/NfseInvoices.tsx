@@ -86,9 +86,9 @@ export default function NfseInvoices() {
   return (
     <MainLayout title="NFS-e" subtitle="Gestao de rascunhos, autorizacao, cancelamento e PDF da NFS-e.">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle>Documentos NFS-e</CardTitle>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Button variant="outline" onClick={() => void load()} disabled={isLoading}>
               Atualizar
             </Button>
@@ -100,7 +100,7 @@ export default function NfseInvoices() {
         <CardContent className="space-y-4">
           <div className="rounded-md border p-3">
             <p className="mb-2 text-sm font-medium">Exportacao contabil</p>
-            <div className="grid gap-2 md:grid-cols-5">
+            <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-5">
               <Input type="date" value={exportFrom} onChange={(e) => setExportFrom(e.target.value)} />
               <Input type="date" value={exportTo} onChange={(e) => setExportTo(e.target.value)} />
               <Input
@@ -127,8 +127,8 @@ export default function NfseInvoices() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <div className="rounded-md border">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto rounded-md border">
+            <table className="w-full min-w-[760px] text-sm">
               <thead>
                 <tr className="border-b bg-muted/50">
                   <th className="p-2 text-left">Numero</th>

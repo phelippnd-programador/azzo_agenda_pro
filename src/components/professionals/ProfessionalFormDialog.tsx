@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
+  DialogSection,
+  DialogStickyFooter,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -161,62 +163,75 @@ export function ProfessionalFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md mx-4 sm:mx-auto sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="mx-4 max-h-[85vh] max-w-md overflow-y-auto sm:mx-auto sm:max-w-2xl">
+        <DialogHeader className="border-b border-border/70 pb-4 pr-10">
           <DialogTitle>{editingProfessional ? 'Editar Profissional' : 'Novo Profissional'}</DialogTitle>
           <DialogDescription>
             {editingProfessional ? 'Atualize os dados do profissional' : 'Adicione um novo membro a equipe'}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="rounded-2xl border border-border/70 bg-muted/15 p-4">
+        <DialogBody>
+          <DialogSection>
             <p className="text-sm font-medium text-foreground">
               {editingProfessional ? 'Ajuste dados operacionais, especialidades e disponibilidade.' : 'Cadastre o profissional com os dados minimos para liberar agenda, especialidades e horarios.'}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               E-mail, telefone e horario de trabalho ajudam a deixar o perfil pronto para operacao desde o primeiro acesso.
             </p>
-          </div>
+          </DialogSection>
 
-          <div className="space-y-2">
-            <Label>Nome Completo *</Label>
-            <Input
-              placeholder="Nome do profissional"
-              value={formName}
-              onChange={(e) => setFormName(e.target.value)}
-            />
-          </div>
+          <DialogSection className="bg-transparent">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Dados principais</p>
+              <p className="text-sm text-muted-foreground">Identificacao e contato para liberar uso operacional e acesso do profissional.</p>
+            </div>
 
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>E-mail *</Label>
+              <Label>Nome Completo *</Label>
               <Input
-                type="email"
-                placeholder="email@exemplo.com"
-                value={formEmail}
-                onChange={(e) => setFormEmail(e.target.value)}
-                disabled={!!editingProfessional}
+                placeholder="Nome do profissional"
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Telefone *</Label>
-              <Input
-                placeholder="(11) 99999-0000"
-                value={formPhone}
-                onChange={(e) => setFormPhone(maskPhoneBr(e.target.value))}
-                disabled={!!editingProfessional}
-              />
-            </div>
-          </div>
-          {editingProfessional ? (
-            <p className="text-xs text-muted-foreground">
-              E-mail e telefone nao podem ser alterados na edicao do profissional.
-            </p>
-          ) : null}
 
-          <div className="space-y-2">
-            <Label>Especialidades</Label>
-            <div className="rounded-lg border p-3 space-y-3 max-h-48 overflow-y-auto">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>E-mail *</Label>
+                <Input
+                  type="email"
+                  placeholder="email@exemplo.com"
+                  value={formEmail}
+                  onChange={(e) => setFormEmail(e.target.value)}
+                  disabled={!!editingProfessional}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Telefone *</Label>
+                <Input
+                  placeholder="(11) 99999-0000"
+                  value={formPhone}
+                  onChange={(e) => setFormPhone(maskPhoneBr(e.target.value))}
+                  disabled={!!editingProfessional}
+                />
+              </div>
+            </div>
+            {editingProfessional ? (
+              <p className="text-xs text-muted-foreground">
+                E-mail e telefone nao podem ser alterados na edicao do profissional.
+              </p>
+            ) : null}
+          </DialogSection>
+
+          <DialogSection className="bg-transparent">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Escopo de atuacao</p>
+              <p className="text-sm text-muted-foreground">Defina onde esse profissional atua e quais servicos ele pode assumir.</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Especialidades</Label>
+              <div className="max-h-48 space-y-3 overflow-y-auto rounded-xl border border-border/70 bg-background/80 p-3">
               {isLoadingSpecialties && <p className="text-sm text-muted-foreground">Carregando especialidades...</p>}
               {specialtiesError && (
                 <div className="space-y-2">
@@ -246,17 +261,24 @@ export function ProfessionalFormDialog({
                 ))}
               </div>
             )}
-          </div>
+            </div>
+          </DialogSection>
 
-          <div className="space-y-2">
-            <Label>Horario de trabalho</Label>
-            <div className="rounded-lg border p-3 space-y-2">
+          <DialogSection className="bg-transparent">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Disponibilidade semanal</p>
+              <p className="text-sm text-muted-foreground">Revise os dias ativos para evitar conflitos na agenda e nos encaixes operacionais.</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Horario de trabalho</Label>
+              <div className="space-y-2 rounded-xl border border-border/70 bg-background/80 p-3">
               {formWorkingHours
                 .slice()
                 .sort((a, b) => a.dayOfWeek - b.dayOfWeek)
                 .map((hour) => (
-                  <div key={hour.dayOfWeek} className="grid grid-cols-[80px_1fr_1fr_auto] items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{weekdayLabels[hour.dayOfWeek]}</span>
+                  <div key={hour.dayOfWeek} className="grid grid-cols-1 items-center gap-2 rounded-xl border border-border/60 bg-muted/10 p-3 sm:grid-cols-[92px_1fr_1fr_auto]">
+                    <span className="text-xs font-medium text-muted-foreground">{weekdayLabels[hour.dayOfWeek]}</span>
                     <Input
                       type="time"
                       value={hour.startTime}
@@ -277,22 +299,23 @@ export function ProfessionalFormDialog({
                   </div>
                 ))}
             </div>
-            {isWorkingHoursDisabled ? (
-              <p className="text-xs text-amber-700">
-                Horarios de trabalho nao informados pelo backend. Edicao desativada.
-              </p>
-            ) : null}
-          </div>
+              {isWorkingHoursDisabled ? (
+                <p className="text-xs text-amber-700">
+                  Horarios de trabalho nao informados pelo backend. Edicao desativada.
+                </p>
+              ) : null}
+            </div>
+          </DialogSection>
 
-          <div className="flex items-center justify-between p-3 bg-muted/40 rounded-lg">
+          <DialogSection className="flex flex-col gap-3 bg-transparent sm:flex-row sm:items-center sm:justify-between">
             <div>
               <Label>Profissional Ativo</Label>
               <p className="text-xs text-muted-foreground">Disponivel para agendamentos</p>
             </div>
             <Switch checked={formIsActive} onCheckedChange={setFormIsActive} />
-          </div>
-        </div>
-        <DialogFooter>
+          </DialogSection>
+        </DialogBody>
+        <DialogStickyFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
             {isSubmitting ? (
@@ -302,7 +325,7 @@ export function ProfessionalFormDialog({
               </>
             ) : editingProfessional ? 'Salvar profissional' : 'Criar profissional'}
           </Button>
-        </DialogFooter>
+        </DialogStickyFooter>
       </DialogContent>
     </Dialog>
   );

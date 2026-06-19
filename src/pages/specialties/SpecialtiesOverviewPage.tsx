@@ -8,15 +8,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
+  DialogSection,
+  DialogStickyFooter,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { PageEmptyState, PageErrorState } from "@/components/ui/page-states";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageEmptyState, PageErrorState, PageListLoadingState } from "@/components/ui/page-states";
 import {
   Table,
   TableBody,
@@ -194,6 +195,30 @@ export default function SpecialtiesOverviewPage() {
   return (
     <>
       <div className="space-y-6">
+        <Card className="border-border/70 bg-card/90 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.16)]">
+          <CardContent className="flex flex-col gap-4 py-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Organizacao
+              </p>
+              <p className="text-sm font-medium text-foreground">
+                Mantenha as especialidades claras para apoiar cadastro, filtros e leitura operacional.
+              </p>
+              <p className="max-w-3xl text-sm text-muted-foreground">
+                A busca ajuda a localizar termos rapidamente, enquanto cards e tabela servem para contextos diferentes de manutencao.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className="bg-background/80">
+                {specialties.length} especialidade(s)
+              </Badge>
+              <Badge variant="outline" className="bg-background/80">
+                {viewMode === "grid" ? "Cards" : "Lista"}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+
         <Dialog
           open={isNewSpecialtyOpen}
           onOpenChange={(open) => {
@@ -217,36 +242,41 @@ export default function SpecialtiesOverviewPage() {
             onAction={() => setIsNewSpecialtyOpen(true)}
           />
 
-          <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
-            <DialogHeader>
+          <DialogContent className="mx-4 max-h-[85vh] overflow-y-auto sm:mx-auto sm:max-w-2xl">
+            <DialogHeader className="border-b border-border/70 pb-4 pr-10">
               <DialogTitle>Nova especialidade</DialogTitle>
               <DialogDescription>
                 Preencha os dados da nova especialidade.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-3 py-4">
-              <div className="rounded-2xl border border-border/70 bg-muted/15 p-4">
+            <DialogBody>
+              <DialogSection>
                 <p className="text-sm font-medium text-foreground">
                   Use especialidades para organizar catalogo, filtros e contexto operacional.
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Um nome claro e uma descricao curta ja ajudam a manter o sistema consistente.
                 </p>
-              </div>
+              </DialogSection>
 
-              <Input
-                placeholder="Ex.: Corte, Coloracao, Escova..."
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <Textarea
-                placeholder="Descricao opcional da especialidade (usada para detalhamento e contexto do assistente)."
-                value={description}
-                maxLength={500}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </div>
-            <DialogFooter>
+              <DialogSection className="bg-transparent">
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Ex.: Corte, Coloracao, Escova..."
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
+                <Textarea
+                  placeholder="Descricao opcional da especialidade (usada para detalhamento e contexto do assistente)."
+                  value={description}
+                  maxLength={500}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={4}
+                />
+              </DialogSection>
+            </DialogBody>
+            <DialogStickyFooter>
               <Button
                 variant="outline"
                 onClick={() => {
@@ -260,11 +290,11 @@ export default function SpecialtiesOverviewPage() {
               <Button onClick={handleCreate} disabled={isCreating}>
                 {isCreating ? "Salvando..." : "Criar especialidade"}
               </Button>
-            </DialogFooter>
+            </DialogStickyFooter>
           </DialogContent>
         </Dialog>
 
-        <div className="flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
             <Checkbox
               checked={allFilteredSelected}
@@ -292,13 +322,7 @@ export default function SpecialtiesOverviewPage() {
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-24" />
-            ))}
-          </div>
-        ) : null}
+        {isLoading ? <PageListLoadingState itemCount={6} itemHeightClassName="h-24" /> : null}
 
         {error ? (
           <PageErrorState
@@ -313,8 +337,8 @@ export default function SpecialtiesOverviewPage() {
             viewMode === "grid" ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filtered.map((specialty) => (
-                <Card key={specialty.id}>
-                  <CardContent className="flex items-start justify-between gap-3 py-4">
+                <Card key={specialty.id} className="border-border/70 shadow-none">
+                  <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex min-w-0 items-start gap-2">
                       <Checkbox
                         checked={selectedSpecialtyIds.includes(specialty.id)}
@@ -332,7 +356,7 @@ export default function SpecialtiesOverviewPage() {
                         ) : null}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex justify-end gap-1 sm:justify-start">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -364,7 +388,7 @@ export default function SpecialtiesOverviewPage() {
               ))}
             </div>
             ) : (
-              <Card>
+              <Card className="border-border/70 shadow-none">
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
@@ -515,30 +539,33 @@ export default function SpecialtiesOverviewPage() {
           if (!open) setSpecialtyToEdit(null);
         }}
       >
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="mx-4 max-h-[85vh] overflow-y-auto sm:mx-auto sm:max-w-2xl">
+          <DialogHeader className="border-b border-border/70 pb-4 pr-10">
             <DialogTitle>Editar especialidade</DialogTitle>
             <DialogDescription>Atualize nome e descricao da especialidade.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            <div className="rounded-2xl border border-border/70 bg-muted/15 p-4">
+          <DialogBody>
+            <DialogSection>
               <p className="text-sm font-medium text-foreground">
                 Ajuste nome e descricao sem perder o padrao usado no catalogo.
               </p>
-            </div>
-            <Input
-              placeholder="Nome da especialidade"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-            />
-            <Textarea
-              placeholder="Descricao opcional"
-              value={editDescription}
-              maxLength={500}
-              onChange={(e) => setEditDescription(e.target.value)}
-            />
-          </div>
-          <DialogFooter>
+            </DialogSection>
+            <DialogSection className="bg-transparent">
+              <Input
+                placeholder="Nome da especialidade"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+              />
+              <Textarea
+                placeholder="Descricao opcional"
+                value={editDescription}
+                maxLength={500}
+                onChange={(e) => setEditDescription(e.target.value)}
+                rows={4}
+              />
+            </DialogSection>
+          </DialogBody>
+          <DialogStickyFooter>
             <Button
               variant="outline"
               onClick={() => setSpecialtyToEdit(null)}
@@ -549,7 +576,7 @@ export default function SpecialtiesOverviewPage() {
             <Button onClick={handleUpdate} isLoading={isUpdating} loadingText="Salvando...">
               Salvar alteracoes
             </Button>
-          </DialogFooter>
+          </DialogStickyFooter>
         </DialogContent>
       </Dialog>
     </>

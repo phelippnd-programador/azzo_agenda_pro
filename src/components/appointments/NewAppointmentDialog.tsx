@@ -7,8 +7,8 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
+  DialogStickyFooter,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useClients } from '@/hooks/useClients';
@@ -226,7 +226,7 @@ export function NewAppointmentDialog({
         toast.error(
           resolveUiError(
             error,
-            'Nao foi possivel carregar a configuracao da agenda.',
+            'Não foi possível carregar a configuração da agenda.',
           ).message,
         );
       })
@@ -387,7 +387,7 @@ export function NewAppointmentDialog({
     } catch (error) {
       const uiError = resolveUiError(
         error,
-        'Nao foi possivel criar o agendamento.',
+        'Não foi possível criar o agendamento.',
       );
 
       if (String(uiError.code || '').toUpperCase() === 'APPOINTMENT_CONFLICT') {
@@ -454,11 +454,11 @@ export function NewAppointmentDialog({
         }}
       >
         <DialogContent className="mx-4 max-h-[92vh] overflow-y-auto sm:mx-auto sm:max-w-3xl">
-          <DialogHeader>
+          <DialogHeader className="border-b border-border/70 pb-4 pr-10">
             <DialogTitle>Novo Agendamento</DialogTitle>
             <DialogDescription>
               Siga as etapas para montar o atendimento interno com o mesmo fluxo
-              guiado do agendamento publico.
+              guiado do agendamento público.
             </DialogDescription>
           </DialogHeader>
 
@@ -517,7 +517,7 @@ export function NewAppointmentDialog({
             onDiscountChange={setNewDiscountInput}
           />
 
-          <DialogFooter className="flex-row items-center justify-between gap-2 sm:justify-between">
+          <DialogStickyFooter className="flex-row items-center justify-between gap-2 sm:justify-between">
             <div className="flex gap-2">
               <Button variant="outline" onClick={closeDialog}>
                 Cancelar
@@ -550,7 +550,7 @@ export function NewAppointmentDialog({
                 )}
               </Button>
             )}
-          </DialogFooter>
+          </DialogStickyFooter>
         </DialogContent>
       </Dialog>
 
@@ -569,8 +569,8 @@ export function NewAppointmentDialog({
       <ConfirmationDialog
         open={isConflictDialogOpen}
         onOpenChange={setIsConflictDialogOpen}
-        title="Confirmar conflito de horario?"
-        description="Este horario ja possui atendimento para o mesmo profissional. A decisao de assumir a sobreposicao ficara registrada na auditoria."
+        title="Confirmar conflito de horário?"
+        description="Este horário já possui atendimento para o mesmo profissional. A decisão de assumir a sobreposição ficará registrada na auditoria."
         confirmLabel="Criar mesmo assim"
         loadingLabel="Criando..."
         isLoading={isSubmitting}
@@ -579,7 +579,7 @@ export function NewAppointmentDialog({
       >
         <div className="space-y-3 text-sm">
           <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-red-900">
-            Solicitacao: {conflictDetails?.requestedDate || newDate}{' '}
+            Solicitação: {conflictDetails?.requestedDate || newDate}{' '}
             {conflictDetails?.requestedStartTime || newStartTime} -{' '}
             {conflictDetails?.requestedEndTime || newEndTime}
           </div>

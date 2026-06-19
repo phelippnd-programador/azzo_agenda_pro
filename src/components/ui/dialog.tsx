@@ -62,6 +62,27 @@ const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 );
 DialogFooter.displayName = 'DialogFooter';
 
+const DialogBody = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={cn('space-y-5 py-1', className)} {...props} />
+);
+DialogBody.displayName = 'DialogBody';
+
+const DialogSection = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={cn('space-y-3 rounded-2xl border border-border/70 bg-muted/10 p-4', className)} {...props} />
+);
+DialogSection.displayName = 'DialogSection';
+
+const DialogStickyFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  <DialogFooter
+    className={cn(
+      'sticky bottom-0 -mx-6 mt-2 border-t border-border/70 bg-background/95 px-6 pb-1 pt-4 backdrop-blur sm:-mx-7 sm:px-7',
+      className
+    )}
+    {...props}
+  />
+);
+DialogStickyFooter.displayName = 'DialogStickyFooter';
+
 const DialogTitle = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
@@ -87,6 +108,9 @@ export {
   DialogContent,
   DialogHeader,
   DialogFooter,
+  DialogBody,
+  DialogSection,
+  DialogStickyFooter,
   DialogTitle,
   DialogDescription,
 };

@@ -118,7 +118,7 @@ export default function StockImportDetailPage() {
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="border-border/80">
         <CardContent className="py-8 text-sm text-muted-foreground">Carregando detalhe da importacao...</CardContent>
       </Card>
     );
@@ -177,7 +177,7 @@ export default function StockImportDetailPage() {
         </div>
       </div>
 
-      <Card>
+      <Card className="border-border/80">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle>Job {job.jobId}</CardTitle>
@@ -188,6 +188,25 @@ export default function StockImportDetailPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Progresso</p>
+              <p className="mt-1 text-lg font-semibold text-foreground">{progressPercent}%</p>
+              <p className="text-xs text-muted-foreground">
+                {job.linhasProcessadas}/{job.totalLinhas} linhas
+              </p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Linhas</p>
+              <p className="mt-1 text-lg font-semibold text-foreground">{job.totalLinhas}</p>
+              <p className="text-xs text-muted-foreground">Total recebido no arquivo</p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Erros</p>
+              <p className="mt-1 text-lg font-semibold text-foreground">{job.linhasComErro}</p>
+              <p className="text-xs text-muted-foreground">Linhas com falha no processamento</p>
+            </div>
+          </div>
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
             <p><strong>Criado em:</strong> {formatDateTime(job.createdAt)}</p>
             <p><strong>Atualizado em:</strong> {formatDateTime(job.updatedAt)}</p>
@@ -209,7 +228,7 @@ export default function StockImportDetailPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-border/80">
         <CardHeader>
           <CardTitle>Erros por linha</CardTitle>
         </CardHeader>
@@ -227,7 +246,7 @@ export default function StockImportDetailPage() {
                 {pagedErrors.map((line, index) => (
                   <div
                     key={`${line.linha}-${line.coluna}-${index}`}
-                    className="rounded-md border p-3 text-sm"
+                    className="rounded-xl border border-border/70 bg-card p-4 text-sm"
                   >
                     <p><strong>Linha:</strong> {line.linha} | <strong>Coluna:</strong> {line.coluna}</p>
                     <p><strong>Codigo:</strong> {line.codigoErro}</p>

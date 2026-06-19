@@ -18,7 +18,7 @@ import { formatDateTime, getListItems } from "./utils";
 
 const MOVEMENT_TYPE_LABELS: Record<string, string> = {
   ENTRADA: "Entrada",
-  SAIDA: "Saída",
+  SAIDA: "Saida",
   AJUSTE: "Ajuste",
 };
 
@@ -124,7 +124,7 @@ export default function StockMovementsPage() {
   }
 
   return (
-    <Card>
+    <Card className="border-border/80">
       <CardHeader className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle>Movimentacoes de estoque</CardTitle>
@@ -192,6 +192,10 @@ export default function StockMovementsPage() {
           </Dialog>
         </div>
 
+        <p className="text-sm text-muted-foreground">
+          Filtre o historico por tipo ou item e registre entradas, saidas e ajustes sem sair da tela.
+        </p>
+
         <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
           <select className="h-10 rounded-md border border-input bg-background px-3 text-sm" value={selectedType} onChange={(e) => setSelectedType(e.target.value as "all" | StockMovementType)}>
             <option value="all">Todos os tipos</option>
@@ -225,16 +229,16 @@ export default function StockMovementsPage() {
             return (
               <div
                 key={movement.id}
-                className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-muted/40 rounded-xl hover:bg-muted/70 transition-colors"
+                className="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 transition-colors hover:bg-muted/35 sm:gap-4 sm:p-4"
               >
                 <div
                   className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                    isEntrada ? "bg-green-100" : isSaida ? "bg-red-100" : "bg-indigo-100"
+                    isEntrada ? "bg-green-100 dark:bg-green-500/15" : isSaida ? "bg-red-100 dark:bg-red-500/15" : "bg-indigo-100 dark:bg-indigo-500/15"
                   }`}
                 >
                   <Icon
                     className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                      isEntrada ? "text-green-600" : isSaida ? "text-red-600" : "text-indigo-600"
+                      isEntrada ? "text-green-600 dark:text-green-300" : isSaida ? "text-red-600 dark:text-red-300" : "text-indigo-600 dark:text-indigo-300"
                     }`}
                   />
                 </div>

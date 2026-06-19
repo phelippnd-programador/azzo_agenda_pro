@@ -27,10 +27,10 @@ export default function ForgotPassword() {
     try {
       setIsSubmitting(true);
       const response = await authApi.forgotPassword(values.email);
-      toast.success(response.message || "Se o e-mail existir, voce recebera instrucoes de recuperacao.");
+      toast.success(response.message || "Se o e-mail existir, você receberá instruções de recuperação.");
       form.reset({ email: "" });
     } catch (error) {
-      toast.error(resolveUiError(error, "Nao foi possivel solicitar a redefinicao de senha.").message);
+      toast.error(resolveUiError(error, "Não foi possível solicitar a redefinição de senha.").message);
     } finally {
       setIsSubmitting(false);
     }
@@ -51,7 +51,7 @@ export default function ForgotPassword() {
           <div className="flex justify-center">
             <span className="brand-orbit-badge">
               <span className="brand-orbit-dot" />
-              Recuperacao segura
+              Recuperação segura
             </span>
           </div>
           <p className="section-eyebrow">Acesso protegido</p>
@@ -67,7 +67,7 @@ export default function ForgotPassword() {
               Recuperar senha
             </CardTitle>
             <CardDescription className="text-sm leading-6 sm:text-[15px]">
-              Digite seu e-mail para receber instrucoes de redefinicao.
+              Digite seu e-mail para receber instruções de redefinição.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -96,7 +96,7 @@ export default function ForgotPassword() {
                     Enviando...
                   </>
                 ) : (
-                  "Enviar instrucoes"
+                  "Enviar instruções"
                 )}
               </Button>
             </form>

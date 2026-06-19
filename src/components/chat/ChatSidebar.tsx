@@ -44,7 +44,7 @@ export function ChatSidebar({
           <div className="flex items-center justify-between gap-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <MessageCircleMore className="h-4 w-4" />
-              Todas as Conversas
+              Todas as conversas
             </CardTitle>
             <Badge variant="outline" className="shrink-0">
               {filteredConversations.length}/{conversations.length}

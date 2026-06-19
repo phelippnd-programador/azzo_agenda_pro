@@ -4,8 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PageEmptyState, PageErrorState } from '@/components/ui/page-states';
+import { PageEmptyState, PageErrorState, PageListLoadingState } from '@/components/ui/page-states';
 import { HighlightMetricCard } from '@/components/ui/highlight-metric-card';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { CrudListToolbar } from '@/components/crud/CrudListToolbar';
@@ -87,16 +86,7 @@ export default function ClientsOverviewPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-12 w-full" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-48" />
-          ))}
-        </div>
-      </div>
-    );
+    return <PageListLoadingState />;
   }
 
   if (error) {
@@ -111,6 +101,30 @@ export default function ClientsOverviewPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      <Card className="border-border/70 bg-card/90 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.16)]">
+        <CardContent className="flex flex-col gap-4 py-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Relacionamento
+            </p>
+            <p className="text-sm font-medium text-foreground">
+              Acompanhe crescimento da base, recorrencia recente e potencial de receita por cliente.
+            </p>
+            <p className="max-w-3xl text-sm text-muted-foreground">
+              Use a busca para localizar nomes rapidamente e troque entre cards e lista conforme a tarefa do momento.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="bg-background/80">
+              {pagination.total} cliente(s)
+            </Badge>
+            <Badge variant="outline" className="bg-background/80">
+              {viewMode === 'grid' ? 'Cards' : 'Lista'}
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+
       <CrudListToolbar
         searchPlaceholder="Buscar clientes..."
         searchValue={searchTerm}
@@ -133,7 +147,7 @@ export default function ClientsOverviewPage() {
           title="Total de Clientes"
           value={String(pagination.total)}
           icon={Users}
-          className="border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5"
+          className="border-primary/20 bg-primary/8"
           titleClassName="text-primary"
           valueClassName="text-primary"
           iconContainerClassName="bg-primary/15"
@@ -143,21 +157,21 @@ export default function ClientsOverviewPage() {
           title="Ativos nesta pagina"
           value={String(activeClientsOnPage)}
           icon={Calendar}
-          className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50"
-          titleClassName="text-green-700"
-          valueClassName="text-green-800"
-          iconContainerClassName="bg-green-100"
-          iconClassName="text-green-600"
+          className="border-green-200/70 bg-green-50/70 dark:border-green-500/20 dark:bg-green-500/10"
+          titleClassName="text-green-700 dark:text-green-300"
+          valueClassName="text-green-800 dark:text-green-50"
+          iconContainerClassName="bg-green-100 dark:bg-green-500/15"
+          iconClassName="text-green-600 dark:text-green-300"
         />
         <HighlightMetricCard
           title="Faturamento na pagina"
           value={formatCurrency(totalSpentOnPage)}
           icon={DollarSign}
-          className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50"
-          titleClassName="text-indigo-700"
-          valueClassName="text-indigo-800"
-          iconContainerClassName="bg-indigo-100"
-          iconClassName="text-indigo-600"
+          className="border-indigo-200/70 bg-indigo-50/70 dark:border-indigo-500/20 dark:bg-indigo-500/10"
+          titleClassName="text-indigo-700 dark:text-indigo-300"
+          valueClassName="text-indigo-800 dark:text-indigo-50"
+          iconContainerClassName="bg-indigo-100 dark:bg-indigo-500/15"
+          iconClassName="text-indigo-600 dark:text-indigo-300"
         />
       </div>
 
@@ -195,7 +209,7 @@ export default function ClientsOverviewPage() {
           ))}
         </div>
       ) : (
-        <Card>
+        <Card className="border-border/70 shadow-none">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>

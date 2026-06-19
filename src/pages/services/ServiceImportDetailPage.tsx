@@ -104,7 +104,7 @@ export default function ServiceImportDetailPage() {
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="border-border/80">
         <CardContent className="py-8 text-sm text-muted-foreground">Carregando detalhe da importacao...</CardContent>
       </Card>
     );
@@ -153,7 +153,7 @@ export default function ServiceImportDetailPage() {
         </div>
       </div>
 
-      <Card>
+      <Card className="border-border/80">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle>Job {job.jobId}</CardTitle>
@@ -164,6 +164,20 @@ export default function ServiceImportDetailPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
+              <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Progresso</p>
+              <p className="mt-1 text-lg font-semibold text-foreground">{progressPercent}%</p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
+              <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Sucesso</p>
+              <p className="mt-1 text-lg font-semibold text-foreground">{job.linhasSucesso}</p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
+              <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Erros</p>
+              <p className="mt-1 text-lg font-semibold text-foreground">{job.linhasErro}</p>
+            </div>
+          </div>
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
             <p><strong>Arquivo:</strong> {job.nomeArquivo}</p>
             <p><strong>Dry-run:</strong> {job.dryRun ? "Sim" : "Nao"}</p>
@@ -195,7 +209,7 @@ export default function ServiceImportDetailPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-border/80">
         <CardHeader>
           <CardTitle>Erros por linha</CardTitle>
         </CardHeader>
@@ -213,7 +227,7 @@ export default function ServiceImportDetailPage() {
                 {pagedErrors.map((line, index) => (
                   <div
                     key={`${line.linha}-${line.coluna}-${index}`}
-                    className="rounded-md border p-3 text-sm"
+                    className="rounded-xl border border-border/70 bg-card p-4 text-sm"
                   >
                     <p><strong>Linha:</strong> {line.linha} | <strong>Coluna:</strong> {line.coluna || "-"}</p>
                     <p><strong>Codigo:</strong> {line.codigo || "-"}</p>

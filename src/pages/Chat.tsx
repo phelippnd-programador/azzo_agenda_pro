@@ -247,21 +247,21 @@ export default function ChatPage() {
       <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
         <div className="order-2 lg:order-1">
           <ChatSidebar
-          conversations={conversations}
-          filteredConversations={filteredConversations}
-          selectedConversationId={selectedConversation?.id}
-          isLoading={isLoadingConversations}
-          query={conversationQuery}
-          onQueryChange={setConversationQuery}
-          filter={conversationFilter}
-          onFilterChange={setConversationFilter}
-          onSelectConversation={(nextConversationId) => navigate(`/chat/${nextConversationId}`)}
-          onReload={handleReloadConversations}
-          onClearFilters={() => {
-            setConversationQuery("");
-            setConversationFilter("all");
-          }}
-        />
+            conversations={conversations}
+            filteredConversations={filteredConversations}
+            selectedConversationId={selectedConversation?.id}
+            isLoading={isLoadingConversations}
+            query={conversationQuery}
+            onQueryChange={setConversationQuery}
+            filter={conversationFilter}
+            onFilterChange={setConversationFilter}
+            onSelectConversation={(nextConversationId) => navigate(`/chat/${nextConversationId}`)}
+            onReload={handleReloadConversations}
+            onClearFilters={() => {
+              setConversationQuery("");
+              setConversationFilter("all");
+            }}
+          />
         </div>
 
         <Card className="order-1 min-h-[28rem] lg:order-2 lg:h-[calc(100vh-13rem)]">
@@ -297,7 +297,10 @@ export default function ChatPage() {
                       {messages.length} mensagens
                     </Badge>
                     {selectedConversation.manualModeEnabled ? (
-                      <Badge variant="outline" className="shrink-0 border-amber-400 text-amber-600">
+                      <Badge
+                        variant="outline"
+                        className="shrink-0 border-amber-400 text-amber-700 dark:border-amber-700 dark:text-amber-300"
+                      >
                         Modo Manual
                       </Badge>
                     ) : null}

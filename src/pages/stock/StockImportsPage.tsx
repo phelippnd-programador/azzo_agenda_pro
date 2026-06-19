@@ -149,9 +149,12 @@ export default function StockImportsPage() {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="border-border/80">
         <CardHeader>
           <CardTitle>Nova importacao</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Escolha o tipo de arquivo, baixe o modelo correto e acompanhe o processamento por job.
+          </p>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
@@ -211,7 +214,7 @@ export default function StockImportsPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-border/80">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle>Historico de importacoes</CardTitle>
@@ -233,7 +236,7 @@ export default function StockImportsPage() {
               const errors = errorsByJob[job.jobId] || [];
               const canCancel = ["RECEBIDO", "EM_VALIDACAO", "PROCESSANDO"].includes(job.status);
               return (
-                <div key={job.jobId} className="rounded-md border p-3">
+                <div key={job.jobId} className="rounded-xl border border-border/70 bg-card p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">{job.tipoImportacao}</Badge>
@@ -241,9 +244,22 @@ export default function StockImportsPage() {
                     </div>
                     <p className="text-xs text-muted-foreground">Criado em: {formatDateTime(job.createdAt)}</p>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Processadas: {job.linhasProcessadas}/{job.totalLinhas} | Erros: {job.linhasComErro}
-                  </p>
+                  <div className="mt-3 grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
+                    <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Progresso</p>
+                      <p className="mt-1 font-medium text-foreground">
+                        {job.linhasProcessadas}/{job.totalLinhas}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Tipo</p>
+                      <p className="mt-1 font-medium text-foreground">{job.tipoImportacao}</p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Erros</p>
+                      <p className="mt-1 font-medium text-foreground">{job.linhasComErro}</p>
+                    </div>
+                  </div>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <Button variant="outline" size="sm" asChild>
                       <Link to={`/estoque/importacoes/${job.jobId}`}>Detalhes</Link>
@@ -254,7 +270,7 @@ export default function StockImportsPage() {
                     </Button>
                   </div>
                   {!!errors.length && (
-                    <div className="mt-2 rounded-md bg-muted p-2 text-xs">
+                    <div className="mt-3 rounded-lg border border-border/60 bg-muted/30 p-3 text-xs">
                       {errors.slice(0, 5).map((line) => (
                         <p key={`${line.linha}-${line.coluna}`}>Linha {line.linha} / {line.coluna}: {line.mensagem}</p>
                       ))}

@@ -16,7 +16,10 @@ export default function Services() {
   ];
 
   return (
-    <MainLayout title="Servicos" subtitle="Gerencie os servicos oferecidos e suas importacoes">
+    <MainLayout
+      title="Servicos"
+      subtitle="Organize o catalogo de servicos e acompanhe importacoes sem perder consistencia operacional."
+    >
       <div className="space-y-4 sm:space-y-6">
         <ModuleTabs items={tabs} pathname={location.pathname} />
         <Suspense fallback={<RouteContentLoader />}>

@@ -47,8 +47,8 @@ import { toast } from "sonner";
 
 const PAYMENT_METHODS: Array<{ key: CashClosingPaymentMethod; label: string }> = [
   { key: "CASH", label: "Dinheiro" },
-  { key: "CREDIT_CARD", label: "Cartao de credito" },
-  { key: "DEBIT_CARD", label: "Cartao de debito" },
+  { key: "CREDIT_CARD", label: "Cartão de crédito" },
+  { key: "DEBIT_CARD", label: "Cartão de débito" },
   { key: "PIX", label: "Pix" },
   { key: "OTHER", label: "Outros" },
 ];
@@ -68,7 +68,7 @@ const parseMoneyInputToCents = (rawValue: string) => {
   if (!normalized) return 0;
   const numeric = Number(normalized);
   if (!Number.isFinite(numeric) || numeric < 0) {
-    throw new Error("Informe um valor monetario valido");
+    throw new Error("Informe um valor monetário válido");
   }
   return Math.round(numeric * 100);
 };
@@ -145,7 +145,7 @@ export default function FinancialCashClosing() {
       });
       setError(null);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Nao foi possivel carregar os fechamentos de caixa";
+      const message = err instanceof Error ? err.message : "Não foi possível carregar os fechamentos de caixa";
       setError(message);
     } finally {
       setIsLoading(false);
@@ -201,7 +201,7 @@ export default function FinancialCashClosing() {
       setOpeningNotes("");
       toast.success("Caixa aberto com sucesso");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Nao foi possivel abrir o caixa");
+      toast.error(err instanceof Error ? err.message : "Não foi possível abrir o caixa");
     } finally {
       setIsSubmittingOpen(false);
     }
@@ -223,9 +223,9 @@ export default function FinancialCashClosing() {
       await loadClosings(true);
       setSelectedId(closed.id);
       setIsCloseDialogVisible(false);
-      toast.success("Fechamento de caixa concluido");
+      toast.success("Fechamento de caixa concluído");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Nao foi possivel fechar o caixa");
+      toast.error(err instanceof Error ? err.message : "Não foi possível fechar o caixa");
     } finally {
       setIsSubmittingClose(false);
     }
@@ -238,7 +238,7 @@ export default function FinancialCashClosing() {
       await refetchTransactions();
       await loadClosings(true);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Nao foi possivel conciliar o lancamento");
+      toast.error(err instanceof Error ? err.message : "Não foi possível conciliar o lançamento");
     }
   };
 
@@ -270,7 +270,7 @@ export default function FinancialCashClosing() {
 
   if (isLoading) {
     return (
-      <MainLayout title="Fechamento de Caixa" subtitle="Caixa operacional do dia e conferencia final">
+      <MainLayout title="Fechamento de Caixa" subtitle="Caixa operacional do dia e conferência final">
         <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
           <Skeleton className="h-[24rem]" />
           <Skeleton className="h-[24rem]" />
@@ -281,9 +281,9 @@ export default function FinancialCashClosing() {
 
   if (error) {
     return (
-      <MainLayout title="Fechamento de Caixa" subtitle="Caixa operacional do dia e conferencia final">
+      <MainLayout title="Fechamento de Caixa" subtitle="Caixa operacional do dia e conferência final">
         <PageErrorState
-          title="Nao foi possivel carregar o fechamento de caixa"
+          title="Não foi possível carregar o fechamento de caixa"
           description={error}
           action={{ label: "Tentar novamente", onClick: () => void loadClosings() }}
         />
@@ -292,7 +292,7 @@ export default function FinancialCashClosing() {
   }
 
   return (
-    <MainLayout title="Fechamento de Caixa" subtitle="Caixa operacional do dia e conferencia final">
+    <MainLayout title="Fechamento de Caixa" subtitle="Caixa operacional do dia e conferência final">
       <div className="space-y-4 sm:space-y-6">
         <div className="grid gap-3 sm:grid-cols-3">
           <Card className="surface-panel border">
@@ -311,7 +311,7 @@ export default function FinancialCashClosing() {
           </Card>
           <Card className="surface-panel border">
             <CardHeader className="pb-2">
-              <CardDescription>Diferenca consolidada</CardDescription>
+              <CardDescription>Diferença consolidada</CardDescription>
               <CardTitle className="text-2xl">
                 {selectedClosing ? formatCurrencyCents(selectedClosing.totalDifference) : "R$ 0,00"}
               </CardTitle>
@@ -321,7 +321,7 @@ export default function FinancialCashClosing() {
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-muted-foreground">
-            Esta pagina agora concentra a operacao do caixa do dia e o fechamento final por forma de pagamento.
+            Esta página agora concentra a operação do caixa do dia e o fechamento final por forma de pagamento.
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => void loadClosings(true)} disabled={isRefreshing}>
@@ -338,14 +338,14 @@ export default function FinancialCashClosing() {
         {closings.length === 0 ? (
           <PageEmptyState
             title="Nenhum fechamento registrado"
-            description="Abra o primeiro caixa do dia para iniciar a operacao e registrar a conferencia final."
+            description="Abra o primeiro caixa do dia para iniciar a operação e registrar a conferência final."
             action={{ label: "Abrir caixa", onClick: () => setIsOpenDialogVisible(true) }}
           />
         ) : (
           <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
             <Card className="surface-panel border">
               <CardHeader className="pb-3">
-                <CardTitle>Historico</CardTitle>
+                <CardTitle>Histórico</CardTitle>
                 <CardDescription>Selecione um caixa para operar ou revisar o fechamento do dia.</CardDescription>
               </CardHeader>
               <CardContent className="px-0 pt-0">
@@ -356,7 +356,7 @@ export default function FinancialCashClosing() {
                         <TableHead>Data</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Esperado</TableHead>
-                        <TableHead>Diferenca</TableHead>
+                        <TableHead>Diferença</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -393,7 +393,7 @@ export default function FinancialCashClosing() {
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <CardTitle>{formatDateOnly(selectedClosing.businessDate)}</CardTitle>
-                      <CardDescription>Caixa do dia com operacao e consolidado por forma de pagamento.</CardDescription>
+                      <CardDescription>Caixa do dia com operação e consolidado por forma de pagamento.</CardDescription>
                     </div>
                     <Badge variant={isSelectedCashOpen ? "secondary" : "outline"}>
                       {isSelectedCashOpen ? "Aberto" : "Fechado"}
@@ -409,7 +409,7 @@ export default function FinancialCashClosing() {
                       <div className="mt-1 text-lg font-semibold">{formatCurrencyCents(selectedClosing.totalCounted)}</div>
                     </div>
                     <div className="rounded-2xl border bg-muted/40 p-3">
-                      <div className="text-xs uppercase tracking-wide text-muted-foreground">Diferenca</div>
+                      <div className="text-xs uppercase tracking-wide text-muted-foreground">Diferença</div>
                       <div className="mt-1 text-lg font-semibold">{formatCurrencyCents(selectedClosing.totalDifference)}</div>
                     </div>
                   </div>
@@ -418,9 +418,9 @@ export default function FinancialCashClosing() {
                   <div className="rounded-2xl border bg-muted/30 p-4">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                       <div>
-                        <h3 className="text-sm font-semibold">Operacao do caixa</h3>
+                        <h3 className="text-sm font-semibold">Operação do caixa</h3>
                         <p className="text-sm text-muted-foreground">
-                          Registre entradas e saidas do dia aqui. O fechamento continua sendo a etapa final.
+                          Registre entradas e saídas do dia aqui. O fechamento continua sendo a etapa final.
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -440,7 +440,7 @@ export default function FinancialCashClosing() {
                           disabled={!isSelectedCashOpen}
                         >
                           <ArrowDownCircle className="mr-2 h-4 w-4" />
-                          Nova saida
+                          Nova saída
                         </Button>
                       </div>
                     </div>
@@ -452,7 +452,7 @@ export default function FinancialCashClosing() {
                         </div>
                       </div>
                       <div className="rounded-2xl border bg-background p-3">
-                        <div className="text-xs uppercase tracking-wide text-muted-foreground">Saidas do dia</div>
+                        <div className="text-xs uppercase tracking-wide text-muted-foreground">Saídas do dia</div>
                         <div className="mt-1 text-lg font-semibold text-red-700">
                           {formatCurrencyCents(summary.totalExpenses)}
                         </div>
@@ -464,7 +464,7 @@ export default function FinancialCashClosing() {
                     </div>
                     {!isSelectedCashOpen ? (
                       <p className="mt-3 text-sm text-muted-foreground">
-                        Este caixa ja foi encerrado. As movimentacoes continuam visiveis, mas a operacao ficou somente leitura.
+                        Este caixa já foi encerrado. As movimentações continuam visíveis, mas a operação ficou somente leitura.
                       </p>
                     ) : null}
                   </div>
@@ -507,10 +507,10 @@ export default function FinancialCashClosing() {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Metodo</TableHead>
+                            <TableHead>Método</TableHead>
                             <TableHead>Esperado</TableHead>
                             <TableHead>Contado</TableHead>
-                            <TableHead>Diferenca</TableHead>
+                            <TableHead>Diferença</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -554,7 +554,7 @@ export default function FinancialCashClosing() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Abrir caixa</DialogTitle>
-            <DialogDescription>Crie o registro do dia operacional antes de iniciar a movimentacao e a conferencia final.</DialogDescription>
+            <DialogDescription>Crie o registro do dia operacional antes de iniciar a movimentação e a conferência final.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -567,12 +567,12 @@ export default function FinancialCashClosing() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cash-opening-notes">Observacoes</Label>
+              <Label htmlFor="cash-opening-notes">Observações</Label>
               <Textarea
                 id="cash-opening-notes"
                 value={openingNotes}
                 onChange={(event) => setOpeningNotes(event.target.value)}
-                placeholder="Ex: abertura feita pela recepcao da manha."
+                placeholder="Ex: abertura feita pela recepção da manhã."
               />
             </div>
           </div>
@@ -590,7 +590,7 @@ export default function FinancialCashClosing() {
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Fechar caixa</DialogTitle>
-            <DialogDescription>Informe o contado final por metodo. O sistema calcula a diferenca sobre o esperado.</DialogDescription>
+            <DialogDescription>Informe o contado final por método. O sistema calcula a diferença sobre o esperado.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 sm:grid-cols-2">
             {PAYMENT_METHODS.map((method) => (
@@ -611,12 +611,12 @@ export default function FinancialCashClosing() {
             ))}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="cash-closing-notes">Observacoes finais</Label>
+            <Label htmlFor="cash-closing-notes">Observações finais</Label>
             <Textarea
               id="cash-closing-notes"
               value={closingNotes}
               onChange={(event) => setClosingNotes(event.target.value)}
-              placeholder="Ex: diferenca explicada por troco inicial e pagamento pendente."
+              placeholder="Ex: diferença explicada por troco inicial e pagamento pendente."
             />
           </div>
           <DialogFooter>
@@ -646,8 +646,8 @@ export default function FinancialCashClosing() {
       <DeleteConfirmationDialog
         open={!!transactionToDelete}
         isLoading={isDeletingTransaction}
-        title="Excluir transacao do caixa?"
-        description="Tem certeza que deseja excluir este lancamento do caixa? Esta acao nao pode ser desfeita."
+        title="Excluir transação do caixa?"
+        description="Tem certeza que deseja excluir este lançamento do caixa? Esta ação não pode ser desfeita."
         onOpenChange={(open) => {
           if (!isDeletingTransaction && !open) setTransactionToDelete(null);
         }}

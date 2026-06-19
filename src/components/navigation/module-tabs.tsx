@@ -14,7 +14,8 @@ type ModuleTabsProps = {
 
 export function ModuleTabs({ items, pathname }: ModuleTabsProps) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="overflow-x-auto rounded-xl border border-border/70 bg-card/70 p-1.5 shadow-[0_12px_32px_-28px_rgba(15,23,42,0.22)]">
+      <div className="flex min-w-max gap-1.5">
       {items.map((item) => {
         const customIsActive =
           typeof item.isActive === "function" ? item.isActive(pathname) : item.isActive;
@@ -24,10 +25,10 @@ export function ModuleTabs({ items, pathname }: ModuleTabsProps) {
             to={item.to}
             className={({ isActive }) =>
               cn(
-                "inline-flex items-center rounded-md border px-3 py-2 text-sm transition-colors",
+                "inline-flex shrink-0 items-center rounded-lg border px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors",
                 (customIsActive ?? isActive)
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-background text-muted-foreground hover:text-foreground"
+                  ? "border-primary/30 bg-primary/12 text-primary shadow-sm"
+                  : "border-transparent bg-transparent text-muted-foreground hover:border-border/60 hover:bg-muted/45 hover:text-foreground"
               )
             }
           >
@@ -35,6 +36,7 @@ export function ModuleTabs({ items, pathname }: ModuleTabsProps) {
           </NavLink>
         );
       })}
+      </div>
     </div>
   );
 }

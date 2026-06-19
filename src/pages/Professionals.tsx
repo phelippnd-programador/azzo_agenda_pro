@@ -6,8 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PageEmptyState, PageErrorState } from '@/components/ui/page-states';
+import { PageEmptyState, PageErrorState, PageListLoadingState } from '@/components/ui/page-states';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { ConfirmationDialog } from '@/components/common/ConfirmationDialog';
 import { CrudListToolbar } from '@/components/crud/CrudListToolbar';
@@ -109,12 +108,9 @@ export default function Professionals() {
   if (isLoading) {
     return (
       <MainLayout title="Profissionais" subtitle="Gerencie sua equipe">
-        <div className="space-y-4">
+        <div className="space-y-4 sm:space-y-6">
           <ProfessionalLimitMeter limits={null} isLoading />
-          <Skeleton className="h-12 w-full" />
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-64" />)}
-          </div>
+          <PageListLoadingState metricCount={0} itemCount={6} itemHeightClassName="h-64" />
         </div>
       </MainLayout>
     );

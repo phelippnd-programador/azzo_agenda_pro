@@ -337,7 +337,7 @@ export default function Settings() {
                 Pendencias prioritarias
               </CardTitle>
               <CardDescription>
-                Atalhos para os ajustes mais prováveis antes de mexer no restante da configuracao.
+                Atalhos para os ajustes mais provaveis antes de mexer no restante da configuracao.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -397,23 +397,25 @@ export default function Settings() {
           </div>
 
           <Tabs value={activeTab} onValueChange={(tab) => handleTabChange(tab)} className="space-y-6">
-        <TabsList className="grid h-auto w-full grid-cols-2 gap-2 rounded-2xl border bg-muted/30 p-1.5 lg:grid-cols-5">
-          {visibleTabs.includes('notifications') ? (
-            <TabsTrigger value="notifications">Notificacoes</TabsTrigger>
-          ) : null}
-          {visibleTabs.includes('account') ? (
-            <TabsTrigger value="account">Conta</TabsTrigger>
-          ) : null}
-          {visibleTabs.includes('integrations') ? (
-            <TabsTrigger value="integrations">Integracoes</TabsTrigger>
-          ) : null}
-          {visibleTabs.includes('fiscal') ? (
-            <TabsTrigger value="fiscal">Fiscal</TabsTrigger>
-          ) : null}
-          {visibleTabs.includes('salon') ? (
-            <TabsTrigger value="salon">Perfil do Salao</TabsTrigger>
-          ) : null}
-        </TabsList>
+            <div className="-mx-1 overflow-x-auto pb-1">
+              <TabsList className="flex h-auto min-w-max gap-2 rounded-2xl border bg-muted/30 p-1.5">
+                {visibleTabs.includes('notifications') ? (
+                  <TabsTrigger value="notifications" className="shrink-0 whitespace-nowrap">Notificacoes</TabsTrigger>
+                ) : null}
+                {visibleTabs.includes('account') ? (
+                  <TabsTrigger value="account" className="shrink-0 whitespace-nowrap">Conta</TabsTrigger>
+                ) : null}
+                {visibleTabs.includes('integrations') ? (
+                  <TabsTrigger value="integrations" className="shrink-0 whitespace-nowrap">Integracoes</TabsTrigger>
+                ) : null}
+                {visibleTabs.includes('fiscal') ? (
+                  <TabsTrigger value="fiscal" className="shrink-0 whitespace-nowrap">Fiscal</TabsTrigger>
+                ) : null}
+                {visibleTabs.includes('salon') ? (
+                  <TabsTrigger value="salon" className="shrink-0 whitespace-nowrap">Perfil do Salao</TabsTrigger>
+                ) : null}
+              </TabsList>
+            </div>
 
         <TabsContent value="notifications">
           <SettingsNotificationsTab />
@@ -472,13 +474,13 @@ export default function Settings() {
                         Estoque
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Alertas, políticas e parâmetros operacionais do módulo de estoque.
+                        Alertas, politicas e parametros operacionais do modulo de estoque.
                       </p>
                     </div>
                     <Badge variant="outline">Operacional</Badge>
                   </div>
                   <div className="rounded-lg bg-muted/20 p-3 text-sm text-muted-foreground">
-                    Prioridade: ajustar alertas e políticas antes de escalar o uso de compras, transferências e inventário.
+                    Prioridade: ajustar alertas e politicas antes de escalar o uso de compras, transferencias e inventario.
                   </div>
                   <Button asChild variant="outline" className="w-full justify-between">
                     <Link to="/configuracoes/estoque">
@@ -498,7 +500,7 @@ export default function Settings() {
             <CardHeader>
               <CardTitle>Fiscal</CardTitle>
               <CardDescription>
-                Trate esta aba como checkpoint único para setup tributário, certificado e emissão.
+                Trate esta aba como checkpoint unico para setup tributario, certificado e emissao.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 lg:grid-cols-2">
@@ -511,7 +513,7 @@ export default function Settings() {
                         Configuracao de Impostos
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Regime, alíquotas e regras fiscais do tenant.
+                        Regime, aliquotas e regras fiscais do tenant.
                       </p>
                     </div>
                     <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-800">

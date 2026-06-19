@@ -56,25 +56,25 @@ export function ChatConversationCard({ conversation, selected, onClick }: Props)
           : "border-transparent bg-muted/40 hover:bg-muted/70"
       )}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-start gap-2">
         <Avatar className="w-8 h-8 flex-shrink-0">
-            <AvatarImage src={avatarSrc || undefined} />
-            <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
-              {getInitials(conversation.clientName)}
-            </AvatarFallback>
-          </Avatar>
+          <AvatarImage src={avatarSrc || undefined} />
+          <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
+            {getInitials(conversation.clientName)}
+          </AvatarFallback>
+        </Avatar>
         <div className="flex-1 min-w-0">
           <div className="flex min-w-0 flex-col gap-1">
-            <div className="flex min-w-0 items-center gap-1.5">
-              <p className="font-medium text-foreground text-sm truncate max-w-[150px] sm:max-w-[170px]">
+            <div className="flex min-w-0 items-start gap-1.5">
+              <p className="min-w-0 flex-1 font-medium text-foreground text-sm truncate">
                 {conversation.clientName || "Cliente"}
               </p>
               {conversation.unreadCount > 0 ? (
-                <Badge className="text-[10px] h-4 min-w-4 px-1 bg-green-600 text-white shrink-0 flex items-center justify-center">
+                <Badge className="flex h-4 min-w-4 shrink-0 items-center justify-center bg-emerald-600 px-1 text-[10px] text-white dark:bg-emerald-500">
                   {conversation.unreadCount}
                 </Badge>
               ) : null}
-              <span className="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground shrink-0">
+              <span className="ml-auto flex shrink-0 items-center gap-1 text-[11px] text-muted-foreground">
                 <Clock className="w-3 h-3" />
                 {formatDateTime(conversation.lastMessageAt)}
               </span>

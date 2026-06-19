@@ -4,11 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
-import { PageEmptyState, PageErrorState } from '@/components/ui/page-states';
+import { PageEmptyState, PageErrorState, PageListLoadingState } from '@/components/ui/page-states';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { CrudListToolbar } from '@/components/crud/CrudListToolbar';
 import {
@@ -21,10 +20,12 @@ import {
 } from '@/components/ui/table';
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
+  DialogSection,
+  DialogStickyFooter,
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
@@ -232,16 +233,7 @@ export default function ServicesOverviewPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-12 w-full" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-48" />
-          ))}
-        </div>
-      </div>
-    );
+    return <PageListLoadingState />;
   }
 
   if (error) {
@@ -256,6 +248,30 @@ export default function ServicesOverviewPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      <Card className="border-border/70 bg-card/90 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.16)]">
+        <CardContent className="flex flex-col gap-4 py-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Catalogo
+            </p>
+            <p className="text-sm font-medium text-foreground">
+              Estruture o portifolio de servicos com preco, duracao, categoria e disponibilidade por equipe.
+            </p>
+            <p className="max-w-3xl text-sm text-muted-foreground">
+              Use a busca, os filtros e a alternancia entre cards e tabela para revisar o catalogo com menos atrito.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="bg-background/80">
+              {pagination.total} servico(s)
+            </Badge>
+            <Badge variant="outline" className="bg-background/80">
+              {selectedCategory}
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+
       <Dialog
         open={isNewServiceOpen}
         onOpenChange={(open) => {
@@ -281,81 +297,94 @@ export default function ServicesOverviewPage() {
           }}
         />
 
-      <DialogContent className="max-h-[85vh] max-w-md overflow-y-auto mx-4 sm:mx-auto sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{editingService ? 'Editar Servico' : 'Novo Servico'}</DialogTitle>
+        <DialogContent className="mx-4 max-h-[85vh] max-w-md overflow-y-auto sm:mx-auto sm:max-w-2xl">
+          <DialogHeader className="border-b border-border/70 pb-4 pr-10">
+            <DialogTitle>{editingService ? 'Editar servico' : 'Novo servico'}</DialogTitle>
             <DialogDescription>
               {editingService ? 'Atualize os dados do servico' : 'Preencha os dados do novo servico'}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-                <div className="rounded-2xl border border-border/70 bg-muted/15 p-4">
+          <DialogBody>
+                <DialogSection>
                   <p className="text-sm font-medium text-foreground">
                     {editingService ? 'Revise nome, duracao, preco e disponibilidade antes de salvar.' : 'Cadastre o servico com nome claro, preco e duracao para manter o catalogo consistente.'}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Se nenhum profissional for marcado, o servico continua disponivel para toda a equipe.
                   </p>
-                </div>
+                </DialogSection>
 
-                <div className="space-y-2">
-                  <Label>Nome do Servico *</Label>
-                  <Input
-                    placeholder="Ex: Corte Feminino"
-                    value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
-                  />
-                </div>
+                <DialogSection className="bg-transparent">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-foreground">Estrutura do servico</p>
+                    <p className="text-sm text-muted-foreground">Defina nome, categoria, duracao e preco com o minimo de ambiguidade operacional.</p>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>Descricao</Label>
-                  <Textarea
-                    placeholder="Descreva o servico..."
-                    value={formDescription}
-                    onChange={(e) => setFormDescription(e.target.value)}
-                    rows={2}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Duracao (min) *</Label>
+                    <Label>Nome do servico *</Label>
                     <Input
-                      type="number"
-                      placeholder="60"
-                      value={formDuration}
-                      onChange={(e) => setFormDuration(e.target.value)}
+                      placeholder="Ex: Corte Feminino"
+                      value={formName}
+                      onChange={(e) => setFormName(e.target.value)}
                     />
                   </div>
+
                   <div className="space-y-2">
-                    <Label>Preco (R$) *</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="80.00"
-                      value={formPrice}
-                      onChange={(e) => setFormPrice(e.target.value)}
+                    <Label>Descricao</Label>
+                    <Textarea
+                      placeholder="Descreva o servico..."
+                      value={formDescription}
+                      onChange={(e) => setFormDescription(e.target.value)}
+                      rows={3}
                     />
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label>Categoria</Label>
-                  <Select value={formCategory} onValueChange={setFormCategory}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.filter((c) => c !== 'Todos').map((cat) => (
-                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Duracao (min) *</Label>
+                      <Input
+                        type="number"
+                        placeholder="60"
+                        value={formDuration}
+                        onChange={(e) => setFormDuration(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Preco (R$) *</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="80.00"
+                        value={formPrice}
+                        onChange={(e) => setFormPrice(e.target.value)}
+                      />
+                    </div>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>Profissionais</Label>
-                  <div className="rounded-lg border p-3 space-y-3 max-h-48 overflow-y-auto">
+                  <div className="space-y-2">
+                    <Label>Categoria</Label>
+                    <Select value={formCategory} onValueChange={setFormCategory}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.filter((c) => c !== 'Todos').map((cat) => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </DialogSection>
+
+                <DialogSection className="bg-transparent">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-foreground">Equipe elegivel</p>
+                    <p className="text-sm text-muted-foreground">Restrinja quando o servico depender de pessoas especificas. Caso contrario, mantenha o atendimento aberto para todos.</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Profissionais</Label>
+                    <div className="max-h-48 space-y-3 overflow-y-auto rounded-xl border border-border/70 bg-background/80 p-3">
                     {isLoadingProfessionals ? (
                       <p className="text-sm text-muted-foreground">Carregando profissionais...</p>
                     ) : !professionals.length ? (
@@ -396,20 +425,21 @@ export default function ServicesOverviewPage() {
                       })}
                     </div>
                   ) : null}
-                </div>
+                  </div>
+                </DialogSection>
 
-                <div className="flex items-center justify-between p-3 bg-muted/40 rounded-lg">
+                <DialogSection className="flex flex-col gap-3 bg-transparent sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <Label>Servico Ativo</Label>
+                    <Label>Servico ativo</Label>
                     <p className="text-xs text-muted-foreground">Disponivel para agendamento</p>
                   </div>
                   <Switch
                     checked={formIsActive}
                     onCheckedChange={setFormIsActive}
                   />
-                </div>
-          </div>
-          <DialogFooter>
+                </DialogSection>
+          </DialogBody>
+          <DialogStickyFooter>
             <Button
               variant="outline"
               onClick={() => {
@@ -427,18 +457,18 @@ export default function ServicesOverviewPage() {
                 </>
               ) : editingService ? 'Salvar servico' : 'Criar servico'}
             </Button>
-          </DialogFooter>
+          </DialogStickyFooter>
         </DialogContent>
       </Dialog>
 
-        <div className="flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Checkbox
-            checked={allFilteredSelected}
-            onCheckedChange={(checked) => toggleSelectAllFiltered(checked === true)}
-          />
-          Selecionar todos da lista
-        </label>
+            <Checkbox
+              checked={allFilteredSelected}
+              onCheckedChange={(checked) => toggleSelectAllFiltered(checked === true)}
+            />
+            Selecionar todos da lista
+          </label>
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <Button
               variant="outline"
@@ -446,32 +476,34 @@ export default function ServicesOverviewPage() {
               disabled={!selectedServiceIds.length}
               onClick={() => setIsRemoveSelectedOpen(true)}
             >
-            Remover selecionados ({selectedServiceIds.length})
-          </Button>
+              Remover selecionados ({selectedServiceIds.length})
+            </Button>
             <Button
               variant="outline"
               className="w-full text-destructive hover:text-destructive sm:w-auto"
               disabled={!services.length}
               onClick={() => setIsRemoveAllOpen(true)}
             >
-            Remover todos
-          </Button>
+              Remover todos
+            </Button>
+          </div>
         </div>
-      </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
-        {categories.map((category) => (
-          <Button
-            key={category}
-            variant={selectedCategory === category ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSelectedCategory(category)}
-            className="whitespace-nowrap text-xs sm:text-sm"
-          >
-            {category}
-          </Button>
-        ))}
-      </div>
+        <div className="-mx-1 overflow-x-auto pb-2">
+          <div className="flex min-w-max gap-2 px-1">
+            {categories.map((category) => (
+              <Button
+                key={category}
+                variant={selectedCategory === category ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedCategory(category)}
+                className="whitespace-nowrap text-xs sm:text-sm"
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
+        </div>
 
       {filteredServices.length === 0 ? (
         <PageEmptyState
@@ -483,7 +515,7 @@ export default function ServicesOverviewPage() {
           description={
             searchTerm || selectedCategory !== 'Todos'
               ? 'A busca e os filtros atuais esconderam todos os resultados. Limpe os filtros para voltar a ver a lista completa.'
-              : 'Cadastre o primeiro servico para começar a montar o catalogo operacional do salao.'
+              : 'Cadastre o primeiro servico para comecar a montar o catalogo operacional do salao.'
           }
           action={{
             label: searchTerm || selectedCategory !== 'Todos' ? 'Limpar filtros' : 'Novo servico',
@@ -504,11 +536,11 @@ export default function ServicesOverviewPage() {
           {filteredServices.map((service) => (
             <Card
               key={service.id}
-              className={`hover:shadow-md transition-shadow ${!service.isActive ? 'opacity-60' : ''}`}
+              className={`transition-shadow hover:shadow-md ${!service.isActive ? 'opacity-60' : ''}`}
             >
               <CardContent className="p-4 sm:p-5">
-                <div className="flex items-start justify-between gap-2 mb-3">
-                  <div className="flex items-start gap-2 min-w-0 flex-1">
+                <div className="mb-3 flex items-start justify-between gap-2">
+                  <div className="flex min-w-0 flex-1 items-start gap-2">
                     <Checkbox
                       checked={selectedServiceIds.includes(service.id)}
                       onCheckedChange={() => toggleServiceSelection(service.id)}
@@ -516,8 +548,8 @@ export default function ServicesOverviewPage() {
                       className="mt-1"
                     />
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">
+                      <div className="mb-1 flex flex-wrap items-center gap-2">
+                        <h3 className="truncate text-sm font-semibold text-foreground sm:text-base">
                           {service.name}
                         </h3>
                         {!service.isActive && (
@@ -559,16 +591,16 @@ export default function ServicesOverviewPage() {
                   </DropdownMenu>
                 </div>
 
-                <p className="text-xs sm:text-sm text-muted-foreground mb-4 line-clamp-2">
+                <p className="mb-4 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
                   {service.description || 'Sem descricao'}
                 </p>
 
-                <div className="flex items-center justify-between pt-3 border-t border-border">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                     <span className="text-xs sm:text-sm">{service.duration} min</span>
                   </div>
-                  <div className="flex items-center gap-1 text-primary font-semibold">
+                  <div className="flex items-center gap-1 font-semibold text-primary">
                     <span className="text-sm sm:text-base">{formatCurrencyCents(service.price)}</span>
                   </div>
                 </div>
@@ -577,7 +609,7 @@ export default function ServicesOverviewPage() {
           ))}
         </div>
       ) : (
-        <Card>
+        <Card className="border-border/70 shadow-none">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>

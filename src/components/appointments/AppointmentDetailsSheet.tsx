@@ -163,7 +163,7 @@ export function AppointmentDetailsSheet({
         toast.error(
           resolveUiError(
             error,
-            'Nao foi possivel carregar o historico deste cliente.',
+            'Não foi possível carregar o histórico deste cliente.',
           ).message,
         );
       })
@@ -227,7 +227,7 @@ export function AppointmentDetailsSheet({
       toast.error(
         resolveUiError(
           error,
-          'Nao foi possivel salvar o registro operacional.',
+          'Não foi possível salvar o registro operacional.',
         ).message,
       );
     } finally {
@@ -250,7 +250,7 @@ export function AppointmentDetailsSheet({
         <SheetHeader>
           <SheetTitle>Detalhes do Agendamento</SheetTitle>
           <SheetDescription>
-            Informacoes completas do agendamento
+            Informações completas do agendamento
           </SheetDescription>
         </SheetHeader>
 
@@ -274,7 +274,7 @@ export function AppointmentDetailsSheet({
                 </AlertTitle>
                 <AlertDescription>
                   {flowMeta.nextLabel
-                    ? `Proximo passo esperado: ${flowMeta.nextLabel}.`
+                    ? `Próximo passo esperado: ${flowMeta.nextLabel}.`
                     : 'Atendimento finalizado no fluxo operacional.'}
                 </AlertDescription>
               </Alert>
@@ -284,7 +284,7 @@ export function AppointmentDetailsSheet({
 
             <div className="space-y-3">
               <h4 className="flex items-center gap-2 text-sm font-medium">
-                <CalendarIcon className="h-4 w-4 text-primary" /> Data e horario
+                <CalendarIcon className="h-4 w-4 text-primary" /> Data e horário
               </h4>
               <div className="space-y-2 rounded-lg bg-muted/40 p-4">
                 <div className="flex justify-between text-sm">
@@ -301,7 +301,7 @@ export function AppointmentDetailsSheet({
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Horario:</span>
+                  <span className="text-muted-foreground">Horário:</span>
                   <span className="font-medium">
                     {appointment.startTime} - {appointment.endTime}
                   </span>
@@ -355,7 +355,7 @@ export function AppointmentDetailsSheet({
 
             <div className="space-y-3">
               <h4 className="flex items-center gap-2 text-sm font-medium">
-                <Scissors className="h-4 w-4 text-primary" /> Servicos
+                <Scissors className="h-4 w-4 text-primary" /> Serviços
               </h4>
               {appointmentItemsWithService.length ? (
                 <div className="space-y-3 rounded-lg bg-muted/40 p-4">
@@ -378,7 +378,7 @@ export function AppointmentDetailsSheet({
                       >
                         <div className="flex justify-between gap-2">
                           <span className="font-medium">
-                            {service?.name || item.service?.name || 'Servico'}
+                            {service?.name || item.service?.name || 'Serviço'}
                           </span>
                           {service?.category ? (
                             <Badge variant="outline">{service.category}</Badge>
@@ -386,7 +386,7 @@ export function AppointmentDetailsSheet({
                         </div>
 
                         <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Duracao:</span>
+                          <span className="text-muted-foreground">Duração:</span>
                           <span>{itemDuration} minutos</span>
                         </div>
 
@@ -410,7 +410,7 @@ export function AppointmentDetailsSheet({
 
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">
-                            Liquido do item:
+                            Líquido do item:
                           </span>
                           <span className="font-medium">
                             {formatCurrencyCents(itemNetAmount)}
@@ -498,7 +498,7 @@ export function AppointmentDetailsSheet({
                 <Separator />
                 <div className="space-y-3">
                   <h4 className="flex items-center gap-2 text-sm font-medium">
-                    <FileText className="h-4 w-4 text-primary" /> Observacoes
+                    <FileText className="h-4 w-4 text-primary" /> Observações
                   </h4>
                   <div className="rounded-lg bg-muted/40 p-4">
                     <p className="text-sm text-muted-foreground">
@@ -529,11 +529,11 @@ export function AppointmentDetailsSheet({
               <div className="space-y-3 rounded-lg border bg-muted/20 p-4">
                 <div className="space-y-2">
                   <Label htmlFor="serviceExecutionNotes">
-                    Execucao do servico
+                    Execução do serviço
                   </Label>
                   <Textarea
                     id="serviceExecutionNotes"
-                    placeholder="Descreva tecnicas aplicadas, variacoes do servico e ocorrencias relevantes."
+                    placeholder="Descreva técnicas aplicadas, variações do serviço e ocorrências relevantes."
                     value={serviceExecutionNotes}
                     onChange={(event) =>
                       setServiceExecutionNotes(event.target.value)
@@ -561,11 +561,11 @@ export function AppointmentDetailsSheet({
 
                 <div className="space-y-2">
                   <Label htmlFor="internalFollowupNotes">
-                    Proximo passo / acompanhamento
+                    Próximo passo / acompanhamento
                   </Label>
                   <Textarea
                     id="internalFollowupNotes"
-                    placeholder="Informe recomendacoes, manutencao, pendencias ou abordagem sugerida para o proximo atendimento."
+                    placeholder="Informe recomendações, manutenção, pendências ou abordagem sugerida para o próximo atendimento."
                     value={internalFollowupNotes}
                     onChange={(event) =>
                       setInternalFollowupNotes(event.target.value)
@@ -601,7 +601,7 @@ export function AppointmentDetailsSheet({
                 {!canRegisterNotes ? (
                   <p className="text-xs text-muted-foreground">
                     Registros operacionais ficam bloqueados para agendamentos
-                    cancelados ou marcados como nao compareceu.
+                    cancelados ou marcados como não compareceu.
                   </p>
                 ) : null}
               </div>
@@ -629,7 +629,7 @@ export function AppointmentDetailsSheet({
                       {note.serviceExecutionNotes ? (
                         <p className="text-sm text-muted-foreground">
                           <span className="font-medium text-foreground">
-                            Execucao:
+                            Execução:
                           </span>{' '}
                           {note.serviceExecutionNotes}
                         </p>
@@ -647,7 +647,7 @@ export function AppointmentDetailsSheet({
                       {note.internalFollowupNotes ? (
                         <p className="text-sm text-muted-foreground">
                           <span className="font-medium text-foreground">
-                            Proximo passo:
+                            Próximo passo:
                           </span>{' '}
                           {note.internalFollowupNotes}
                         </p>
@@ -662,12 +662,12 @@ export function AppointmentDetailsSheet({
               </div>
 
               {appointment.status === 'IN_PROGRESS' && careNotes.length === 0 ? (
-                <Alert className="border-amber-200 bg-amber-50">
+                <Alert className="border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
                   <Info className="h-4 w-4" />
-                  <AlertTitle>Registro obrigatorio antes da conclusao</AlertTitle>
+                  <AlertTitle>Registro obrigatório antes da conclusão</AlertTitle>
                   <AlertDescription>
                     Salve ao menos um detalhe operacional do cliente para
-                    habilitar a conclusao do atendimento.
+                    habilitar a conclusão do atendimento.
                   </AlertDescription>
                 </Alert>
               ) : null}
@@ -677,7 +677,7 @@ export function AppointmentDetailsSheet({
               <>
                 <Separator />
                 <Button className="w-full" onClick={() => onViewInvoice(appointment)}>
-                  <Receipt className="mr-2 h-4 w-4" /> Ver pre-visualizacao da
+                  <Receipt className="mr-2 h-4 w-4" /> Ver pré-visualização da
                   Nota Fiscal
                 </Button>
               </>

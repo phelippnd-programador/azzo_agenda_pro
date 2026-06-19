@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { NavLink, Navigate, Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ModuleTabs } from "@/components/navigation/module-tabs";
 import { RouteContentLoader } from "@/components/ui/route-content-loader";
@@ -23,7 +23,10 @@ export default function Stock() {
   }
 
   return (
-      <MainLayout title="Estoque" subtitle="Controle de itens, movimentacoes e importacoes">
+    <MainLayout
+      title="Estoque"
+      subtitle="Centralize itens, saldos, reposicoes e rotinas operacionais do modulo de estoque."
+    >
       <div className="space-y-4 sm:space-y-6">
         <ModuleTabs items={tabs} pathname={location.pathname} />
         <Suspense fallback={<RouteContentLoader />}>

@@ -28,12 +28,27 @@ const getPasswordStrengthStatus = (value: string) => {
   if (/\d/.test(value)) score += 1;
   if (/[^A-Za-z0-9]/.test(value)) score += 1;
   if (score <= 2) {
-    return { label: "Fraca", width: "33%", barClassName: "bg-red-600", textClassName: "text-red-700" };
+    return {
+      label: "Fraca",
+      width: "33%",
+      barClassName: "bg-red-600 dark:bg-red-500",
+      textClassName: "text-red-700 dark:text-red-300",
+    };
   }
   if (score <= 4) {
-    return { label: "Media", width: "66%", barClassName: "bg-amber-500", textClassName: "text-amber-700" };
+    return {
+      label: "Media",
+      width: "66%",
+      barClassName: "bg-amber-500 dark:bg-amber-400",
+      textClassName: "text-amber-700 dark:text-amber-300",
+    };
   }
-  return { label: "Forte", width: "100%", barClassName: "bg-emerald-600", textClassName: "text-emerald-700" };
+  return {
+    label: "Forte",
+    width: "100%",
+    barClassName: "bg-emerald-600 dark:bg-emerald-500",
+    textClassName: "text-emerald-700 dark:text-emerald-300",
+  };
 };
 
 export default function Register() {
@@ -424,7 +439,7 @@ export default function Register() {
                         Conta em preparacao
                       </p>
                       <p className="mt-1 text-sm font-medium text-foreground">
-                        {form.getValues("name") || "Responsavel"} · {form.getValues("email") || "E-mail"}
+                        {form.getValues("name") || "Responsavel"} - {form.getValues("email") || "E-mail"}
                       </p>
                     </div>
                     <span className="rounded-full border border-primary/20 bg-background/80 px-3 py-1 text-[11px] font-medium text-primary">
