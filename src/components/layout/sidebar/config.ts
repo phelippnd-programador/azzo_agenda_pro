@@ -1,7 +1,5 @@
 import {
   BarChart3,
-  Package,
-  ShoppingCart,
   Bell,
   Boxes,
   Building2,
