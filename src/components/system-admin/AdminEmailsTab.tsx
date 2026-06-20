@@ -380,7 +380,7 @@ export function AdminEmailsTab() {
                     title="Preview do template de email"
                     srcDoc={previewHtml}
                     sandbox=""
-                    className="h-[720px] w-full bg-white dark:bg-slate-50"
+                    className="h-[720px] w-full bg-background"
                   />
                 </div>
               </CardContent>

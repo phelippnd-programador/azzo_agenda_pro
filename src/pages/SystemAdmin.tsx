@@ -45,14 +45,16 @@ export default function SystemAdminPage() {
     >
       <div className="space-y-6">
         <Tabs defaultValue="contexto" className="space-y-4">
-          <TabsList className="flex h-auto flex-wrap justify-start gap-2 bg-transparent p-0">
-            <TabsTrigger value="contexto">Contexto</TabsTrigger>
-            <TabsTrigger value="monitoramento">Monitoramento</TabsTrigger>
-            <TabsTrigger value="emails">Templates de Email</TabsTrigger>
-            <TabsTrigger value="menus">Menus</TabsTrigger>
-            <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
-            <TabsTrigger value="acesso">Acesso</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto pb-1">
+            <TabsList className="flex h-auto min-w-max justify-start gap-2 bg-transparent p-0">
+              <TabsTrigger value="contexto">Contexto</TabsTrigger>
+              <TabsTrigger value="monitoramento">Monitoramento</TabsTrigger>
+              <TabsTrigger value="emails">Templates de Email</TabsTrigger>
+              <TabsTrigger value="menus">Menus</TabsTrigger>
+              <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+              <TabsTrigger value="acesso">Acesso</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="contexto" className="space-y-6">
             <AdminContextoTab

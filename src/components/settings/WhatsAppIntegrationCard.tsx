@@ -640,8 +640,8 @@ export function WhatsAppIntegrationCard() {
           renderWizard()
         )}
 
-        <div className="flex items-center justify-between rounded-lg border p-3">
-          <div>
+        <div className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <p className="text-sm font-medium">Ativar integracao</p>
             <p className="text-xs text-muted-foreground">
               Habilita envio, webhook e fluxos de atendimento via WhatsApp para o tenant.
@@ -659,8 +659,8 @@ export function WhatsAppIntegrationCard() {
             Defina quais operacoes o cliente pode executar pelo WhatsApp.
           </p>
           <div className="mt-3 space-y-3">
-            <div className="flex items-center justify-between gap-4">
-              <div>
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
                 <p className="text-sm font-medium">Permitir agendamento</p>
                 <p className="text-xs text-muted-foreground">
                   Autoriza criar novos agendamentos.
@@ -672,8 +672,8 @@ export function WhatsAppIntegrationCard() {
                 disabled={!activateIntegration || isSaving}
               />
             </div>
-            <div className="flex items-center justify-between gap-4">
-              <div>
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
                 <p className="text-sm font-medium">Permitir cancelamento</p>
                 <p className="text-xs text-muted-foreground">
                   Autoriza cancelar agendamentos existentes.
@@ -685,8 +685,8 @@ export function WhatsAppIntegrationCard() {
                 disabled={!activateIntegration || isSaving}
               />
             </div>
-            <div className="flex items-center justify-between gap-4">
-              <div>
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
                 <p className="text-sm font-medium">Permitir remarcacao</p>
                 <p className="text-xs text-muted-foreground">
                   Autoriza remarcar agendamentos existentes.

@@ -232,7 +232,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
 
             <div className="rounded-md border">
               <div className="max-h-[320px] overflow-auto">
-                <table className="w-full text-sm">
+                <table className="min-w-[980px] w-full text-sm">
                   <thead className="bg-muted/50">
                     <tr>
                       <th className="px-3 py-2 text-left">Plano</th>

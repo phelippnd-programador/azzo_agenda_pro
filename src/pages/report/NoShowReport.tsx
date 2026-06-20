@@ -362,10 +362,10 @@ export default function NoShowReport() {
               <div>
                 <CardTitle>Resumo agrupado</CardTitle>
                 <CardDescription>
-                  {selectedGroupingLabel} • {selectedProfessionalLabel} • {selectedServiceLabel}
+                  {selectedGroupingLabel} | {selectedProfessionalLabel} | {selectedServiceLabel}
                 </CardDescription>
               </div>
-              <div className="text-sm text-muted-foreground text-right">
+              <div className="text-sm text-muted-foreground lg:text-right">
                 <div>{report ? `${report.totalNoShows ?? 0} no-show(s) no periodo` : "Sem dados carregados"}</div>
                 <div>{report ? `${groups.length} agrupamento(s) retornado(s)` : ""}</div>
                 <div>{report?.lastUpdatedAt ? `Atualizado em ${formatDateTime(report.lastUpdatedAt)}` : ""}</div>

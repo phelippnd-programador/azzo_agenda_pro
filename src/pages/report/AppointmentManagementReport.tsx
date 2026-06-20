@@ -279,10 +279,24 @@ export default function AppointmentManagementReport() {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Filtros</CardTitle>
-            <CardDescription>
-              Use periodo rapido, profissional, servico e status para consolidar o relatorio.
-            </CardDescription>
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <CardTitle>Filtros e acoes</CardTitle>
+                <CardDescription>
+                  Use periodo rapido, profissional, servico e status para consolidar o relatorio.
+                </CardDescription>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button variant="outline" className="w-full sm:w-auto" onClick={() => setReloadToken((prev) => prev + 1)} disabled={isLoading}>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Atualizar
+                </Button>
+                <Button variant="outline" className="w-full sm:w-auto" onClick={handleExport} disabled={isExporting}>
+                  <Download className="mr-2 h-4 w-4" />
+                  {isExporting ? "Exportando..." : "Baixar CSV"}
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
@@ -372,21 +386,13 @@ export default function AppointmentManagementReport() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <Button onClick={applyFilters}>
                 <Filter className="mr-2 h-4 w-4" />
                 Aplicar filtros
               </Button>
               <Button variant="outline" onClick={clearFilters}>
                 Limpar filtros
-              </Button>
-              <Button variant="outline" onClick={() => setReloadToken((prev) => prev + 1)} disabled={isLoading}>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Atualizar
-              </Button>
-              <Button variant="outline" onClick={handleExport} disabled={isExporting}>
-                <Download className="mr-2 h-4 w-4" />
-                {isExporting ? "Exportando..." : "Baixar CSV"}
               </Button>
             </div>
           </CardContent>
@@ -499,10 +505,10 @@ export default function AppointmentManagementReport() {
               <div>
                 <CardTitle>Tabela de agendamentos</CardTitle>
                 <CardDescription>
-                  {selectedProfessionalLabel} • {selectedServiceLabel} • {selectedStatusLabel}
+                  {selectedProfessionalLabel} | {selectedServiceLabel} | {selectedStatusLabel}
                 </CardDescription>
               </div>
-              <div className="text-right text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground lg:text-right">
                 <div>
                   {report
                     ? `${report.totalItems} agendamento(s) no periodo ${formatDateOnly(report.startDate || monthRange.from)} a ${formatDateOnly(report.endDate || monthRange.to)}`
@@ -520,8 +526,8 @@ export default function AppointmentManagementReport() {
               </Alert>
             ) : null}
 
-            <div className="rounded-xl border">
-              <Table>
+            <div className="overflow-x-auto rounded-xl border">
+              <Table className="min-w-[980px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Data</TableHead>

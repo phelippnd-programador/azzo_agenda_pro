@@ -66,7 +66,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
   }, [visibleMenuEntries]);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(getInitialExpandedGroups);
   const [salonSlug, setSalonSlug] = useState<string | null>(null);
-  const isCompactDesktop = !isDesktopOpen;
+  const isCompactDesktop = false;
 
   const persistScrollPosition = useCallback(() => {
     try {
@@ -143,8 +143,8 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
       <aside
         className={cn(
           "fixed left-0 top-0 z-50 h-full border-r border-sidebar-border bg-sidebar/95 shadow-[0_10px_40px_-28px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-[width,transform] duration-300",
-          isCompactDesktop ? "lg:w-20" : "lg:w-60",
-          "w-60",
+          "lg:w-72",
+          "w-72",
           isMobileOpen ? "translate-x-0" : "-translate-x-full",
           "lg:translate-x-0"
         )}
@@ -216,7 +216,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
                     )}
                     <div className={cn("space-y-1", isCompactDesktop && "lg:flex lg:flex-col lg:items-center")}>
                       {section.items.map((entry) =>
-                        isCompactDesktop || entry.children.length === 0 ? (
+                        entry.children.length === 0 ? (
                           <SidebarNavLink
                             key={entry.path}
                             path={entry.path}
@@ -236,6 +236,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
                             entry={entry}
                             pathname={location.pathname}
                             isOpen={expandedGroups[entry.id] ?? false}
+                            compact={isCompactDesktop}
                             allowedSet={allowedSet}
                             onNavigate={handleNavigate}
                             onToggle={() =>
