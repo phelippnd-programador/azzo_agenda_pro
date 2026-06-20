@@ -287,10 +287,14 @@ export default function Auditoria() {
             {lastExport ? (
               <Alert>
                 <AlertTitle>Exportacao pronta</AlertTitle>
-                <AlertDescription className="text-xs">
-                  <p>Download: {lastExport.downloadUrl}</p>
+                <AlertDescription className="space-y-1 text-xs">
+                  <p className="break-all">
+                    Download: <span className="font-mono">{lastExport.downloadUrl}</span>
+                  </p>
                   <p>Expira em: {formatDateTime(lastExport.expiresAt)}</p>
-                  <p>Checksum: {lastExport.checksumSha256}</p>
+                  <p className="break-all">
+                    Checksum: <span className="font-mono">{lastExport.checksumSha256}</span>
+                  </p>
                 </AlertDescription>
               </Alert>
             ) : null}
@@ -342,7 +346,7 @@ export default function Auditoria() {
             ) : (
               <TooltipProvider delayDuration={150}>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <table className="min-w-[980px] w-full text-sm">
                     <thead>
                       <tr className="border-b text-left text-muted-foreground">
                         <th className="py-2">Data</th>
@@ -403,18 +407,21 @@ export default function Auditoria() {
                     </tbody>
                   </table>
                 </div>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-xs text-muted-foreground">
-                    Paginacao por cursor: {hasNext ? "ha proxima pagina" : "fim da listagem"}
-                  </p>
-                  <p className="text-xs text-muted-foreground font-mono">
-                    cursor: {nextCursor || "-"}
-                  </p>
+                <div className="flex flex-col gap-3 border-t pt-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0 space-y-1">
+                    <p className="text-xs text-muted-foreground">
+                      Paginacao por cursor: {hasNext ? "ha proxima pagina" : "fim da listagem"}
+                    </p>
+                    <p className="break-all font-mono text-xs text-muted-foreground">
+                      cursor: {nextCursor || "-"}
+                    </p>
+                  </div>
                   {hasNext ? (
                     <Button
                       variant="outline"
                       onClick={() => void fetchNextPage()}
                       disabled={isLoadingMore}
+                      className="w-full sm:w-auto"
                     >
                       {isLoadingMore ? "Carregando..." : "Carregar mais"}
                     </Button>

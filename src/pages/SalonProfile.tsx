@@ -341,46 +341,46 @@ export default function SalonProfile() {
       title="Perfil do Salao"
       subtitle="Gerencie as informacoes do seu estabelecimento"
     >
-      <div className="space-y-4 sm:space-y-6 max-w-4xl">
+      <div className="max-w-4xl space-y-4 sm:space-y-6">
         {/* Avatar / header card */}
         <Card>
           <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col gap-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <FileDropzone
-                title="Imagem do estabelecimento"
-                helperText="JPG, PNG ou WEBP"
-                accept={{
-                  'image/jpeg': ['.jpg', '.jpeg'],
-                  'image/png': ['.png'],
-                  'image/webp': ['.webp'],
-                }}
-                maxSizeBytes={10 * 1024 * 1024}
-                currentPreviewUrl={salonLogoUrl || null}
-                previewAlt={salonName || 'Imagem do estabelecimento'}
-                isLoading={isLogoUploading || isLogoRemoving}
-                onFileSelected={handleLogoUpload}
-                onRemove={salonLogoUrl ? handleLogoRemove : undefined}
-                inputTestId="salon-logo-input"
-                variant="avatar"
-                className="shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <h2 className="text-xl sm:text-2xl font-bold text-foreground truncate">
-                  {salonName || 'Nome do Salao'}
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {address.city && address.state
-                    ? `${address.city}, ${address.state}`
-                    : 'Localizacao nao definida'}
-                </p>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  <Badge variant="secondary" className="gap-1">
-                    <Globe className="w-3 h-3" />
-                    {salonSlug || 'meu-salao'}
-                  </Badge>
+              <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+                <FileDropzone
+                  title="Imagem do estabelecimento"
+                  helperText="JPG, PNG ou WEBP"
+                  accept={{
+                    'image/jpeg': ['.jpg', '.jpeg'],
+                    'image/png': ['.png'],
+                    'image/webp': ['.webp'],
+                  }}
+                  maxSizeBytes={10 * 1024 * 1024}
+                  currentPreviewUrl={salonLogoUrl || null}
+                  previewAlt={salonName || 'Imagem do estabelecimento'}
+                  isLoading={isLogoUploading || isLogoRemoving}
+                  onFileSelected={handleLogoUpload}
+                  onRemove={salonLogoUrl ? handleLogoRemove : undefined}
+                  inputTestId="salon-logo-input"
+                  variant="avatar"
+                  className="shrink-0"
+                />
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-xl font-bold text-foreground sm:text-2xl">
+                    {salonName || 'Nome do Salao'}
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {address.city && address.state
+                      ? `${address.city}, ${address.state}`
+                      : 'Localizacao nao definida'}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Badge variant="secondary" className="max-w-full gap-1">
+                      <Globe className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{salonSlug || 'meu-salao'}</span>
+                    </Badge>
+                  </div>
                 </div>
-              </div>
               </div>
             </div>
           </CardContent>
@@ -389,22 +389,27 @@ export default function SalonProfile() {
         {/* Booking URL card */}
         <Card className="bg-gradient-to-br from-primary/10 to-accent border-primary/20">
           <CardContent className="p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
+            <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+              <div className="min-w-0">
                 <h3 className="font-semibold text-foreground">Link de Agendamento Publico</h3>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="mt-1 text-sm text-muted-foreground">
                   Compartilhe este link com seus clientes para agendamento online
                 </p>
-                <code className="text-xs sm:text-sm bg-background/70 px-2 py-1 rounded mt-2 inline-block text-primary">
+                <code className="mt-2 inline-block break-all rounded bg-background/70 px-2 py-1 text-xs text-primary sm:text-sm">
                   {bookingAbsoluteUrl}
                 </code>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={copyBookingLink} className="gap-2">
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={copyBookingLink}
+                  className="w-full gap-2 sm:w-auto"
+                >
                   <Copy className="w-4 h-4" />
                   Copiar
                 </Button>
-                <Button size="sm" asChild className="gap-2">
+                <Button size="sm" asChild className="w-full gap-2 sm:w-auto">
                   <a href={bookingAbsoluteUrl} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="w-4 h-4" />
                     Abrir
@@ -636,7 +641,12 @@ export default function SalonProfile() {
         </Card>
 
         <div className="flex justify-end pb-6">
-          <Button onClick={() => void handleSave()} disabled={isLoading} className="gap-2" size="lg">
+          <Button
+            onClick={() => void handleSave()}
+            disabled={isLoading}
+            className="w-full gap-2 sm:w-auto"
+            size="lg"
+          >
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />

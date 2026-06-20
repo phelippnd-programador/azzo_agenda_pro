@@ -153,7 +153,7 @@ export function NewAppointmentDialogFlow({
             selectedNewClient ? "border-primary/30 bg-primary/[0.03]" : ""
           }`}
         >
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Etapa 1
@@ -224,7 +224,7 @@ export function NewAppointmentDialogFlow({
               className="w-full"
               onClick={onOpenNewClientDialog}
             >
-              <Plus className="mr-2 h-4 w-4" /> Cliente não encontrado? Cadastrar
+              <Plus className="mr-2 h-4 w-4" /> Cliente nao encontrado? Cadastrar
               agora
             </Button>
           ) : (
@@ -259,10 +259,10 @@ export function NewAppointmentDialogFlow({
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Etapa 2
             </p>
-            <Label className="text-sm">Serviço</Label>
+            <Label className="text-sm">Servico</Label>
             <p className="text-xs text-muted-foreground">
               {canChooseService
-                ? "Selecione um serviço para filtrar os profissionais compatíveis."
+                ? "Selecione um serviÃƒÂ¯Ã‚Â¿Ã‚Â½o para filtrar os profissionais compativeis."
                 : "Primeiro selecione ou cadastre um cliente."}
             </p>
           </div>
@@ -283,7 +283,7 @@ export function NewAppointmentDialogFlow({
                 onClick={() => onServiceSelect(service.id)}
               >
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <span className="font-medium">{service.name}</span>
                     <span className="text-sm text-primary">
                       {formatCurrencyCents(service.price)}
@@ -299,12 +299,12 @@ export function NewAppointmentDialogFlow({
           </div>
           {selectedNewService ? (
             <div className="rounded-md border bg-muted/30 p-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Serviço selecionado</span>
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-muted-foreground">Servico selecionado</span>
                 <span className="font-medium">{selectedNewService.name}</span>
               </div>
               <div className="mt-2 flex items-center justify-between">
-                <span className="text-muted-foreground">Duração</span>
+                <span className="text-muted-foreground">Duracao</span>
                 <span>{selectedNewService.duration} min</span>
               </div>
               <div className="mt-1 flex items-center justify-between">
@@ -324,7 +324,7 @@ export function NewAppointmentDialogFlow({
                 />
               </div>
               <div className="mt-2 flex items-center justify-between">
-                <span className="text-muted-foreground">Líquido do item</span>
+                <span className="text-muted-foreground">Liquido do item</span>
                 <span className="font-medium text-foreground">
                   {formatCurrencyCents(netServicePriceCents)}
                 </span>
@@ -347,10 +347,10 @@ export function NewAppointmentDialogFlow({
             <Label className="text-sm">Profissional</Label>
             <p className="text-xs text-muted-foreground">
               {!canChooseProfessional
-                ? "A seleção do profissional depende do serviço escolhido."
+                ? "A selecao do profissional depende do servico escolhido."
                 : !hasProfessionalsForSelectedService
-                  ? "Sem profissional atuando neste serviço."
-                  : "Agora escolha quem executará esse serviço."}
+                  ? "Sem profissional atuando neste servico."
+                  : "Agora escolha quem executara esse servico."}
             </p>
           </div>
           <Select
@@ -367,7 +367,7 @@ export function NewAppointmentDialogFlow({
                 placeholder={
                   hasProfessionalsForSelectedService
                     ? "Selecione o profissional"
-                    : "Sem profissional atuando neste serviço"
+                    : "Sem profissional atuando neste servico"
                 }
               />
             </SelectTrigger>
@@ -381,8 +381,8 @@ export function NewAppointmentDialogFlow({
           </Select>
           {canChooseProfessional && !hasProfessionalsForSelectedService ? (
             <p className="text-sm text-amber-700">
-              Sem profissional atuando neste serviço. Ajuste o cadastro do
-              serviço ou escolha outro.
+              Sem profissional atuando neste servico. Ajuste o cadastro do
+              servico ou escolha outro.
             </p>
           ) : null}
         </div>
@@ -399,8 +399,8 @@ export function NewAppointmentDialogFlow({
             <Label className="text-sm">Data</Label>
             <p className="text-xs text-muted-foreground">
               {canChooseDate
-                ? "Defina a data para consultar os horários disponíveis."
-                : "A data só fica disponível depois da escolha do profissional."}
+                ? "Defina a data para consultar os horarios disponiveis."
+                : "A data so fica disponivel depois da escolha do profissional."}
             </p>
           </div>
           <Input
@@ -421,28 +421,28 @@ export function NewAppointmentDialogFlow({
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Etapa 5
               </p>
-              <p className="text-sm font-medium">Horários e inserção manual</p>
+              <p className="text-sm font-medium">Horarios e insercao manual</p>
               <p className="text-xs text-muted-foreground">
                 {canChooseSlot
-                  ? "Veja horários vagos, identifique conflitos em vermelho e digite o horário quando precisar."
-                  : "Os horários aparecem quando cliente, serviço, profissional e data estiverem definidos."}
+                  ? "Veja horarios vagos, identifique conflitos em vermelho e digite o horario quando precisar."
+                  : "Os horarios aparecem quando cliente, servico, profissional e data estiverem definidos."}
               </p>
             </div>
             <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm lg:min-w-72">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-start justify-between gap-3">
                 <span className="text-muted-foreground">Cliente</span>
                 <span className="text-right font-medium">
-                  {selectedNewClient?.name || "Não selecionado"}
+                  {selectedNewClient?.name || "Nao selecionado"}
                 </span>
               </div>
               <div className="mt-1 flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Serviço</span>
+                <span className="text-muted-foreground">Servico</span>
                 <span className="font-medium">
-                  {selectedNewService?.name || "Não selecionado"}
+                  {selectedNewService?.name || "Nao selecionado"}
                 </span>
               </div>
               <div className="mt-1 flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Duração</span>
+                <span className="text-muted-foreground">Duracao</span>
                 <span className="font-medium">{selectedServiceDuration} min</span>
               </div>
               <div className="mt-1 flex items-center justify-between gap-3">
@@ -458,7 +458,7 @@ export function NewAppointmentDialogFlow({
                 </span>
               </div>
               <div className="mt-1 flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Líquido</span>
+                <span className="text-muted-foreground">Liquido</span>
                 <span className="font-medium text-foreground">
                   {formatCurrencyCents(netServicePriceCents)}
                 </span>
@@ -468,7 +468,7 @@ export function NewAppointmentDialogFlow({
 
           {isLoadingSettings ? (
             <p className="text-xs text-muted-foreground">
-              Carregando política de conflito da agenda...
+              Carregando politica de conflito da agenda...
             </p>
           ) : allowManualConflict ? (
             <Alert className="border-red-200 bg-red-50 text-red-950 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-100">
@@ -476,24 +476,24 @@ export function NewAppointmentDialogFlow({
                 Conflito manual permitido neste estabelecimento
               </AlertTitle>
               <AlertDescription>
-                Os horários vagos continuam como referência principal. Horários em
-                conflito aparecem em vermelho e exigem confirmação explícita antes
-                da criação.
+                Os horÃƒÂ¯Ã‚Â¿Ã‚Â½rios vagos continuam como referencia principal. Horarios em
+                conflito aparecem em vermelho e exigem confirmaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o explÃƒÂ¯Ã‚Â¿Ã‚Â½cita antes
+                da criaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o.
               </AlertDescription>
             </Alert>
           ) : (
             <Alert>
               <AlertTitle>Agenda interna em modo estrito</AlertTitle>
               <AlertDescription>
-                Os horários vagos continuam visíveis normalmente. Horários em
-                conflito não podem ser assumidos neste estabelecimento.
+                Os horÃƒÂ¯Ã‚Â¿Ã‚Â½rios vagos continuam visiveis normalmente. Horarios em
+                conflito nao podem ser assumidos neste estabelecimento.
               </AlertDescription>
             </Alert>
           )}
 
           <Tabs value={slotMode} onValueChange={(value) => onSlotModeChange(value as SlotMode)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="suggested">Sugestões</TabsTrigger>
+            <TabsList className="grid h-auto w-full grid-cols-2 gap-2">
+              <TabsTrigger value="suggested">Sugestoes</TabsTrigger>
               <TabsTrigger value="manual">Manual</TabsTrigger>
             </TabsList>
 
@@ -510,11 +510,11 @@ export function NewAppointmentDialogFlow({
 
             <TabsContent value="manual" className="space-y-3">
               <div className="rounded-lg border p-4">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="text-sm font-medium">Horário manual</p>
+                    <p className="text-sm font-medium">Horario manual</p>
                     <p className="text-xs text-muted-foreground">
-                      Digite o horário inicial. O horário final será calculado
+                      Digite o horario inicial. O horario final sera calculado
                       automaticamente.
                     </p>
                   </div>
@@ -522,7 +522,7 @@ export function NewAppointmentDialogFlow({
                 </div>
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="manual-start-time">Horário inicial</Label>
+                    <Label htmlFor="manual-start-time">Horario inicial</Label>
                     <Input
                       id="manual-start-time"
                       type="time"
@@ -535,7 +535,7 @@ export function NewAppointmentDialogFlow({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="manual-end-time">Horário final</Label>
+                    <Label htmlFor="manual-end-time">Horario final</Label>
                     <Input
                       id="manual-end-time"
                       type="time"
@@ -545,9 +545,9 @@ export function NewAppointmentDialogFlow({
                   </div>
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">
-                  Se o horário digitado conflitar com outro atendimento e a
-                  configuração do estabelecimento permitir, o sistema vai pedir
-                  confirmação antes de salvar.
+                  Se o horÃƒÂ¯Ã‚Â¿Ã‚Â½rio digitado conflitar com outro atendimento e a
+                  configuraÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o do estabelecimento permitir, o sistema vai pedir
+                  confirmaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o antes de salvar.
                 </p>
               </div>
             </TabsContent>
@@ -555,8 +555,8 @@ export function NewAppointmentDialogFlow({
 
           {selectedSlot?.conflicting ? (
             <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-100">
-              Horário em conflito com {selectedSlot.conflicts?.length || 1}{" "}
-              atendimento(s). A criação exigirá confirmação explícita.
+              Horario em conflito com {selectedSlot.conflicts?.length || 1}{" "}
+              atendimento(s). A criaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o exigirÃƒÂ¯Ã‚Â¿Ã‚Â½ confirmaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o explÃƒÂ¯Ã‚Â¿Ã‚Â½cita.
             </div>
           ) : null}
 
@@ -576,17 +576,17 @@ export function NewAppointmentDialogFlow({
             </p>
             <p className="text-lg font-semibold">Revise antes de criar</p>
             <p className="text-sm text-muted-foreground">
-              Confira os dados principais do atendimento antes da confirmação
+              Confira os dados principais do atendimento antes da confirmaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o
               final.
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <div className="rounded-lg border bg-muted/20 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Cliente
               </p>
               <p className="mt-2 font-medium">
-                {selectedNewClient?.name || "Não selecionado"}
+                {selectedNewClient?.name || "Nao selecionado"}
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {[selectedNewClient?.phone, selectedNewClient?.email]
@@ -596,10 +596,10 @@ export function NewAppointmentDialogFlow({
             </div>
             <div className="rounded-lg border bg-muted/20 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Serviço
+                Servico
               </p>
               <p className="mt-2 font-medium">
-                {selectedNewService?.name || "Não selecionado"}
+                {selectedNewService?.name || "Nao selecionado"}
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {selectedServiceDuration} min {" - "}
@@ -611,7 +611,7 @@ export function NewAppointmentDialogFlow({
                 Profissional
               </p>
               <p className="mt-2 font-medium">
-                {selectedProfessional?.name || "Não selecionado"}
+                {selectedProfessional?.name || "Nao selecionado"}
               </p>
             </div>
             <div className="rounded-lg border bg-muted/20 p-4">
@@ -623,27 +623,27 @@ export function NewAppointmentDialogFlow({
                 Desconto: {formatCurrencyCents(discountAmountCents)}
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Líquido: {formatCurrencyCents(netServicePriceCents)}
+                Liquido: {formatCurrencyCents(netServicePriceCents)}
               </p>
             </div>
             <div className="rounded-lg border bg-muted/20 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Agenda
               </p>
-              <p className="mt-2 font-medium">{newDate || "Data não informada"}</p>
+              <p className="mt-2 font-medium">{newDate || "Data nao informada"}</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {newStartTime && newEndTime
                   ? `${newStartTime} - ${newEndTime}`
-                  : "Horário não informado"}
+                  : "Horario nao informado"}
               </p>
             </div>
           </div>
           {selectedSlot?.conflicting && allowManualConflict ? (
             <Alert className="border-red-200 bg-red-50 text-red-950 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-100">
-              <AlertTitle>Horário com sobreposição assumida manualmente</AlertTitle>
+              <AlertTitle>HorÃƒÂ¯Ã‚Â¿Ã‚Â½rio com sobreposiÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o assumida manualmente</AlertTitle>
               <AlertDescription>
-                Este horário já possui atendimento para o mesmo profissional. Ao
-                confirmar, o sistema ainda exigirá sua confirmação explícita.
+                Este horÃƒÂ¯Ã‚Â¿Ã‚Â½rio jÃƒÂ¯Ã‚Â¿Ã‚Â½ possui atendimento para o mesmo profissional. Ao
+                confirmar, o sistema ainda exigirÃƒÂ¯Ã‚Â¿Ã‚Â½ sua confirmaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o explÃƒÂ¯Ã‚Â¿Ã‚Â½cita.
               </AlertDescription>
             </Alert>
           ) : null}

@@ -370,7 +370,7 @@ export default function LicensePage() {
             <CardContent>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="destructive" disabled={isCancelling}>
+                  <Button variant="destructive" disabled={isCancelling} className="w-full sm:w-auto">
                     {isCancelling ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Cancelando...</> : 'Cancelar assinatura'}
                   </Button>
                 </AlertDialogTrigger>
@@ -434,9 +434,19 @@ export default function LicensePage() {
                 )
               ) : (
                 <Card className="border-border">
-                  <CardContent className="pt-6 text-sm space-y-1">
-                    <p><strong>Plano para pagamento:</strong> {managedPlan?.name || selectedPlan?.name || result?.planCode || 'Plano atual'}</p>
-                    <p><strong>Valor:</strong> {formatCurrency(result?.amountCents || selectedPlan?.amountCents || 0)}</p>
+                  <CardContent className="grid gap-3 pt-6 text-sm sm:grid-cols-2">
+                    <div className="rounded-lg border p-3">
+                      <p className="text-xs text-muted-foreground">Plano para pagamento</p>
+                      <p className="mt-1 font-medium text-foreground">
+                        {managedPlan?.name || selectedPlan?.name || result?.planCode || 'Plano atual'}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border p-3">
+                      <p className="text-xs text-muted-foreground">Valor</p>
+                      <p className="mt-1 font-medium text-foreground">
+                        {formatCurrency(result?.amountCents || selectedPlan?.amountCents || 0)}
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -469,13 +479,19 @@ export default function LicensePage() {
                     />
                   </div>
                   {billingType === 'CREDIT_CARD' ? <CreditCardForm form={form} /> : null}
-                  <div className="flex flex-wrap gap-2">
-                    <Button type="submit" disabled={isSubmitting}>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                    <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
                       {isSubmitting ? (
                         <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processando...</>
                       ) : actionMode === 'PAY' ? 'Pagar fatura' : 'Confirmar alteracao'}
                     </Button>
-                    <Button type="button" variant="outline" onClick={() => setActionMode('IDLE')} disabled={isSubmitting}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setActionMode('IDLE')}
+                      disabled={isSubmitting}
+                      className="w-full sm:w-auto"
+                    >
                       Cancelar
                     </Button>
                   </div>
@@ -507,10 +523,21 @@ export default function LicensePage() {
         {result?.billingType === 'CREDIT_CARD' && lastCardDigits ? (
           <Card className="border-border">
             <CardHeader><CardTitle>Ultima confirmacao em cartao</CardTitle></CardHeader>
-            <CardContent className="space-y-2 text-sm text-foreground">
-              <p><strong>Status do plano:</strong> {SUBSCRIPTION_STATUS_LABELS[result.status] ?? result.status}</p>
-              <p><strong>Pagamento:</strong> {PAYMENT_STATUS_LABELS[getCurrentPaymentStatus(result)] ?? getCurrentPaymentStatus(result) ?? 'N/A'}</p>
-              <p><strong>Cartao:</strong> final {lastCardDigits}</p>
+            <CardContent className="grid gap-3 text-sm text-foreground sm:grid-cols-3">
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Status do plano</p>
+                <p className="mt-1 font-medium">{SUBSCRIPTION_STATUS_LABELS[result.status] ?? result.status}</p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Pagamento</p>
+                <p className="mt-1 font-medium">
+                  {PAYMENT_STATUS_LABELS[getCurrentPaymentStatus(result)] ?? getCurrentPaymentStatus(result) ?? 'N/A'}
+                </p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Cartao</p>
+                <p className="mt-1 font-medium">final {lastCardDigits}</p>
+              </div>
             </CardContent>
           </Card>
         ) : null}

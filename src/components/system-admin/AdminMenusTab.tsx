@@ -141,7 +141,7 @@ export function AdminMenusTab() {
 
           <div className="rounded-md border">
             <div className="max-h-[420px] overflow-auto">
-              <table className="w-full text-sm">
+              <table className="min-w-[1080px] w-full text-sm">
                 <thead className="bg-muted/50">
                   <tr>
                     <th className="px-3 py-2 text-left">Titulo</th>
@@ -189,7 +189,7 @@ export function AdminMenusTab() {
                         </Badge>
                       </td>
                       <td className="px-3 py-2">
-                        <Button size="sm" variant="outline" onClick={() => openEdit(item)}>
+                        <Button size="sm" variant="outline" onClick={() => openEdit(item)} className="w-full sm:w-auto">
                           Editar
                         </Button>
                       </td>

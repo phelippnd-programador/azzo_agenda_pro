@@ -17,21 +17,10 @@ interface MainLayoutProps {
   subtitle?: string;
 }
 
-function getInitialDesktopSidebarState() {
-  try {
-    return localStorage.getItem('desktop_sidebar_open') !== '0';
-  } catch {
-    return true;
-  }
-}
-
 export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(
-    getInitialDesktopSidebarState,
-  );
   const { status: licenseStatus, isBlocked: isPlanExpired, refreshStatus } = useLicenseAccess();
 
   const isLicenseRoute = location.pathname === '/financeiro/licenca';
@@ -56,18 +45,6 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
     void checkSubscription();
   }, [isLicenseRoute, licenseStatus, refreshStatus]);
 
-  const toggleDesktopSidebar = () => {
-    setDesktopSidebarOpen((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem('desktop_sidebar_open', next ? '1' : '0');
-      } catch {
-        // ignore localStorage issues
-      }
-      return next;
-    });
-  };
-
   return (
     <div className="min-h-screen bg-[hsl(var(--shell))]">
       <Suspense fallback={null}>
@@ -76,14 +53,12 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
       <Sidebar
         isMobileOpen={mobileSidebarOpen}
         onToggleMobile={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-        isDesktopOpen={desktopSidebarOpen}
+        isDesktopOpen
       />
-      <div className={desktopSidebarOpen ? "lg:pl-60" : "lg:pl-20"}>
+      <div className="lg:pl-72">
         <Header
           title={title}
           subtitle={subtitle}
-          onToggleDesktopSidebar={toggleDesktopSidebar}
-          isDesktopSidebarOpen={desktopSidebarOpen}
         />
         <main className="overflow-x-hidden px-4 pb-6 pt-4 sm:px-6 sm:pb-8 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-6">
           <div className="mx-auto max-w-[1680px]">
