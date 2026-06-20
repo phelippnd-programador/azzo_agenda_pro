@@ -61,19 +61,19 @@ export function AgendaMonthView({
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <div className="rounded-2xl border border-border/70 bg-muted/20 p-3">
             <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Volume do mes</p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">{totalAppointmentsInMonth}</p>
+            <p className="mt-1 text-xl font-semibold text-foreground sm:text-2xl">{totalAppointmentsInMonth}</p>
           </div>
           <div className="rounded-2xl border border-border/70 bg-muted/20 p-3">
             <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Dias ativos</p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">{activeDays}</p>
+            <p className="mt-1 text-xl font-semibold text-foreground sm:text-2xl">{activeDays}</p>
           </div>
           <div className="rounded-2xl border border-border/70 bg-muted/20 p-3">
             <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Maior pico</p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">{highestVolume}</p>
+            <p className="mt-1 text-xl font-semibold text-foreground sm:text-2xl">{highestVolume}</p>
           </div>
           <div className="rounded-2xl border border-border/70 bg-muted/20 p-3">
             <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Media por dia ativo</p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">{averageByActiveDay}</p>
+            <p className="mt-1 text-xl font-semibold text-foreground sm:text-2xl">{averageByActiveDay}</p>
           </div>
         </div>
 
@@ -101,7 +101,7 @@ export function AgendaMonthView({
                 key={day.key}
                 type="button"
                 className={cn(
-                  'group h-auto min-h-[88px] w-full rounded-2xl border p-2.5 text-left transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:min-h-[108px] sm:p-3',
+                  'group h-auto min-h-[88px] w-full rounded-2xl border p-2 text-left transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:min-h-[108px] sm:p-3',
                   isToday
                     ? 'border-primary/40 bg-primary/8 shadow-[0_10px_24px_-18px_rgba(59,130,246,0.55)]'
                     : apptCount === 0
