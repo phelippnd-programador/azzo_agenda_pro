@@ -62,6 +62,33 @@ export default function NfseInvoiceForm() {
   };
 
   useEffect(() => {
+    if (mode !== "create") return;
+    void (async () => {
+      try {
+        const cfg = await nfseApi.getConfig("HOMOLOGACAO");
+        setInvoice((prev) => ({
+          ...prev,
+          municipioCodigoIbge: cfg.municipioCodigoIbge || prev.municipioCodigoIbge,
+          provedor: cfg.provedor || prev.provedor,
+          serieRps: cfg.serieRps || prev.serieRps,
+          aliquotaIss: cfg.aliquotaIssPadrao ?? prev.aliquotaIss,
+          itemListaServico: cfg.itemListaServicoPadrao || prev.itemListaServico,
+          codigoTributacaoMunicipio: cfg.codigoTributacaoMunicipio || prev.codigoTributacaoMunicipio,
+          items: [
+            {
+              ...(prev.items?.[0] || BASE_ITEM),
+              itemListaServico: cfg.itemListaServicoPadrao || prev.items?.[0]?.itemListaServico || "1.01",
+              aliquotaIss: cfg.aliquotaIssPadrao ?? prev.items?.[0]?.aliquotaIss ?? 5,
+            },
+          ],
+        }));
+      } catch {
+        // config nao configurada ainda — manter defaults
+      }
+    })();
+  }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     if (!id) return;
     void (async () => {
       try {
