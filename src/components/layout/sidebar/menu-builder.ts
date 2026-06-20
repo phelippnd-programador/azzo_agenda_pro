@@ -8,6 +8,7 @@ import {
   ICON_REGISTRY,
   MAIN_MENU_ORDER,
   MENU_REGISTRY,
+  REPORTS_GROUP_PATHS,
   STANDALONE_LAST_ROUTES,
 } from "./config";
 import type { SidebarMenuNode } from "./types";
@@ -140,6 +141,10 @@ export function buildFallbackSidebarMenu(allowedSet: Set<string>): SidebarMenuNo
       return;
     }
 
+    if (REPORTS_GROUP_PATHS.includes(route as typeof REPORTS_GROUP_PATHS[number])) {
+      return;
+    }
+
     if (route === "/auditoria/lgpd") {
       if (!allowedSet.has("/auditoria") && !allowedSet.has("/auditoria/lgpd")) {
         return;
@@ -178,6 +183,33 @@ export function buildFallbackSidebarMenu(allowedSet: Set<string>): SidebarMenuNo
       entries.splice(financeInsertIndex, 0, financialGroup);
     } else {
       entries.push(financialGroup);
+    }
+  }
+
+  const reportsItems = REPORTS_GROUP_PATHS.filter((route) => allowedSet.has(route)).map(
+    (route) => MENU_REGISTRY[route as keyof typeof MENU_REGISTRY],
+  ).filter(Boolean);
+
+  if (reportsItems.length > 0) {
+    const reportsInsertIndex = entries.findIndex((entry) => entry.path === "/relatorio");
+    const reportsGroup: SidebarMenuNode = {
+      id: "relatorios-group",
+      path: "/relatorio",
+      label: "Relatorios",
+      icon: MENU_REGISTRY["/relatorio"].icon,
+      children: reportsItems.map((item) => ({
+        id: item.path,
+        path: item.path,
+        label: item.label,
+        icon: item.icon,
+        children: [],
+      })),
+    };
+
+    if (reportsInsertIndex >= 0) {
+      entries.splice(reportsInsertIndex, 1, reportsGroup);
+    } else {
+      entries.push(reportsGroup);
     }
   }
 
