@@ -384,7 +384,7 @@ export function AppointmentDetailsSheet({
                         </div>
 
                         <div className="flex items-start justify-between gap-3 text-sm">
-                          <span className="text-muted-foreground">DuraÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o:</span>
+                          <span className="text-muted-foreground">Duracao:</span>
                           <span>{itemDuration} minutos</span>
                         </div>
 
@@ -496,7 +496,7 @@ export function AppointmentDetailsSheet({
                 <Separator />
                 <div className="space-y-3">
                   <h4 className="flex items-center gap-2 text-sm font-medium">
-                    <FileText className="h-4 w-4 text-primary" /> ObservaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½es
+                    <FileText className="h-4 w-4 text-primary" /> Observacoes
                   </h4>
                   <div className="rounded-lg bg-muted/40 p-4">
                     <p className="text-sm text-muted-foreground">
@@ -527,11 +527,11 @@ export function AppointmentDetailsSheet({
               <div className="space-y-3 rounded-lg border bg-muted/20 p-4">
                 <div className="space-y-2">
                   <Label htmlFor="serviceExecutionNotes">
-                    ExecuÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o do serviÃƒÂ¯Ã‚Â¿Ã‚Â½o
+                    Execucao do servico
                   </Label>
                   <Textarea
                     id="serviceExecutionNotes"
-                    placeholder="Descreva tÃƒÂ¯Ã‚Â¿Ã‚Â½cnicas aplicadas, variaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½es do serviÃƒÂ¯Ã‚Â¿Ã‚Â½o e ocorrÃƒÂ¯Ã‚Â¿Ã‚Â½ncias relevantes."
+                    placeholder="Descreva tecnicas aplicadas, variacoes do servico e ocorrencias relevantes."
                     value={serviceExecutionNotes}
                     onChange={(event) =>
                       setServiceExecutionNotes(event.target.value)
@@ -563,7 +563,7 @@ export function AppointmentDetailsSheet({
                   </Label>
                   <Textarea
                     id="internalFollowupNotes"
-                    placeholder="Informe recomendaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½es, manutenÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o, pendÃƒÂ¯Ã‚Â¿Ã‚Â½ncias ou abordagem sugerida para o prÃƒÂ¯Ã‚Â¿Ã‚Â½ximo atendimento."
+                    placeholder="Informe recomendacoes, manutencao, pendencias ou abordagem sugerida para o proximo atendimento."
                     value={internalFollowupNotes}
                     onChange={(event) =>
                       setInternalFollowupNotes(event.target.value)
@@ -626,7 +626,7 @@ export function AppointmentDetailsSheet({
                       {note.serviceExecutionNotes ? (
                         <p className="text-sm text-muted-foreground">
                           <span className="font-medium text-foreground">
-                            ExecuÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o:
+                            Execucao:
                           </span>{' '}
                           {note.serviceExecutionNotes}
                         </p>
@@ -644,7 +644,7 @@ export function AppointmentDetailsSheet({
                       {note.internalFollowupNotes ? (
                         <p className="text-sm text-muted-foreground">
                           <span className="font-medium text-foreground">
-                            PrÃƒÂ¯Ã‚Â¿Ã‚Â½ximo passo:
+                            Proximo passo:
                           </span>{' '}
                           {note.internalFollowupNotes}
                         </p>
@@ -674,7 +674,7 @@ export function AppointmentDetailsSheet({
               <>
                 <Separator />
                 <Button className="w-full" onClick={() => onViewInvoice(appointment)}>
-                  <Receipt className="mr-2 h-4 w-4" /> Ver prÃƒÂ¯Ã‚Â¿Ã‚Â½-visualizaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o da
+                  <Receipt className="mr-2 h-4 w-4" /> Ver pre-visualizacao da
                   Nota Fiscal
                 </Button>
               </>

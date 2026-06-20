@@ -349,40 +349,47 @@ export function AgendaDayView({
 
   return (
     <>
-      <Card>
+      <Card className="border-border/70 bg-card/96 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.14)]">
         <CardContent className="p-0">
           {appointments.length === 0 && (
-            <div className="px-4 py-3 text-xs text-muted-foreground border-b border-border/50 bg-muted/20 flex items-center gap-2">
+            <div className="flex items-center gap-2 border-b border-border/50 bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
               <CalendarIcon className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground/60" />
               <span>Nenhum agendamento neste dia.</span>
             </div>
           )}
           <div className="overflow-x-auto">
-            <div className="min-w-[600px]">
-              <div className="grid grid-cols-[60px_1fr] sm:grid-cols-[80px_1fr] border-b">
-                <div className="p-2 sm:p-3 bg-muted/40 border-r">
+            <div className="min-w-[640px]">
+              <div className="grid grid-cols-[68px_1fr] border-b border-border/60 bg-muted/25 sm:grid-cols-[88px_1fr]">
+                <div className="border-r border-border/60 p-3">
                   <Clock className="w-4 h-4 text-muted-foreground mx-auto" />
                 </div>
-                <div className="p-2 sm:p-3 bg-muted/40">
+                <div className="p-3">
                   <div className="flex items-center gap-2">
                     <CalendarIcon className="w-4 h-4 text-primary" />
-                    <span className="font-medium text-sm capitalize">{formattedDate}</span>
+                    <div className="min-w-0">
+                      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+                        Grade do dia
+                      </p>
+                      <span className="block truncate text-sm font-medium capitalize">{formattedDate}</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="divide-y max-h-[500px] sm:max-h-[600px] overflow-y-auto">
+              <div className="max-h-[520px] divide-y overflow-y-auto sm:max-h-[640px]">
                 {displayedTimeSlots.map((time) => {
                   const slotAppointments = groupedAppointments[time] || [];
                   return (
                     <div
                       key={time}
-                      className="grid grid-cols-[60px_1fr] sm:grid-cols-[80px_1fr] min-h-[60px] sm:min-h-[70px]"
+                      className="grid min-h-[72px] grid-cols-[68px_1fr] bg-background/85 sm:min-h-[80px] sm:grid-cols-[88px_1fr]"
                     >
-                      <div className="p-2 sm:p-3 bg-muted/40 border-r text-xs sm:text-sm text-muted-foreground font-medium">
-                        {time}
+                      <div className="border-r border-border/60 bg-muted/25 px-2 py-3 text-center text-xs font-medium text-muted-foreground sm:px-3 sm:text-sm">
+                        <span className="inline-flex rounded-full bg-background/85 px-2 py-1 shadow-sm">
+                          {time}
+                        </span>
                       </div>
-                      <div className="p-1 sm:p-2">
+                      <div className="p-2 sm:p-3">
                         {slotAppointments.length > 1
                           ? renderOverlapGroup(time, slotAppointments)
                           : slotAppointments.map(renderSingleAppointment)}
@@ -397,12 +404,18 @@ export function AgendaDayView({
       </Card>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between gap-3 border rounded-lg p-3 bg-muted/20">
-          <p className="text-sm text-muted-foreground">
-            Pagina {pagination.page} de {Math.max(1, totalPages)}
-          </p>
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+              Paginacao
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Pagina {pagination.page} de {Math.max(1, totalPages)}
+            </p>
+          </div>
+          <div className="flex w-full items-center gap-2 sm:w-auto">
             <Button
+              className="flex-1 sm:flex-none"
               variant="outline"
               size="sm"
               onClick={() => onPageChange(pagination.page - 1)}
@@ -411,6 +424,7 @@ export function AgendaDayView({
               Anterior
             </Button>
             <Button
+              className="flex-1 sm:flex-none"
               variant="outline"
               size="sm"
               onClick={() => onPageChange(pagination.page + 1)}

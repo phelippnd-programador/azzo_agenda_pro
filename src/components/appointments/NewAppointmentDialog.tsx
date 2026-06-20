@@ -226,7 +226,7 @@ export function NewAppointmentDialog({
         toast.error(
           resolveUiError(
             error,
-            'Não foi possível carregar a configuração da agenda.',
+            'Nao foi possivel carregar a configuracao da agenda.',
           ).message,
         );
       })
@@ -387,7 +387,7 @@ export function NewAppointmentDialog({
     } catch (error) {
       const uiError = resolveUiError(
         error,
-        'Não foi possível criar o agendamento.',
+        'Nao foi possivel criar o agendamento.',
       );
 
       if (String(uiError.code || '').toUpperCase() === 'APPOINTMENT_CONFLICT') {
@@ -458,7 +458,7 @@ export function NewAppointmentDialog({
             <DialogTitle>Novo Agendamento</DialogTitle>
             <DialogDescription>
               Siga as etapas para montar o atendimento interno com o mesmo fluxo
-              guiado do agendamento público.
+              guiado do agendamento publico.
             </DialogDescription>
           </DialogHeader>
 
@@ -517,13 +517,13 @@ export function NewAppointmentDialog({
             onDiscountChange={setNewDiscountInput}
           />
 
-          <DialogStickyFooter className="flex-row items-center justify-between gap-2 sm:justify-between">
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={closeDialog}>
+          <DialogStickyFooter className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              <Button className="w-full sm:w-auto" variant="outline" onClick={closeDialog}>
                 Cancelar
               </Button>
               {currentStep > 1 ? (
-                <Button variant="outline" onClick={handlePreviousStep}>
+                <Button className="w-full sm:w-auto" variant="outline" onClick={handlePreviousStep}>
                   <ChevronLeft className="mr-1 h-4 w-4" />
                   Voltar
                 </Button>
@@ -531,12 +531,12 @@ export function NewAppointmentDialog({
             </div>
 
             {currentStep < stepItems.length ? (
-              <Button onClick={handleNextStep} disabled={!canProceed()}>
+              <Button className="w-full sm:w-auto" onClick={handleNextStep} disabled={!canProceed()}>
                 Continuar
                 <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             ) : (
-              <Button onClick={handleSubmit} disabled={isSubmitting || !canSubmit}>
+              <Button className="w-full sm:w-auto" onClick={handleSubmit} disabled={isSubmitting || !canSubmit}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -569,8 +569,8 @@ export function NewAppointmentDialog({
       <ConfirmationDialog
         open={isConflictDialogOpen}
         onOpenChange={setIsConflictDialogOpen}
-        title="Confirmar conflito de horário?"
-        description="Este horário já possui atendimento para o mesmo profissional. A decisão de assumir a sobreposição ficará registrada na auditoria."
+        title="Confirmar conflito de horario?"
+        description="Este horario ja possui atendimento para o mesmo profissional. A decisao de assumir a sobreposicao ficara registrada na auditoria."
         confirmLabel="Criar mesmo assim"
         loadingLabel="Criando..."
         isLoading={isSubmitting}
@@ -578,8 +578,8 @@ export function NewAppointmentDialog({
         onConfirm={handleConfirmConflict}
       >
         <div className="space-y-3 text-sm">
-          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-red-900">
-            Solicitação: {conflictDetails?.requestedDate || newDate}{' '}
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-red-900 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-100">
+            Solicitacao: {conflictDetails?.requestedDate || newDate}{' '}
             {conflictDetails?.requestedStartTime || newStartTime} -{' '}
             {conflictDetails?.requestedEndTime || newEndTime}
           </div>
