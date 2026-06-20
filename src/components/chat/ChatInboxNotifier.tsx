@@ -80,7 +80,6 @@ export function ChatInboxNotifier() {
           seenConversationUpdateRef.current.set(conversation.id, stamp);
           if (!isNewer) return;
           if (openConversationId === conversation.id) return;
-          if (!conversation.manualModeEnabled) return;
 
           const dedupeKey = `${conversation.id}:${stamp}`;
           if (shownNotificationsRef.current.has(dedupeKey)) return;
@@ -88,8 +87,11 @@ export function ChatInboxNotifier() {
 
           const clientName = conversation.clientName?.trim() || "Cliente";
           const preview = conversation.lastMessagePreview?.trim() || "Nova mensagem recebida.";
-          toast("Nova mensagem no chat (modo manual)", {
-            id: `chat-manual-${conversation.id}`,
+          const title = conversation.manualModeEnabled
+            ? "Nova mensagem no chat (modo manual)"
+            : "Nova mensagem no chat";
+          toast(title, {
+            id: `chat-inbox-${conversation.id}`,
             description: `${clientName}: ${preview}`,
             action: {
               label: "Abrir conversa",

@@ -76,7 +76,7 @@ export function ReassignAppointmentDialog({
               Reatribua o atendimento sem perder o contexto operacional do cliente.
             </p>
             <p className="text-sm text-muted-foreground">
-              {appointment?.client?.name ? `Cliente atual: ${appointment.client.name}.` : 'Escolha o novo responsável para concluir a transferência.'}
+              {appointment?.client?.name ? `Cliente atual: ${appointment.client.name}.` : 'Escolha o novo responsavel para concluir a transferencia.'}
             </p>
           </DialogSection>
 
@@ -99,16 +99,16 @@ export function ReassignAppointmentDialog({
           </DialogSection>
         </DialogBody>
 
-        <DialogStickyFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isLoading}>Cancelar</Button>
-          <Button onClick={() => void handleConfirm()} disabled={isLoading || !selectedProfessionalId}>
+        <DialogStickyFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
+          <Button className="w-full sm:w-auto" variant="outline" onClick={handleClose} disabled={isLoading}>Cancelar</Button>
+          <Button className="w-full sm:w-auto" onClick={() => void handleConfirm()} disabled={isLoading || !selectedProfessionalId}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Realocando...
               </>
             ) : (
-              'Confirmar realocação'
+              'Confirmar realocacao'
             )}
           </Button>
         </DialogStickyFooter>

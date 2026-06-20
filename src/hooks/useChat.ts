@@ -24,14 +24,17 @@ export function useChat(options: UseChatOptions = {}) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoadingConversations, setIsLoadingConversations] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isLoadingMoreMessages, setIsLoadingMoreMessages] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isUpdatingMarker, setIsUpdatingMarker] = useState(false);
+  const [hasNextMessages, setHasNextMessages] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const hasLoadedConversationsRef = useRef(false);
+  const nextCursorRef = useRef<string | null>(null);
 
-  const loadConversations = useCallback(async (options: LoadOptions = {}) => {
+  const loadConversations = useCallback(async (opts: LoadOptions = {}) => {
     try {
-      if (!hasLoadedConversationsRef.current || !options.background) {
+      if (!hasLoadedConversationsRef.current || !opts.background) {
         setIsLoadingConversations(true);
       }
       const response = await chatApi.listConversations({ page: 1, pageSize, todayOnly });
@@ -46,31 +49,35 @@ export function useChat(options: UseChatOptions = {}) {
     }
   }, [pageSize, todayOnly]);
 
-  const loadMessages = useCallback(async (conversationId: string, options: LoadOptions = {}) => {
+  const loadMessages = useCallback(async (conversationId: string, opts: LoadOptions = {}) => {
     if (!conversationId) {
       setActiveConversationId(null);
       setMessages([]);
+      nextCursorRef.current = null;
+      setHasNextMessages(false);
       return;
     }
     try {
       const isConversationChanged = activeConversationId !== conversationId;
       setActiveConversationId(conversationId);
-      if (!options.background) {
+      if (!opts.background) {
         setIsLoadingMessages(true);
       }
       if (isConversationChanged) {
         setMessages([]);
+        nextCursorRef.current = null;
+        setHasNextMessages(false);
       }
-      const response = await chatApi.listMessages(conversationId, { page: 1, pageSize: 200 });
+      const response = await chatApi.listMessages(conversationId, { pageSize: 50 });
       const nextMessages = response.items || [];
+      nextCursorRef.current = response.nextCursor ?? null;
+      setHasNextMessages(response.hasNext ?? false);
       setMessages(nextMessages);
       setConversations((prev) => {
         const lastMessage = nextMessages.at(-1);
         if (!lastMessage) return prev;
-
         const lastMessagePreview = lastMessage.content?.trim() || "[Conteudo expirado]";
         const lastMessageAt = lastMessage.createdAt;
-
         const next = prev.map((conversation) =>
           conversation.id === conversationId
             ? {
@@ -83,7 +90,6 @@ export function useChat(options: UseChatOptions = {}) {
               }
             : conversation
         );
-
         next.sort((a, b) => {
           const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
           const bTime = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
@@ -91,6 +97,8 @@ export function useChat(options: UseChatOptions = {}) {
         });
         return next;
       });
+      // Marca como lida ao abrir a conversa (fire-and-forget)
+      chatApi.markRead(conversationId).catch(() => null);
     } catch (err) {
       const uiError = resolveUiError(err, "Erro ao carregar mensagens da conversa");
       toast.error(uiError.message);
@@ -99,6 +107,26 @@ export function useChat(options: UseChatOptions = {}) {
       setIsLoadingMessages(false);
     }
   }, [activeConversationId]);
+
+  const loadMoreMessages = useCallback(async (conversationId: string) => {
+    if (!conversationId || !nextCursorRef.current || isLoadingMoreMessages) return;
+    try {
+      setIsLoadingMoreMessages(true);
+      const response = await chatApi.listMessages(conversationId, {
+        pageSize: 50,
+        cursor: nextCursorRef.current,
+      });
+      const moreMessages = response.items || [];
+      nextCursorRef.current = response.nextCursor ?? null;
+      setHasNextMessages(response.hasNext ?? false);
+      setMessages((prev) => [...prev, ...moreMessages]);
+    } catch (err) {
+      const uiError = resolveUiError(err, "Erro ao carregar mais mensagens");
+      toast.error(uiError.message);
+    } finally {
+      setIsLoadingMoreMessages(false);
+    }
+  }, [isLoadingMoreMessages]);
 
   const sendMessage = useCallback(
     async (clientId: string, content: string) => {
@@ -180,12 +208,14 @@ export function useChat(options: UseChatOptions = {}) {
     messages,
     isLoadingConversations,
     isLoadingMessages,
+    isLoadingMoreMessages,
     isSending,
     isUpdatingMarker,
+    hasNextMessages,
     loadConversations,
     loadMessages,
+    loadMoreMessages,
     sendMessage,
     updateMarker,
   };
 }
-
