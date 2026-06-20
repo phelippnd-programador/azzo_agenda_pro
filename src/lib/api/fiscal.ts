@@ -63,6 +63,8 @@ export type NfseConfig = {
   emissionMode: "MANUAL" | "ASK_ON_CLOSE" | "AUTO_ON_CLOSE";
   emitForCpfMode: "ALWAYS" | "ASK" | "NEVER_AUTO";
   autoIssueOnAppointmentClose: boolean;
+  wsUrl?: string;
+  wsUrlHomologacao?: string;
 };
 
 export type NfseFiscalState = {
