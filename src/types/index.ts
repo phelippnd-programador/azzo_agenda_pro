@@ -261,6 +261,9 @@ export interface AppointmentManagementReportResponse {
   noShowRate: number;
   limit: number;
   totalItems: number;
+  page?: number;
+  pageSize?: number;
+  hasMore?: boolean;
   alerts: AppointmentManagementReportSignal[];
   opportunities: AppointmentManagementReportSignal[];
   items: AppointmentManagementReportItem[];

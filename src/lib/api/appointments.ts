@@ -32,6 +32,18 @@ export type AppointmentCreateRequest = {
   conflictAcknowledged?: boolean;
 };
 
+export type AppointmentUpdateRequest = {
+  professionalId?: string;
+  date?: string;
+  startTime?: string;
+  notes?: string | null;
+  serviceId?: string;
+  totalPrice?: number;
+  items?: AppointmentCreateItemInput[];
+  allowConflict?: boolean;
+  conflictAcknowledged?: boolean;
+};
+
 export type AppointmentCustomerNoteRequest = {
   serviceExecutionNotes?: string;
   clientFeedbackNotes?: string;
@@ -51,6 +63,8 @@ export type AppointmentManagementReportParams = {
   serviceId?: string;
   status?: string;
   limit?: number;
+  page?: number;
+  pageSize?: number;
 };
 
 export type AppointmentStatusUpdatePayload = {
@@ -124,6 +138,8 @@ export const appointmentsApi = {
       query.set("status", params.status);
     }
     if (params?.limit) query.set("limit", String(params.limit));
+    if (params?.page !== undefined) query.set("page", String(params.page));
+    if (params?.pageSize !== undefined) query.set("pageSize", String(params.pageSize));
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return request<AppointmentManagementReportResponse>(`/appointments/management-report${suffix}`);
   },
@@ -178,6 +194,11 @@ export const appointmentsApi = {
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return requestBlob(`/appointments/no-show/export${suffix}`);
   },
+  update: (id: string, data: AppointmentUpdateRequest) =>
+    request<Appointment>(`/appointments/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
   updateStatus: (id: string, status: string, payload?: AppointmentStatusUpdatePayload) =>
     request<Appointment>(`/appointments/${id}/status?value=${status}`, {
       method: "PATCH",
@@ -204,6 +225,10 @@ export const appointmentsApi = {
         method: "PATCH",
       }
     ),
+  deleteCustomerNote: (appointmentId: string, noteId: string) =>
+    request<void>(`/appointments/${appointmentId}/customer-notes/${noteId}`, {
+      method: "DELETE",
+    }),
   delete: (id: string) =>
     request<void>(`/appointments/${id}`, {
       method: "DELETE",

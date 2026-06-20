@@ -6,6 +6,7 @@ import {
   type Appointment,
   type AppointmentStatusUpdatePayload,
   type AppointmentCreateRequest,
+  type AppointmentUpdateRequest,
 } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import { useResourceList, type UseResourceListOptions } from "@/hooks/useResourceList";
@@ -47,6 +48,20 @@ export function useAppointments(
 
   const { items: appointments, pagination, isLoading, error, refetch, goToPage, _fetch } =
     useResourceList<Appointment>(fetchFn, "Erro ao carregar agendamentos", options);
+
+  const updateAppointment = async (id: string, data: AppointmentUpdateRequest) => {
+    try {
+      const result = await appointmentsApi.update(id, data);
+      await _fetch({ page: pagination.page, limit: pagination.limit });
+      toast.success("Agendamento atualizado com sucesso!");
+      return result;
+    } catch (err) {
+      if (!isPlanExpiredApiError(err) && !isAppointmentConflictError(err)) {
+        toast.error(resolveUiError(err, "Erro ao atualizar agendamento").message);
+      }
+      throw err;
+    }
+  };
 
   const createAppointment = async (data: AppointmentCreateRequest) => {
     try {
@@ -115,6 +130,7 @@ export function useAppointments(
     refetch,
     goToPage,
     createAppointment,
+    updateAppointment,
     updateAppointmentStatus,
     deleteAppointment,
     reassignAppointmentProfessional,
