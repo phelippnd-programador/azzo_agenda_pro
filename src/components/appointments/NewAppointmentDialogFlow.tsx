@@ -262,7 +262,7 @@ export function NewAppointmentDialogFlow({
             <Label className="text-sm">Servico</Label>
             <p className="text-xs text-muted-foreground">
               {canChooseService
-                ? "Selecione um serviÃƒÂ¯Ã‚Â¿Ã‚Â½o para filtrar os profissionais compativeis."
+                ? "Selecione um servico para filtrar os profissionais compativeis."
                 : "Primeiro selecione ou cadastre um cliente."}
             </p>
           </div>
@@ -476,16 +476,14 @@ export function NewAppointmentDialogFlow({
                 Conflito manual permitido neste estabelecimento
               </AlertTitle>
               <AlertDescription>
-                Os horÃƒÂ¯Ã‚Â¿Ã‚Â½rios vagos continuam como referencia principal. Horarios em
-                conflito aparecem em vermelho e exigem confirmaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o explÃƒÂ¯Ã‚Â¿Ã‚Â½cita antes
-                da criaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o.
+                Os horarios vagos continuam como referencia principal. Horarios em conflito aparecem em vermelho e exigem confirmacao explicita antes da criacao.
               </AlertDescription>
             </Alert>
           ) : (
             <Alert>
               <AlertTitle>Agenda interna em modo estrito</AlertTitle>
               <AlertDescription>
-                Os horÃƒÂ¯Ã‚Â¿Ã‚Â½rios vagos continuam visiveis normalmente. Horarios em
+                Os horarios vagos continuam visiveis normalmente. Horarios em
                 conflito nao podem ser assumidos neste estabelecimento.
               </AlertDescription>
             </Alert>
@@ -545,9 +543,7 @@ export function NewAppointmentDialogFlow({
                   </div>
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">
-                  Se o horÃƒÂ¯Ã‚Â¿Ã‚Â½rio digitado conflitar com outro atendimento e a
-                  configuraÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o do estabelecimento permitir, o sistema vai pedir
-                  confirmaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o antes de salvar.
+                  Se o horario digitado conflitar com outro atendimento e a configuracao do estabelecimento permitir, o sistema vai pedir confirmacao antes de salvar.
                 </p>
               </div>
             </TabsContent>
@@ -556,7 +552,7 @@ export function NewAppointmentDialogFlow({
           {selectedSlot?.conflicting ? (
             <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-100">
               Horario em conflito com {selectedSlot.conflicts?.length || 1}{" "}
-              atendimento(s). A criaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o exigirÃƒÂ¯Ã‚Â¿Ã‚Â½ confirmaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o explÃƒÂ¯Ã‚Â¿Ã‚Â½cita.
+              atendimento(s). A criacao exigira confirmacao explicita.
             </div>
           ) : null}
 
@@ -576,8 +572,7 @@ export function NewAppointmentDialogFlow({
             </p>
             <p className="text-lg font-semibold">Revise antes de criar</p>
             <p className="text-sm text-muted-foreground">
-              Confira os dados principais do atendimento antes da confirmaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o
-              final.
+              Confira os dados principais do atendimento antes da confirmacao final.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -640,10 +635,9 @@ export function NewAppointmentDialogFlow({
           </div>
           {selectedSlot?.conflicting && allowManualConflict ? (
             <Alert className="border-red-200 bg-red-50 text-red-950 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-100">
-              <AlertTitle>HorÃƒÂ¯Ã‚Â¿Ã‚Â½rio com sobreposiÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o assumida manualmente</AlertTitle>
+              <AlertTitle>Horario com sobreposicao assumida manualmente</AlertTitle>
               <AlertDescription>
-                Este horÃƒÂ¯Ã‚Â¿Ã‚Â½rio jÃƒÂ¯Ã‚Â¿Ã‚Â½ possui atendimento para o mesmo profissional. Ao
-                confirmar, o sistema ainda exigirÃƒÂ¯Ã‚Â¿Ã‚Â½ sua confirmaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o explÃƒÂ¯Ã‚Â¿Ã‚Â½cita.
+                Este horario ja possui atendimento para o mesmo profissional. Ao confirmar, o sistema ainda exigira sua confirmacao explicita.
               </AlertDescription>
             </Alert>
           ) : null}
