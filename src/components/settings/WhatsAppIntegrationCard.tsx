@@ -55,6 +55,12 @@ export function WhatsAppIntegrationCard() {
   const [webhookVerifyToken, setWebhookVerifyToken] = useState("");
   const [businessId, setBusinessId] = useState("");
   const [displayPhoneNumber, setDisplayPhoneNumber] = useState("");
+  const [confirmationTemplate, setConfirmationTemplate] = useState("");
+  const [cancellationTemplate, setCancellationTemplate] = useState("");
+  const [reminderTemplate, setReminderTemplate] = useState("");
+  const [showMessageLog, setShowMessageLog] = useState(false);
+  const [messageLog, setMessageLog] = useState<import("@/lib/api/whatsapp").WhatsAppMessageLogItem[]>([]);
+  const [isLoadingLog, setIsLoadingLog] = useState(false);
   const [testDestinationPhone, setTestDestinationPhone] = useState("");
   const [testMessageBody, setTestMessageBody] = useState("Mensagem de teste do AZZO Agenda Pro.");
   const [embeddedStatus, setEmbeddedStatus] =
@@ -134,6 +140,9 @@ export function WhatsAppIntegrationCard() {
         setCanSchedule(config.canSchedule ?? true);
         setCanCancel(config.canCancel ?? true);
         setCanReschedule(config.canReschedule ?? true);
+        setConfirmationTemplate(config.confirmationMessageTemplate ?? "");
+        setCancellationTemplate(config.cancellationMessageTemplate ?? "");
+        setReminderTemplate(config.reminderMessageTemplate ?? "");
         setPhoneNumberId(embedded.phoneNumberId || config.phoneNumberId || "");
         setBusinessAccountId(
           embedded.businessAccountId || config.businessAccountId || ""
@@ -207,6 +216,9 @@ export function WhatsAppIntegrationCard() {
     setCanSchedule(config.canSchedule ?? true);
     setCanCancel(config.canCancel ?? true);
     setCanReschedule(config.canReschedule ?? true);
+    setConfirmationTemplate(config.confirmationMessageTemplate ?? "");
+    setCancellationTemplate(config.cancellationMessageTemplate ?? "");
+    setReminderTemplate(config.reminderMessageTemplate ?? "");
     setPhoneNumberId(embedded.phoneNumberId || config.phoneNumberId || "");
     setBusinessAccountId(embedded.businessAccountId || config.businessAccountId || "");
     setBusinessId(embedded.businessId || config.businessId || "");
@@ -387,6 +399,9 @@ export function WhatsAppIntegrationCard() {
         canSchedule,
         canCancel,
         canReschedule,
+        confirmationMessageTemplate: confirmationTemplate.trim() || undefined,
+        cancellationMessageTemplate: cancellationTemplate.trim() || undefined,
+        reminderMessageTemplate: reminderTemplate.trim() || undefined,
       });
 
       setConfigStatus(response);
@@ -394,6 +409,9 @@ export function WhatsAppIntegrationCard() {
       setCanSchedule(response.canSchedule ?? canSchedule);
       setCanCancel(response.canCancel ?? canCancel);
       setCanReschedule(response.canReschedule ?? canReschedule);
+      setConfirmationTemplate(response.confirmationMessageTemplate ?? confirmationTemplate);
+      setCancellationTemplate(response.cancellationMessageTemplate ?? cancellationTemplate);
+      setReminderTemplate(response.reminderMessageTemplate ?? reminderTemplate);
       setBusinessId(response.businessId || businessId);
       setDisplayPhoneNumber(response.displayPhoneNumber || displayPhoneNumber);
       setWebhookVerifyToken(response.webhookVerifyToken || webhookVerifyToken);
@@ -540,6 +558,89 @@ export function WhatsAppIntegrationCard() {
           <p className="text-xs font-medium text-muted-foreground">Status de onboarding</p>
           <p className="mt-1 text-sm">{onboardingStatus}</p>
         </div>
+      </div>
+
+      {/* Templates de mensagem */}
+      <div className="rounded-lg border p-4 space-y-3">
+        <p className="text-sm font-semibold">Templates de mensagem automática</p>
+        <p className="text-xs text-muted-foreground">Use {"{nome}"}, {"{data}"} e {"{hora}"}. Deixe em branco para usar o texto padrão.</p>
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground">Confirmação de agendamento</label>
+          <textarea
+            className="w-full rounded-md border px-3 py-2 text-sm min-h-[64px] resize-none"
+            placeholder="Olá, {nome}! Seu agendamento foi confirmado para {data} às {hora}. Aguardamos você!"
+            value={confirmationTemplate}
+            onChange={(e) => setConfirmationTemplate(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground">Cancelamento de agendamento</label>
+          <textarea
+            className="w-full rounded-md border px-3 py-2 text-sm min-h-[64px] resize-none"
+            placeholder="Olá, {nome}! Seu agendamento do dia {data} às {hora} foi cancelado."
+            value={cancellationTemplate}
+            onChange={(e) => setCancellationTemplate(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground">Lembrete (24h antes)</label>
+          <textarea
+            className="w-full rounded-md border px-3 py-2 text-sm min-h-[64px] resize-none"
+            placeholder="Olá, {nome}! Lembrando que você tem agendamento amanhã ({data}) às {hora}."
+            value={reminderTemplate}
+            onChange={(e) => setReminderTemplate(e.target.value)}
+          />
+        </div>
+        <Button size="sm" onClick={() => void handleSaveConfig()} disabled={isSaving}>
+          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Salvar templates
+        </Button>
+      </div>
+
+      {/* Log de mensagens */}
+      <div className="rounded-lg border p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold">Histórico de mensagens</p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setShowMessageLog((v) => !v);
+              if (!showMessageLog) {
+                setIsLoadingLog(true);
+                whatsappApi.getMessageLog(50)
+                  .then((r) => setMessageLog(r.items))
+                  .catch(() => setMessageLog([]))
+                  .finally(() => setIsLoadingLog(false));
+              }
+            }}
+          >
+            {showMessageLog ? "Ocultar" : "Ver histórico"}
+          </Button>
+        </div>
+        {showMessageLog && (
+          isLoadingLog ? (
+            <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+          ) : messageLog.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma mensagem enviada ainda.</p>
+          ) : (
+            <div className="divide-y text-sm max-h-72 overflow-y-auto">
+              {messageLog.map((item) => (
+                <div key={item.id} className="py-2 flex gap-3 items-start">
+                  <span className={`shrink-0 mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium ${item.status === "SENT" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                    {item.status}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-xs text-muted-foreground">{item.eventType} → {item.destinationPhone}</p>
+                    <p className="truncate text-xs mt-0.5">{item.messageText}</p>
+                    {item.errorMessage && <p className="text-xs text-destructive mt-0.5">{item.errorMessage}</p>}
+                  </div>
+                  <span className="text-[10px] text-muted-foreground shrink-0">{new Date(item.sentAt).toLocaleString("pt-BR")}</span>
+                </div>
+              ))}
+            </div>
+          )
+        )}
       </div>
     </div>
   );
