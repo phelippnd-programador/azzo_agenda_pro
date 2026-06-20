@@ -1,4 +1,18 @@
-export const AUDIT_MODULES = ["FISCAL", "RBAC", "FINANCE", "AUTH", "SYSTEM"] as const;
+export const AUDIT_MODULES = [
+  "FISCAL",
+  "RBAC",
+  "FINANCE",
+  "AUTH",
+  "APPOINTMENT",
+  "CUSTOMER",
+  "PROFESSIONAL",
+  "INVENTORY",
+  "LGPD",
+  "CHAT",
+  "WHATSAPP",
+  "TENANT",
+  "SYSTEM",
+] as const;
 export const AUDIT_STATUSES = ["SUCCESS", "ERROR", "DENIED"] as const;
 export const AUDIT_SOURCE_CHANNELS = ["API", "WEBHOOK", "SCHEDULER", "SYSTEM"] as const;
 export const AUDIT_EXPORT_FORMATS = ["CSV", "JSON"] as const;
@@ -115,6 +129,13 @@ export type AuditRetentionListResponseDto = {
   nextCursor: string | null;
   hasNext: boolean;
 };
+
+export const AUDIT_WHATSAPP_ACTIONS = [
+  "WHATSAPP_CONFIG_UPDATE",
+  "WHATSAPP_CONNECTION_TEST",
+  "WHATSAPP_TEST_MESSAGE",
+  "WHATSAPP_EMBEDDED_SIGNUP_COMPLETE",
+] as const;
 
 export type AuditRetentionQueryDto = {
   from: string;
