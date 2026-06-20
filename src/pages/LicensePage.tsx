@@ -358,7 +358,8 @@ export default function LicensePage() {
           onRefetchPlans={refetchPlans}
         />
 
-        {result && !isTrialSubscription(result) && result.status !== 'CANCELLED' && hasPaidAccess ? (
+        {result && !isTrialSubscription(result) && result.status !== 'CANCELLED' && hasPaidAccess
+          && result.billingType !== 'CHECKOUT' ? (
           <Card className="border-destructive/30">
             <CardHeader>
               <CardTitle className="text-destructive text-base">Cancelar assinatura</CardTitle>
