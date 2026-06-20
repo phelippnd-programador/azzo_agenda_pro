@@ -13,17 +13,7 @@ import type {
   MenuRoleRoutesResponse,
   SystemAdminRole,
 } from "@/types/system-admin";
-import type {
-  WhatsAppConfigRequest,
-  WhatsAppConfigResponse,
-  WhatsAppEmbeddedSignupCompleteRequest,
-  WhatsAppEmbeddedSignupStatusResponse,
-  WhatsAppTestMessageRequest,
-  WhatsAppTestMessageResponse,
-  WhatsAppTestResponse,
-  WhatsAppValidateConnectionRequest,
-  WhatsAppValidateConnectionResponse,
-} from "@/types/whatsapp";
+import { whatsappApi } from "./whatsapp";
 import { request } from "./core";
 
 export const suggestionsApi = {
@@ -41,33 +31,16 @@ export const suggestionsApi = {
 };
 
 export const tenantApi = {
-  getWhatsAppConfig: () => request<WhatsAppConfigResponse>("/tenant/whatsapp"),
-  saveWhatsAppConfig: (data: WhatsAppConfigRequest) =>
-    request<WhatsAppConfigResponse>("/tenant/whatsapp", {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }),
-  testWhatsAppConnection: () =>
-    request<WhatsAppTestResponse>("/tenant/whatsapp/test", {
-      method: "POST",
-    }),
-  validateWhatsAppConnection: (data: WhatsAppValidateConnectionRequest) =>
-    request<WhatsAppValidateConnectionResponse>("/tenant/whatsapp/validate", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-  sendWhatsAppTestMessage: (data: WhatsAppTestMessageRequest) =>
-    request<WhatsAppTestMessageResponse>("/tenant/whatsapp/test-message", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-  getWhatsAppEmbeddedSignupStatus: () =>
-    request<WhatsAppEmbeddedSignupStatusResponse>("/tenant/whatsapp/embedded-signup/status"),
-  completeWhatsAppEmbeddedSignup: (data: WhatsAppEmbeddedSignupCompleteRequest) =>
-    request<WhatsAppEmbeddedSignupStatusResponse>("/tenant/whatsapp/embedded-signup/complete", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+  getWhatsAppConfig: () => whatsappApi.getConfig(),
+  saveWhatsAppConfig: (data: Parameters<typeof whatsappApi.saveConfig>[0]) => whatsappApi.saveConfig(data),
+  testWhatsAppConnection: () => whatsappApi.testConnection(),
+  validateWhatsAppConnection: (data: Parameters<typeof whatsappApi.validateConnection>[0]) =>
+    whatsappApi.validateConnection(data),
+  sendWhatsAppTestMessage: (data: Parameters<typeof whatsappApi.sendTestMessage>[0]) =>
+    whatsappApi.sendTestMessage(data),
+  getWhatsAppEmbeddedSignupStatus: () => whatsappApi.getEmbeddedSignupStatus(),
+  completeWhatsAppEmbeddedSignup: (data: Parameters<typeof whatsappApi.completeEmbeddedSignup>[0]) =>
+    whatsappApi.completeEmbeddedSignup(data),
 };
 
 export const configApi = {

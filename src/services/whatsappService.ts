@@ -1,4 +1,10 @@
-import { tenantApi } from "@/lib/api";
+// Re-exporta do novo local canônico — mantém compatibilidade com importações existentes
+export {
+  whatsappApi as default,
+  whatsappApi,
+} from "@/lib/api/whatsapp";
+
+import { whatsappApi } from "@/lib/api/whatsapp";
 import type {
   WhatsAppConfigRequest,
   WhatsAppConfigResponse,
@@ -9,40 +15,38 @@ import type {
   WhatsAppTestMessageResponse,
   WhatsAppValidateConnectionRequest,
   WhatsAppValidateConnectionResponse,
-} from "@/types/whatsapp";
+} from "@/lib/api/whatsapp";
 
-export async function saveWhatsAppConfig(
-  data: WhatsAppConfigRequest
-): Promise<WhatsAppConfigResponse> {
-  return tenantApi.saveWhatsAppConfig(data);
+export async function saveWhatsAppConfig(data: WhatsAppConfigRequest): Promise<WhatsAppConfigResponse> {
+  return whatsappApi.saveConfig(data);
 }
 
 export async function getWhatsAppConfig(): Promise<WhatsAppConfigResponse> {
-  return tenantApi.getWhatsAppConfig();
+  return whatsappApi.getConfig();
 }
 
 export async function testWhatsAppConnection(): Promise<WhatsAppTestResponse> {
-  return tenantApi.testWhatsAppConnection();
+  return whatsappApi.testConnection();
 }
 
 export async function validateWhatsAppConnection(
   data: WhatsAppValidateConnectionRequest
 ): Promise<WhatsAppValidateConnectionResponse> {
-  return tenantApi.validateWhatsAppConnection(data);
+  return whatsappApi.validateConnection(data);
 }
 
 export async function sendWhatsAppTestMessage(
   data: WhatsAppTestMessageRequest
 ): Promise<WhatsAppTestMessageResponse> {
-  return tenantApi.sendWhatsAppTestMessage(data);
+  return whatsappApi.sendTestMessage(data);
 }
 
 export async function getWhatsAppEmbeddedSignupStatus(): Promise<WhatsAppEmbeddedSignupStatusResponse> {
-  return tenantApi.getWhatsAppEmbeddedSignupStatus();
+  return whatsappApi.getEmbeddedSignupStatus();
 }
 
 export async function completeWhatsAppEmbeddedSignup(
   data: WhatsAppEmbeddedSignupCompleteRequest
 ): Promise<WhatsAppEmbeddedSignupStatusResponse> {
-  return tenantApi.completeWhatsAppEmbeddedSignup(data);
+  return whatsappApi.completeEmbeddedSignup(data);
 }

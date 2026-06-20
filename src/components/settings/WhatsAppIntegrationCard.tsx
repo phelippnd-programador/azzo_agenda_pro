@@ -4,8 +4,11 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
+  Phone,
   PlugZap,
+  RefreshCw,
   ShieldCheck,
+  Unplug,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -20,21 +23,13 @@ import {
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  completeWhatsAppEmbeddedSignup,
-  getWhatsAppConfig,
-  getWhatsAppEmbeddedSignupStatus,
-  saveWhatsAppConfig,
-  sendWhatsAppTestMessage,
-  testWhatsAppConnection,
-  validateWhatsAppConnection,
-} from "@/services/whatsappService";
+import { whatsappApi } from "@/lib/api/whatsapp";
 import type {
   WhatsAppConfigResponse,
   WhatsAppEmbeddedSignupStatusResponse,
   WhatsAppTestMessageResponse,
   WhatsAppValidateConnectionResponse,
-} from "@/types/whatsapp";
+} from "@/lib/api/whatsapp";
 import { resolveUiError } from "@/lib/error-utils";
 import { WhatsAppSetupWizard } from "@/components/settings/whatsapp-integration/WhatsAppSetupWizard";
 import {
@@ -124,8 +119,8 @@ export function WhatsAppIntegrationCard() {
     const loadConfig = async () => {
       try {
         const [config, embedded] = await Promise.all([
-          getWhatsAppConfig(),
-          getWhatsAppEmbeddedSignupStatus(),
+          whatsappApi.getConfig(),
+          whatsappApi.getEmbeddedSignupStatus(),
         ]);
         if (!mounted) return;
 
@@ -135,7 +130,7 @@ export function WhatsAppIntegrationCard() {
         setConfigStatus(config);
         setEmbeddedStatus(embedded);
         setSetupMode(embeddedEnabled && tokenSource === "EMBEDDED_CODE_EXCHANGE" ? "meta" : "wizard");
-        setActivateIntegration(Boolean(config.whatsappEnabled || config.enabled));
+        setActivateIntegration(Boolean(config.whatsappEnabled));
         setCanSchedule(config.canSchedule ?? true);
         setCanCancel(config.canCancel ?? true);
         setCanReschedule(config.canReschedule ?? true);
@@ -150,6 +145,11 @@ export function WhatsAppIntegrationCard() {
         setWebhookVerifyToken(
           embedded.webhookVerifyToken || config.webhookVerifyToken || ""
         );
+        // Pula para o último passo se já estiver conectado
+        const status = embedded.onboardingStatus || config.onboardingStatus || "NOT_STARTED";
+        if (status === "CONNECTED") {
+          setCurrentStep(7);
+        }
       } catch {
         if (!mounted) return;
         setConfigStatus(null);
@@ -193,8 +193,8 @@ export function WhatsAppIntegrationCard() {
 
   const refreshStatuses = async () => {
     const [config, embedded] = await Promise.all([
-      getWhatsAppConfig(),
-      getWhatsAppEmbeddedSignupStatus(),
+      whatsappApi.getConfig(),
+      whatsappApi.getEmbeddedSignupStatus(),
     ]);
 
     const embeddedEnabled =
@@ -203,19 +203,17 @@ export function WhatsAppIntegrationCard() {
     setConfigStatus(config);
     setEmbeddedStatus(embedded);
     setSetupMode(embeddedEnabled && tokenSource === "EMBEDDED_CODE_EXCHANGE" ? "meta" : "wizard");
-    setActivateIntegration(Boolean(config.whatsappEnabled || config.enabled));
+    setActivateIntegration(Boolean(config.whatsappEnabled));
     setCanSchedule(config.canSchedule ?? true);
     setCanCancel(config.canCancel ?? true);
     setCanReschedule(config.canReschedule ?? true);
     setPhoneNumberId(embedded.phoneNumberId || config.phoneNumberId || "");
     setBusinessAccountId(embedded.businessAccountId || config.businessAccountId || "");
     setBusinessId(embedded.businessId || config.businessId || "");
-    setDisplayPhoneNumber(
-      embedded.displayPhoneNumber || config.displayPhoneNumber || ""
-    );
-    setWebhookVerifyToken(
-      embedded.webhookVerifyToken || config.webhookVerifyToken || ""
-    );
+    setDisplayPhoneNumber(embedded.displayPhoneNumber || config.displayPhoneNumber || "");
+    setWebhookVerifyToken(embedded.webhookVerifyToken || config.webhookVerifyToken || "");
+    const status = embedded.onboardingStatus || config.onboardingStatus || "NOT_STARTED";
+    if (status === "CONNECTED") setCurrentStep(7);
   };
 
   const handleCopy = async (value: string, successMessage: string) => {
@@ -242,7 +240,7 @@ export function WhatsAppIntegrationCard() {
 
     try {
       setIsFinalizingEmbeddedSignup(true);
-      const response = await completeWhatsAppEmbeddedSignup({
+      const response = await whatsappApi.completeEmbeddedSignup({
         code,
         setupInfo: {
           wabaId: setupInfo.wabaId,
@@ -341,7 +339,7 @@ export function WhatsAppIntegrationCard() {
 
     try {
       setIsValidatingConnection(true);
-      const result = await validateWhatsAppConnection({
+      const result = await whatsappApi.validateConnection({
         accessToken: token,
         phoneNumberId: phoneNumberId.trim(),
       });
@@ -378,9 +376,8 @@ export function WhatsAppIntegrationCard() {
       setTestMessageResult(null);
 
       const trimmedAccessToken = manualAccessToken.trim();
-      const response = await saveWhatsAppConfig({
+      const response = await whatsappApi.saveConfig({
         whatsappEnabled: activateIntegration,
-        enabled: activateIntegration,
         accessToken: trimmedAccessToken || undefined,
         phoneNumberId: phoneNumberId.trim(),
         businessAccountId: businessAccountId.trim() || undefined,
@@ -393,7 +390,7 @@ export function WhatsAppIntegrationCard() {
       });
 
       setConfigStatus(response);
-      setActivateIntegration(Boolean(response.whatsappEnabled || response.enabled));
+      setActivateIntegration(Boolean(response.whatsappEnabled));
       setCanSchedule(response.canSchedule ?? canSchedule);
       setCanCancel(response.canCancel ?? canCancel);
       setCanReschedule(response.canReschedule ?? canReschedule);
@@ -428,7 +425,7 @@ export function WhatsAppIntegrationCard() {
 
     try {
       setIsTesting(true);
-      const result = await testWhatsAppConnection();
+      const result = await whatsappApi.testConnection();
       setTestResult(result.message);
       if (result.success) {
         toast.success("Conexao validada");
@@ -446,15 +443,20 @@ export function WhatsAppIntegrationCard() {
   };
 
   const handleSendTestMessage = async () => {
-    if (!testDestinationPhone.trim()) {
+    const phone = testDestinationPhone.trim();
+    if (!phone) {
       toast.error("Informe o telefone de destino para enviar a mensagem de teste.");
+      return;
+    }
+    if (!/^\+\d{10,15}$/.test(phone)) {
+      toast.error("Informe o telefone no formato internacional: +55 11 99999-9999 (somente digitos apos o +).");
       return;
     }
 
     try {
       setIsSendingTestMessage(true);
-      const result = await sendWhatsAppTestMessage({
-        destinationPhone: testDestinationPhone.trim(),
+      const result = await whatsappApi.sendTestMessage({
+        destinationPhone: phone,
         message: testMessageBody.trim() || undefined,
       });
       setTestMessageResult(result);
@@ -474,6 +476,73 @@ export function WhatsAppIntegrationCard() {
       setIsSendingTestMessage(false);
     }
   };
+
+  const renderStatusPanel = () => (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4">
+        <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-green-800">WhatsApp conectado</p>
+          {displayPhoneNumber && (
+            <p className="mt-0.5 flex items-center gap-1 text-xs text-green-700">
+              <Phone className="h-3 w-3" />
+              {displayPhoneNumber}
+            </p>
+          )}
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="shrink-0"
+          onClick={() => void handleTest()}
+          disabled={isTesting}
+        >
+          {isTesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          <span className="ml-1.5">Testar</span>
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="shrink-0 text-destructive hover:bg-destructive/10"
+          onClick={() => setCurrentStep(1)}
+        >
+          <Unplug className="h-4 w-4" />
+          <span className="ml-1.5">Reconfigurar</span>
+        </Button>
+      </div>
+
+      {testResult && (
+        <Alert variant={testResult.toLowerCase().includes("sucesso") ? "default" : "destructive"}>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Resultado do teste</AlertTitle>
+          <AlertDescription>{testResult}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="grid gap-3 md:grid-cols-2">
+        {phoneNumberId && (
+          <div className="rounded-lg border p-3">
+            <p className="text-xs font-medium text-muted-foreground">Phone Number ID</p>
+            <p className="mt-1 break-all text-sm">{phoneNumberId}</p>
+          </div>
+        )}
+        {businessAccountId && (
+          <div className="rounded-lg border p-3">
+            <p className="text-xs font-medium text-muted-foreground">Business Account ID</p>
+            <p className="mt-1 break-all text-sm">{businessAccountId}</p>
+          </div>
+        )}
+        <div className="rounded-lg border p-3">
+          <p className="text-xs font-medium text-muted-foreground">Origem do token</p>
+          <p className="mt-1 text-sm">{tokenSource === "EMBEDDED_CODE_EXCHANGE" ? "Meta (Embedded Signup)" : "Manual"}</p>
+        </div>
+        <div className="rounded-lg border p-3">
+          <p className="text-xs font-medium text-muted-foreground">Status de onboarding</p>
+          <p className="mt-1 text-sm">{onboardingStatus}</p>
+        </div>
+      </div>
+    </div>
+  );
 
   const renderWizard = () => (
     <WhatsAppSetupWizard
@@ -558,18 +627,9 @@ export function WhatsAppIntegrationCard() {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="rounded-lg border p-3">
-            <p className="text-sm font-medium">Status do onboarding</p>
-            <p className="text-xs text-muted-foreground">{onboardingStatus}</p>
-          </div>
-          <div className="rounded-lg border p-3">
-            <p className="text-sm font-medium">Origem do token</p>
-            <p className="text-xs text-muted-foreground">{tokenSource}</p>
-          </div>
-        </div>
-
-        {embeddedSignupEnabled ? (
+        {isConnected && onboardingStatus === "CONNECTED" && currentStep === 7 ? (
+          renderStatusPanel()
+        ) : embeddedSignupEnabled ? (
           <Tabs value={setupMode} onValueChange={(value) => setSetupMode(value as SetupMode)} className="space-y-4">
             <TabsList className="grid h-auto w-full grid-cols-2 gap-2">
               <TabsTrigger value="wizard">Cloud API guiado</TabsTrigger>
