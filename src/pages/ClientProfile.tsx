@@ -23,6 +23,7 @@ import {
 } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import { formatCurrency, formatDateOnly, formatDateTime } from "@/lib/format";
+import { maskEmail, maskPhone, maskCpfCnpj } from "@/lib/mask";
 import { prepareImageUpload } from "@/lib/image-upload";
 import { toast } from "sonner";
 import type {
@@ -254,14 +255,14 @@ export default function ClientProfile() {
                   <span className="font-medium">Telefone:</span>{" "}
                   <span className="inline-flex min-w-0 items-center gap-1 break-all">
                     <Phone className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    {client.phone || "-"}
+                    {maskPhone(client.phone)}
                   </span>
                 </p>
                 <p className="min-w-0 text-sm">
                   <span className="font-medium">E-mail:</span>{" "}
                   <span className="inline-flex min-w-0 items-center gap-1 break-all">
                     <Mail className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    {client.email || "-"}
+                    {maskEmail(client.email)}
                   </span>
                 </p>
                 <p className="text-sm">
@@ -283,7 +284,7 @@ export default function ClientProfile() {
                 {client.cpfCnpj && (
                   <p className="min-w-0 text-sm">
                     <span className="font-medium">{client.clientType === "PJ" ? "CNPJ:" : "CPF:"}</span>{" "}
-                    {client.cpfCnpj}
+                    {maskCpfCnpj(client.cpfCnpj, client.clientType)}
                   </p>
                 )}
               </div>
