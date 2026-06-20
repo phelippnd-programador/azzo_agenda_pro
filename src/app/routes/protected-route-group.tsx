@@ -3,6 +3,12 @@ import { Navigate, Route } from "react-router-dom";
 import { appRouteManifest } from "@/app/route-manifest";
 import {
   AbandonmentReport,
+  ClientsReportPage,
+  FinancialReportPage,
+  LicenseReportPage,
+  ManagementReportPage,
+  SalesReportPage,
+  StockReportPage,
   Agenda,
   AppointmentManagementReport,
   ApuracaoMensal,
@@ -91,6 +97,12 @@ export function ProtectedRouteGroup({
       <Route path={appRouteManifest.reports.legacyAbandonment} element={<ProtectedRoute><Navigate to={appRouteManifest.reports.abandonment} replace /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.agendaNoShow} element={<ProtectedRoute><Navigate to={appRouteManifest.reports.noShow} replace /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.agendaNoShowWildcard} element={<ProtectedRoute><Navigate to={appRouteManifest.reports.noShow} replace /></ProtectedRoute>} />
+      <Route path={appRouteManifest.reports.financeiro} element={<ProtectedRoute><FinancialReportPage /></ProtectedRoute>} />
+      <Route path={appRouteManifest.reports.estoque} element={<ProtectedRoute><StockReportPage /></ProtectedRoute>} />
+      <Route path={appRouteManifest.reports.vendas} element={<ProtectedRoute><SalesReportPage /></ProtectedRoute>} />
+      <Route path={appRouteManifest.reports.clientes} element={<ProtectedRoute><ClientsReportPage /></ProtectedRoute>} />
+      <Route path={appRouteManifest.reports.licencas} element={<ProtectedRoute><LicenseReportPage /></ProtectedRoute>} />
+      <Route path={appRouteManifest.reports.gerencial} element={<ProtectedRoute><ManagementReportPage /></ProtectedRoute>} />
 
       <Route path={appRouteManifest.services.root} element={<ProtectedRoute><Services /></ProtectedRoute>}>
         <Route index element={<ServicesOverviewPage />} />

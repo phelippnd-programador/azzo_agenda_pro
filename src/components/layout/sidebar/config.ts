@@ -1,5 +1,7 @@
 import {
   BarChart3,
+  Package,
+  ShoppingCart,
   Bell,
   Boxes,
   Building2,
@@ -13,8 +15,10 @@ import {
   LayoutDashboard,
   Lightbulb,
   MessageCircleMore,
+  Package,
   Receipt,
   Scissors,
+  ShoppingCart,
   Settings,
   ShieldCheck,
   Tag,
@@ -37,6 +41,41 @@ export const MENU_REGISTRY = {
     icon: BarChart3,
     label: "Relatorios",
     path: appRouteManifest.reports.root,
+  },
+  [appRouteManifest.reports.appointments]: {
+    icon: BarChart3,
+    label: "Agendamentos",
+    path: appRouteManifest.reports.appointments,
+  },
+  [appRouteManifest.reports.financeiro]: {
+    icon: DollarSign,
+    label: "Financeiro",
+    path: appRouteManifest.reports.financeiro,
+  },
+  [appRouteManifest.reports.estoque]: {
+    icon: Package,
+    label: "Estoque",
+    path: appRouteManifest.reports.estoque,
+  },
+  [appRouteManifest.reports.vendas]: {
+    icon: ShoppingCart,
+    label: "Vendas",
+    path: appRouteManifest.reports.vendas,
+  },
+  [appRouteManifest.reports.clientes]: {
+    icon: UserCircle,
+    label: "Clientes",
+    path: appRouteManifest.reports.clientes,
+  },
+  [appRouteManifest.reports.licencas]: {
+    icon: ShieldCheck,
+    label: "Licencas",
+    path: appRouteManifest.reports.licencas,
+  },
+  [appRouteManifest.reports.gerencial]: {
+    icon: BarChart3,
+    label: "Gerencial",
+    path: appRouteManifest.reports.gerencial,
   },
   [appRouteManifest.shell.notifications]: {
     icon: Bell,
@@ -160,6 +199,13 @@ export const MAIN_MENU_ORDER = [
   appRouteManifest.shell.notifications,
   appRouteManifest.shell.agenda,
   appRouteManifest.reports.root,
+  appRouteManifest.reports.appointments,
+  appRouteManifest.reports.financeiro,
+  appRouteManifest.reports.estoque,
+  appRouteManifest.reports.vendas,
+  appRouteManifest.reports.clientes,
+  appRouteManifest.reports.licencas,
+  appRouteManifest.reports.gerencial,
   appRouteManifest.services.root,
   appRouteManifest.specialties.root,
   appRouteManifest.professionals.root,
@@ -185,6 +231,16 @@ export const FINANCIAL_GROUP_PATHS = [
   appRouteManifest.finance.cashClosing,
   appRouteManifest.finance.commissions,
   appRouteManifest.finance.professionals,
+] as const;
+
+export const REPORTS_GROUP_PATHS = [
+  appRouteManifest.reports.appointments,
+  appRouteManifest.reports.financeiro,
+  appRouteManifest.reports.estoque,
+  appRouteManifest.reports.vendas,
+  appRouteManifest.reports.clientes,
+  appRouteManifest.reports.licencas,
+  appRouteManifest.reports.gerencial,
 ] as const;
 
 export const ICON_REGISTRY: Record<string, LucideIcon> = {
