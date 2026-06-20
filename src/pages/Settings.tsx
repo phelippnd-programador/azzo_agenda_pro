@@ -27,6 +27,7 @@ import { AppointmentConflictSettingsCard } from '@/components/settings/Appointme
 import { SettingsLgpdTab } from '@/components/settings/SettingsLgpdTab';
 import { SettingsFeatureFlagsTab } from '@/components/settings/SettingsFeatureFlagsTab';
 import { SettingsEmailTemplatesTab } from '@/components/settings/SettingsEmailTemplatesTab';
+import { SettingsBusinessHoursTab } from '@/components/settings/SettingsBusinessHoursTab';
 
 function SettingsDomainCard({
   icon: Icon,
@@ -115,6 +116,7 @@ export default function Settings() {
       tabs.push('fiscal');
     if (canAccessSalonProfile) tabs.push('salon');
     if (isOwner) {
+      tabs.push('business-hours');
       tabs.push('lgpd');
       tabs.push('features');
       tabs.push('email-templates');
@@ -218,6 +220,19 @@ export default function Settings() {
         statusTone: 'default' as const,
         actionLabel: 'Abrir perfil do salao',
         onAction: () => handleTabChange('salon', { scrollToSection: true }),
+      });
+    }
+
+    if (visibleTabs.includes('business-hours')) {
+      cards.push({
+        key: 'business-hours',
+        icon: Bell,
+        title: 'Horarios de Funcionamento',
+        description: 'Horarios de atendimento por dia da semana (tabela relacional).',
+        statusLabel: 'Restrito',
+        statusTone: 'default' as const,
+        actionLabel: 'Abrir horarios',
+        onAction: () => handleTabChange('business-hours', { scrollToSection: true }),
       });
     }
 
@@ -333,6 +348,10 @@ export default function Settings() {
       salon: {
         label: 'Perfil do Salao',
         description: 'Dados publicos e operacionais que impactam pagina e agenda online.',
+      },
+      'business-hours': {
+        label: 'Horarios de Funcionamento',
+        description: 'Horarios de atendimento do estabelecimento por dia da semana.',
       },
       lgpd: {
         label: 'LGPD',
@@ -476,6 +495,9 @@ export default function Settings() {
                 ) : null}
                 {visibleTabs.includes('salon') ? (
                   <TabsTrigger value="salon" className="shrink-0 whitespace-nowrap">Perfil do Salao</TabsTrigger>
+                ) : null}
+                {visibleTabs.includes('business-hours') ? (
+                  <TabsTrigger value="business-hours" className="shrink-0 whitespace-nowrap">Horarios</TabsTrigger>
                 ) : null}
                 {visibleTabs.includes('lgpd') ? (
                   <TabsTrigger value="lgpd" className="shrink-0 whitespace-nowrap">LGPD</TabsTrigger>
@@ -693,6 +715,12 @@ export default function Settings() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {isOwner ? (
+          <TabsContent value="business-hours">
+            <SettingsBusinessHoursTab />
+          </TabsContent>
+        ) : null}
 
         {isOwner ? (
           <TabsContent value="lgpd">
