@@ -386,12 +386,12 @@ export default function PublicBooking() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top,#dbeafe,transparent_35%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-4">
+      <div className="min-h-screen bg-background px-3 py-4 sm:px-6 sm:py-6">
         <div className="mx-auto max-w-6xl">
-          <Skeleton className="mb-6 h-28 w-full rounded-3xl" />
+          <Skeleton className="mb-6 h-28 w-full rounded-2xl" />
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <Skeleton className="h-[34rem] w-full rounded-3xl" />
-            <Skeleton className="hidden h-80 w-full rounded-3xl lg:block" />
+            <Skeleton className="h-[34rem] w-full rounded-2xl" />
+            <Skeleton className="hidden h-80 w-full rounded-2xl lg:block" />
           </div>
         </div>
       </div>
@@ -411,9 +411,9 @@ export default function PublicBooking() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#dbeafe,transparent_35%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-3 pb-36 sm:p-6 sm:pb-6">
+    <div className="min-h-screen bg-background px-3 pb-36 pt-3 sm:px-6 sm:pb-6 sm:pt-6">
       <div className="mx-auto max-w-6xl space-y-6">
-        <section className="rounded-[2rem] border border-border/70 bg-background/90 p-4 shadow-sm backdrop-blur sm:p-6">
+        <section className="rounded-2xl border border-border/70 bg-card p-4 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.14)] sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-4">
               {salonLogoUrl ? (
@@ -428,20 +428,20 @@ export default function PublicBooking() {
                 </div>
               )}
 
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                   Agendamento online
                 </p>
                 <h1 className="mt-1 text-2xl font-semibold text-foreground sm:text-3xl">
                   {salonName}
                 </h1>
-                <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
+                <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
                   Escolha servicos, profissional e horario em um fluxo simples para celular e desktop.
                 </p>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 lg:max-w-[19rem]">
+            <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 lg:max-w-[19rem]">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Etapa atual</p>
               <p className="text-sm font-semibold text-foreground">{currentStepMeta.title}</p>
               <p className="mt-1 text-xs text-muted-foreground">{currentStepMeta.description}</p>
@@ -476,7 +476,7 @@ export default function PublicBooking() {
                 return (
                   <div
                     key={step.id}
-                    className={`rounded-2xl border p-3 transition-colors ${
+                    className={`rounded-xl border p-3 transition-colors ${
                       isCurrent
                         ? 'border-primary bg-primary/10'
                         : isDone
@@ -521,7 +521,7 @@ export default function PublicBooking() {
               />
             </div>
 
-            <Card className="overflow-hidden rounded-[2rem] border-0 shadow-xl">
+            <Card className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[0_12px_36px_-28px_rgba(15,23,42,0.18)]">
               {currentStep === 1 ? (
                 <BookingServiceStep
                   services={paginatedServices}
@@ -576,21 +576,21 @@ export default function PublicBooking() {
                 />
               ) : null}
 
-                <div className="flex flex-col gap-3 border-t border-border/60 bg-muted/10 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+              <div className="flex flex-col gap-3 border-t border-border/60 bg-muted/10 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
                 {currentStep > 1 ? (
-                <Button variant="outline" className="w-full sm:w-auto" onClick={() => setCurrentStep(currentStep - 1)}>
-                  <ChevronLeft className="mr-1 h-4 w-4" />
-                  Voltar
-                </Button>
+                  <Button variant="outline" className="w-full sm:w-auto" onClick={() => setCurrentStep(currentStep - 1)}>
+                    <ChevronLeft className="mr-1 h-4 w-4" />
+                    Voltar
+                  </Button>
                 ) : (
-                  <div />
+                  <div className="hidden sm:block" />
                 )}
 
                 {currentStep < 4 ? (
                   <Button
                     onClick={handleNextStep}
                     disabled={!canProceed()}
-                    className="w-full bg-primary hover:bg-primary/90 sm:w-auto"
+                    className="w-full sm:w-auto"
                   >
                     {isLoadingProfessionals && currentStep === 1 ? (
                       <>
@@ -599,7 +599,9 @@ export default function PublicBooking() {
                       </>
                     ) : (
                       <>
-                        Continuar para {BOOKING_STEPS[currentStep]?.title ?? 'a proxima etapa'}
+                        <span className="truncate">
+                          Continuar para {BOOKING_STEPS[currentStep]?.title ?? 'a proxima etapa'}
+                        </span>
                         <ChevronRight className="ml-1 h-4 w-4" />
                       </>
                     )}
@@ -608,7 +610,7 @@ export default function PublicBooking() {
                   <Button
                     onClick={handleSubmit}
                     disabled={!canProceed() || isSubmitting}
-                    className="w-full bg-primary hover:bg-primary/90 sm:w-auto"
+                    className="w-full sm:w-auto"
                   >
                     {isSubmitting ? (
                       <>

@@ -43,7 +43,7 @@ export function BookingServiceStep({
 
   return (
     <>
-      <CardHeader className="space-y-3">
+      <CardHeader className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <CardTitle className="text-lg sm:text-xl">Escolha os servicos</CardTitle>
@@ -56,7 +56,7 @@ export function BookingServiceStep({
           </Badge>
         </div>
 
-        <div className="rounded-2xl border border-border/70 bg-muted/20 p-3">
+        <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
           <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Buscar por nome
           </label>
@@ -75,7 +75,7 @@ export function BookingServiceStep({
 
       <CardContent className="space-y-4">
         {services.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 px-4 py-10 text-center">
+          <div className="rounded-xl border border-dashed border-border/70 bg-muted/20 px-4 py-10 text-center">
             <p className="text-sm text-muted-foreground">Nenhum servico disponivel para esse filtro.</p>
           </div>
         ) : (
@@ -86,7 +86,7 @@ export function BookingServiceStep({
               return (
                 <label
                   key={service.id}
-                  className={`flex h-full cursor-pointer items-start gap-3 rounded-2xl border-2 p-3.5 transition-all sm:p-4 ${
+                  className={`flex h-full cursor-pointer items-start gap-3 rounded-xl border-2 p-3.5 transition-all sm:p-4 ${
                     checked
                       ? 'border-primary bg-primary/10 shadow-sm'
                       : 'border-border bg-background hover:border-primary/40 hover:bg-muted/10'
@@ -128,7 +128,7 @@ export function BookingServiceStep({
                         {service.description || 'Servico disponivel para agendamento publico.'}
                     </p>
 
-                    <div className="flex items-center justify-between gap-3 rounded-xl bg-muted/20 px-3 py-2">
+                    <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/20 px-3 py-2">
                       <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                         Valor
                       </span>
@@ -143,30 +143,32 @@ export function BookingServiceStep({
           </div>
         )}
 
-        <div className="flex flex-col gap-3 rounded-2xl border border-border/70 bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-muted-foreground sm:text-sm">
             {totalFilteredServices === 0
               ? 'Nenhum servico encontrado para esse filtro.'
               : `Mostrando ${startItem}-${endItem} de ${totalFilteredServices} servicos`}
           </p>
 
-          <div className="flex items-center gap-2 self-end sm:self-auto">
+          <div className="flex w-full items-center gap-2 sm:w-auto sm:self-auto">
             <Button
               type="button"
               variant="outline"
               size="sm"
+              className="flex-1 sm:flex-none"
               onClick={() => onPageChange(Math.max(1, servicePage - 1))}
               disabled={servicePage <= 1}
             >
               Anterior
             </Button>
-            <span className="min-w-16 text-center text-xs text-muted-foreground sm:text-sm">
+            <span className="min-w-20 text-center text-xs text-muted-foreground sm:text-sm">
               Pagina {servicePage} de {totalPages}
             </span>
             <Button
               type="button"
               variant="outline"
               size="sm"
+              className="flex-1 sm:flex-none"
               onClick={() => onPageChange(Math.min(totalPages, servicePage + 1))}
               disabled={servicePage >= totalPages}
             >
@@ -175,16 +177,16 @@ export function BookingServiceStep({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border/70 bg-muted/30 p-4">
-          <div className="flex items-center justify-between text-sm">
+        <div className="rounded-xl border border-border/70 bg-muted/30 p-4">
+          <div className="flex items-center justify-between gap-3 text-sm">
             <span className="text-muted-foreground">Servicos selecionados</span>
             <span className="font-medium">{selectedServicesData.length}</span>
           </div>
-          <div className="mt-2 flex items-center justify-between text-sm">
+          <div className="mt-2 flex items-center justify-between gap-3 text-sm">
             <span className="text-muted-foreground">Duracao total</span>
             <span>{selectedServiceDuration} min</span>
           </div>
-          <div className="mt-2 flex items-center justify-between text-sm">
+          <div className="mt-2 flex items-center justify-between gap-3 text-sm">
             <span className="text-muted-foreground">Valor total</span>
             <span className="font-semibold text-primary">
               {formatCurrencyCents(selectedServiceTotal)}
