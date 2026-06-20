@@ -280,6 +280,12 @@ export default function ClientProfile() {
                 <p className="min-w-0 text-sm">
                   <span className="font-medium">Observacoes:</span> {client.notes || "-"}
                 </p>
+                {client.cpfCnpj && (
+                  <p className="min-w-0 text-sm">
+                    <span className="font-medium">{client.clientType === "PJ" ? "CNPJ:" : "CPF:"}</span>{" "}
+                    {client.cpfCnpj}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
