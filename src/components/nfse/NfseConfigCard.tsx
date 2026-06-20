@@ -217,6 +217,33 @@ export function NfseConfigCard({
           </div>
         </div>
 
+        {(config.provedor === "ABRASF" || config.provedor === "ABRASF_204") && (
+          <div className="grid gap-4 md:grid-cols-1">
+            <div className="space-y-2">
+              <Label>URL webservice ABRASF — Producao</Label>
+              <Input
+                placeholder="https://nfse.municipio.sp.gov.br/ws/RecepcionarLoteRps"
+                value={config.wsUrl || ""}
+                onChange={(e) => onConfigChange({ wsUrl: e.target.value || undefined })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Endpoint SOAP da prefeitura para envio de RPS em producao. Consulte o portal da sua cidade.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>URL webservice ABRASF — Homologacao</Label>
+              <Input
+                placeholder="https://nfse-hom.municipio.sp.gov.br/ws/RecepcionarLoteRps"
+                value={config.wsUrlHomologacao || ""}
+                onChange={(e) => onConfigChange({ wsUrlHomologacao: e.target.value || undefined })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Endpoint SOAP da prefeitura para testes em homologacao.
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between rounded-md border p-3">
           <div>
             <p className="font-medium">Auto emissao ao fechar atendimento</p>

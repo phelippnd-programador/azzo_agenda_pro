@@ -42,7 +42,7 @@ export default function NfseInvoiceForm() {
     ambiente: "HOMOLOGACAO",
     municipioCodigoIbge: "3304557",
     provedor: "ABRASF",
-    numeroRps: Date.now(),
+    numeroRps: 0,
     serieRps: "A1",
     dataCompetencia: new Date().toISOString().slice(0, 10),
     naturezaOperacao: "Prestacao de servico",
@@ -60,6 +60,33 @@ export default function NfseInvoiceForm() {
     const uiError = resolveUiError(error, fallbackMessage);
     toast.error(uiError.code ? `[${uiError.code}] ${uiError.message}` : uiError.message);
   };
+
+  useEffect(() => {
+    if (mode !== "create") return;
+    void (async () => {
+      try {
+        const cfg = await nfseApi.getConfig("HOMOLOGACAO");
+        setInvoice((prev) => ({
+          ...prev,
+          municipioCodigoIbge: cfg.municipioCodigoIbge || prev.municipioCodigoIbge,
+          provedor: cfg.provedor || prev.provedor,
+          serieRps: cfg.serieRps || prev.serieRps,
+          aliquotaIss: cfg.aliquotaIssPadrao ?? prev.aliquotaIss,
+          itemListaServico: cfg.itemListaServicoPadrao || prev.itemListaServico,
+          codigoTributacaoMunicipio: cfg.codigoTributacaoMunicipio || prev.codigoTributacaoMunicipio,
+          items: [
+            {
+              ...(prev.items?.[0] || BASE_ITEM),
+              itemListaServico: cfg.itemListaServicoPadrao || prev.items?.[0]?.itemListaServico || "1.01",
+              aliquotaIss: cfg.aliquotaIssPadrao ?? prev.items?.[0]?.aliquotaIss ?? 5,
+            },
+          ],
+        }));
+      } catch {
+        // config nao configurada ainda — manter defaults
+      }
+    })();
+  }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!id) return;
@@ -259,11 +286,13 @@ export default function NfseInvoiceForm() {
               <Label>Numero RPS</Label>
               <Input
                 type="number"
-                value={invoice.numeroRps || 0}
+                placeholder="Auto"
+                value={invoice.numeroRps || ""}
                 onChange={(e) =>
                   setInvoice((prev) => ({ ...prev, numeroRps: Number(e.target.value || 0) }))
                 }
               />
+              <p className="text-xs text-muted-foreground">Deixe 0 para numerar automaticamente.</p>
             </div>
           </div>
 

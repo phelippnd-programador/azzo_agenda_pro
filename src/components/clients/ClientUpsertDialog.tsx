@@ -17,6 +17,8 @@ type ClientUpsertPayload = {
   phone: string;
   birthDate?: string;
   notes?: string;
+  cpfCnpj?: string;
+  clientType?: 'PF' | 'PJ';
   address: {
     zipCode?: string;
     street?: string;
@@ -59,6 +61,8 @@ export function ClientUpsertDialog({
   const [formPhone, setFormPhone] = useState('');
   const [formBirthDate, setFormBirthDate] = useState('');
   const [formNotes, setFormNotes] = useState('');
+  const [formCpfCnpj, setFormCpfCnpj] = useState('');
+  const [formClientType, setFormClientType] = useState<'PF' | 'PJ'>('PF');
   const [formZipCode, setFormZipCode] = useState('');
   const [formStreet, setFormStreet] = useState('');
   const [formNumber, setFormNumber] = useState('');
@@ -73,6 +77,8 @@ export function ClientUpsertDialog({
     setFormPhone('');
     setFormBirthDate('');
     setFormNotes('');
+    setFormCpfCnpj('');
+    setFormClientType('PF');
     setFormZipCode('');
     setFormStreet('');
     setFormNumber('');
@@ -94,6 +100,8 @@ export function ClientUpsertDialog({
     setFormPhone(initialClient?.phone || '');
     setFormBirthDate((initialClient?.birthDate as string) || '');
     setFormNotes(initialClient?.notes || '');
+    setFormCpfCnpj(initialClient?.cpfCnpj || '');
+    setFormClientType(initialClient?.clientType || 'PF');
     setFormZipCode(initialClient?.address?.zipCode || '');
     setFormStreet(initialClient?.address?.street || '');
     setFormNumber(initialClient?.address?.number || '');
@@ -149,6 +157,8 @@ export function ClientUpsertDialog({
           phone: formPhone,
           birthDate: formBirthDate || undefined,
           notes: formNotes || undefined,
+          cpfCnpj: formCpfCnpj || undefined,
+          clientType: formClientType,
           address: {
             zipCode: formZipCode || undefined,
             street: formStreet || undefined,
@@ -229,6 +239,28 @@ export function ClientUpsertDialog({
                 value={formBirthDate}
                 onChange={(e) => setFormBirthDate(e.target.value)}
               />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>CPF / CNPJ</Label>
+                <Input
+                  placeholder="000.000.000-00"
+                  value={formCpfCnpj}
+                  onChange={(e) => setFormCpfCnpj(e.target.value.replace(/\D/g, '').slice(0, 14))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Tipo de pessoa</Label>
+                <select
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  value={formClientType}
+                  onChange={(e) => setFormClientType(e.target.value as 'PF' | 'PJ')}
+                >
+                  <option value="PF">Pessoa Fisica (PF)</option>
+                  <option value="PJ">Pessoa Juridica (PJ)</option>
+                </select>
+              </div>
             </div>
 
             <div className="space-y-2">
