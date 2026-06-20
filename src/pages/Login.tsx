@@ -355,6 +355,12 @@ export default function Login() {
                 </Label>
               </div>
 
+              {rememberPassword && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Seu e-mail sera salvo neste dispositivo. Nao use em dispositivos compartilhados.
+                </p>
+              )}
+
               <p className="text-xs text-muted-foreground">
                 Apenas seu e-mail pode ser lembrado neste navegador. Sua senha nunca é salva localmente.
               </p>
