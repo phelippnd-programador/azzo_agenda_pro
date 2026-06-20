@@ -116,6 +116,8 @@ export default function AppointmentManagementReport() {
   const [isExporting, setIsExporting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
+  const PAGE_SIZE = 50;
 
   useEffect(() => {
     let cancelled = false;
@@ -156,7 +158,8 @@ export default function AppointmentManagementReport() {
           professionalId: activeFilters.professionalId,
           serviceId: activeFilters.serviceId,
           status: activeFilters.status,
-          limit: 100,
+          page: currentPage,
+          pageSize: PAGE_SIZE,
         });
         if (!cancelled) setReport(response);
       } catch (error) {
@@ -176,7 +179,7 @@ export default function AppointmentManagementReport() {
     return () => {
       cancelled = true;
     };
-  }, [activeFilters, reloadToken]);
+  }, [activeFilters, reloadToken, currentPage]);
 
   const selectedProfessionalLabel = useMemo(() => {
     if (activeFilters.professionalId === "all") return "Todos os profissionais";
@@ -215,6 +218,7 @@ export default function AppointmentManagementReport() {
   };
 
   const applyFilters = () => {
+    setCurrentPage(0);
     setActiveFilters({
       periodPreset: periodPresetInput,
       from: fromInput,
@@ -233,6 +237,7 @@ export default function AppointmentManagementReport() {
     setProfessionalIdInput("all");
     setServiceIdInput("all");
     setStatusInput("all");
+    setCurrentPage(0);
     setActiveFilters({
       periodPreset: "MONTH",
       from: range.from,
@@ -593,6 +598,32 @@ export default function AppointmentManagementReport() {
               </Table>
             </div>
           </CardContent>
+          {(report?.hasMore || currentPage > 0) ? (
+            <div className="flex items-center justify-between border-t px-6 py-3">
+              <p className="text-sm text-muted-foreground">
+                Pagina {currentPage + 1}
+                {report?.hasMore ? " — ha mais resultados" : ""}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === 0 || isLoading}
+                  onClick={() => setCurrentPage((previous) => Math.max(0, previous - 1))}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!report?.hasMore || isLoading}
+                  onClick={() => setCurrentPage((previous) => previous + 1)}
+                >
+                  Proxima
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </Card>
       </div>
     </MainLayout>

@@ -56,6 +56,7 @@ export type {
 
 export type {
   AppointmentCreateRequest,
+  AppointmentUpdateRequest,
   AppointmentCustomerNoteRequest,
   AppointmentManagementReportParams,
   AppointmentMonthlyMetric,

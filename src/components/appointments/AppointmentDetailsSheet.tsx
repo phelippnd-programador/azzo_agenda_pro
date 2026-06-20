@@ -9,6 +9,7 @@ import {
   Phone,
   Receipt,
   Scissors,
+  Trash2,
   User,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -37,6 +38,7 @@ import {
   getAppointmentItems,
   getServiceFlowMeta,
 } from '@/lib/appointment-status';
+import { EditAppointmentDialog } from './EditAppointmentDialog';
 import type { Appointment } from '@/hooks/useAppointments';
 import type {
   AppointmentCustomerNote,
@@ -59,6 +61,7 @@ interface AppointmentDetailsSheetProps {
   onDeleteRequest: (id: string) => void;
   onReassignRequest: (appointment: Appointment) => void;
   onViewInvoice: (appointment: Appointment) => void;
+  onEditSuccess?: () => void;
 }
 
 export function AppointmentDetailsSheet({
@@ -74,11 +77,14 @@ export function AppointmentDetailsSheet({
   onDeleteRequest,
   onReassignRequest,
   onViewInvoice,
+  onEditSuccess,
 }: AppointmentDetailsSheetProps) {
   const [historyItem, setHistoryItem] =
     useState<ClientAppointmentHistoryItem | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeletingNote, setIsDeletingNote] = useState<string | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [serviceExecutionNotes, setServiceExecutionNotes] = useState('');
   const [clientFeedbackNotes, setClientFeedbackNotes] = useState('');
   const [internalFollowupNotes, setInternalFollowupNotes] = useState('');
@@ -175,6 +181,24 @@ export function AppointmentDetailsSheet({
       active = false;
     };
   }, [appointment, open, selectedClient?.id]);
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!appointment) return;
+    setIsDeletingNote(noteId);
+    try {
+      await appointmentsApi.deleteCustomerNote(appointment.id, noteId);
+      setHistoryItem((previous) =>
+        previous
+          ? { ...previous, careNotes: (previous.careNotes || []).filter((n) => n.noteId !== noteId) }
+          : previous
+      );
+      toast.success('Registro operacional removido.');
+    } catch (error) {
+      toast.error(resolveUiError(error, 'Nao foi possivel remover o registro operacional.').message);
+    } finally {
+      setIsDeletingNote(null);
+    }
+  };
 
   const handleSaveCareNote = async () => {
     if (!appointment) return;
@@ -620,7 +644,23 @@ export function AppointmentDetailsSheet({
                           Registro em{' '}
                           {new Date(note.recordedAt).toLocaleString('pt-BR')}
                         </p>
-                        <Badge variant="outline">Atendimento</Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">Atendimento</Badge>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            disabled={isDeletingNote === note.noteId}
+                            onClick={() => void handleDeleteNote(note.noteId)}
+                            aria-label="Remover registro operacional"
+                          >
+                            {isDeletingNote === note.noteId ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                        </div>
                       </div>
 
                       {note.serviceExecutionNotes ? (
@@ -722,6 +762,16 @@ export function AppointmentDetailsSheet({
                 ) : null}
               </div>
 
+              {!['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(appointment.status) ? (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setIsEditOpen(true)}
+                >
+                  Editar agendamento
+                </Button>
+              ) : null}
+
               {!isProfessionalUser && canReassignAppointments ? (
                 <Button
                   variant="outline"
@@ -743,6 +793,14 @@ export function AppointmentDetailsSheet({
           </div>
         ) : null}
       </SheetContent>
+
+      <EditAppointmentDialog
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        appointment={appointment}
+        professionals={professionals}
+        onSuccess={() => { onEditSuccess?.(); }}
+      />
     </Sheet>
   );
 }

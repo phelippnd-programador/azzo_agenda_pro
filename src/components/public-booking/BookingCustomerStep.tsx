@@ -23,14 +23,14 @@ export function BookingCustomerStep({
 }: BookingCustomerStepProps) {
   return (
     <>
-      <CardHeader>
+      <CardHeader className="space-y-3">
         <CardTitle className="text-lg sm:text-xl">Seus Dados</CardTitle>
         <CardDescription className="text-sm">
           Preencha seus dados para confirmar o agendamento. O resumo permanece visivel durante o fluxo.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
+        <div className="rounded-xl border border-primary/15 bg-primary/5 p-4">
           <p className="text-sm font-medium text-foreground">Falta pouco para concluir.</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Usamos seus dados apenas para confirmar o agendamento e facilitar o contato sobre esse horario.
@@ -80,6 +80,9 @@ export function BookingCustomerStep({
             value={customerEmail}
             onChange={(e) => onChangeEmail(e.target.value)}
           />
+          <p className="text-xs text-muted-foreground">
+            O e-mail ajuda no envio de confirmacoes e lembretes, quando disponivel.
+          </p>
         </div>
       </CardContent>
     </>

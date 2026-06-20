@@ -600,6 +600,7 @@ export default function Agenda() {
           onDeleteRequest={handleDeleteRequest}
           onReassignRequest={(apt) => { handleReassignRequest(apt); setIsDetailsOpen(false); }}
           onViewInvoice={handleViewInvoice}
+          onEditSuccess={refetch}
         />
 
         <ReassignAppointmentDialog
