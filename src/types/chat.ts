@@ -14,7 +14,8 @@ export type ChatRealtimeEventType =
   | "OUTBOUND_SENT"
   | "OUTBOUND_FAILED"
   | "OUTBOUND_ASSISTANT"
-  | "MARKER_UPDATED";
+  | "MARKER_UPDATED"
+  | "CONVERSATION_READ";
 
 export interface ChatConversation {
   id: string;
@@ -62,6 +63,8 @@ export interface ChatMessageListResponse {
   total: number;
   page: number;
   pageSize: number;
+  nextCursor: string | null;
+  hasNext: boolean;
 }
 
 export interface SendChatMessageRequest {

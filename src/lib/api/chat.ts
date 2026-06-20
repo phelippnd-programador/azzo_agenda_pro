@@ -16,10 +16,11 @@ export const chatApi = {
     const base = params?.todayOnly ? "/chat/conversations/today" : "/chat/conversations";
     return request<ChatConversationListResponse>(`${base}${suffix}`);
   },
-  listMessages: (conversationId: string, params?: { page?: number; pageSize?: number }) => {
+  listMessages: (conversationId: string, params?: { page?: number; pageSize?: number; cursor?: string }) => {
     const query = new URLSearchParams();
     if (params?.page) query.set("page", String(params.page));
     if (params?.pageSize) query.set("pageSize", String(params.pageSize));
+    if (params?.cursor) query.set("cursor", params.cursor);
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return request<ChatMessageListResponse>(
       `/chat/conversations/${conversationId}/messages${suffix}`
@@ -30,6 +31,8 @@ export const chatApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  markRead: (conversationId: string) =>
+    request<void>(`/chat/conversations/${conversationId}/read`, { method: "PATCH" }),
   updateAppointmentMarker: (conversationId: string, appointmentMarker: ChatAppointmentMarker) =>
     request<{ conversationId: string; appointmentMarker: ChatAppointmentMarker; updatedAt: string }>(
       `/chat/conversations/${conversationId}/appointment-marker`,
