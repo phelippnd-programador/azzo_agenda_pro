@@ -38,9 +38,12 @@ export default function ChatPage() {
     messages,
     isLoadingConversations,
     isLoadingMessages,
+    isLoadingMoreMessages,
     isSending,
+    hasNextMessages,
     loadConversations,
     loadMessages,
+    loadMoreMessages,
     sendMessage,
   } = useChat({ todayOnly: false, pageSize: 100 });
   const deferredConversationQuery = useDeferredValue(conversationQuery);
@@ -311,6 +314,9 @@ export default function ChatPage() {
                 <ChatTimeline
                   messages={messages}
                   isLoading={isLoadingMessages}
+                  isLoadingMore={isLoadingMoreMessages}
+                  hasNext={hasNextMessages}
+                  onLoadMore={() => conversationId && loadMoreMessages(conversationId)}
                   onFocusComposer={() => form.setFocus("message")}
                   containerRef={messagesContainerRef}
                   onScroll={handleMessagesScroll}

@@ -15,6 +15,7 @@ type MockEventSourceInstance = {
 const mocks = vi.hoisted(() => ({
   loadConversations: vi.fn().mockResolvedValue(undefined),
   loadMessages: vi.fn().mockResolvedValue(undefined),
+  loadMoreMessages: vi.fn().mockResolvedValue(undefined),
   sendMessage: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -81,10 +82,15 @@ vi.mock("@/hooks/useChat", () => ({
     messages: chatState.messages,
     isLoadingConversations: false,
     isLoadingMessages: false,
+    isLoadingMoreMessages: false,
     isSending: false,
+    isUpdatingMarker: false,
+    hasNextMessages: false,
     loadConversations: mocks.loadConversations,
     loadMessages: mocks.loadMessages,
+    loadMoreMessages: mocks.loadMoreMessages,
     sendMessage: mocks.sendMessage,
+    updateMarker: vi.fn(),
   }),
 }));
 
@@ -161,7 +167,7 @@ describe("ChatPage", () => {
     );
 
     expect(await screen.findByText("Modo Manual")).toBeInTheDocument();
-    expect(screen.getByText("Todas as Conversas")).toBeInTheDocument();
+    expect(screen.getByText("Todas as conversas")).toBeInTheDocument();
     expect(screen.getByText("Historico completo de mensagens por cliente")).toBeInTheDocument();
     expect(screen.getByLabelText("Buscar conversas")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Nao lidas" })).toHaveAttribute("aria-pressed", "false");
@@ -303,5 +309,51 @@ describe("ChatPage", () => {
 
     expect(within(conversationsList).getByText("Cliente Volume Critico")).toBeInTheDocument();
     expect(within(conversationsList).queryByText("Cliente 1")).not.toBeInTheDocument();
+  }, 10000);
+
+  it("exibe badge de nao lidas quando unreadCount > 0", async () => {
+    chatState.conversations = [
+      buildConversation({ id: "conv-1", unreadCount: 3 }),
+      buildConversation({ id: "conv-2", clientId: "client-2", clientName: "Joao", unreadCount: 0 }),
+    ];
+
+    render(
+      <MemoryRouter initialEntries={["/chat/conv-1"]}>
+        <Routes>
+          <Route path="/chat/:conversationId" element={<ChatPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await screen.findByText("Modo Manual");
+    const badges = screen.getAllByText("3");
+    expect(badges.length).toBeGreaterThan(0);
+  }, 10000);
+
+  it("chama loadMessages ao abrir conversa e zera unreadCount localmente", async () => {
+    render(
+      <MemoryRouter initialEntries={["/chat/conv-1"]}>
+        <Routes>
+          <Route path="/chat/:conversationId" element={<ChatPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await screen.findByText("Modo Manual");
+    expect(mocks.loadMessages).toHaveBeenCalledWith("conv-1");
+  }, 10000);
+
+  it("botao Carregar mensagens anteriores aparece quando hasNextMessages=true", async () => {
+    const { rerender } = render(
+      <MemoryRouter initialEntries={["/chat/conv-1"]}>
+        <Routes>
+          <Route path="/chat/:conversationId" element={<ChatPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    // por padrao hasNextMessages = false no mock, botao nao aparece
+    await screen.findByText("Modo Manual");
+    expect(screen.queryByRole("button", { name: /Carregar mensagens anteriores/i })).not.toBeInTheDocument();
   }, 10000);
 });

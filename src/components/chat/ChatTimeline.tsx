@@ -1,6 +1,7 @@
 import type { ChatMessage } from "@/types/chat";
 import { formatDateLong, formatDateTime } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { PageEmptyState } from "@/components/ui/page-states";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -42,6 +43,9 @@ const formatTimeOnly = (value?: string | null) => {
 type ChatTimelineProps = {
   messages: ChatMessage[];
   isLoading: boolean;
+  isLoadingMore?: boolean;
+  hasNext?: boolean;
+  onLoadMore?: () => void;
   onFocusComposer: () => void;
   containerRef: React.RefObject<HTMLDivElement | null>;
   onScroll: () => void;
@@ -50,6 +54,9 @@ type ChatTimelineProps = {
 export function ChatTimeline({
   messages,
   isLoading,
+  isLoadingMore = false,
+  hasNext = false,
+  onLoadMore,
   onFocusComposer,
   containerRef,
   onScroll,
@@ -98,6 +105,18 @@ export function ChatTimeline({
         />
       ) : (
         <>
+          {hasNext && (
+            <div className="flex justify-center pb-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={isLoadingMore}
+                onClick={onLoadMore}
+              >
+                {isLoadingMore ? "Carregando..." : "Carregar mensagens anteriores"}
+              </Button>
+            </div>
+          )}
           {timelineItems.map((item) => {
             if (item.type === "day") {
               return (
