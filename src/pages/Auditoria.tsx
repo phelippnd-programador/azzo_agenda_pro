@@ -288,9 +288,16 @@ export default function Auditoria() {
               <Alert>
                 <AlertTitle>Exportacao pronta</AlertTitle>
                 <AlertDescription className="space-y-1 text-xs">
-                  <p className="break-all">
-                    Download: <span className="font-mono">{lastExport.downloadUrl}</span>
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`${(import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, "") || "http://localhost:8080/api/v1"}${auditoriaApi.downloadExport(lastExport.exportId)}`}
+                      download
+                      className="inline-flex items-center gap-1 rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                    >
+                      <Download className="h-3 w-3" />
+                      Baixar arquivo ({lastExport.format})
+                    </a>
+                  </div>
                   <p>Expira em: {formatDateTime(lastExport.expiresAt)}</p>
                   <p className="break-all">
                     Checksum: <span className="font-mono">{lastExport.checksumSha256}</span>

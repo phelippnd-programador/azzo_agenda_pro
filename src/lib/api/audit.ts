@@ -68,4 +68,6 @@ export const auditoriaApi = {
       `/auditoria/retention/events?${query.toString()}`
     );
   },
+  downloadExport: (exportId: string) =>
+    `/auditoria/events/export/${exportId}`,
 };
