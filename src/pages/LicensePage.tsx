@@ -11,6 +11,12 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { billingApi } from '@/lib/api/commerce';
+import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from '@/components/ui/form';
 import { CreditCardForm } from '@/components/billing/CreditCardForm';
@@ -92,6 +98,7 @@ export default function LicensePage() {
   const [paymentHistory, setPaymentHistory] = useState<BillingPaymentItem[]>([]);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [hasAppliedQueryDefaults, setHasAppliedQueryDefaults] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const plans = useMemo<BillingPlanOption[]>(
     () => products.map((product) => ({
@@ -256,6 +263,20 @@ export default function LicensePage() {
     }
   };
 
+  const handleCancelSubscription = async () => {
+    try {
+      setIsCancelling(true);
+      const res = await billingApi.cancelarAssinatura();
+      toast.success(res.message || 'Assinatura cancelada com sucesso.');
+      await Promise.all([loadCurrentSubscription(), loadPaymentHistory()]);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Nao foi possivel cancelar a assinatura.';
+      toast.error(msg);
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   const onSubmit = form.handleSubmit(async (values) => {
     if (actionMode === 'CHANGE' && hasPaidAccess) {
       toast.error('Nao e possivel trocar de plano com assinatura ativa.'); return;
@@ -336,6 +357,45 @@ export default function LicensePage() {
           onRefreshStatus={handleRefreshStatus}
           onRefetchPlans={refetchPlans}
         />
+
+        {result && !isTrialSubscription(result) && result.status !== 'CANCELLED' && hasPaidAccess
+          && result.billingType !== 'CHECKOUT' ? (
+          <Card className="border-destructive/30">
+            <CardHeader>
+              <CardTitle className="text-destructive text-base">Cancelar assinatura</CardTitle>
+              <CardDescription>
+                Ao cancelar, seu acesso permanece ativo ate o fim do periodo vigente. Nao ha reembolso proporcional.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" disabled={isCancelling}>
+                    {isCancelling ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Cancelando...</> : 'Cancelar assinatura'}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirmar cancelamento</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza que deseja cancelar sua assinatura? Voce continuara tendo acesso ate o vencimento atual,
+                      mas nao sera renovado automaticamente.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Voltar</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={handleCancelSubscription}
+                    >
+                      Sim, cancelar
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </CardContent>
+          </Card>
+        ) : null}
 
         {actionMode !== 'IDLE' ? (
           <Card>

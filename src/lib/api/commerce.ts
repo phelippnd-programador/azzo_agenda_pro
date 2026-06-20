@@ -67,4 +67,19 @@ export const billingApi = {
       method: "POST",
       body: JSON.stringify({ tenantId, paymentId, validityDays }),
     }),
+  cancelarAssinatura: () =>
+    request<{ subscriptionId: string; status: string; cancelledAt: string; message: string }>(
+      "/billing/subscriptions/current/cancelar",
+      { method: "POST" }
+    ),
+  adminExtenderTrial: (tenantId: string, extraDays: number) =>
+    request<{ tenantId: string; validUntil: string; message: string }>(
+      "/billing/admin/trial/extend",
+      { method: "POST", body: JSON.stringify({ tenantId, extraDays }) }
+    ),
+  adminGetLicenseHistory: (tenantId: string) =>
+    request<{
+      tenantId: string;
+      events: Array<{ id: string; eventType: string; validUntil?: string; createdAt: string }>;
+    }>(`/billing/admin/tenants/${tenantId}/license-history`),
 };
