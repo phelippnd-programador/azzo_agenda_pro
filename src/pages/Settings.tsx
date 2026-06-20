@@ -7,6 +7,8 @@ import {
   Building2,
   CheckCircle2,
   CircleAlert,
+  Cpu,
+  Mail,
   PlugZap,
   Receipt,
   ShieldCheck,
@@ -22,6 +24,9 @@ import { useMenuPermissions } from '@/contexts/MenuPermissionsContext';
 import { SettingsNotificationsTab } from '@/components/settings/SettingsNotificationsTab';
 import { SettingsAccountTab } from '@/components/settings/SettingsAccountTab';
 import { AppointmentConflictSettingsCard } from '@/components/settings/AppointmentConflictSettingsCard';
+import { SettingsLgpdTab } from '@/components/settings/SettingsLgpdTab';
+import { SettingsFeatureFlagsTab } from '@/components/settings/SettingsFeatureFlagsTab';
+import { SettingsEmailTemplatesTab } from '@/components/settings/SettingsEmailTemplatesTab';
 
 function SettingsDomainCard({
   icon: Icon,
@@ -101,17 +106,24 @@ export default function Settings() {
   const canAccessNfseModule = hasExactRoute('/fiscal/nfse');
   const canAccessSalonProfile = canAccess('/perfil-salao');
 
+  const isOwner = user?.role === 'OWNER';
+
   const visibleTabs = useMemo(() => {
     const tabs = ['notifications', 'account'];
     if (canAccessWhatsAppIntegration || canAccessStockSettings) tabs.push('integrations');
     if (canAccessTaxSettings || canAccessCertificates || canAccessNfseSettings || canAccessNfseModule)
       tabs.push('fiscal');
     if (canAccessSalonProfile) tabs.push('salon');
+    if (isOwner) {
+      tabs.push('lgpd');
+      tabs.push('features');
+      tabs.push('email-templates');
+    }
     return tabs;
   }, [
     canAccessWhatsAppIntegration, canAccessStockSettings,
     canAccessTaxSettings, canAccessCertificates, canAccessNfseSettings, canAccessNfseModule,
-    canAccessSalonProfile,
+    canAccessSalonProfile, isOwner,
   ]);
 
   useEffect(() => {
@@ -209,6 +221,45 @@ export default function Settings() {
       });
     }
 
+    if (visibleTabs.includes('lgpd')) {
+      cards.push({
+        key: 'lgpd',
+        icon: ShieldCheck,
+        title: 'LGPD',
+        description: 'Canal de contato, DPO e SLA de resposta para titulares.',
+        statusLabel: 'Restrito',
+        statusTone: 'default' as const,
+        actionLabel: 'Abrir LGPD',
+        onAction: () => handleTabChange('lgpd', { scrollToSection: true }),
+      });
+    }
+
+    if (visibleTabs.includes('features')) {
+      cards.push({
+        key: 'features',
+        icon: Cpu,
+        title: 'Recursos',
+        description: 'Feature flags e politicas de retencao de dados do tenant.',
+        statusLabel: 'Restrito',
+        statusTone: 'default' as const,
+        actionLabel: 'Abrir recursos',
+        onAction: () => handleTabChange('features', { scrollToSection: true }),
+      });
+    }
+
+    if (visibleTabs.includes('email-templates')) {
+      cards.push({
+        key: 'email-templates',
+        icon: Mail,
+        title: 'Templates de E-mail',
+        description: 'Personalize os modelos de e-mail transacional do tenant.',
+        statusLabel: 'Restrito',
+        statusTone: 'default' as const,
+        actionLabel: 'Abrir templates',
+        onAction: () => handleTabChange('email-templates', { scrollToSection: true }),
+      });
+    }
+
     return cards;
   }, [
     canAccessWhatsAppIntegration,
@@ -282,6 +333,18 @@ export default function Settings() {
       salon: {
         label: 'Perfil do Salao',
         description: 'Dados publicos e operacionais que impactam pagina e agenda online.',
+      },
+      lgpd: {
+        label: 'LGPD',
+        description: 'Canal de contato, DPO e prazo de resposta para titulares de dados.',
+      },
+      features: {
+        label: 'Recursos',
+        description: 'Integracao com pagamentos, armazenamento e retencao de dados do tenant.',
+      },
+      'email-templates': {
+        label: 'Templates de E-mail',
+        description: 'Personalize os modelos de e-mail transacional enviados pelo sistema.',
       },
     };
 
@@ -413,6 +476,15 @@ export default function Settings() {
                 ) : null}
                 {visibleTabs.includes('salon') ? (
                   <TabsTrigger value="salon" className="shrink-0 whitespace-nowrap">Perfil do Salao</TabsTrigger>
+                ) : null}
+                {visibleTabs.includes('lgpd') ? (
+                  <TabsTrigger value="lgpd" className="shrink-0 whitespace-nowrap">LGPD</TabsTrigger>
+                ) : null}
+                {visibleTabs.includes('features') ? (
+                  <TabsTrigger value="features" className="shrink-0 whitespace-nowrap">Recursos</TabsTrigger>
+                ) : null}
+                {visibleTabs.includes('email-templates') ? (
+                  <TabsTrigger value="email-templates" className="shrink-0 whitespace-nowrap">Templates de E-mail</TabsTrigger>
                 ) : null}
               </TabsList>
             </div>
@@ -621,6 +693,24 @@ export default function Settings() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {isOwner ? (
+          <TabsContent value="lgpd">
+            <SettingsLgpdTab />
+          </TabsContent>
+        ) : null}
+
+        {isOwner ? (
+          <TabsContent value="features">
+            <SettingsFeatureFlagsTab />
+          </TabsContent>
+        ) : null}
+
+        {isOwner ? (
+          <TabsContent value="email-templates">
+            <SettingsEmailTemplatesTab />
+          </TabsContent>
+        ) : null}
           </Tabs>
         </div>
 
