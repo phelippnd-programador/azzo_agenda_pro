@@ -13,6 +13,9 @@ export interface WhatsAppConfigRequest {
   canSchedule?: boolean;
   canCancel?: boolean;
   canReschedule?: boolean;
+  confirmationMessageTemplate?: string;
+  cancellationMessageTemplate?: string;
+  reminderMessageTemplate?: string;
 }
 
 export interface WhatsAppConfigResponse {
@@ -30,6 +33,27 @@ export interface WhatsAppConfigResponse {
   canSchedule?: boolean;
   canCancel?: boolean;
   canReschedule?: boolean;
+  confirmationMessageTemplate?: string;
+  cancellationMessageTemplate?: string;
+  reminderMessageTemplate?: string;
+}
+
+export interface WhatsAppMessageLogItem {
+  id: string;
+  eventType: string;
+  destinationPhone: string;
+  messageText?: string;
+  providerMessageId?: string;
+  status: string;
+  errorMessage?: string;
+  sentAt: string;
+  appointmentId?: string;
+}
+
+export interface WhatsAppMessageLogResponse {
+  items: WhatsAppMessageLogItem[];
+  hasMore: boolean;
+  nextCursorSentAt?: string;
 }
 
 export interface WhatsAppTestResponse {
@@ -123,4 +147,7 @@ export const whatsappApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  getMessageLog: (limit = 50) =>
+    request<WhatsAppMessageLogResponse>(`/tenant/whatsapp/message-log?limit=${limit}`),
 };
