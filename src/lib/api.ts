@@ -67,13 +67,21 @@ export type {
   TransactionListParams,
   TransactionPagedResponse,
 } from "./api/finance";
+export type { ProfessionalUpsertPayload } from "./api/professionals";
 export type {
   AddressLookup,
   SalonBusinessHours,
   SalonProfile,
   SalonSpecialClosureDate,
 } from "./api/salon";
-export type { AppSettings } from "./api/settings";
+export type {
+  AppSettings,
+  BusinessHourEntry,
+  LgpdContact,
+  TenantFeatureFlags,
+  EmailTemplateListItem,
+  EmailTemplateDetail,
+} from "./api/settings";
 export type {
   DanfeJobResponse,
   FiscalCertificateResponse,

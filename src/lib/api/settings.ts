@@ -2,6 +2,52 @@ import type { User } from "@/types";
 import type { MfaSetupResponse, MfaStatusResponse } from "./contracts";
 import { request, requestBlob } from "./core";
 
+// ---- Tipos para configurações internas (OWNER) ----
+
+export type BusinessHourEntry = {
+  dayOfWeek:
+    | "MONDAY"
+    | "TUESDAY"
+    | "WEDNESDAY"
+    | "THURSDAY"
+    | "FRIDAY"
+    | "SATURDAY"
+    | "SUNDAY";
+  openTime: string | null;
+  closeTime: string | null;
+  enabled: boolean;
+};
+
+export type LgpdContact = {
+  lgpdContactEmail: string | null;
+  lgpdContactChannel: string | null;
+  lgpdContactResponseSlaDays: number;
+};
+
+export type TenantFeatureFlags = {
+  asaasEnabled: boolean;
+  minioEnabled: boolean;
+  chatRetentionDaysCompleted: number;
+  chatRetentionDaysCanceled: number;
+  chatRetentionDaysDefault: number;
+  auditRetentionDays: number;
+};
+
+export type EmailTemplateListItem = {
+  type: string;
+  customized: boolean;
+};
+
+export type EmailTemplateDetail = {
+  type: string;
+  subjectTemplate: string;
+  htmlTemplate: string;
+  fromEmail: string | null;
+  fromName: string | null;
+  replyTo: string | null;
+  customized: boolean;
+};
+
 export type AppSettings = {
   notifications: {
     emailNotifications: boolean;
@@ -45,6 +91,37 @@ export const settingsApi = {
     }),
   updateBusinessHours: (data: AppSettings["businessHours"]) =>
     request<AppSettings["businessHours"]>("/settings/business-hours", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  getBusinessHoursTable: () =>
+    request<BusinessHourEntry[]>("/settings/business-hours/table"),
+  updateBusinessHoursTable: (data: BusinessHourEntry[]) =>
+    request<BusinessHourEntry[]>("/settings/business-hours/table", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  getLgpdContact: () => request<LgpdContact>("/settings/lgpd"),
+  updateLgpdContact: (data: LgpdContact) =>
+    request<void>("/settings/lgpd", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  getFeatureFlags: () => request<TenantFeatureFlags>("/settings/features"),
+  updateFeatureFlags: (data: Partial<TenantFeatureFlags>) =>
+    request<void>("/settings/features", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  getEmailTemplates: () =>
+    request<EmailTemplateListItem[]>("/settings/email-templates"),
+  getEmailTemplate: (type: string) =>
+    request<EmailTemplateDetail>(`/settings/email-templates/${type}`),
+  updateEmailTemplate: (
+    type: string,
+    data: Omit<EmailTemplateDetail, "type" | "customized">
+  ) =>
+    request<EmailTemplateDetail>(`/settings/email-templates/${type}`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
