@@ -42,7 +42,7 @@ export default function NfseInvoiceForm() {
     ambiente: "HOMOLOGACAO",
     municipioCodigoIbge: "3304557",
     provedor: "ABRASF",
-    numeroRps: Date.now(),
+    numeroRps: 0,
     serieRps: "A1",
     dataCompetencia: new Date().toISOString().slice(0, 10),
     naturezaOperacao: "Prestacao de servico",
@@ -286,11 +286,13 @@ export default function NfseInvoiceForm() {
               <Label>Numero RPS</Label>
               <Input
                 type="number"
-                value={invoice.numeroRps || 0}
+                placeholder="Auto"
+                value={invoice.numeroRps || ""}
                 onChange={(e) =>
                   setInvoice((prev) => ({ ...prev, numeroRps: Number(e.target.value || 0) }))
                 }
               />
+              <p className="text-xs text-muted-foreground">Deixe 0 para numerar automaticamente.</p>
             </div>
           </div>
 
