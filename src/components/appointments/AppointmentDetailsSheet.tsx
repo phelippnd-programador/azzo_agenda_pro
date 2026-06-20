@@ -163,7 +163,7 @@ export function AppointmentDetailsSheet({
         toast.error(
           resolveUiError(
             error,
-            'Não foi possível carregar o histórico deste cliente.',
+            'Nao foi possivel carregar o historico deste cliente.',
           ).message,
         );
       })
@@ -227,7 +227,7 @@ export function AppointmentDetailsSheet({
       toast.error(
         resolveUiError(
           error,
-          'Não foi possível salvar o registro operacional.',
+          'Nao foi possivel salvar o registro operacional.',
         ).message,
       );
     } finally {
@@ -246,17 +246,15 @@ export function AppointmentDetailsSheet({
         }
       }}
     >
-      <SheetContent className="w-full overflow-y-auto sm:max-w-md">
+      <SheetContent className="w-full overflow-y-auto sm:max-w-2xl">
         <SheetHeader>
           <SheetTitle>Detalhes do Agendamento</SheetTitle>
-          <SheetDescription>
-            Informações completas do agendamento
-          </SheetDescription>
+          <SheetDescription>Informacoes completas do agendamento</SheetDescription>
         </SheetHeader>
 
         {appointment ? (
           <div className="mt-6 space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-sm text-muted-foreground">Status</span>
               <StatusBadge
                 status={appointment.status}
@@ -274,7 +272,7 @@ export function AppointmentDetailsSheet({
                 </AlertTitle>
                 <AlertDescription>
                   {flowMeta.nextLabel
-                    ? `Próximo passo esperado: ${flowMeta.nextLabel}.`
+                    ? `Proximo passo esperado: ${flowMeta.nextLabel}.`
                     : 'Atendimento finalizado no fluxo operacional.'}
                 </AlertDescription>
               </Alert>
@@ -284,10 +282,10 @@ export function AppointmentDetailsSheet({
 
             <div className="space-y-3">
               <h4 className="flex items-center gap-2 text-sm font-medium">
-                <CalendarIcon className="h-4 w-4 text-primary" /> Data e horário
+                <CalendarIcon className="h-4 w-4 text-primary" /> Data e horario
               </h4>
               <div className="space-y-2 rounded-lg bg-muted/40 p-4">
-                <div className="flex justify-between text-sm">
+                <div className="flex items-start justify-between gap-3 text-sm">
                   <span className="text-muted-foreground">Data:</span>
                   <span className="font-medium">
                     {new Date(
@@ -300,8 +298,8 @@ export function AppointmentDetailsSheet({
                     })}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Horário:</span>
+                <div className="flex items-start justify-between gap-3 text-sm">
+                  <span className="text-muted-foreground">Horario:</span>
                   <span className="font-medium">
                     {appointment.startTime} - {appointment.endTime}
                   </span>
@@ -355,7 +353,7 @@ export function AppointmentDetailsSheet({
 
             <div className="space-y-3">
               <h4 className="flex items-center gap-2 text-sm font-medium">
-                <Scissors className="h-4 w-4 text-primary" /> Serviços
+                <Scissors className="h-4 w-4 text-primary" /> Servicos
               </h4>
               {appointmentItemsWithService.length ? (
                 <div className="space-y-3 rounded-lg bg-muted/40 p-4">
@@ -378,19 +376,19 @@ export function AppointmentDetailsSheet({
                       >
                         <div className="flex justify-between gap-2">
                           <span className="font-medium">
-                            {service?.name || item.service?.name || 'Serviço'}
+                            {service?.name || item.service?.name || 'Servico'}
                           </span>
                           {service?.category ? (
                             <Badge variant="outline">{service.category}</Badge>
                           ) : null}
                         </div>
 
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Duração:</span>
+                        <div className="flex items-start justify-between gap-3 text-sm">
+                          <span className="text-muted-foreground">DuraÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o:</span>
                           <span>{itemDuration} minutos</span>
                         </div>
 
-                        <div className="flex justify-between text-sm">
+                        <div className="flex items-start justify-between gap-3 text-sm">
                           <span className="text-muted-foreground">
                             Valor bruto:
                           </span>
@@ -398,7 +396,7 @@ export function AppointmentDetailsSheet({
                         </div>
 
                         {itemDiscountAmount > 0 ? (
-                          <div className="flex justify-between text-sm">
+                          <div className="flex items-start justify-between gap-3 text-sm">
                             <span className="text-muted-foreground">
                               Desconto aplicado:
                             </span>
@@ -408,9 +406,9 @@ export function AppointmentDetailsSheet({
                           </div>
                         ) : null}
 
-                        <div className="flex justify-between text-sm">
+                        <div className="flex items-start justify-between gap-3 text-sm">
                           <span className="text-muted-foreground">
-                            Líquido do item:
+                            Liquido do item:
                           </span>
                           <span className="font-medium">
                             {formatCurrencyCents(itemNetAmount)}
@@ -484,7 +482,7 @@ export function AppointmentDetailsSheet({
                     </div>
                   </>
                 ) : null}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <span className="text-muted-foreground">Total:</span>
                   <span className="text-2xl font-bold text-primary">
                     {formatCurrencyCents(totalPrice)}
@@ -498,7 +496,7 @@ export function AppointmentDetailsSheet({
                 <Separator />
                 <div className="space-y-3">
                   <h4 className="flex items-center gap-2 text-sm font-medium">
-                    <FileText className="h-4 w-4 text-primary" /> Observações
+                    <FileText className="h-4 w-4 text-primary" /> ObservaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½es
                   </h4>
                   <div className="rounded-lg bg-muted/40 p-4">
                     <p className="text-sm text-muted-foreground">
@@ -529,11 +527,11 @@ export function AppointmentDetailsSheet({
               <div className="space-y-3 rounded-lg border bg-muted/20 p-4">
                 <div className="space-y-2">
                   <Label htmlFor="serviceExecutionNotes">
-                    Execução do serviço
+                    ExecuÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o do serviÃƒÂ¯Ã‚Â¿Ã‚Â½o
                   </Label>
                   <Textarea
                     id="serviceExecutionNotes"
-                    placeholder="Descreva técnicas aplicadas, variações do serviço e ocorrências relevantes."
+                    placeholder="Descreva tÃƒÂ¯Ã‚Â¿Ã‚Â½cnicas aplicadas, variaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½es do serviÃƒÂ¯Ã‚Â¿Ã‚Â½o e ocorrÃƒÂ¯Ã‚Â¿Ã‚Â½ncias relevantes."
                     value={serviceExecutionNotes}
                     onChange={(event) =>
                       setServiceExecutionNotes(event.target.value)
@@ -561,11 +559,11 @@ export function AppointmentDetailsSheet({
 
                 <div className="space-y-2">
                   <Label htmlFor="internalFollowupNotes">
-                    Próximo passo / acompanhamento
+                    Proximo passo / acompanhamento
                   </Label>
                   <Textarea
                     id="internalFollowupNotes"
-                    placeholder="Informe recomendações, manutenção, pendências ou abordagem sugerida para o próximo atendimento."
+                    placeholder="Informe recomendaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½es, manutenÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o, pendÃƒÂ¯Ã‚Â¿Ã‚Â½ncias ou abordagem sugerida para o prÃƒÂ¯Ã‚Â¿Ã‚Â½ximo atendimento."
                     value={internalFollowupNotes}
                     onChange={(event) =>
                       setInternalFollowupNotes(event.target.value)
@@ -575,8 +573,9 @@ export function AppointmentDetailsSheet({
                   />
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                   <Button
+                    className="w-full sm:w-auto"
                     onClick={handleSaveCareNote}
                     disabled={!canRegisterNotes || isSaving}
                   >
@@ -590,9 +589,7 @@ export function AppointmentDetailsSheet({
                     )}
                   </Button>
                   <Button
-                    variant="outline"
-                    onClick={resetForm}
-                    disabled={isSaving}
+                    variant="outline" className="w-full sm:w-auto" onClick={resetForm} disabled={isSaving}
                   >
                     Limpar
                   </Button>
@@ -601,7 +598,7 @@ export function AppointmentDetailsSheet({
                 {!canRegisterNotes ? (
                   <p className="text-xs text-muted-foreground">
                     Registros operacionais ficam bloqueados para agendamentos
-                    cancelados ou marcados como não compareceu.
+                    cancelados ou marcados como nao compareceu.
                   </p>
                 ) : null}
               </div>
@@ -629,7 +626,7 @@ export function AppointmentDetailsSheet({
                       {note.serviceExecutionNotes ? (
                         <p className="text-sm text-muted-foreground">
                           <span className="font-medium text-foreground">
-                            Execução:
+                            ExecuÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o:
                           </span>{' '}
                           {note.serviceExecutionNotes}
                         </p>
@@ -647,7 +644,7 @@ export function AppointmentDetailsSheet({
                       {note.internalFollowupNotes ? (
                         <p className="text-sm text-muted-foreground">
                           <span className="font-medium text-foreground">
-                            Próximo passo:
+                            PrÃƒÂ¯Ã‚Â¿Ã‚Â½ximo passo:
                           </span>{' '}
                           {note.internalFollowupNotes}
                         </p>
@@ -664,10 +661,10 @@ export function AppointmentDetailsSheet({
               {appointment.status === 'IN_PROGRESS' && careNotes.length === 0 ? (
                 <Alert className="border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
                   <Info className="h-4 w-4" />
-                  <AlertTitle>Registro obrigatório antes da conclusão</AlertTitle>
+                  <AlertTitle>Registro obrigatorio antes da conclusao</AlertTitle>
                   <AlertDescription>
                     Salve ao menos um detalhe operacional do cliente para
-                    habilitar a conclusão do atendimento.
+                    habilitar a conclusao do atendimento.
                   </AlertDescription>
                 </Alert>
               ) : null}
@@ -677,17 +674,17 @@ export function AppointmentDetailsSheet({
               <>
                 <Separator />
                 <Button className="w-full" onClick={() => onViewInvoice(appointment)}>
-                  <Receipt className="mr-2 h-4 w-4" /> Ver pré-visualização da
+                  <Receipt className="mr-2 h-4 w-4" /> Ver prÃƒÂ¯Ã‚Â¿Ã‚Â½-visualizaÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o da
                   Nota Fiscal
                 </Button>
               </>
             ) : null}
 
             <div className="space-y-2 pt-4">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {appointment.status === 'PENDING' ? (
                   <Button
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="w-full bg-blue-600 hover:bg-blue-700"
                     onClick={() => onStatusChange(appointment.id, 'CONFIRMED')}
                   >
                     Confirmar agendamento
@@ -696,7 +693,7 @@ export function AppointmentDetailsSheet({
 
                 {appointment.status === 'CONFIRMED' ? (
                   <Button
-                    onClick={() => onStatusChange(appointment.id, 'IN_PROGRESS')}
+                    className="w-full" onClick={() => onStatusChange(appointment.id, 'IN_PROGRESS')}
                   >
                     Iniciar atendimento
                   </Button>
@@ -704,7 +701,7 @@ export function AppointmentDetailsSheet({
 
                 {appointment.status === 'IN_PROGRESS' ? (
                   <Button
-                    className="bg-green-600 hover:bg-green-700"
+                    className="w-full bg-green-600 hover:bg-green-700"
                     disabled={careNotes.length === 0}
                     onClick={() => onStatusChange(appointment.id, 'COMPLETED')}
                   >
@@ -717,7 +714,7 @@ export function AppointmentDetailsSheet({
                 ) ? (
                   <Button
                     variant="outline"
-                    className="border-red-200 text-red-600 hover:bg-red-50"
+                    className="w-full border-red-200 text-red-600 hover:bg-red-50"
                     onClick={() => onStatusChange(appointment.id, 'CANCELLED')}
                   >
                     Cancelar

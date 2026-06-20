@@ -108,16 +108,16 @@ export default function ProfessionalProfile() {
                 </AlertDescription>
               </Alert>
             </div>
-            <p className="text-sm">
+            <p className="min-w-0 text-sm">
               <span className="font-medium">E-mail:</span>{" "}
-              <span className="inline-flex items-center gap-1">
+              <span className="inline-flex min-w-0 items-center gap-1 break-all">
                 <Mail className="w-3.5 h-3.5 text-muted-foreground" />
                 {professional.email || "-"}
               </span>
             </p>
-            <p className="text-sm">
+            <p className="min-w-0 text-sm">
               <span className="font-medium">Telefone:</span>{" "}
-              <span className="inline-flex items-center gap-1">
+              <span className="inline-flex min-w-0 items-center gap-1 break-all">
                 <Phone className="w-3.5 h-3.5 text-muted-foreground" />
                 {professional.phone || "-"}
               </span>
@@ -128,7 +128,7 @@ export default function ProfessionalProfile() {
                 {professional.isActive ? "Ativo" : "Inativo"}
               </Badge>
             </div>
-            <div className="sm:col-span-2 text-sm">
+            <div className="sm:col-span-2 text-sm leading-relaxed">
               <span className="font-medium">Especialidades:</span>{" "}
               {professional.specialties.length ? professional.specialties.join(", ") : "-"}
             </div>

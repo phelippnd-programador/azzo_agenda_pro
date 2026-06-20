@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Settings2 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageErrorState } from "@/components/ui/page-states";
@@ -111,7 +111,11 @@ export default function ProfessionalCommissionReport() {
         </div>
 
         <Card>
-          <CardContent className="grid gap-4 p-4 md:grid-cols-3 lg:grid-cols-5">
+          <CardHeader>
+            <CardTitle>Filtro e resumo</CardTitle>
+            <CardDescription>Recorte o periodo e acompanhe o total consolidado da comissao.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-5">
             <div className="space-y-2">
               <Label>Data inicial</Label>
               <Input type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
@@ -126,11 +130,11 @@ export default function ProfessionalCommissionReport() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Em aberto</p>
-              <p className="text-lg font-bold text-amber-700">{formatCurrency(report.totalOpenAmountCents)}</p>
+              <p className="text-lg font-bold text-amber-700 dark:text-amber-400">{formatCurrency(report.totalOpenAmountCents)}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Pago</p>
-              <p className="text-lg font-bold text-emerald-700">{formatCurrency(report.totalPaidAmountCents)}</p>
+              <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400">{formatCurrency(report.totalPaidAmountCents)}</p>
             </div>
           </CardContent>
         </Card>
@@ -143,7 +147,8 @@ export default function ProfessionalCommissionReport() {
             {!report.entries.length ? (
               <p className="text-sm text-muted-foreground">Nenhum lancamento encontrado no periodo.</p>
             ) : (
-              <Table>
+              <div className="overflow-x-auto">
+              <Table className="min-w-[960px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Origem</TableHead>
@@ -184,6 +189,7 @@ export default function ProfessionalCommissionReport() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </CardContent>
         </Card>

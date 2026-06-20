@@ -356,8 +356,13 @@ export default function ProfessionalFinancial() {
       title="Financeiro por Profissional"
       subtitle="Metricas detalhadas por periodo para dono e equipe."
     >
-      <div className={`space-y-4 sm:space-y-6 transition-opacity duration-200 ${isLoadingMetrics ? "opacity-50 pointer-events-none" : ""}`}>
+      <div
+        className={`space-y-4 transition-opacity duration-200 sm:space-y-6 ${isLoadingMetrics ? "pointer-events-none opacity-50" : ""}`}
+      >
         <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base sm:text-lg">Filtros e recorte</CardTitle>
+          </CardHeader>
           <CardContent className="grid gap-3 p-4 md:grid-cols-4">
             <div className="space-y-2">
               <Label>Periodo</Label>
@@ -395,7 +400,7 @@ export default function ProfessionalFinancial() {
             ) : (
               <div className="space-y-2">
                 <Label>Profissional</Label>
-                <div className="h-10 rounded-md border bg-muted/40 px-3 flex items-center text-sm text-muted-foreground">
+                <div className="flex h-10 items-center rounded-md border bg-muted/40 px-3 text-sm text-muted-foreground">
                   {loggedProfessional?.name || "Profissional logado"}
                 </div>
               </div>
@@ -429,7 +434,7 @@ export default function ProfessionalFinancial() {
             variant="outline"
             onClick={() => setRefreshVersion((current) => current + 1)}
             disabled={!canRefresh || isLoadingMetrics}
-            className="gap-2"
+            className="w-full gap-2 sm:w-auto"
           >
             {isLoadingMetrics ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -449,28 +454,40 @@ export default function ProfessionalFinancial() {
         <div className={`grid gap-4 ${isOwnerView ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
           {isOwnerView ? (
             <Card>
-              <CardContent className="p-4">
-                <p className="text-sm text-muted-foreground">Faturamento</p>
-                <p className="text-xl font-bold text-foreground">{formatCurrencyCents(totals.revenue)}</p>
+              <CardContent className="flex items-start justify-between gap-3 p-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Faturamento</p>
+                  <p className="text-xl font-bold text-foreground">{formatCurrencyCents(totals.revenue)}</p>
+                </div>
+                <DollarSign className="h-5 w-5 text-muted-foreground" />
               </CardContent>
             </Card>
           ) : null}
           <Card>
-            <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">Comissao total</p>
-              <p className="text-xl font-bold text-primary">{formatCurrencyCents(totals.commission)}</p>
+            <CardContent className="flex items-start justify-between gap-3 p-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Comissao total</p>
+                <p className="text-xl font-bold text-primary">{formatCurrencyCents(totals.commission)}</p>
+              </div>
+              <DollarSign className="h-5 w-5 text-primary/70" />
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">Servicos concluidos</p>
-              <p className="text-xl font-bold text-emerald-700">{totals.services}</p>
+            <CardContent className="flex items-start justify-between gap-3 p-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Servicos concluidos</p>
+                <p className="text-xl font-bold text-emerald-700 dark:text-emerald-400">{totals.services}</p>
+              </div>
+              <Scissors className="h-5 w-5 text-emerald-700/70 dark:text-emerald-400/70" />
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">Clientes atendidos</p>
-              <p className="text-xl font-bold text-sky-700">{totals.clients}</p>
+            <CardContent className="flex items-start justify-between gap-3 p-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Clientes atendidos</p>
+                <p className="text-xl font-bold text-sky-700 dark:text-sky-400">{totals.clients}</p>
+              </div>
+              <Users className="h-5 w-5 text-sky-700/70 dark:text-sky-400/70" />
             </CardContent>
           </Card>
         </div>
@@ -541,7 +558,7 @@ export default function ProfessionalFinancial() {
             <CardTitle className="text-base sm:text-lg">Analise de servicos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-4">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               {serviceHighlights.map(({ title, item }) => {
                 const metricItem = item as DashboardServiceMetricItem | null;
                 return (
@@ -679,26 +696,40 @@ export default function ProfessionalFinancial() {
               visibleStatsByProfessional.map((item) => (
                 <div
                   key={item.professionalId}
-                  className={`grid gap-2 rounded-lg border p-3 ${
+                  className={`grid gap-3 rounded-lg border p-3 ${
                     isOwnerView
                       ? "md:grid-cols-[1.5fr_repeat(4,1fr)]"
                       : "md:grid-cols-[1.5fr_repeat(3,1fr)]"
                   }`}
                 >
-                  <div className="font-medium text-foreground">{item.name}</div>
+                  <div className="min-w-0 font-medium text-foreground">{item.name}</div>
                   {isOwnerView ? (
-                    <div className="text-sm text-muted-foreground">
-                      <span className="text-muted-foreground">Faturamento:</span> {formatCurrencyCents(item.revenue)}
+                    <div className="rounded-md bg-muted/30 px-3 py-2 text-sm text-muted-foreground md:bg-transparent md:p-0">
+                      <span className="block text-xs uppercase tracking-wide text-muted-foreground/80 md:hidden">
+                        Faturamento
+                      </span>
+                      <span className="hidden text-muted-foreground md:inline">Faturamento:</span>{" "}
+                      {formatCurrencyCents(item.revenue)}
                     </div>
                   ) : null}
-                  <div className="text-sm text-muted-foreground">
-                    <span className="text-muted-foreground">Comissao:</span> {formatCurrencyCents(item.commission)}
+                  <div className="rounded-md bg-muted/30 px-3 py-2 text-sm text-muted-foreground md:bg-transparent md:p-0">
+                    <span className="block text-xs uppercase tracking-wide text-muted-foreground/80 md:hidden">
+                      Comissao
+                    </span>
+                    <span className="hidden text-muted-foreground md:inline">Comissao:</span>{" "}
+                    {formatCurrencyCents(item.commission)}
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    <span className="text-muted-foreground">Servicos:</span> {item.servicesCount}
+                  <div className="rounded-md bg-muted/30 px-3 py-2 text-sm text-muted-foreground md:bg-transparent md:p-0">
+                    <span className="block text-xs uppercase tracking-wide text-muted-foreground/80 md:hidden">
+                      Servicos
+                    </span>
+                    <span className="hidden text-muted-foreground md:inline">Servicos:</span> {item.servicesCount}
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    <span className="text-muted-foreground">Clientes:</span> {item.clientsCount}
+                  <div className="rounded-md bg-muted/30 px-3 py-2 text-sm text-muted-foreground md:bg-transparent md:p-0">
+                    <span className="block text-xs uppercase tracking-wide text-muted-foreground/80 md:hidden">
+                      Clientes
+                    </span>
+                    <span className="hidden text-muted-foreground md:inline">Clientes:</span> {item.clientsCount}
                   </div>
                 </div>
               ))
@@ -726,4 +757,5 @@ export default function ProfessionalFinancial() {
     </MainLayout>
   );
 }
+
 

@@ -2,6 +2,14 @@ import { memo } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   getActiveChildPath,
   isSidebarEntryActive,
   isSidebarGroupEntryAccessible,
@@ -13,6 +21,7 @@ type SidebarNavGroupProps = {
   entry: SidebarMenuNode;
   pathname: string;
   isOpen: boolean;
+  compact?: boolean;
   allowedSet: Set<string>;
   onNavigate: () => void;
   onToggle: () => void;
@@ -22,6 +31,7 @@ export const SidebarNavGroup = memo(function SidebarNavGroup({
   entry,
   pathname,
   isOpen,
+  compact = false,
   allowedSet,
   onNavigate,
   onToggle,
@@ -32,6 +42,54 @@ export const SidebarNavGroup = memo(function SidebarNavGroup({
   const parentIsAccessible = isSidebarGroupEntryAccessible(entry.path, allowedSet);
   const contentId = `sidebar-group-${entry.id}`;
   const parentLinkLabel = entry.path === "/financeiro" ? "Resumo" : "Visao geral";
+
+  if (compact) {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            aria-label={entry.label}
+            className={cn(
+              "flex h-10 w-10 items-center justify-center rounded-xl text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              isGroupActive
+                ? "bg-primary/10 text-primary font-medium shadow-soft ring-1 ring-primary/10"
+                : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"
+            )}
+          >
+            <entry.icon className="h-4 w-4 flex-shrink-0 opacity-80" />
+            <span className="sr-only">{entry.label}</span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="right" align="start" className="w-64">
+          <DropdownMenuLabel>{entry.label}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {parentIsAccessible ? (
+            <DropdownMenuItem asChild>
+              <SidebarNavLink
+                path={entry.path}
+                label={parentLinkLabel}
+                icon={entry.icon}
+                isActive={isParentActive}
+                onNavigate={onNavigate}
+              />
+            </DropdownMenuItem>
+          ) : null}
+          {entry.children.map((item) => (
+            <DropdownMenuItem key={item.path} asChild>
+              <SidebarNavLink
+                path={item.path}
+                label={item.label}
+                icon={item.icon}
+                isActive={activeChildPath === item.path || isSidebarEntryActive(pathname, item.path)}
+                onNavigate={onNavigate}
+              />
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
 
   return (
     <div className="space-y-0.5">
@@ -77,7 +135,6 @@ export const SidebarNavGroup = memo(function SidebarNavGroup({
               label={parentLinkLabel}
               icon={entry.icon}
               isActive={isParentActive}
-              compact
               onNavigate={onNavigate}
             />
           ) : null}
@@ -88,7 +145,6 @@ export const SidebarNavGroup = memo(function SidebarNavGroup({
               label={item.label}
               icon={item.icon}
               isActive={activeChildPath === item.path || isSidebarEntryActive(pathname, item.path)}
-              compact
               onNavigate={onNavigate}
             />
           ))}

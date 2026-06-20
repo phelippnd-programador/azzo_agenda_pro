@@ -3,10 +3,7 @@ import { WhatsAppIntegrationCard } from "@/components/settings/WhatsAppIntegrati
 
 export default function WhatsAppIntegration() {
   return (
-    <MainLayout
-      title="Integrações"
-      subtitle="Configure o WhatsApp Cloud API do seu tenant"
-    >
+    <MainLayout title="Integracoes" subtitle="Configure o WhatsApp Cloud API do seu tenant">
       <div className="w-full">
         <WhatsAppIntegrationCard />
       </div>
