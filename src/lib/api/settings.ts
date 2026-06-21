@@ -16,6 +16,8 @@ export type BusinessHourEntry = {
   openTime: string | null;
   closeTime: string | null;
   enabled: boolean;
+  breakStart?: string | null;
+  breakEnd?: string | null;
 };
 
 export type LgpdContact = {
