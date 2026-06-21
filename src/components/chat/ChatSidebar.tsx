@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageEmptyState } from "@/components/ui/page-states";
 import { ChatConversationCard } from "@/components/chat/ChatConversationCard";
 
 export type ConversationFilter = "all" | "manual" | "unread";
@@ -38,7 +37,7 @@ export function ChatSidebar({
   onClearFilters,
 }: ChatSidebarProps) {
   return (
-    <Card className="h-[calc(100vh-13rem)]">
+    <Card className="flex h-[calc(100vh-13rem)] flex-col overflow-hidden">
       <CardHeader className="pb-2">
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
@@ -91,10 +90,7 @@ export function ChatSidebar({
           </div>
         </div>
       </CardHeader>
-      <CardContent
-        className="h-[calc(100%-4.25rem)] space-y-2 overflow-y-auto pr-1"
-        aria-label="Lista de conversas"
-      >
+      <CardContent className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1" aria-label="Lista de conversas">
         {isLoading ? (
           <>
             <Skeleton className="h-20 w-full rounded-lg" />
@@ -102,23 +98,35 @@ export function ChatSidebar({
             <Skeleton className="h-20 w-full rounded-lg" />
           </>
         ) : conversations.length === 0 ? (
-          <PageEmptyState
-            title="Inbox sem conversas ainda"
-            description="Assim que chegarem mensagens do WhatsApp, elas aparecem aqui. Se voce esperava atendimento ativo, atualize o inbox."
-            action={{
-              label: "Atualizar inbox",
-              onClick: onReload,
-            }}
-          />
+          <div className="flex min-h-full items-center">
+            <div className="w-full rounded-2xl border border-dashed border-border/80 bg-card/90 px-5 py-10 text-center shadow-none">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/10">
+                <MessageCircleMore className="h-6 w-6 text-primary" />
+              </div>
+              <p className="text-base font-semibold text-foreground">Inbox sem conversas ainda</p>
+              <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-muted-foreground">
+                Assim que chegarem mensagens do WhatsApp, elas aparecem aqui. Se voce esperava atendimento ativo, atualize o inbox.
+              </p>
+              <Button className="mt-4" onClick={onReload}>
+                Atualizar inbox
+              </Button>
+            </div>
+          </div>
         ) : filteredConversations.length === 0 ? (
-          <PageEmptyState
-            title="Nenhuma conversa encontrada"
-            description="Ajuste a busca ou troque o filtro para voltar ao inbox completo."
-            action={{
-              label: "Limpar filtros",
-              onClick: onClearFilters,
-            }}
-          />
+          <div className="flex min-h-full items-center">
+            <div className="w-full rounded-2xl border border-dashed border-border/80 bg-card/90 px-5 py-10 text-center shadow-none">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/10">
+                <Search className="h-6 w-6 text-primary" />
+              </div>
+              <p className="text-base font-semibold text-foreground">Nenhuma conversa encontrada</p>
+              <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-muted-foreground">
+                Ajuste a busca ou troque o filtro para voltar ao inbox completo.
+              </p>
+              <Button className="mt-4" onClick={onClearFilters}>
+                Limpar filtros
+              </Button>
+            </div>
+          </div>
         ) : (
           filteredConversations.map((conversation) => (
             <ChatConversationCard
