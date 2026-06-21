@@ -102,10 +102,20 @@ export function NfseCapabilityCard({
 
           <div className="space-y-2">
             <Label>Provedor</Label>
-            <Input
+            <Select
               value={capability.provedor}
-              onChange={(e) => onCapabilityChange({ provedor: e.target.value })}
-            />
+              onValueChange={(value) => onCapabilityChange({ provedor: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o provedor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ABRASF">ABRASF (padrao nacional)</SelectItem>
+                <SelectItem value="ABRASF_204">ABRASF 2.04</SelectItem>
+                <SelectItem value="SEFIN_NACIONAL">SEFIN Nacional</SelectItem>
+                <SelectItem value="MOCK_NACIONAL">Mock Nacional (testes)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -128,8 +138,8 @@ export function NfseCapabilityCard({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="SYNC">SYNC</SelectItem>
-                <SelectItem value="ASYNC">ASYNC</SelectItem>
+                <SelectItem value="SYNC">Sincrono — resposta imediata</SelectItem>
+                <SelectItem value="ASYNC">Assincrono — aguarda processamento</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -156,20 +166,26 @@ export function NfseCapabilityCard({
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="space-y-2">
-            <Label>Codigo IBGE selecionado</Label>
-            <Input value={capability.municipioCodigoIbge || ""} readOnly />
+        {capability.municipioCodigoIbge && (
+          <div className="grid gap-4 md:grid-cols-3 rounded-md border bg-muted/30 p-3">
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Codigo IBGE</p>
+              <p className="text-sm font-mono font-medium">{capability.municipioCodigoIbge}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Codigo TOM</p>
+              <p className="text-sm font-mono font-medium">
+                {selectedMunicipality?.codigoTom || "—"}
+              </p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Codigo TOM com DV</p>
+              <p className="text-sm font-mono font-medium">
+                {selectedMunicipality?.codigoTomComDv || "—"}
+              </p>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label>Codigo TOM</Label>
-            <Input value={selectedMunicipality?.codigoTom || ""} readOnly />
-          </div>
-          <div className="space-y-2">
-            <Label>Codigo TOM com DV</Label>
-            <Input value={selectedMunicipality?.codigoTomComDv || ""} readOnly />
-          </div>
-        </div>
+        )}
 
         <div className="flex items-center justify-between rounded-md border p-3">
           <span className="font-medium">Suporta cancelamento</span>
