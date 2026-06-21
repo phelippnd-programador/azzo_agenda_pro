@@ -35,6 +35,7 @@ export default function InvoiceEmission() {
   const [cancelReasonTouched, setCancelReasonTouched] = useState(false);
   const [activeTab, setActiveTab] = useState('new');
   const [nfseEnabled, setNfseEnabled] = useState(false);
+  const [nfceEnabled, setNfceEnabled] = useState(true);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [pendingInvoiceData, setPendingInvoiceData] = useState<InvoiceFormData | null>(null);
   const [invoiceToReprocess, setInvoiceToReprocess] = useState<Invoice | null>(null);
@@ -60,6 +61,15 @@ export default function InvoiceEmission() {
         } catch {
           setNfseEnabled(false);
         }
+      }
+    })();
+    void (async () => {
+      try {
+        const config = await fiscalApi.getTaxConfig();
+        setNfceEnabled(!!config);
+      } catch {
+        // sem config fiscal — NFC-e nao configurado
+        setNfceEnabled(false);
       }
     })();
   }, []);
@@ -327,6 +337,7 @@ export default function InvoiceEmission() {
               }
               onSubmit={handleSubmit}
               nfseEnabled={nfseEnabled}
+              nfceEnabled={nfceEnabled}
             />
           </TabsContent>
 

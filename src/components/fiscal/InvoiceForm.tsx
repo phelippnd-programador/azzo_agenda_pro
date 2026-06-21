@@ -31,9 +31,10 @@ interface InvoiceFormProps {
   onSubmit: (data: InvoiceFormData, isDraft: boolean) => void;
   initialData?: Partial<InvoiceFormData>;
   nfseEnabled?: boolean;
+  nfceEnabled?: boolean;
 }
 
-export function InvoiceForm({ onSubmit, initialData, nfseEnabled = false }: InvoiceFormProps) {
+export function InvoiceForm({ onSubmit, initialData, nfseEnabled = false, nfceEnabled = true }: InvoiceFormProps) {
   const [regime, setRegime] = useState<TaxRegime>(TaxRegime.SIMPLES_NACIONAL);
   const [type, setType] = useState<'NFE' | 'NFCE' | 'NFSE'>(initialData?.type || 'NFCE');
   const [operationNature, setOperationNature] = useState(
@@ -247,13 +248,17 @@ export function InvoiceForm({ onSubmit, initialData, nfseEnabled = false }: Invo
           <div className={`grid gap-4 ${nfseEnabled ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <Button
               variant={type === 'NFCE' ? 'default' : 'outline'}
-              onClick={() => setType('NFCE')}
-              className="h-20"
+              onClick={() => nfceEnabled && setType('NFCE')}
+              disabled={!nfceEnabled}
+              className={`h-20 ${!nfceEnabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+              title={!nfceEnabled ? 'Configure o NFC-e nas configuracoes fiscais para habilitar' : undefined}
             >
               <div className="text-center">
                 <div className="font-bold">NFC-e</div>
                 <div className="text-xs">Modelo 65</div>
-                <div className="text-xs opacity-70">Consumidor Final</div>
+                <div className="text-xs opacity-70">
+                  {nfceEnabled ? 'Consumidor Final' : 'Nao configurado'}
+                </div>
               </div>
             </Button>
             <Button
