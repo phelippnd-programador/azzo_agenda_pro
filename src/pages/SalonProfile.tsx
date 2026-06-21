@@ -30,6 +30,8 @@ import { resolveUiError } from '@/lib/error-utils';
 import { prepareImageUpload } from '@/lib/image-upload';
 import { buildPublicBookingUrl } from '@/lib/public-booking-url';
 import { maskCpfCnpj, onlyDigits } from '@/lib/input-masks';
+import { CnpjAutoFillField } from '@/components/shared/CnpjAutoFillField';
+import type { CnpjConsultaResponse } from '@/lib/api/cnpj';
 
 const defaultBusinessHours: BusinessHours[] = [
   { day: 'Segunda-feira', enabled: true, open: '09:00', close: '19:00' },
@@ -517,11 +519,32 @@ export default function SalonProfile() {
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>CPF/CNPJ</Label>
-                <Input
-                  placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                <CnpjAutoFillField
+                  id="salon-cpf-cnpj"
+                  label="CPF/CNPJ"
                   value={salonCpfCnpj}
-                  onChange={(e) => setSalonCpfCnpj(maskCpfCnpj(e.target.value))}
+                  onChange={(v) => {
+                    // Mantém máscara de CPF quando tiver 11 dígitos ou menos
+                    const digits = v.replace(/\D/g, '');
+                    setSalonCpfCnpj(digits.length <= 11 ? maskCpfCnpj(v) : v);
+                  }}
+                  onDataLoaded={(data: CnpjConsultaResponse) => {
+                    setSalonName((prev) => prev || data.razaoSocial);
+                    if (data.endereco) {
+                      setAddress((prev) => ({
+                        ...prev,
+                        street: data.endereco!.logradouro,
+                        number: data.endereco!.numero,
+                        complement: data.endereco!.complemento ?? '',
+                        neighborhood: data.endereco!.bairro,
+                        city: data.endereco!.municipio,
+                        state: data.endereco!.uf.toUpperCase(),
+                        zipCode: data.endereco!.cep,
+                      }));
+                      setLastResolvedCep(normalizeCep(data.endereco.cep));
+                    }
+                    // emailSugestao e telefoneSugestao nao sao preenchidos automaticamente (LGPD)
+                  }}
                 />
               </div>
             </div>

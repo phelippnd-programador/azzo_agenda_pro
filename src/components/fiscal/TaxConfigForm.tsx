@@ -18,6 +18,8 @@ import { ApiError, fiscalApi } from '@/lib/api';
 import { maskCnpj, maskPhoneBr, maskCep, onlyDigits } from '@/lib/input-masks';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
+import { CnpjAutoFillField } from '@/components/shared/CnpjAutoFillField';
+import type { CnpjConsultaResponse } from '@/lib/api/cnpj';
 
 export function TaxConfigForm() {
   const { toast } = useToast();
@@ -234,8 +236,26 @@ export function TaxConfigForm() {
               <Input value={issuerNomeFantasia} onChange={(e) => setIssuerNomeFantasia(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>CNPJ</Label>
-              <Input value={issuerCnpj} onChange={(e) => setIssuerCnpj(maskCnpj(e.target.value))} placeholder="00.000.000/0000-00" />
+              <CnpjAutoFillField
+                id="issuer-cnpj"
+                label="CNPJ"
+                value={issuerCnpj}
+                onChange={(v) => setIssuerCnpj(v)}
+                onDataLoaded={(data: CnpjConsultaResponse) => {
+                  setIssuerRazaoSocial(data.razaoSocial);
+                  setIssuerNomeFantasia(data.nomeFantasia ?? '');
+                  if (data.endereco) {
+                    setIssuerZipCode(maskCep(data.endereco.cep));
+                    setIssuerStreet(data.endereco.logradouro);
+                    setIssuerNumber(data.endereco.numero);
+                    setIssuerComplement(data.endereco.complemento ?? '');
+                    setIssuerNeighborhood(data.endereco.bairro);
+                    setIssuerCity(data.endereco.municipio);
+                    setIssuerState(data.endereco.uf.toUpperCase());
+                  }
+                  // emailSugestao e telefoneSugestao nao sao preenchidos automaticamente (LGPD)
+                }}
+              />
             </div>
             <div className="space-y-2">
               <Label>IE</Label>
