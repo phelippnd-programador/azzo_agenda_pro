@@ -17,10 +17,26 @@ interface MainLayoutProps {
   subtitle?: string;
 }
 
+const DESKTOP_SIDEBAR_STORAGE_KEY = 'desktop_sidebar_open';
+
+function getInitialDesktopSidebarOpen() {
+  if (typeof window === 'undefined') {
+    return true;
+  }
+
+  try {
+    const stored = window.localStorage.getItem(DESKTOP_SIDEBAR_STORAGE_KEY);
+    return stored === null ? true : stored === 'true';
+  } catch {
+    return true;
+  }
+}
+
 export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(getInitialDesktopSidebarOpen);
   const { status: licenseStatus, isBlocked: isPlanExpired, refreshStatus } = useLicenseAccess();
 
   const isLicenseRoute = location.pathname === '/financeiro/licenca';
@@ -45,6 +61,14 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
     void checkSubscription();
   }, [isLicenseRoute, licenseStatus, refreshStatus]);
 
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(DESKTOP_SIDEBAR_STORAGE_KEY, String(desktopSidebarOpen));
+    } catch {
+      // ignore localStorage issues
+    }
+  }, [desktopSidebarOpen]);
+
   return (
     <div className="min-h-screen bg-[hsl(var(--shell))]">
       <Suspense fallback={null}>
@@ -53,12 +77,15 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
       <Sidebar
         isMobileOpen={mobileSidebarOpen}
         onToggleMobile={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-        isDesktopOpen
+        isDesktopOpen={desktopSidebarOpen}
+        onToggleDesktop={() => setDesktopSidebarOpen((current) => !current)}
       />
-      <div className="lg:pl-72">
+      <div className={desktopSidebarOpen ? 'lg:pl-72' : 'lg:pl-20'}>
         <Header
           title={title}
           subtitle={subtitle}
+          onToggleDesktopSidebar={() => setDesktopSidebarOpen((current) => !current)}
+          isDesktopSidebarOpen={desktopSidebarOpen}
         />
         <main className="overflow-x-hidden px-4 pb-6 pt-4 sm:px-6 sm:pb-8 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-6">
           <div className="mx-auto max-w-[1680px]">

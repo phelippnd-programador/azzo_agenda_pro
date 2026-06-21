@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { resolveApiMediaUrl } from "@/lib/api";
 import { maskPhoneBr } from "@/lib/input-masks";
+import { maskEmail } from "@/lib/mask";
 import { formatCurrency } from "@/lib/format";
 import { Calendar, DollarSign, Mail, MoreVertical, Phone } from "lucide-react";
 import type { Client } from "@/lib/api";
@@ -84,7 +85,7 @@ export function ClientCard({ client, onOpenProfile, onEdit, onDelete }: ClientCa
             {client.email && (
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Mail className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                <span className="text-xs sm:text-sm truncate">{client.email}</span>
+                <span className="text-xs sm:text-sm truncate">{maskEmail(client.email)}</span>
               </div>
             )}
             {!hasContact ? (

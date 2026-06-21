@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { CircleDot, ExternalLink, LogOut, Menu, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleDot, ExternalLink, LogOut, Menu, X } from "lucide-react";
 import { BrandLockup } from "@/components/common/BrandLockup";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +17,7 @@ interface SidebarProps {
   isMobileOpen: boolean;
   onToggleMobile: () => void;
   isDesktopOpen: boolean;
+  onToggleDesktop: () => void;
 }
 
 const SIDEBAR_SCROLL_STORAGE_KEY = "sidebar_scroll_top";
@@ -33,7 +34,7 @@ function getInitialExpandedGroups() {
   }
 }
 
-export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: SidebarProps) {
+export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleDesktop }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
@@ -66,7 +67,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
   }, [visibleMenuEntries]);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(getInitialExpandedGroups);
   const [salonSlug, setSalonSlug] = useState<string | null>(null);
-  const isCompactDesktop = false;
+  const isCompactDesktop = !isDesktopOpen;
 
   const persistScrollPosition = useCallback(() => {
     try {
@@ -143,7 +144,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
       <aside
         className={cn(
           "fixed left-0 top-0 z-50 h-full border-r border-sidebar-border bg-sidebar/95 shadow-[0_10px_40px_-28px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-[width,transform] duration-300",
-          "lg:w-72",
+          isDesktopOpen ? "lg:w-72" : "lg:w-20",
           "w-72",
           isMobileOpen ? "translate-x-0" : "-translate-x-full",
           "lg:translate-x-0"
@@ -175,6 +176,15 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen }: Sidebar
                   aria-label="Fechar menu"
                 >
                   <X className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hidden h-8 w-8 flex-shrink-0 rounded-xl text-sidebar-foreground/75 hover:bg-accent hover:text-accent-foreground lg:inline-flex"
+                  onClick={onToggleDesktop}
+                  aria-label={isDesktopOpen ? "Recolher menu lateral" : "Expandir menu lateral"}
+                >
+                  {isDesktopOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 </Button>
               </div>
               {isCompactDesktop ? (

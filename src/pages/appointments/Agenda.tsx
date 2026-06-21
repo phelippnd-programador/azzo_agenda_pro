@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { WorkspaceNotice } from '@/components/layout/module-surfaces';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -387,13 +388,13 @@ export default function Agenda() {
     <MainLayout title="Agenda" subtitle="Gerencie seus agendamentos">
       <div className="space-y-4 sm:space-y-6">
         <Card className="border-border/70 bg-card/90 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.16)]">
-          <CardContent className="space-y-4 py-4">
+          <CardContent className="space-y-4 p-4 sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="space-y-1.5">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                   Operacao do dia
                 </p>
-                <p className="text-sm font-medium text-foreground">
+                <p className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
                   Leia a agenda em duas etapas: primeiro o volume do dia, depois os horarios e conflitos.
                 </p>
                 <p className="max-w-3xl text-sm text-muted-foreground">
@@ -407,6 +408,39 @@ export default function Agenda() {
                 <Badge variant="outline" className="bg-background/80">
                   {formattedDate}
                 </Badge>
+                <Badge variant="outline" className="bg-background/80">
+                  {viewMode === 'day' ? `${daySummary.total} no dia` : `${totalAppointmentsInMonth} no mes`}
+                </Badge>
+              </div>
+            </div>
+
+            <div className="grid gap-3 lg:grid-cols-3">
+              <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  Leitura principal
+                </p>
+                <p className="mt-2 text-sm font-medium text-foreground">Volume, pendencias e execução</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Priorize pendências e atendimentos em andamento antes de descer para detalhes finos do dia.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  Navegacao
+                </p>
+                <p className="mt-2 text-sm font-medium text-foreground">Dia para execução, mês para distribuição</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Alterne a visão conforme a tarefa: operar horários ou enxergar concentração de demanda no calendário.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  Proximo passo
+                </p>
+                <p className="mt-2 text-sm font-medium text-foreground">Defina contexto e então aja</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Primeiro escolha profissional, status e período; depois abra o agendamento ou registre um novo horário.
+                </p>
               </div>
             </div>
 
@@ -542,6 +576,12 @@ export default function Agenda() {
             </div>
           </CardContent>
         </Card>
+
+        <WorkspaceNotice
+          title="Area de trabalho da agenda"
+          description="Navegue no calendario, aplique contexto por profissional ou status e entao siga para o atendimento ou novo agendamento."
+          badge={viewMode === 'day' ? `${daySummary.pending} pendente(s)` : `${totalAppointmentsInMonth} agendamento(s) no mes`}
+        />
 
         <Alert className="border-primary/20 bg-primary/5">
           <Info className="h-4 w-4" />

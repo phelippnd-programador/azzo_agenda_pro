@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -32,6 +33,7 @@ import { ProfessionalLimitMeter } from '@/components/professionals/ProfessionalL
 import { ProfessionalCard } from '@/components/professionals/ProfessionalCard';
 import { ProfessionalFormDialog } from '@/components/professionals/ProfessionalFormDialog';
 import { useMenuPermissions } from '@/contexts/MenuPermissionsContext';
+import { useAuth } from '@/contexts/AuthContext';
 import type { WorkingHours } from '@/types';
 
 type ProfessionalData = {
@@ -47,6 +49,7 @@ type ProfessionalData = {
 export default function Professionals() {
   const navigate = useNavigate();
   const { canAccess } = useMenuPermissions();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -73,6 +76,9 @@ export default function Professionals() {
   });
   const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.limit));
   const canAccessFinancialCommissions = canAccess('/financeiro/comissoes');
+  const hasLinkedCurrentUserProfessional = professionals.some((professional) => professional.userId === user?.id);
+  const activeProfessionalsCount = professionals.filter((professional) => professional.isActive).length;
+  const inactiveProfessionalsCount = Math.max(0, professionals.length - activeProfessionalsCount);
 
   const openEditDialog = (prof: ProfessionalData) => {
     setEditingProfessional(prof);
@@ -131,6 +137,34 @@ export default function Professionals() {
   return (
     <MainLayout title="Profissionais" subtitle="Gerencie sua equipe">
       <div className="space-y-4 sm:space-y-6">
+        <ModuleIntro
+          eyebrow="Equipe"
+          title="Organize cadastro, disponibilidade e regras de acesso da equipe no mesmo fluxo."
+          description="Use cards para leitura rápida do time e mude para lista quando precisar editar, ativar ou revisar várias pessoas em sequência."
+          badges={[
+            { label: `${professionals.length} profissional(is)` },
+            { label: viewMode === 'grid' ? 'Cards' : 'Lista' },
+            { label: `${filteredProfessionals.length} em foco` },
+          ]}
+          points={[
+            {
+              eyebrow: 'Operacao',
+              title: 'Cadastre e ative a equipe certa',
+              description: 'Mantenha a equipe ativa enxuta e use o perfil individual para detalhes e regras mais profundas.',
+            },
+            {
+              eyebrow: 'Comissao',
+              title: 'Configuracao saiu da tela principal',
+              description: 'A tela agora serve melhor para gestao do time; a apuracao fica concentrada no modulo financeiro.',
+            },
+            {
+              eyebrow: 'Proximo passo',
+              title: 'Busque, revise e abra o perfil',
+              description: 'Use a lista quando precisar agir em sequencia e os cards quando quiser leitura mais humana do time.',
+            },
+          ]}
+        />
+
         <ProfessionalLimitMeter limits={professionalLimits} isLoading={isLimitsLoading} />
 
         <Alert>
@@ -150,6 +184,36 @@ export default function Professionals() {
             )}
           </AlertDescription>
         </Alert>
+
+        <div className="grid gap-3 md:grid-cols-3 sm:gap-4">
+          <Card className="border-border/70 bg-card/90 shadow-none">
+            <div className="space-y-1 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Equipe total</p>
+              <p className="text-2xl font-semibold text-foreground">{professionals.length}</p>
+              <p className="text-xs text-muted-foreground">Total carregado na página atual.</p>
+            </div>
+          </Card>
+          <Card className="border-green-200/70 bg-green-50/70 shadow-none dark:border-green-500/20 dark:bg-green-500/10">
+            <div className="space-y-1 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-green-700 dark:text-green-300">Ativos</p>
+              <p className="text-2xl font-semibold text-green-800 dark:text-green-50">{activeProfessionalsCount}</p>
+              <p className="text-xs text-green-700/80 dark:text-green-200/80">Disponíveis para a operação do dia.</p>
+            </div>
+          </Card>
+          <Card className="border-slate-200/70 bg-slate-50/70 shadow-none dark:border-slate-700 dark:bg-slate-900/40">
+            <div className="space-y-1 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700 dark:text-slate-300">Inativos</p>
+              <p className="text-2xl font-semibold text-slate-800 dark:text-slate-50">{inactiveProfessionalsCount}</p>
+              <p className="text-xs text-slate-700/80 dark:text-slate-200/80">Fora da operação ativa ou aguardando uso.</p>
+            </div>
+          </Card>
+        </div>
+
+        <WorkspaceNotice
+          title="Area de trabalho da equipe"
+          description="Busque, alterne a visualizacao e siga para cadastro, edicao, ativacao ou perfil individual."
+          badge={`${activeProfessionalsCount} ativo(s) no momento`}
+        />
 
         <CrudListToolbar
           searchPlaceholder="Buscar profissionais..."
@@ -208,7 +272,18 @@ export default function Professionals() {
               ))}
             </div>
           ) : (
-            <Card>
+            <Card className="border-border/70 bg-muted/15 shadow-none">
+              <div className="flex flex-col gap-3 border-b border-border/70 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">Lista da equipe</p>
+                  <p className="text-sm text-muted-foreground">
+                    Leia status, contato e especialidades em uma visualizacao mais previsivel para manutencao.
+                  </p>
+                </div>
+                <Badge variant="outline" className="w-fit bg-background/80">
+                  {filteredProfessionals.length} visivel(is)
+                </Badge>
+              </div>
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -326,6 +401,7 @@ export default function Professionals() {
         open={isDialogOpen}
         onOpenChange={handleDialogOpenChange}
         editingProfessional={editingProfessional}
+        hasLinkedCurrentUserProfessional={hasLinkedCurrentUserProfessional}
         specialties={specialties}
         isLoadingSpecialties={isLoadingSpecialties}
         specialtiesError={specialtiesError}

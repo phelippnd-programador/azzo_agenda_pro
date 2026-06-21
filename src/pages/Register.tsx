@@ -547,6 +547,19 @@ export default function Register() {
                   </Button>
                 </div>
 
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  Ao criar sua conta, voce concorda com nossa{' '}
+                  <a
+                    href="/politica-privacidade"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-foreground"
+                  >
+                    Politica de Privacidade
+                  </a>
+                  {' '}e confirma que seus dados serao tratados conforme a LGPD (Lei 13.709/2018).
+                </p>
+
                 <p className="text-center text-xs text-muted-foreground" aria-live="polite">
                   {isLoading
                     ? "Criando sua conta e preparando o primeiro acesso..."

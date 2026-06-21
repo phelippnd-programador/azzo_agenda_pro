@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +35,7 @@ import { ClientCard } from '@/components/clients/ClientCard';
 import { ClientUpsertDialog } from '@/components/clients/ClientUpsertDialog';
 import { resolveApiMediaUrl } from '@/lib/api';
 import { maskPhoneBr } from '@/lib/input-masks';
+import { maskEmail } from '@/lib/mask';
 import { formatCurrency } from '@/lib/format';
 
 export default function ClientsOverviewPage() {
@@ -58,6 +60,7 @@ export default function ClientsOverviewPage() {
   );
   const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.limit));
   const editingClient = editingClientId ? clients.find((client) => client.id === editingClientId) ?? null : null;
+  const recurringClientsOnPage = clients.filter((client) => client.totalVisits >= 3).length;
 
   const openEditDialog = (client: typeof clients[number]) => {
     setEditingClientId(client.id);
@@ -101,29 +104,33 @@ export default function ClientsOverviewPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <Card className="border-border/70 bg-card/90 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.16)]">
-        <CardContent className="flex flex-col gap-4 py-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-1.5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              Relacionamento
-            </p>
-            <p className="text-sm font-medium text-foreground">
-              Acompanhe crescimento da base, recorrencia recente e potencial de receita por cliente.
-            </p>
-            <p className="max-w-3xl text-sm text-muted-foreground">
-              Use a busca para localizar nomes rapidamente e troque entre cards e lista conforme a tarefa do momento.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="bg-background/80">
-              {pagination.total} cliente(s)
-            </Badge>
-            <Badge variant="outline" className="bg-background/80">
-              {viewMode === 'grid' ? 'Cards' : 'Lista'}
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
+      <ModuleIntro
+        eyebrow="Relacionamento"
+        title="Acompanhe crescimento da base, recorrencia recente e potencial de receita por cliente."
+        description="Use a busca para localizar nomes rapidamente e troque entre cards e lista conforme a tarefa do momento."
+        badges={[
+          { label: `${pagination.total} cliente(s)` },
+          { label: viewMode === 'grid' ? 'Cards' : 'Lista' },
+          { label: `${filteredClients.length} em foco` },
+        ]}
+        points={[
+          {
+            eyebrow: 'Relacionamento',
+            title: 'Base e recorrencia',
+            description: 'Priorize clientes recentes e recorrentes antes de descer para acoes de edicao.',
+          },
+          {
+            eyebrow: 'Navegacao',
+            title: 'Cards para leitura, lista para manutencao',
+            description: 'Alterne a visualizacao conforme a tarefa: leitura rapida ou edicao em sequencia.',
+          },
+          {
+            eyebrow: 'Proximo passo',
+            title: 'Filtre, revise e abra o historico',
+            description: 'Use a tabela quando precisar comparar visitas, gasto e dados de contato na mesma passada.',
+          },
+        ]}
+      />
 
       <CrudListToolbar
         searchPlaceholder="Buscar clientes..."
@@ -164,8 +171,8 @@ export default function ClientsOverviewPage() {
           iconClassName="text-green-600 dark:text-green-300"
         />
         <HighlightMetricCard
-          title="Faturamento na pagina"
-          value={formatCurrency(totalSpentOnPage)}
+          title="Recorrentes na pagina"
+          value={String(recurringClientsOnPage)}
           icon={DollarSign}
           className="border-indigo-200/70 bg-indigo-50/70 dark:border-indigo-500/20 dark:bg-indigo-500/10"
           titleClassName="text-indigo-700 dark:text-indigo-300"
@@ -174,6 +181,12 @@ export default function ClientsOverviewPage() {
           iconClassName="text-indigo-600 dark:text-indigo-300"
         />
       </div>
+
+      <WorkspaceNotice
+        title="Area de trabalho de clientes"
+        description="Busque, alterne a visualizacao e abra rapidamente o cadastro ou o historico do cliente."
+        badge={`${formatCurrency(totalSpentOnPage)} em faturamento nesta pagina`}
+      />
 
       {filteredClients.length === 0 ? (
         <PageEmptyState
@@ -209,7 +222,18 @@ export default function ClientsOverviewPage() {
           ))}
         </div>
       ) : (
-        <Card className="border-border/70 shadow-none">
+        <Card className="border-border/70 bg-muted/15 shadow-none">
+          <div className="flex flex-col gap-3 border-b border-border/70 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Lista de clientes</p>
+              <p className="text-sm text-muted-foreground">
+                Compare contato, recorrencia e faturamento sem sair da mesma passada.
+              </p>
+            </div>
+            <Badge variant="outline" className="w-fit bg-background/80">
+              {filteredClients.length} visivel(is)
+            </Badge>
+          </div>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -243,7 +267,7 @@ export default function ClientsOverviewPage() {
                     </TableCell>
                     <TableCell className="hidden text-sm sm:table-cell">{maskPhoneBr(client.phone, false)}</TableCell>
                     <TableCell className="hidden max-w-[150px] truncate text-sm md:table-cell">
-                      {client.email || '-'}
+                      {maskEmail(client.email)}
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant="secondary" className="text-xs">

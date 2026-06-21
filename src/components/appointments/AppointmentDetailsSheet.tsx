@@ -563,6 +563,10 @@ export function AppointmentDetailsSheet({
                     rows={3}
                     disabled={!canRegisterNotes || isSaving}
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Evite registrar informacoes de saude (alergias, condicoes clinicas) sem consentimento expresso do cliente.
+                    Dados sensiveis exigem tratamento diferenciado pela LGPD (art. 11).
+                  </p>
                 </div>
 
                 <div className="space-y-2">

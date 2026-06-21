@@ -116,7 +116,7 @@ const isPublicEndpoint = (endpoint: string) =>
 
 export const saveSession = (user?: User | null) => {
   if (user) {
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    sessionStorage.setItem(USER_KEY, JSON.stringify(user));
     if (String(user.role || "").toUpperCase() === "ADMIN") {
       setLicenseAccessStatus("ACTIVE");
     }
@@ -124,14 +124,14 @@ export const saveSession = (user?: User | null) => {
 };
 
 export const clearSession = () => {
-  localStorage.removeItem(USER_KEY);
+  sessionStorage.removeItem(USER_KEY);
   setLicenseAccessStatus("UNKNOWN");
 };
 
 const isCurrentUserAdmin = () => {
   if (typeof window === "undefined") return false;
   try {
-    const raw = localStorage.getItem(USER_KEY);
+    const raw = sessionStorage.getItem(USER_KEY);
     if (!raw) return false;
     const parsed = JSON.parse(raw) as { role?: string };
     return String(parsed?.role || "").toUpperCase() === "ADMIN";
@@ -143,7 +143,7 @@ const isCurrentUserAdmin = () => {
 const hasSessionUserHint = () => {
   if (typeof window === "undefined") return false;
   try {
-    return Boolean(localStorage.getItem(USER_KEY));
+    return Boolean(sessionStorage.getItem(USER_KEY));
   } catch {
     return false;
   }

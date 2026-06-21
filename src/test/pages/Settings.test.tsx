@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import Settings from "@/pages/Settings";
@@ -182,9 +182,8 @@ describe("Settings", () => {
       </MemoryRouter>
     );
 
-    const integrationsTitle = (await screen.findAllByText("Integracoes"))[0];
-    const integrationsCard = integrationsTitle.closest('[class*="rounded"]') as HTMLElement;
-    await user.click(within(integrationsCard).getByRole("button", { name: /Abrir integracoes/i }));
+    const integrationButtons = await screen.findAllByRole("button", { name: /Abrir integracoes/i });
+    await user.click(integrationButtons[0]);
 
     expect(await screen.findByRole("tab", { name: "Integracoes", selected: true })).toBeInTheDocument();
     expect(screen.getByText(/Acompanhe o estado das integracoes operacionais/i)).toBeInTheDocument();

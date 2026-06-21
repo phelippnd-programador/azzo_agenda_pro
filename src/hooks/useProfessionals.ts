@@ -1,5 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
-import { professionalsApi, isPlanExpiredApiError, type Professional, type ProfessionalLimits } from "@/lib/api";
+import {
+  professionalsApi,
+  isPlanExpiredApiError,
+  type Professional,
+  type ProfessionalLimits,
+  type ProfessionalUpsertPayload,
+} from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import { useResourceList } from "@/hooks/useResourceList";
 import { toast } from "sonner";
@@ -46,7 +52,7 @@ export function useProfessionals(options?: UseProfessionalsOptions) {
 
   // ─── Mutações ─────────────────────────────────────────────────────────────────
 
-  const createProfessional = async (data: Partial<Professional>) => {
+  const createProfessional = async (data: ProfessionalUpsertPayload) => {
     try {
       const result = await professionalsApi.create(data);
       await _fetch({ page: pagination.page, limit: pagination.limit });
@@ -60,7 +66,7 @@ export function useProfessionals(options?: UseProfessionalsOptions) {
     }
   };
 
-  const updateProfessional = async (id: string, data: Partial<Professional>) => {
+  const updateProfessional = async (id: string, data: ProfessionalUpsertPayload) => {
     try {
       const result = await professionalsApi.update(id, data);
       await _fetch({ page: pagination.page, limit: pagination.limit });

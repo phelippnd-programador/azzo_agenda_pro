@@ -7,12 +7,15 @@ import {
   Building2,
   CheckCircle2,
   CircleAlert,
+  Cpu,
+  Mail,
   PlugZap,
   Receipt,
   ShieldCheck,
   User,
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +25,10 @@ import { useMenuPermissions } from '@/contexts/MenuPermissionsContext';
 import { SettingsNotificationsTab } from '@/components/settings/SettingsNotificationsTab';
 import { SettingsAccountTab } from '@/components/settings/SettingsAccountTab';
 import { AppointmentConflictSettingsCard } from '@/components/settings/AppointmentConflictSettingsCard';
+import { SettingsLgpdTab } from '@/components/settings/SettingsLgpdTab';
+import { SettingsFeatureFlagsTab } from '@/components/settings/SettingsFeatureFlagsTab';
+import { SettingsEmailTemplatesTab } from '@/components/settings/SettingsEmailTemplatesTab';
+import { SettingsBusinessHoursTab } from '@/components/settings/SettingsBusinessHoursTab';
 
 function SettingsDomainCard({
   icon: Icon,
@@ -44,25 +51,25 @@ function SettingsDomainCard({
 }) {
   const badgeClassName =
     statusTone === 'success'
-      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+      ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300'
       : statusTone === 'warning'
-        ? 'border-amber-200 bg-amber-50 text-amber-800'
-        : 'border-border bg-muted text-muted-foreground';
+        ? 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300'
+        : 'border-border bg-muted text-muted-foreground dark:bg-muted/30';
 
   return (
-    <Card className="border-border/60">
+    <Card className="border-border/60 bg-card/95 shadow-none transition-colors hover:border-border">
       <CardContent className={compact ? 'space-y-3 p-4' : 'space-y-4 p-5'}>
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <div
-              className={`flex items-center justify-center rounded-xl bg-primary/10 text-primary ${
+              className={`flex items-center justify-center rounded-xl border border-primary/10 bg-primary/10 text-primary ${
                 compact ? 'h-9 w-9' : 'h-10 w-10'
               }`}
             >
               <Icon className={compact ? 'h-4.5 w-4.5' : 'h-5 w-5'} />
             </div>
-            <div>
-              <p className="font-medium text-foreground">{title}</p>
+            <div className="min-w-0">
+              <p className="truncate font-medium text-foreground">{title}</p>
               <p className={compact ? 'text-xs text-muted-foreground' : 'text-sm text-muted-foreground'}>
                 {description}
               </p>
@@ -76,7 +83,7 @@ function SettingsDomainCard({
           </Badge>
         </div>
 
-        <Button variant="outline" className="w-full justify-between" onClick={onAction}>
+        <Button variant="outline" className="w-full justify-between border-border/70 bg-background/70" onClick={onAction}>
           {actionLabel}
           <ArrowRight className="h-4 w-4" />
         </Button>
@@ -101,17 +108,25 @@ export default function Settings() {
   const canAccessNfseModule = hasExactRoute('/fiscal/nfse');
   const canAccessSalonProfile = canAccess('/perfil-salao');
 
+  const isOwner = user?.role === 'OWNER';
+
   const visibleTabs = useMemo(() => {
     const tabs = ['notifications', 'account'];
     if (canAccessWhatsAppIntegration || canAccessStockSettings) tabs.push('integrations');
     if (canAccessTaxSettings || canAccessCertificates || canAccessNfseSettings || canAccessNfseModule)
       tabs.push('fiscal');
     if (canAccessSalonProfile) tabs.push('salon');
+    if (isOwner) {
+      tabs.push('business-hours');
+      tabs.push('lgpd');
+      tabs.push('features');
+      tabs.push('email-templates');
+    }
     return tabs;
   }, [
     canAccessWhatsAppIntegration, canAccessStockSettings,
     canAccessTaxSettings, canAccessCertificates, canAccessNfseSettings, canAccessNfseModule,
-    canAccessSalonProfile,
+    canAccessSalonProfile, isOwner,
   ]);
 
   useEffect(() => {
@@ -209,6 +224,58 @@ export default function Settings() {
       });
     }
 
+    if (visibleTabs.includes('business-hours')) {
+      cards.push({
+        key: 'business-hours',
+        icon: Bell,
+        title: 'Horarios de Funcionamento',
+        description: 'Horarios de atendimento por dia da semana (tabela relacional).',
+        statusLabel: 'Restrito',
+        statusTone: 'default' as const,
+        actionLabel: 'Abrir horarios',
+        onAction: () => handleTabChange('business-hours', { scrollToSection: true }),
+      });
+    }
+
+    if (visibleTabs.includes('lgpd')) {
+      cards.push({
+        key: 'lgpd',
+        icon: ShieldCheck,
+        title: 'LGPD',
+        description: 'Canal de contato, DPO e SLA de resposta para titulares.',
+        statusLabel: 'Restrito',
+        statusTone: 'default' as const,
+        actionLabel: 'Abrir LGPD',
+        onAction: () => handleTabChange('lgpd', { scrollToSection: true }),
+      });
+    }
+
+    if (visibleTabs.includes('features')) {
+      cards.push({
+        key: 'features',
+        icon: Cpu,
+        title: 'Recursos',
+        description: 'Feature flags e politicas de retencao de dados do tenant.',
+        statusLabel: 'Restrito',
+        statusTone: 'default' as const,
+        actionLabel: 'Abrir recursos',
+        onAction: () => handleTabChange('features', { scrollToSection: true }),
+      });
+    }
+
+    if (visibleTabs.includes('email-templates')) {
+      cards.push({
+        key: 'email-templates',
+        icon: Mail,
+        title: 'Templates de E-mail',
+        description: 'Personalize os modelos de e-mail transacional do tenant.',
+        statusLabel: 'Restrito',
+        statusTone: 'default' as const,
+        actionLabel: 'Abrir templates',
+        onAction: () => handleTabChange('email-templates', { scrollToSection: true }),
+      });
+    }
+
     return cards;
   }, [
     canAccessWhatsAppIntegration,
@@ -283,10 +350,29 @@ export default function Settings() {
         label: 'Perfil do Salao',
         description: 'Dados publicos e operacionais que impactam pagina e agenda online.',
       },
+      'business-hours': {
+        label: 'Horarios de Funcionamento',
+        description: 'Horarios de atendimento do estabelecimento por dia da semana.',
+      },
+      lgpd: {
+        label: 'LGPD',
+        description: 'Canal de contato, DPO e prazo de resposta para titulares de dados.',
+      },
+      features: {
+        label: 'Recursos',
+        description: 'Integracao com pagamentos, armazenamento e retencao de dados do tenant.',
+      },
+      'email-templates': {
+        label: 'Templates de E-mail',
+        description: 'Personalize os modelos de e-mail transacional enviados pelo sistema.',
+      },
     };
 
     return meta[activeTab] ?? meta.notifications;
   }, [activeTab]);
+
+  const visibleDomainCount = domainCards.length;
+  const visiblePriorityCount = pendingItems.length;
 
   return (
     <MainLayout
@@ -294,26 +380,44 @@ export default function Settings() {
       subtitle="Centro de controle para conta, operacao, integracoes e configuracoes fiscais."
     >
       <div className="space-y-6">
-        <Card className="border-border/60 bg-gradient-to-r from-background via-muted/30 to-background">
-          <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Centro de controle
-              </p>
-              <p className="text-sm font-medium text-foreground">
-                Use os atalhos rapidos para escolher o dominio e siga direto para a configuracao detalhada.
-              </p>
-            </div>
-            <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-              <Badge variant="outline" className="w-fit bg-background/80">
-                {domainCards.length} dominios disponiveis
-              </Badge>
-              <Button variant="outline" className="w-full sm:w-auto" onClick={() => scrollToSettingsTabs()}>
-                Ir para configuracao detalhada
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <ModuleIntro
+          eyebrow="Centro de controle"
+          title="Entre pelo dominio certo e siga direto para o ajuste detalhado."
+          description="A pagina foi organizada para separar visao geral, prioridades imediatas e configuracao profunda sem repetir blocos desnecessarios."
+          badges={[
+            { label: `${visibleDomainCount} dominios` },
+            { label: `${visiblePriorityCount} prioridades` },
+          ]}
+          actions={
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => scrollToSettingsTabs()}>
+              Ir para configuracao detalhada
+            </Button>
+          }
+          points={[
+            {
+              eyebrow: 'Conta',
+              title: 'Dados, senha e MFA',
+              description: 'Seguranca e identidade do usuario no mesmo fluxo.',
+            },
+            {
+              eyebrow: 'Operacao',
+              title: 'Notificacoes e rotina',
+              description: 'Lembretes, reativacao e regras internas da agenda.',
+            },
+            {
+              eyebrow: 'Integracoes',
+              title: 'Canais e modulos',
+              description: 'WhatsApp, estoque e conexoes externas do tenant.',
+            },
+            {
+              eyebrow: 'Fiscal',
+              title: 'Setup critico',
+              description: 'Impostos, certificados e emissao no mesmo checkpoint.',
+            },
+          ]}
+          className="bg-gradient-to-r from-background via-muted/30 to-background shadow-none"
+        />
+
 
         <div className="hidden gap-4 lg:grid lg:grid-cols-[minmax(0,1.7fr)_minmax(320px,1fr)]">
           <div className="space-y-4">
@@ -361,7 +465,7 @@ export default function Settings() {
           </Card>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-3 lg:hidden">
           <div className="space-y-1">
             <h2 className="text-lg font-semibold tracking-tight text-foreground">Acesso rapido por dominio</h2>
             <p className="text-sm text-muted-foreground">
@@ -376,6 +480,12 @@ export default function Settings() {
         </div>
 
         <div ref={tabsSectionRef} className="scroll-mt-24 space-y-3">
+          <WorkspaceNotice
+            title="Area de trabalho de configuracoes"
+            description="Escolha um dominio acima e use esta secao para seguir direto no ajuste detalhado da aba correspondente."
+            badge={activeTabMeta.label}
+          />
+
           <div className="space-y-1">
             <h2 className="text-lg font-semibold tracking-tight text-foreground">Configuracao detalhada</h2>
             <p className="text-sm text-muted-foreground">
@@ -413,6 +523,18 @@ export default function Settings() {
                 ) : null}
                 {visibleTabs.includes('salon') ? (
                   <TabsTrigger value="salon" className="shrink-0 whitespace-nowrap">Perfil do Salao</TabsTrigger>
+                ) : null}
+                {visibleTabs.includes('business-hours') ? (
+                  <TabsTrigger value="business-hours" className="shrink-0 whitespace-nowrap">Horarios</TabsTrigger>
+                ) : null}
+                {visibleTabs.includes('lgpd') ? (
+                  <TabsTrigger value="lgpd" className="shrink-0 whitespace-nowrap">LGPD</TabsTrigger>
+                ) : null}
+                {visibleTabs.includes('features') ? (
+                  <TabsTrigger value="features" className="shrink-0 whitespace-nowrap">Recursos</TabsTrigger>
+                ) : null}
+                {visibleTabs.includes('email-templates') ? (
+                  <TabsTrigger value="email-templates" className="shrink-0 whitespace-nowrap">Templates de E-mail</TabsTrigger>
                 ) : null}
               </TabsList>
             </div>
@@ -621,10 +743,34 @@ export default function Settings() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {isOwner ? (
+          <TabsContent value="business-hours">
+            <SettingsBusinessHoursTab />
+          </TabsContent>
+        ) : null}
+
+        {isOwner ? (
+          <TabsContent value="lgpd">
+            <SettingsLgpdTab />
+          </TabsContent>
+        ) : null}
+
+        {isOwner ? (
+          <TabsContent value="features">
+            <SettingsFeatureFlagsTab />
+          </TabsContent>
+        ) : null}
+
+        {isOwner ? (
+          <TabsContent value="email-templates">
+            <SettingsEmailTemplatesTab />
+          </TabsContent>
+        ) : null}
           </Tabs>
         </div>
 
-        <Card className="border-border/60">
+        <Card className="border-border/60 lg:hidden">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <CircleAlert className="h-4 w-4 text-amber-600" />
