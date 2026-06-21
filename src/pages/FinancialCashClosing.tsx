@@ -25,6 +25,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageEmptyState, PageErrorState } from "@/components/ui/page-states";
@@ -61,17 +62,6 @@ const todayDateKey = () => {
   return `${year}-${month}-${day}`;
 };
 
-const formatMoneyInput = (valueCents: number) => (valueCents / 100).toFixed(2).replace(".", ",");
-
-const parseMoneyInputToCents = (rawValue: string) => {
-  const normalized = rawValue.replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
-  if (!normalized) return 0;
-  const numeric = Number(normalized);
-  if (!Number.isFinite(numeric) || numeric < 0) {
-    throw new Error("Informe um valor monetário válido");
-  }
-  return Math.round(numeric * 100);
-};
 
 export default function FinancialCashClosing() {
   const [closings, setClosings] = useState<CashClosing[]>([]);
@@ -87,12 +77,12 @@ export default function FinancialCashClosing() {
 
   const [isCloseDialogVisible, setIsCloseDialogVisible] = useState(false);
   const [closingNotes, setClosingNotes] = useState("");
-  const [countedTotals, setCountedTotals] = useState<Record<CashClosingPaymentMethod, string>>({
-    CASH: "0,00",
-    CREDIT_CARD: "0,00",
-    DEBIT_CARD: "0,00",
-    PIX: "0,00",
-    OTHER: "0,00",
+  const [countedTotals, setCountedTotals] = useState<Record<CashClosingPaymentMethod, number>>({
+    CASH: 0,
+    CREDIT_CARD: 0,
+    DEBIT_CARD: 0,
+    PIX: 0,
+    OTHER: 0,
   });
   const [isSubmittingClose, setIsSubmittingClose] = useState(false);
 
@@ -161,11 +151,11 @@ export default function FinancialCashClosing() {
     if (!isCloseDialogVisible || !selectedClosing) return;
     setClosingNotes(selectedClosing.closingNotes ?? "");
     setCountedTotals({
-      CASH: formatMoneyInput(selectedClosing.expectedTotals.CASH ?? 0),
-      CREDIT_CARD: formatMoneyInput(selectedClosing.expectedTotals.CREDIT_CARD ?? 0),
-      DEBIT_CARD: formatMoneyInput(selectedClosing.expectedTotals.DEBIT_CARD ?? 0),
-      PIX: formatMoneyInput(selectedClosing.expectedTotals.PIX ?? 0),
-      OTHER: formatMoneyInput(selectedClosing.expectedTotals.OTHER ?? 0),
+      CASH: selectedClosing.expectedTotals.CASH ?? 0,
+      CREDIT_CARD: selectedClosing.expectedTotals.CREDIT_CARD ?? 0,
+      DEBIT_CARD: selectedClosing.expectedTotals.DEBIT_CARD ?? 0,
+      PIX: selectedClosing.expectedTotals.PIX ?? 0,
+      OTHER: selectedClosing.expectedTotals.OTHER ?? 0,
     });
   }, [isCloseDialogVisible, selectedClosing]);
 
@@ -212,7 +202,7 @@ export default function FinancialCashClosing() {
     setIsSubmittingClose(true);
     try {
       const payload = PAYMENT_METHODS.reduce<Partial<Record<CashClosingPaymentMethod, number>>>((acc, method) => {
-        acc[method.key] = parseMoneyInputToCents(countedTotals[method.key] ?? "0");
+        acc[method.key] = countedTotals[method.key] ?? 0;
         return acc;
       }, {});
 
@@ -596,14 +586,14 @@ export default function FinancialCashClosing() {
             {PAYMENT_METHODS.map((method) => (
               <div key={method.key} className="space-y-2">
                 <Label htmlFor={`counted-${method.key}`}>{method.label}</Label>
-                <Input
+                <CurrencyInput
                   id={`counted-${method.key}`}
-                  inputMode="decimal"
+                  cents
                   value={countedTotals[method.key]}
-                  onChange={(event) =>
+                  onChange={(val) =>
                     setCountedTotals((current) => ({
                       ...current,
-                      [method.key]: event.target.value,
+                      [method.key]: val,
                     }))
                   }
                 />

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,7 +39,7 @@ type EditableRule = {
   targetId: string;
   targetCode: string;
   percentValue: string;
-  fixedAmount: string;
+  fixedAmount: number;
   percentBaseType: "GROSS" | "NET_OF_DISCOUNT";
   refundPolicy: "KEEP_COMMISSION" | "REVERSE_COMMISSION";
   active: boolean;
@@ -49,14 +50,11 @@ const createEmptyRule = (): EditableRule => ({
   targetId: "",
   targetCode: "",
   percentValue: "0",
-  fixedAmount: "0",
+  fixedAmount: 0,
   percentBaseType: "GROSS",
   refundPolicy: "KEEP_COMMISSION",
   active: true,
 });
-
-const centsToAmount = (value: number) => (value / 100).toFixed(2);
-const amountToCents = (value: string) => Math.round(Number(value || 0) * 100);
 
 const toEditableRule = (rule: CommissionRuleItemResponse): EditableRule => ({
   id: rule.id,
@@ -64,7 +62,7 @@ const toEditableRule = (rule: CommissionRuleItemResponse): EditableRule => ({
   targetId: rule.targetId || "",
   targetCode: rule.targetCode || "",
   percentValue: String(rule.percentValue ?? 0),
-  fixedAmount: centsToAmount(rule.fixedAmountCents ?? 0),
+  fixedAmount: rule.fixedAmountCents ?? 0,
   percentBaseType: rule.percentBaseType,
   refundPolicy: rule.refundPolicy,
   active: rule.active,
@@ -81,7 +79,7 @@ const normalizeRule = (rule: EditableRule): CommissionRuleRequest => ({
       ? rule.targetCode.trim() || null
       : null,
   percentValue: Number(rule.percentValue || 0),
-  fixedAmountCents: amountToCents(rule.fixedAmount),
+  fixedAmountCents: rule.fixedAmount,
   percentBaseType: rule.percentBaseType,
   refundPolicy: rule.refundPolicy,
   active: rule.active,
@@ -291,12 +289,10 @@ export function CommissionRuleSetEditor({
                   </div>
                   <div className="space-y-2">
                     <Label>Fixo (R$)</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
+                    <CurrencyInput
+                      cents
                       value={rule.fixedAmount}
-                      onChange={(event) => updateRule(index, { fixedAmount: event.target.value })}
+                      onChange={(val) => updateRule(index, { fixedAmount: val })}
                     />
                   </div>
                   <div className="space-y-2">

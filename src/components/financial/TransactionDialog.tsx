@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toDateKey } from '@/lib/format';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import type { Transaction } from '@/types';
 import type { StockItem } from '@/types/stock';
 
@@ -48,17 +49,6 @@ interface TransactionDialogProps {
   createCategory: (name: string) => Promise<{ id: string; name: string } | undefined>;
 }
 
-function formatAmountInput(amountCents?: number | null) {
-  if (amountCents == null) return '';
-  return (amountCents / 100).toFixed(2);
-}
-
-function parseAmountToCents(input: string) {
-  const normalized = input.replace(',', '.').trim();
-  const amountValue = Number(normalized);
-  if (!Number.isFinite(amountValue) || amountValue <= 0) return null;
-  return Math.round(amountValue * 100);
-}
 
 export function TransactionDialog({
   open,
@@ -75,7 +65,7 @@ export function TransactionDialog({
 }: TransactionDialogProps) {
   const [transactionType, setTransactionType] = useState<'INCOME' | 'EXPENSE'>(defaultType);
   const [formDescription, setFormDescription] = useState('');
-  const [formAmount, setFormAmount] = useState('');
+  const [formAmount, setFormAmount] = useState(0);
   const [formCategory, setFormCategory] = useState('');
   const [formNewCategory, setFormNewCategory] = useState('');
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
@@ -105,7 +95,7 @@ export function TransactionDialog({
     if (editingTransaction) {
       setTransactionType(editingTransaction.type);
       setFormDescription(editingTransaction.description);
-      setFormAmount(formatAmountInput(editingTransaction.amount));
+      setFormAmount(editingTransaction.amount ?? 0);
       setFormCategory(editingTransaction.category);
       setFormPaymentMethod(editingTransaction.paymentMethod);
       setFormDate(toDateKey(editingTransaction.date));
@@ -136,7 +126,7 @@ export function TransactionDialog({
 
   const resetForm = () => {
     setFormDescription('');
-    setFormAmount('');
+    setFormAmount(0);
     setFormCategory('');
     setFormNewCategory('');
     setIsCreatingCategory(false);
@@ -169,8 +159,8 @@ export function TransactionDialog({
       return;
     }
 
-    const amountCents = parseAmountToCents(formAmount);
-    if (amountCents == null) {
+    const amountCents = formAmount;
+    if (!amountCents || amountCents <= 0) {
       toast.error('Informe um valor maior que zero');
       return;
     }
@@ -260,13 +250,10 @@ export function TransactionDialog({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Valor (R$) *</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  placeholder="0.00"
+                <CurrencyInput
+                  cents
                   value={formAmount}
-                  onChange={(e) => setFormAmount(e.target.value)}
+                  onChange={(val) => setFormAmount(val)}
                 />
               </div>
               <div className="space-y-2">

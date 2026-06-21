@@ -25,6 +25,7 @@ import { CFOP_CODES, CSOSN_CODES, CST_CODES, TaxRegime } from '@/types/fiscal';
 import type { CnpjConsultaResponse } from '@/lib/api/cnpj';
 import { fiscalApi } from '@/lib/api';
 import { maskCpf, maskCnpj, maskPhoneBr } from '@/lib/input-masks';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { toast } from 'sonner';
 
 interface InvoiceFormProps {
@@ -127,11 +128,6 @@ export function InvoiceForm({ onSubmit, initialData, nfseEnabled = false, nfceEn
       }
       return item;
     }));
-  };
-
-  const parseUnitPriceInput = (rawValue: string) => {
-    const normalized = rawValue.replace(",", ".").replace(/^0+(?=\d)/, "");
-    return parseFloat(normalized) || 0;
   };
 
   const normalizeCfop = (value?: string) => (value || "").replace(/\D/g, "");
@@ -449,14 +445,9 @@ export function InvoiceForm({ onSubmit, initialData, nfseEnabled = false, nfceEn
                 </div>
                 <div className="space-y-2">
                   <Label>Valor Unitario *</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={item.unitPrice === 0 ? '' : item.unitPrice}
-                    placeholder="0,00"
-                    onChange={(e) => updateItem(item.id, 'unitPrice', parseUnitPriceInput(e.target.value))}
-                    onFocus={(e) => e.target.select()}
+                  <CurrencyInput
+                    value={item.unitPrice}
+                    onChange={(val) => updateItem(item.id, 'unitPrice', val)}
                   />
                 </div>
               </div>

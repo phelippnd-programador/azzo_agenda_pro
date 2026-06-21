@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { nfseApi, type NfseInvoice } from "@/lib/api";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import type { CnpjConsultaResponse } from "@/lib/api/cnpj";
 import { resolveUiError } from "@/lib/error-utils";
 import { toast } from "sonner";
@@ -434,16 +435,15 @@ export default function NfseInvoiceForm() {
             </div>
             <div className="space-y-2">
               <Label>Valor unitario</Label>
-              <Input
-                type="number"
-                value={invoice.items?.[0]?.valorUnitario || 0}
-                onChange={(e) =>
+              <CurrencyInput
+                value={invoice.items?.[0]?.valorUnitario ?? 0}
+                onChange={(val) =>
                   setInvoice((prev) => ({
                     ...prev,
                     items: [
                       {
                         ...(prev.items?.[0] || BASE_ITEM),
-                        valorUnitario: Number(e.target.value || 0),
+                        valorUnitario: val,
                       },
                     ],
                   }))

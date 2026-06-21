@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -57,7 +58,7 @@ type NewAppointmentDialogFlowProps = {
   canChooseSlot: boolean;
   selectedServiceDuration: number;
   selectedServicePrice: number;
-  discountInput: string;
+  discountInput: number;
   discountAmountCents: number;
   netServicePriceCents: number;
   onOpenNewClientDialog: () => void;
@@ -69,7 +70,7 @@ type NewAppointmentDialogFlowProps = {
   onSlotModeChange: (mode: SlotMode) => void;
   onSuggestedSlotSelect: (slot: ManualTimeSlotResponse) => void;
   onManualStartTimeChange: (value: string) => void;
-  onDiscountChange: (value: string) => void;
+  onDiscountChange: (value: number) => void;
 };
 
 export function NewAppointmentDialogFlow({
@@ -315,12 +316,11 @@ export function NewAppointmentDialogFlow({
               </div>
               <div className="mt-3 space-y-2">
                 <Label htmlFor="appointment-discount">Desconto opcional</Label>
-                <Input
+                <CurrencyInput
                   id="appointment-discount"
-                  inputMode="decimal"
+                  cents
                   value={discountInput}
-                  onChange={(event) => onDiscountChange(event.target.value)}
-                  placeholder="0,00"
+                  onChange={onDiscountChange}
                 />
               </div>
               <div className="mt-2 flex items-center justify-between">

@@ -44,29 +44,13 @@ export function NewAppointmentDialog({
   activeProfessionals,
   createAppointment,
 }: NewAppointmentDialogProps) {
-  const parseCurrencyInputToCents = (rawValue: string) => {
-    const compact = rawValue.trim().replace(/\s/g, "");
-    if (!compact) return 0;
-
-    let normalized = compact;
-    if (normalized.includes(",") && normalized.includes(".")) {
-      normalized = normalized.replace(/\./g, "").replace(",", ".");
-    } else if (normalized.includes(",")) {
-      normalized = normalized.replace(",", ".");
-    }
-
-    const numeric = Number(normalized);
-    if (!Number.isFinite(numeric) || numeric < 0) return 0;
-    return Math.round(numeric * 100);
-  };
-
   const [currentStep, setCurrentStep] = useState(1);
   const [newClientId, setNewClientId] = useState('');
   const [newClientSearch, setNewClientSearch] = useState('');
   const [isNewClientDialogOpen, setIsNewClientDialogOpen] = useState(false);
   const [newProfessionalId, setNewProfessionalId] = useState('');
   const [newServiceId, setNewServiceId] = useState('');
-  const [newDiscountInput, setNewDiscountInput] = useState('0,00');
+  const [newDiscountInput, setNewDiscountInput] = useState(0);
   const [newDate, setNewDate] = useState(toDateKey(currentDate));
   const [newStartTime, setNewStartTime] = useState('');
   const [newEndTime, setNewEndTime] = useState('');
@@ -178,7 +162,7 @@ export function NewAppointmentDialog({
   );
   const selectedServiceDuration = Number(selectedNewService?.duration || 0);
   const selectedServicePrice = Number(selectedNewService?.price || 0);
-  const discountAmountCents = Math.min(parseCurrencyInputToCents(newDiscountInput), selectedServicePrice);
+  const discountAmountCents = Math.min(newDiscountInput, selectedServicePrice);
   const netServicePriceCents = Math.max(0, selectedServicePrice - discountAmountCents);
 
   const {
@@ -256,7 +240,7 @@ export function NewAppointmentDialog({
   }, [activeServices, newServiceId]);
 
   useEffect(() => {
-    setNewDiscountInput('0,00');
+    setNewDiscountInput(0);
   }, [newServiceId]);
 
   useEffect(() => {
@@ -304,7 +288,7 @@ export function NewAppointmentDialog({
       isProfessionalUser && loggedProfessional?.id ? loggedProfessional.id : '',
     );
     setNewServiceId('');
-    setNewDiscountInput('0,00');
+    setNewDiscountInput(0);
     setNewStartTime('');
     setNewEndTime('');
     setSlotMode('suggested');

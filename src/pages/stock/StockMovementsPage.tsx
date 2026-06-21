@@ -9,6 +9,7 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageEmptyState } from "@/components/ui/page-states";
 import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { resolveUiError } from "@/lib/error-utils";
 import type { CreateStockMovementRequest, StockItem, StockMovement, StockMovementType } from "@/types/stock";
 import { ArrowDownCircle, ArrowLeftRight, ArrowUpCircle, Scale } from "lucide-react";
@@ -173,7 +174,10 @@ export default function StockMovementsPage() {
                 </div>
                 <div className="space-y-1">
                   <Label>Valor unitario pago (opcional)</Label>
-                  <Input type="number" min="0" step="0.0001" value={form.valorUnitarioPago || 0} onChange={(e) => setForm((prev) => ({ ...prev, valorUnitarioPago: Number(e.target.value || 0) }))} />
+                  <CurrencyInput
+                    value={form.valorUnitarioPago ?? 0}
+                    onChange={(val) => setForm((prev) => ({ ...prev, valorUnitarioPago: val }))}
+                  />
                 </div>
               </div>
               <DialogFooter>

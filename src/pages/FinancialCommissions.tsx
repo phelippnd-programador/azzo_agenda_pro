@@ -49,7 +49,7 @@ export default function FinancialCommissions() {
   const [services, setServices] = useState<Service[]>([]);
   const [products, setProducts] = useState<StockItem[]>([]);
   const [adjustmentProfessionalId, setAdjustmentProfessionalId] = useState("");
-  const [adjustmentAmount, setAdjustmentAmount] = useState("0.00");
+  const [adjustmentAmount, setAdjustmentAmount] = useState(0);
   const [adjustmentReason, setAdjustmentReason] = useState("");
   const [cyclePayNotes, setCyclePayNotes] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -124,11 +124,11 @@ export default function FinancialCommissions() {
       setIsSubmittingAdjustment(true);
       await commissionApi.createAdjustment({
         professionalId: adjustmentProfessionalId,
-        amountCents: Math.round(Number(adjustmentAmount || 0) * 100),
+        amountCents: adjustmentAmount,
         reason: adjustmentReason.trim(),
       });
       toast.success("Ajuste manual registrado.");
-      setAdjustmentAmount("0.00");
+      setAdjustmentAmount(0);
       setAdjustmentReason("");
       await loadData();
     } catch (err) {

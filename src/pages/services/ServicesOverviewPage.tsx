@@ -42,6 +42,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, Clock, MoreVertical, Scissors, Loader2 } from 'lucide-react';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { useServices } from '@/hooks/useServices';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { useProfessionals } from '@/hooks/useProfessionals';
@@ -69,7 +70,7 @@ export default function ServicesOverviewPage() {
   const [formName, setFormName] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formDuration, setFormDuration] = useState('60');
-  const [formPrice, setFormPrice] = useState('');
+  const [formPrice, setFormPrice] = useState(0);
   const [formCategory, setFormCategory] = useState('Cabelo');
   const [formProfessionalIds, setFormProfessionalIds] = useState<string[]>([]);
   const [formIsActive, setFormIsActive] = useState(true);
@@ -101,19 +102,11 @@ export default function ServicesOverviewPage() {
     filteredServices.length > 0 &&
     filteredServices.every((service) => selectedServiceIds.includes(service.id));
 
-  const parsePriceInputToCents = (value: string) => {
-    const normalized = value.trim().replace(',', '.');
-    if (!normalized) return 0;
-    return Math.round(Number(normalized) * 100);
-  };
-
-  const formatPriceCentsToInput = (value: number) => (Number(value || 0) / 100).toFixed(2);
-
   const resetForm = () => {
     setFormName('');
     setFormDescription('');
     setFormDuration('60');
-    setFormPrice('');
+    setFormPrice(0);
     setFormCategory('Cabelo');
     setFormProfessionalIds([]);
     setFormIsActive(true);
@@ -124,7 +117,7 @@ export default function ServicesOverviewPage() {
     setFormName(service.name);
     setFormDescription(service.description);
     setFormDuration(String(service.duration));
-    setFormPrice(formatPriceCentsToInput(service.price));
+    setFormPrice(service.price);
     setFormCategory(service.category);
     setFormProfessionalIds(Array.isArray(service.professionalIds) ? service.professionalIds : []);
     setFormIsActive(service.isActive);
@@ -141,7 +134,7 @@ export default function ServicesOverviewPage() {
   };
 
   const handleSubmit = async () => {
-    if (!formName || !formPrice || !formDuration) {
+    if (!formName || !formPrice || !formDuration || formPrice <= 0) {
       toast.error('Preencha todos os campos obrigatorios');
       return;
     }
@@ -152,7 +145,7 @@ export default function ServicesOverviewPage() {
         name: formName,
         description: formDescription,
         duration: parseInt(formDuration),
-        price: parsePriceInputToCents(formPrice),
+        price: formPrice,
         category: formCategory,
         professionalIds: formProfessionalIds,
         isActive: formIsActive,
@@ -356,12 +349,10 @@ export default function ServicesOverviewPage() {
                     </div>
                     <div className="space-y-2">
                       <Label>Preco (R$) *</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="80.00"
+                      <CurrencyInput
+                        cents
                         value={formPrice}
-                        onChange={(e) => setFormPrice(e.target.value)}
+                        onChange={(val) => setFormPrice(val)}
                       />
                     </div>
                   </div>

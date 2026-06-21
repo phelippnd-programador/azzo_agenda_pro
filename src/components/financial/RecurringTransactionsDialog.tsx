@@ -3,6 +3,7 @@ import { Loader2, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { recurringTransactionsApi, type RecurringTransaction } from '@/lib/api';
 import { formatCurrencyCents } from '@/lib/format';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,7 +40,7 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
   const [isSaving, setIsSaving] = useState(false);
   const [type, setType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE');
   const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState('');
   const [frequency, setFrequency] = useState<'MONTHLY' | 'WEEKLY'>('MONTHLY');
   const [dayOfMonth, setDayOfMonth] = useState('5');
@@ -75,7 +76,7 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
       await recurringTransactionsApi.create({
         type,
         description: description.trim(),
-        amount: Math.round(parseFloat(amount.replace(',', '.')) * 100),
+        amount: amount,
         paymentMethod,
         frequency,
         dayOfMonth: frequency === 'MONTHLY' ? parseInt(dayOfMonth, 10) : undefined,
@@ -83,7 +84,7 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
       });
       toast.success('Recorrência criada!');
       setDescription('');
-      setAmount('');
+      setAmount(0);
       setPaymentMethod('');
       const data = await recurringTransactionsApi.getAll();
       setList(data);
@@ -183,7 +184,11 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Valor (R$)</Label>
-                <Input placeholder="0,00" value={amount} onChange={(e) => setAmount(e.target.value)} />
+                <CurrencyInput
+                  cents
+                  value={amount}
+                  onChange={setAmount}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Pagamento</Label>
