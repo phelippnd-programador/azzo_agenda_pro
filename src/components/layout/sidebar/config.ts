@@ -45,6 +45,16 @@ export const MENU_REGISTRY = {
     label: "Agendamentos",
     path: appRouteManifest.reports.appointments,
   },
+  [appRouteManifest.reports.noShow]: {
+    icon: Calendar,
+    label: "No-show",
+    path: appRouteManifest.reports.noShow,
+  },
+  [appRouteManifest.reports.abandonment]: {
+    icon: MessageCircleMore,
+    label: "Abandono",
+    path: appRouteManifest.reports.abandonment,
+  },
   [appRouteManifest.reports.financeiro]: {
     icon: DollarSign,
     label: "Financeiro",
@@ -145,6 +155,11 @@ export const MENU_REGISTRY = {
     label: "Plano",
     path: appRouteManifest.finance.license,
   },
+  [appRouteManifest.fiscal.root]: {
+    icon: Receipt,
+    label: "Fiscal",
+    path: appRouteManifest.fiscal.root,
+  },
   [appRouteManifest.audit.root]: {
     icon: ShieldCheck,
     label: "Auditoria",
@@ -159,21 +174,6 @@ export const MENU_REGISTRY = {
     icon: ShieldCheck,
     label: "Admin",
     path: appRouteManifest.settings.systemAdmin,
-  },
-  [appRouteManifest.fiscal.invoiceEmission]: {
-    icon: FileText,
-    label: "Emitir Nota Fiscal",
-    path: appRouteManifest.fiscal.invoiceEmission,
-  },
-  [appRouteManifest.fiscal.invoicePreview]: {
-    icon: Eye,
-    label: "Preview NF",
-    path: appRouteManifest.fiscal.invoicePreview,
-  },
-  [appRouteManifest.fiscal.monthlyTaxStatement]: {
-    icon: Calculator,
-    label: "Apuracao Mensal",
-    path: appRouteManifest.fiscal.monthlyTaxStatement,
   },
   [appRouteManifest.settings.root]: {
     icon: Settings,
@@ -198,6 +198,8 @@ export const MAIN_MENU_ORDER = [
   appRouteManifest.shell.agenda,
   appRouteManifest.reports.root,
   appRouteManifest.reports.appointments,
+  appRouteManifest.reports.noShow,
+  appRouteManifest.reports.abandonment,
   appRouteManifest.reports.financeiro,
   appRouteManifest.reports.estoque,
   appRouteManifest.reports.vendas,
@@ -216,12 +218,10 @@ export const MAIN_MENU_ORDER = [
   appRouteManifest.finance.commissions,
   appRouteManifest.finance.professionals,
   appRouteManifest.finance.license,
+  appRouteManifest.fiscal.root,
   appRouteManifest.audit.root,
   appRouteManifest.audit.lgpd,
   appRouteManifest.settings.systemAdmin,
-  appRouteManifest.fiscal.invoiceEmission,
-  appRouteManifest.fiscal.invoicePreview,
-  appRouteManifest.fiscal.monthlyTaxStatement,
 ] as const;
 
 export const FINANCIAL_GROUP_PATHS = [
@@ -233,12 +233,18 @@ export const FINANCIAL_GROUP_PATHS = [
 
 export const REPORTS_GROUP_PATHS = [
   appRouteManifest.reports.appointments,
+  appRouteManifest.reports.noShow,
+  appRouteManifest.reports.abandonment,
   appRouteManifest.reports.financeiro,
   appRouteManifest.reports.estoque,
   appRouteManifest.reports.vendas,
   appRouteManifest.reports.clientes,
   appRouteManifest.reports.licencas,
   appRouteManifest.reports.gerencial,
+] as const;
+
+export const FISCAL_GROUP_PATHS = [
+  appRouteManifest.fiscal.root,
 ] as const;
 
 export const ICON_REGISTRY: Record<string, LucideIcon> = {
@@ -342,9 +348,7 @@ export const SIDEBAR_SECTIONS = [
       appRouteManifest.shell.suggestions,
       appRouteManifest.audit.root,
       appRouteManifest.settings.systemAdmin,
-      appRouteManifest.fiscal.invoiceEmission,
-      appRouteManifest.fiscal.invoicePreview,
-      appRouteManifest.fiscal.monthlyTaxStatement,
+      appRouteManifest.fiscal.root,
     ]),
   },
 ] as const;

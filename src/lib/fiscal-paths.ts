@@ -4,11 +4,11 @@
  * Para adicionar uma nova rota fiscal, basta incluir neste array.
  */
 export const FISCAL_OWNER_ONLY_PATHS = [
+  "/fiscal",
   "/emitir-nota",
   "/nota-fiscal",
   "/apuracao-mensal",
   "/configuracoes/fiscal",
-  "/fiscal/nfse",
   "/config-impostos",
 ] as const;
 

@@ -25,7 +25,7 @@ type AuthMode = 'CREATE_AND_AUTHORIZE' | 'AUTHORIZE_EXISTING' | 'REPROCESS_AUTHO
 
 const PASSWORD_MIN_LENGTH = 4;
 
-export default function InvoiceEmission() {
+export function InvoiceEmissionContent() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [editingDraft, setEditingDraft] = useState<Invoice | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -54,7 +54,6 @@ export default function InvoiceEmission() {
         await nfseApi.getConfig('PRODUCAO');
         setNfseEnabled(true);
       } catch {
-        // config nao encontrada — NFS-e nao habilitado para este tenant
         try {
           await nfseApi.getConfig('HOMOLOGACAO');
           setNfseEnabled(true);
@@ -68,7 +67,6 @@ export default function InvoiceEmission() {
         const config = await fiscalApi.getTaxConfig();
         setNfceEnabled(!!config);
       } catch {
-        // sem config fiscal — NFC-e nao configurado
         setNfceEnabled(false);
       }
     })();
@@ -289,147 +287,149 @@ export default function InvoiceEmission() {
   };
 
   return (
-    <MainLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Emissao de Notas Fiscais</h1>
-          <p className="text-muted-foreground mt-2">
-            Emita NF-e, NFC-e e NFS-e para seus servicos prestados
-          </p>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="new" className="gap-2">
-              <FileText className="w-4 h-4" />
-              Nova Nota
-            </TabsTrigger>
-            <TabsTrigger value="list" className="gap-2">
-              <List className="w-4 h-4" />
-              Historico ({invoices.length})
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="new" className="mt-6">
-            {editingDraft ? (
-              <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm flex items-center justify-between gap-3">
-                <span>
-                  Editando rascunho <strong>{editingDraft.number}</strong>.
-                </span>
-                <Button variant="outline" size="sm" onClick={() => setEditingDraft(null)}>
-                  Cancelar edicao
-                </Button>
-              </div>
-            ) : null}
-            <InvoiceForm
-              key={editingDraft?.id || 'new-invoice'}
-              initialData={
-                editingDraft
-                  ? {
-                      type: editingDraft.type,
-                      customer: editingDraft.customer,
-                      items: editingDraft.items,
-                      operationNature: editingDraft.operationNature,
-                      notes: editingDraft.notes || '',
-                      appointmentId: editingDraft.appointmentId,
-                    }
-                  : undefined
-              }
-              onSubmit={handleSubmit}
-              nfseEnabled={nfseEnabled}
-              nfceEnabled={nfceEnabled}
-            />
-          </TabsContent>
-
-          <TabsContent value="list" className="mt-6">
-            <InvoiceList
-              invoices={invoices}
-              onView={handleView}
-              onPrint={handlePrint}
-              onCancel={handleCancelRequest}
-              onReprocessAuthorize={(invoice) => {
-                openAuthDialog('REPROCESS_AUTHORIZE', null, invoice);
-              }}
-              onAuthorizeDraft={(invoice) => {
-                openAuthDialog('AUTHORIZE_EXISTING', null, invoice);
-              }}
-              onEditDraft={(invoice) => {
-                setEditingDraft(invoice);
-                setActiveTab('new');
-              }}
-              onRefresh={() => void loadInvoices()}
-            />
-          </TabsContent>
-
-        </Tabs>
-
-        {/* Invoice viewer dialog */}
-        <Dialog open={isViewerOpen} onOpenChange={setIsViewerOpen}>
-          <DialogContent className="max-w-4xl mx-4 sm:mx-auto max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Detalhes da Nota Fiscal</DialogTitle>
-              <DialogDescription>
-                Visualizacao completa da nota fiscal emitida
-              </DialogDescription>
-            </DialogHeader>
-            {selectedInvoice ? <InvoiceViewer invoice={selectedInvoice} /> : null}
-          </DialogContent>
-        </Dialog>
-
-        {/* Cancel dialog */}
-        <ConfirmationDialog
-          open={!!invoiceToCancel}
-          title="Cancelar Nota Fiscal?"
-          description={`Tem certeza que deseja cancelar a nota fiscal ${invoiceToCancel?.number}? Esta acao nao pode ser desfeita.`}
-          cancelLabel="Nao, manter nota"
-          confirmLabel="Sim, cancelar nota"
-          confirmDisabled={!cancelReason.trim()}
-          confirmClassName="bg-red-600 hover:bg-red-700"
-          onOpenChange={(open) => {
-            if (!open) {
-              setInvoiceToCancel(null);
-              setCancelReason('');
-              setCancelReasonTouched(false);
-            }
-          }}
-          onConfirm={() => void handleCancelConfirm()}
-        >
-          <div className="space-y-2">
-            <Input
-              placeholder="Motivo do cancelamento"
-              value={cancelReason}
-              onChange={(e) => setCancelReason(e.target.value)}
-              onBlur={() => setCancelReasonTouched(true)}
-            />
-            {cancelReasonTouched && !cancelReason.trim() ? (
-              <p className="text-xs text-red-600">Motivo do cancelamento e obrigatorio.</p>
-            ) : null}
-          </div>
-        </ConfirmationDialog>
-
-        {/* Authorization dialog */}
-        <InvoiceAuthDialog
-          open={authDialogOpen}
-          onOpenChange={(open) => {
-            setAuthDialogOpen(open);
-            if (!open) resetAuthDialog();
-          }}
-          authMode={authMode}
-          certificatePassword={certificatePassword}
-          certificatePasswordTouched={certificatePasswordTouched}
-          isCertificatePasswordValid={isCertificatePasswordValid}
-          isAuthorizing={isAuthorizing}
-          passwordMinLength={PASSWORD_MIN_LENGTH}
-          onPasswordChange={setCertificatePassword}
-          onPasswordBlur={() => setCertificatePasswordTouched(true)}
-          onCancel={() => {
-            setAuthDialogOpen(false);
-            setEditingDraft(null);
-            resetAuthDialog();
-          }}
-          onConfirm={() => void handleAuthorizeEmission()}
-        />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Emissao de Notas Fiscais</h1>
+        <p className="text-muted-foreground mt-2">
+          Emita NF-e, NFC-e e NFS-e para seus servicos prestados
+        </p>
       </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="new" className="gap-2">
+            <FileText className="w-4 h-4" />
+            Nova Nota
+          </TabsTrigger>
+          <TabsTrigger value="list" className="gap-2">
+            <List className="w-4 h-4" />
+            Historico ({invoices.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="new" className="mt-6">
+          {editingDraft ? (
+            <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm flex items-center justify-between gap-3">
+              <span>
+                Editando rascunho <strong>{editingDraft.number}</strong>.
+              </span>
+              <Button variant="outline" size="sm" onClick={() => setEditingDraft(null)}>
+                Cancelar edicao
+              </Button>
+            </div>
+          ) : null}
+          <InvoiceForm
+            key={editingDraft?.id || 'new-invoice'}
+            initialData={
+              editingDraft
+                ? {
+                    type: editingDraft.type,
+                    customer: editingDraft.customer,
+                    items: editingDraft.items,
+                    operationNature: editingDraft.operationNature,
+                    notes: editingDraft.notes || '',
+                    appointmentId: editingDraft.appointmentId,
+                  }
+                : undefined
+            }
+            onSubmit={handleSubmit}
+            nfseEnabled={nfseEnabled}
+            nfceEnabled={nfceEnabled}
+          />
+        </TabsContent>
+
+        <TabsContent value="list" className="mt-6">
+          <InvoiceList
+            invoices={invoices}
+            onView={handleView}
+            onPrint={handlePrint}
+            onCancel={handleCancelRequest}
+            onReprocessAuthorize={(invoice) => {
+              openAuthDialog('REPROCESS_AUTHORIZE', null, invoice);
+            }}
+            onAuthorizeDraft={(invoice) => {
+              openAuthDialog('AUTHORIZE_EXISTING', null, invoice);
+            }}
+            onEditDraft={(invoice) => {
+              setEditingDraft(invoice);
+              setActiveTab('new');
+            }}
+            onRefresh={() => void loadInvoices()}
+          />
+        </TabsContent>
+      </Tabs>
+
+      <Dialog open={isViewerOpen} onOpenChange={setIsViewerOpen}>
+        <DialogContent className="max-w-4xl mx-4 sm:mx-auto max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Detalhes da Nota Fiscal</DialogTitle>
+            <DialogDescription>
+              Visualizacao completa da nota fiscal emitida
+            </DialogDescription>
+          </DialogHeader>
+          {selectedInvoice ? <InvoiceViewer invoice={selectedInvoice} /> : null}
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmationDialog
+        open={!!invoiceToCancel}
+        title="Cancelar Nota Fiscal?"
+        description={`Tem certeza que deseja cancelar a nota fiscal ${invoiceToCancel?.number}? Esta acao nao pode ser desfeita.`}
+        cancelLabel="Nao, manter nota"
+        confirmLabel="Sim, cancelar nota"
+        confirmDisabled={!cancelReason.trim()}
+        confirmClassName="bg-red-600 hover:bg-red-700"
+        onOpenChange={(open) => {
+          if (!open) {
+            setInvoiceToCancel(null);
+            setCancelReason('');
+            setCancelReasonTouched(false);
+          }
+        }}
+        onConfirm={() => void handleCancelConfirm()}
+      >
+        <div className="space-y-2">
+          <Input
+            placeholder="Motivo do cancelamento"
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            onBlur={() => setCancelReasonTouched(true)}
+          />
+          {cancelReasonTouched && !cancelReason.trim() ? (
+            <p className="text-xs text-red-600">Motivo do cancelamento e obrigatorio.</p>
+          ) : null}
+        </div>
+      </ConfirmationDialog>
+
+      <InvoiceAuthDialog
+        open={authDialogOpen}
+        onOpenChange={(open) => {
+          setAuthDialogOpen(open);
+          if (!open) resetAuthDialog();
+        }}
+        authMode={authMode}
+        certificatePassword={certificatePassword}
+        certificatePasswordTouched={certificatePasswordTouched}
+        isCertificatePasswordValid={isCertificatePasswordValid}
+        isAuthorizing={isAuthorizing}
+        passwordMinLength={PASSWORD_MIN_LENGTH}
+        onPasswordChange={setCertificatePassword}
+        onPasswordBlur={() => setCertificatePasswordTouched(true)}
+        onCancel={() => {
+          setAuthDialogOpen(false);
+          setEditingDraft(null);
+          resetAuthDialog();
+        }}
+        onConfirm={() => void handleAuthorizeEmission()}
+      />
+    </div>
+  );
+}
+
+export default function InvoiceEmission() {
+  return (
+    <MainLayout>
+      <InvoiceEmissionContent />
     </MainLayout>
   );
 }

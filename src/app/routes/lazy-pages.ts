@@ -50,6 +50,7 @@ export const SalesReportPage = lazy(() => import("@/pages/report/SalesReportPage
 export const ClientsReportPage = lazy(() => import("@/pages/report/ClientsReportPage"));
 export const LicenseReportPage = lazy(() => import("@/pages/report/LicenseReportPage"));
 export const ManagementReportPage = lazy(() => import("@/pages/report/ManagementReportPage"));
+export const FiscalPage = lazy(() => import("@/pages/fiscal/FiscalPage"));
 export const TaxConfig = lazy(() => import("@/pages/tax/TaxConfig"));
 export const FiscalCertificatesSettings = lazy(() => import("@/pages/tax/FiscalCertificatesSettings"));
 export const NfseSettings = lazy(() => import("@/pages/tax/NfseSettings"));

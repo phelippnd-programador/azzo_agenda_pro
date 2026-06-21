@@ -109,6 +109,7 @@ export const appRouteManifest = {
     salon: "/perfil-salao",
   },
   fiscal: {
+    root: "/fiscal",
     invoices: "/fiscal/nfse",
     invoiceCreate: "/fiscal/nfse/nova",
     invoiceDetail: "/fiscal/nfse/:id",

@@ -11,7 +11,7 @@ import { resolveUiError } from "@/lib/error-utils";
 import { DeleteConfirmationDialog } from "@/components/common/DeleteConfirmationDialog";
 import { toast } from "sonner";
 
-export default function FiscalCertificatesSettings() {
+export function FiscalCertificatesSettingsContent() {
   const [certificates, setCertificates] = useState<FiscalCertificateResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -115,110 +115,110 @@ export default function FiscalCertificatesSettings() {
   };
 
   return (
-    <MainLayout title="Certificados Fiscais" subtitle="Gerencie certificado A1 por tenant.">
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Upload de Certificado A1</CardTitle>
-            <CardDescription>
-              Envie arquivo `.pfx` ou `.p12`. O sistema mantera apenas um certificado ativo por tenant.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="fiscal-cert-file">Arquivo do certificado</Label>
-              <Input
-                id="fiscal-cert-file"
-                type="file"
-                accept=".pfx,.p12,application/x-pkcs12"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="fiscal-cert-password">Senha do certificado</Label>
-              <Input
-                id="fiscal-cert-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Senha do certificado"
-              />
-            </div>
-            <div className="flex justify-end">
-              <Button onClick={handleUpload} disabled={isSubmitting}>
-                {isSubmitting ? "Processando..." : "Enviar Certificado"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Upload de Certificado A1</CardTitle>
+          <CardDescription>
+            Envie arquivo `.pfx` ou `.p12`. O sistema mantera apenas um certificado ativo por tenant.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="fiscal-cert-file">Arquivo do certificado</Label>
+            <Input
+              id="fiscal-cert-file"
+              type="file"
+              accept=".pfx,.p12,application/x-pkcs12"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="fiscal-cert-password">Senha do certificado</Label>
+            <Input
+              id="fiscal-cert-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Senha do certificado"
+            />
+          </div>
+          <div className="flex justify-end">
+            <Button onClick={handleUpload} disabled={isSubmitting}>
+              {isSubmitting ? "Processando..." : "Enviar Certificado"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Certificados Cadastrados</CardTitle>
-            <CardDescription>
-              Certificado ativo atual: {activeCertificate?.subjectName || "Nenhum certificado ativo"}.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {isLoading ? (
-              <p className="text-sm text-muted-foreground">Carregando certificados...</p>
-            ) : certificates.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum certificado cadastrado.</p>
-            ) : (
-              certificates.map((item) => (
-                <div key={item.id} className="rounded-lg border p-4 space-y-2">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="font-medium">{item.subjectName}</p>
-                    <Badge variant={item.status === "ACTIVE" ? "default" : "outline"}>
-                      {item.status}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground break-all">Thumbprint: {item.thumbprint}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Validade: {new Date(item.validTo).toLocaleDateString("pt-BR")}
-                  </p>
-                  <div className="flex gap-2 justify-end">
-                    {item.status !== "ACTIVE" ? (
-                      <Button
-                        variant="outline"
-                        onClick={() => handleActivate(item.id)}
-                        disabled={isSubmitting}
-                      >
-                        Ativar
-                      </Button>
-                    ) : null}
+      <Card>
+        <CardHeader>
+          <CardTitle>Certificados Cadastrados</CardTitle>
+          <CardDescription>
+            Certificado ativo atual: {activeCertificate?.subjectName || "Nenhum certificado ativo"}.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Carregando certificados...</p>
+          ) : certificates.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum certificado cadastrado.</p>
+          ) : (
+            certificates.map((item) => (
+              <div key={item.id} className="rounded-lg border p-4 space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-medium">{item.subjectName}</p>
+                  <Badge variant={item.status === "ACTIVE" ? "default" : "outline"}>
+                    {item.status}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground break-all">Thumbprint: {item.thumbprint}</p>
+                <p className="text-xs text-muted-foreground">
+                  Validade: {new Date(item.validTo).toLocaleDateString("pt-BR")}
+                </p>
+                <div className="flex gap-2 justify-end">
+                  {item.status !== "ACTIVE" ? (
                     <Button
-                      variant="destructive"
-                      onClick={() => openDeleteDialog(item.id)}
+                      variant="outline"
+                      onClick={() => handleActivate(item.id)}
                       disabled={isSubmitting}
                     >
-                      Remover
+                      Ativar
                     </Button>
-                  </div>
+                  ) : null}
+                  <Button
+                    variant="destructive"
+                    onClick={() => openDeleteDialog(item.id)}
+                    disabled={isSubmitting}
+                  >
+                    Remover
+                  </Button>
                 </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
 
-        <div className="flex justify-end">
-          <Button asChild variant="outline">
-            <Link to="/configuracoes?tab=fiscal">Voltar para Configuracoes</Link>
-          </Button>
-        </div>
+      <DeleteConfirmationDialog
+        open={!!certificateToDelete}
+        isLoading={isDeletingCertificate}
+        title="Remover certificado?"
+        description="Tem certeza que deseja remover este certificado? Esta acao nao pode ser desfeita."
+        onOpenChange={(open) => {
+          if (isDeletingCertificate) return;
+          if (!open) setCertificateToDelete(null);
+        }}
+        onConfirm={handleDelete}
+      />
+    </div>
+  );
+}
 
-        <DeleteConfirmationDialog
-          open={!!certificateToDelete}
-          isLoading={isDeletingCertificate}
-          title="Remover certificado?"
-          description="Tem certeza que deseja remover este certificado? Esta acao nao pode ser desfeita."
-          onOpenChange={(open) => {
-            if (isDeletingCertificate) return;
-            if (!open) setCertificateToDelete(null);
-          }}
-          onConfirm={handleDelete}
-        />
-      </div>
+export default function FiscalCertificatesSettings() {
+  return (
+    <MainLayout title="Certificados Fiscais" subtitle="Gerencie certificado A1 por tenant.">
+      <FiscalCertificatesSettingsContent />
     </MainLayout>
   );
 }

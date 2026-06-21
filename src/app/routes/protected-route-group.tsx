@@ -11,7 +11,6 @@ import {
   StockReportPage,
   Agenda,
   AppointmentManagementReport,
-  ApuracaoMensal,
   Auditoria,
   ChatPage,
   ClientImportDetailPage,
@@ -22,17 +21,13 @@ import {
   Financial,
   FinancialCashClosing,
   FinancialCommissions,
-  FiscalCertificatesSettings,
+  FiscalPage,
   Index,
-  InvoiceEmission,
-  InvoicePreview,
   LicensePage,
   LgpdRequests,
   NfseInvoiceDetails,
   NfseInvoiceForm,
   NfseInvoicePdf,
-  NfseInvoices,
-  NfseSettings,
   NoShowReport,
   Notifications,
   ProfessionalCommissionReport,
@@ -63,7 +58,6 @@ import {
   StockTransfersPage,
   SuggestionsPage,
   SystemAdminPage,
-  TaxConfig,
   Unauthorized,
   UserProfile,
   WhatsAppIntegration,
@@ -164,21 +158,29 @@ export function ProtectedRouteGroup({
       <Route path={appRouteManifest.settings.stock} element={<ProtectedRoute><StockSettingsPage /></ProtectedRoute>} />
       <Route path={appRouteManifest.profiles.user} element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
       <Route path={appRouteManifest.profiles.salon} element={<ProtectedRoute><SalonProfile /></ProtectedRoute>} />
-      <Route path={appRouteManifest.settings.fiscalTaxes} element={<ProtectedRoute><TaxConfig /></ProtectedRoute>} />
-      <Route path={appRouteManifest.settings.fiscalCertificates} element={<ProtectedRoute><FiscalCertificatesSettings /></ProtectedRoute>} />
-      <Route path={appRouteManifest.settings.fiscalNfse} element={<ProtectedRoute><NfseSettings /></ProtectedRoute>} />
       <Route path={appRouteManifest.settings.whatsapp} element={<ProtectedRoute><WhatsAppIntegration /></ProtectedRoute>} />
       <Route path={appRouteManifest.settings.systemAdmin} element={<ProtectedRoute><SystemAdminPage /></ProtectedRoute>} />
 
-      <Route path={appRouteManifest.fiscal.invoices} element={<ProtectedRoute><NfseInvoices /></ProtectedRoute>} />
+      {/* Pagina fiscal unificada */}
+      <Route path={appRouteManifest.fiscal.root} element={<ProtectedRoute><FiscalPage /></ProtectedRoute>} />
+
+      {/* Paginas de detalhe NFS-e — permanecem como rotas separadas */}
       <Route path={appRouteManifest.fiscal.invoiceCreate} element={<ProtectedRoute><NfseInvoiceForm /></ProtectedRoute>} />
       <Route path={appRouteManifest.fiscal.invoiceDetail} element={<ProtectedRoute><NfseInvoiceDetails /></ProtectedRoute>} />
       <Route path={appRouteManifest.fiscal.invoiceEdit} element={<ProtectedRoute><NfseInvoiceForm /></ProtectedRoute>} />
       <Route path={appRouteManifest.fiscal.invoicePdf} element={<ProtectedRoute><NfseInvoicePdf /></ProtectedRoute>} />
-      <Route path={appRouteManifest.fiscal.taxAlias} element={<ProtectedRoute><Navigate to={appRouteManifest.settings.fiscalTaxes} replace /></ProtectedRoute>} />
-      <Route path={appRouteManifest.fiscal.invoicePreview} element={<ProtectedRoute><InvoicePreview /></ProtectedRoute>} />
-      <Route path={appRouteManifest.fiscal.invoiceEmission} element={<ProtectedRoute><InvoiceEmission /></ProtectedRoute>} />
-      <Route path={appRouteManifest.fiscal.monthlyTaxStatement} element={<ProtectedRoute><ApuracaoMensal /></ProtectedRoute>} />
+
+      {/* Redirects de rotas antigas para a nova pagina unificada */}
+      <Route path={appRouteManifest.fiscal.invoices} element={<ProtectedRoute><Navigate to={`${appRouteManifest.fiscal.root}?tab=notas`} replace /></ProtectedRoute>} />
+      <Route path={appRouteManifest.fiscal.invoiceEmission} element={<ProtectedRoute><Navigate to={`${appRouteManifest.fiscal.root}?tab=emissao`} replace /></ProtectedRoute>} />
+      <Route path={appRouteManifest.fiscal.monthlyTaxStatement} element={<ProtectedRoute><Navigate to={`${appRouteManifest.fiscal.root}?tab=apuracao`} replace /></ProtectedRoute>} />
+      <Route path={appRouteManifest.fiscal.invoicePreview} element={<ProtectedRoute><Navigate to={`${appRouteManifest.fiscal.root}?tab=emissao`} replace /></ProtectedRoute>} />
+      <Route path={appRouteManifest.fiscal.taxAlias} element={<ProtectedRoute><Navigate to={`${appRouteManifest.fiscal.root}?tab=config&subtab=impostos`} replace /></ProtectedRoute>} />
+
+      {/* Redirects das rotas de configuracoes fiscais antigas */}
+      <Route path={appRouteManifest.settings.fiscalTaxes} element={<ProtectedRoute><Navigate to={`${appRouteManifest.fiscal.root}?tab=config&subtab=impostos`} replace /></ProtectedRoute>} />
+      <Route path={appRouteManifest.settings.fiscalCertificates} element={<ProtectedRoute><Navigate to={`${appRouteManifest.fiscal.root}?tab=config&subtab=certificados`} replace /></ProtectedRoute>} />
+      <Route path={appRouteManifest.settings.fiscalNfse} element={<ProtectedRoute><Navigate to={`${appRouteManifest.fiscal.root}?tab=config&subtab=nfse`} replace /></ProtectedRoute>} />
 
       <Route path={appRouteManifest.shell.unauthorized} element={<ProtectedRoute><Unauthorized /></ProtectedRoute>} />
     </>

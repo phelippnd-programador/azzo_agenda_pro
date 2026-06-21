@@ -34,7 +34,7 @@ const DEFAULT_CAP: NfseProviderCapabilities = {
   cancelMode: "SYNC",
 };
 
-export default function NfseSettings() {
+export function NfseSettingsContent() {
   const [config, setConfig] = useState<NfseConfig>(DEFAULT_CONFIG);
   const [capability, setCapability] = useState<NfseProviderCapabilities>(DEFAULT_CAP);
   const [capabilities, setCapabilities] = useState<NfseProviderCapabilities[]>([]);
@@ -181,44 +181,50 @@ export default function NfseSettings() {
   };
 
   return (
+    <div className="space-y-6">
+      <NfseConfigCard
+        config={config}
+        configStateUf={configStateUf}
+        configMunicipalities={configMunicipalities}
+        states={states}
+        selectedMunicipality={selectedConfigMunicipality}
+        isConfigUnconfigured={isConfigUnconfigured}
+        isSaving={isSavingConfig}
+        onConfigChange={(update) => setConfig((prev) => ({ ...prev, ...update }))}
+        onStateUfChange={(uf) => {
+          setConfigStateUf(uf);
+          void loadMunicipalities(uf, "config");
+        }}
+        onLoadConfig={(ambiente) => void loadConfig(ambiente)}
+        onSave={() => void handleSaveConfig()}
+      />
+
+      <NfseCapabilityCard
+        capability={capability}
+        capabilityStateUf={capabilityStateUf}
+        capabilityMunicipalities={capabilityMunicipalities}
+        capabilities={capabilities}
+        states={states}
+        selectedMunicipality={selectedCapabilityMunicipality}
+        isSaving={isSavingCap}
+        onCapabilityChange={(update) => setCapability((prev) => ({ ...prev, ...update }))}
+        onStateUfChange={(uf) => {
+          setCapabilityStateUf(uf);
+          void loadMunicipalities(uf, "capability");
+        }}
+        onSave={() => void handleSaveCapability()}
+      />
+    </div>
+  );
+}
+
+export default function NfseSettings() {
+  return (
     <MainLayout
       title="Configuracoes NFS-e"
       subtitle="Parametros por ambiente e capacidades de provedor por municipio."
     >
-      <div className="space-y-6">
-        <NfseConfigCard
-          config={config}
-          configStateUf={configStateUf}
-          configMunicipalities={configMunicipalities}
-          states={states}
-          selectedMunicipality={selectedConfigMunicipality}
-          isConfigUnconfigured={isConfigUnconfigured}
-          isSaving={isSavingConfig}
-          onConfigChange={(update) => setConfig((prev) => ({ ...prev, ...update }))}
-          onStateUfChange={(uf) => {
-            setConfigStateUf(uf);
-            void loadMunicipalities(uf, "config");
-          }}
-          onLoadConfig={(ambiente) => void loadConfig(ambiente)}
-          onSave={() => void handleSaveConfig()}
-        />
-
-        <NfseCapabilityCard
-          capability={capability}
-          capabilityStateUf={capabilityStateUf}
-          capabilityMunicipalities={capabilityMunicipalities}
-          capabilities={capabilities}
-          states={states}
-          selectedMunicipality={selectedCapabilityMunicipality}
-          isSaving={isSavingCap}
-          onCapabilityChange={(update) => setCapability((prev) => ({ ...prev, ...update }))}
-          onStateUfChange={(uf) => {
-            setCapabilityStateUf(uf);
-            void loadMunicipalities(uf, "capability");
-          }}
-          onSave={() => void handleSaveCapability()}
-        />
-      </div>
+      <NfseSettingsContent />
     </MainLayout>
   );
 }

@@ -2,6 +2,7 @@ import { DollarSign, Settings } from "lucide-react";
 import type { CurrentMenuPermissionItem } from "@/types/menu-permissions";
 import {
   DYNAMIC_BOTTOM_ROUTES,
+  FISCAL_GROUP_PATHS,
   FINANCIAL_GROUP_PATHS,
   GROUP_ONLY_ROUTES,
   HIDDEN_MENU_ROUTES,
@@ -134,10 +135,18 @@ export function buildFallbackSidebarMenu(allowedSet: Set<string>): SidebarMenuNo
   const financialItems = FINANCIAL_GROUP_PATHS.filter((route) => allowedSet.has(route)).map(
     (route) => MENU_REGISTRY[route]
   );
+  const fiscalItems = FISCAL_GROUP_PATHS
+    .filter((route) => allowedSet.has(route))
+    .map((route) => MENU_REGISTRY[route as keyof typeof MENU_REGISTRY])
+    .filter(Boolean);
 
   const entries: SidebarMenuNode[] = [];
   MAIN_MENU_ORDER.forEach((route) => {
     if (FINANCIAL_GROUP_PATHS.includes(route)) {
+      return;
+    }
+
+    if (FISCAL_GROUP_PATHS.includes(route as typeof FISCAL_GROUP_PATHS[number])) {
       return;
     }
 
@@ -183,6 +192,25 @@ export function buildFallbackSidebarMenu(allowedSet: Set<string>): SidebarMenuNo
       entries.splice(financeInsertIndex, 0, financialGroup);
     } else {
       entries.push(financialGroup);
+    }
+  }
+
+  if (fiscalItems.length > 0) {
+    const fiscalItem = MENU_REGISTRY["/fiscal"];
+    if (fiscalItem && allowedSet.has("/fiscal")) {
+      const fiscalInsertIndex = entries.findIndex((entry) => entry.path === "/auditoria");
+      const fiscalNode: SidebarMenuNode = {
+        id: "fiscal",
+        path: "/fiscal",
+        label: fiscalItem.label,
+        icon: fiscalItem.icon,
+        children: [],
+      };
+      if (fiscalInsertIndex >= 0) {
+        entries.splice(fiscalInsertIndex, 0, fiscalNode);
+      } else {
+        entries.push(fiscalNode);
+      }
     }
   }
 

@@ -8,7 +8,7 @@ import { nfseApi, type NfseAccountingExportFormat, type NfseInvoice } from "@/li
 import { resolveUiError } from "@/lib/error-utils";
 import { toast } from "sonner";
 
-export default function NfseInvoices() {
+export function NfseInvoicesContent() {
   const now = new Date();
   const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
   const toDateInput = (date: Date) => {
@@ -84,97 +84,103 @@ export default function NfseInvoices() {
   });
 
   return (
-    <MainLayout title="NFS-e" subtitle="Gestao de rascunhos, autorizacao, cancelamento e PDF da NFS-e.">
-      <Card>
-        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle>Documentos NFS-e</CardTitle>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Button variant="outline" onClick={() => void load()} disabled={isLoading}>
-              Atualizar
-            </Button>
-            <Button asChild>
-              <Link to="/fiscal/nfse/nova">Nova NFS-e</Link>
+    <Card>
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <CardTitle>Documentos NFS-e</CardTitle>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button variant="outline" onClick={() => void load()} disabled={isLoading}>
+            Atualizar
+          </Button>
+          <Button asChild>
+            <Link to="/fiscal/nfse/nova">Nova NFS-e</Link>
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="rounded-md border p-3">
+          <p className="mb-2 text-sm font-medium">Exportacao contabil</p>
+          <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-5">
+            <Input type="date" value={exportFrom} onChange={(e) => setExportFrom(e.target.value)} />
+            <Input type="date" value={exportTo} onChange={(e) => setExportTo(e.target.value)} />
+            <Input
+              placeholder="Status (ex: AUTHORIZED,CANCELLED)"
+              value={exportStatus}
+              onChange={(e) => setExportStatus(e.target.value)}
+            />
+            <select
+              className="h-10 rounded-md border bg-background px-3 text-sm"
+              value={exportFormat}
+              onChange={(e) => setExportFormat(e.target.value as NfseAccountingExportFormat)}
+            >
+              <option value="CSV">CSV</option>
+              <option value="XLSX">XLSX</option>
+              <option value="ZIP_XML">ZIP XML</option>
+            </select>
+            <Button onClick={() => void handleExport()} disabled={isExporting || !exportFrom || !exportTo}>
+              {isExporting ? "Exportando..." : "Exportar"}
             </Button>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="rounded-md border p-3">
-            <p className="mb-2 text-sm font-medium">Exportacao contabil</p>
-            <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-5">
-              <Input type="date" value={exportFrom} onChange={(e) => setExportFrom(e.target.value)} />
-              <Input type="date" value={exportTo} onChange={(e) => setExportTo(e.target.value)} />
-              <Input
-                placeholder="Status (ex: AUTHORIZED,CANCELLED)"
-                value={exportStatus}
-                onChange={(e) => setExportStatus(e.target.value)}
-              />
-              <select
-                className="h-10 rounded-md border bg-background px-3 text-sm"
-                value={exportFormat}
-                onChange={(e) => setExportFormat(e.target.value as NfseAccountingExportFormat)}
-              >
-                <option value="CSV">CSV</option>
-                <option value="XLSX">XLSX</option>
-                <option value="ZIP_XML">ZIP XML</option>
-              </select>
-              <Button onClick={() => void handleExport()} disabled={isExporting || !exportFrom || !exportTo}>
-                {isExporting ? "Exportando..." : "Exportar"}
-              </Button>
-            </div>
-          </div>
-          <Input
-            placeholder="Buscar por numero, RPS, status ou tomador"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <div className="overflow-x-auto rounded-md border">
-            <table className="w-full min-w-[760px] text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="p-2 text-left">Numero</th>
-                  <th className="p-2 text-left">RPS</th>
-                  <th className="p-2 text-left">Tomador</th>
-                  <th className="p-2 text-left">Status</th>
-                  <th className="p-2 text-left">Acoes</th>
+        </div>
+        <Input
+          placeholder="Buscar por numero, RPS, status ou tomador"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <div className="overflow-x-auto rounded-md border">
+          <table className="w-full min-w-[760px] text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="p-2 text-left">Numero</th>
+                <th className="p-2 text-left">RPS</th>
+                <th className="p-2 text-left">Tomador</th>
+                <th className="p-2 text-left">Status</th>
+                <th className="p-2 text-left">Acoes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td className="p-2 text-muted-foreground" colSpan={5}>
+                    Nenhuma NFS-e encontrada.
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 ? (
-                  <tr>
-                    <td className="p-2 text-muted-foreground" colSpan={5}>
-                      Nenhuma NFS-e encontrada.
+              ) : (
+                filtered.map((invoice) => (
+                  <tr key={invoice.id} className="border-b">
+                    <td className="p-2">{invoice.numeroNfse || "--"}</td>
+                    <td className="p-2">{invoice.numeroRps}</td>
+                    <td className="p-2">{invoice.customer?.name}</td>
+                    <td className="p-2">{invoice.fiscalStatus}</td>
+                    <td className="p-2">
+                      <div className="flex flex-wrap gap-2">
+                        <Button asChild size="sm" variant="outline">
+                          <Link to={`/fiscal/nfse/${invoice.id}`}>Detalhes</Link>
+                        </Button>
+                        {invoice.fiscalStatus === "DRAFT" && (
+                          <Button asChild size="sm" variant="outline">
+                            <Link to={`/fiscal/nfse/${invoice.id}/editar`}>Editar</Link>
+                          </Button>
+                        )}
+                        <Button asChild size="sm" variant="outline">
+                          <Link to={`/fiscal/nfse/${invoice.id}/pdf`}>PDF</Link>
+                        </Button>
+                      </div>
                     </td>
                   </tr>
-                ) : (
-                  filtered.map((invoice) => (
-                    <tr key={invoice.id} className="border-b">
-                      <td className="p-2">{invoice.numeroNfse || "--"}</td>
-                      <td className="p-2">{invoice.numeroRps}</td>
-                      <td className="p-2">{invoice.customer?.name}</td>
-                      <td className="p-2">{invoice.fiscalStatus}</td>
-                      <td className="p-2">
-                        <div className="flex flex-wrap gap-2">
-                          <Button asChild size="sm" variant="outline">
-                            <Link to={`/fiscal/nfse/${invoice.id}`}>Detalhes</Link>
-                          </Button>
-                          {invoice.fiscalStatus === "DRAFT" && (
-                            <Button asChild size="sm" variant="outline">
-                              <Link to={`/fiscal/nfse/${invoice.id}/editar`}>Editar</Link>
-                            </Button>
-                          )}
-                          <Button asChild size="sm" variant="outline">
-                            <Link to={`/fiscal/nfse/${invoice.id}/pdf`}>PDF</Link>
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function NfseInvoices() {
+  return (
+    <MainLayout title="Fiscal" subtitle="Gestao de notas fiscais, emissao e apuracao mensal.">
+      <NfseInvoicesContent />
     </MainLayout>
   );
 }
