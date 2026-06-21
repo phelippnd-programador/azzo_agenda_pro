@@ -626,16 +626,16 @@ export default function Dashboard() {
                       </Avatar>
                       <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-foreground">
+                          <p className="max-w-[220px] truncate text-sm font-medium text-foreground">
                             {professional.name}
                           </p>
-                          <p className="truncate text-xs text-muted-foreground">
+                          <p className="max-w-[240px] truncate text-xs text-muted-foreground">
                             {professional.specialties.slice(0, 2).join(', ')}
                           </p>
                         </div>
                         <Badge
                           variant="outline"
-                          className={`w-fit text-[10px] sm:text-xs ${currentAppointment
+                          className={`w-fit shrink-0 text-[10px] sm:text-xs ${currentAppointment
                             ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-300'
                               : nextAppointment
                                 ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-500/20 dark:bg-green-500/10 dark:text-green-300'
