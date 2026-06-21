@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InvoiceForm } from '@/components/fiscal/InvoiceForm';
@@ -16,10 +16,22 @@ import { ConfirmationDialog } from '@/components/common/ConfirmationDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { Invoice, InvoiceFormData } from '@/types/invoice';
-import { fiscalApi } from '@/lib/api';
+import { fiscalApi, nfseApi } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
 import { toast } from 'sonner';
-import { FileText, List } from 'lucide-react';
+import { FileText, List, Receipt } from 'lucide-react';
+
+const NfseInvoiceFormEmbed = lazy(() =>
+  import('@/components/fiscal/NfseInvoiceFormEmbed').then((m) => ({
+    default: m.NfseInvoiceFormEmbed,
+  })),
+);
+
+const NfseInvoicesEmbed = lazy(() =>
+  import('@/components/fiscal/NfseInvoicesEmbed').then((m) => ({
+    default: m.NfseInvoicesEmbed,
+  })),
+);
 
 type AuthMode = 'CREATE_AND_AUTHORIZE' | 'AUTHORIZE_EXISTING' | 'REPROCESS_AUTHORIZE';
 
@@ -34,6 +46,8 @@ export default function InvoiceEmission() {
   const [cancelReason, setCancelReason] = useState('');
   const [cancelReasonTouched, setCancelReasonTouched] = useState(false);
   const [activeTab, setActiveTab] = useState('new');
+  const [nfseSubTab, setNfseSubTab] = useState<'emitir' | 'historico'>('emitir');
+  const [nfseEnabled, setNfseEnabled] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [pendingInvoiceData, setPendingInvoiceData] = useState<InvoiceFormData | null>(null);
   const [invoiceToReprocess, setInvoiceToReprocess] = useState<Invoice | null>(null);
@@ -47,6 +61,20 @@ export default function InvoiceEmission() {
 
   useEffect(() => {
     void loadInvoices();
+    void (async () => {
+      try {
+        await nfseApi.getConfig('PRODUCAO');
+        setNfseEnabled(true);
+      } catch {
+        // config nao encontrada — NFS-e nao habilitado para este tenant
+        try {
+          await nfseApi.getConfig('HOMOLOGACAO');
+          setNfseEnabled(true);
+        } catch {
+          setNfseEnabled(false);
+        }
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -269,12 +297,12 @@ export default function InvoiceEmission() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Emissao de Notas Fiscais</h1>
           <p className="text-muted-foreground mt-2">
-            Emita NF-e e NFC-e para seus servicos prestados
+            Emita NF-e, NFC-e e NFS-e para seus servicos prestados
           </p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className={`grid w-full ${nfseEnabled ? 'max-w-lg grid-cols-3' : 'max-w-md grid-cols-2'}`}>
             <TabsTrigger value="new" className="gap-2">
               <FileText className="w-4 h-4" />
               Nova Nota
@@ -283,6 +311,12 @@ export default function InvoiceEmission() {
               <List className="w-4 h-4" />
               Historico ({invoices.length})
             </TabsTrigger>
+            {nfseEnabled ? (
+              <TabsTrigger value="nfse" className="gap-2">
+                <Receipt className="w-4 h-4" />
+                NFS-e
+              </TabsTrigger>
+            ) : null}
           </TabsList>
 
           <TabsContent value="new" className="mt-6">
@@ -333,6 +367,38 @@ export default function InvoiceEmission() {
               onRefresh={() => void loadInvoices()}
             />
           </TabsContent>
+
+          {nfseEnabled ? (
+            <TabsContent value="nfse" className="mt-6 space-y-4">
+              <div className="flex gap-2 border-b pb-3">
+                <Button
+                  variant={nfseSubTab === 'emitir' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setNfseSubTab('emitir')}
+                >
+                  Emitir NFS-e
+                </Button>
+                <Button
+                  variant={nfseSubTab === 'historico' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setNfseSubTab('historico')}
+                >
+                  Historico NFS-e
+                </Button>
+              </div>
+              <Suspense fallback={<div className="py-8 text-center text-sm text-muted-foreground">Carregando...</div>}>
+                {nfseSubTab === 'emitir' ? (
+                  <NfseInvoiceFormEmbed
+                    onSaved={() => setNfseSubTab('historico')}
+                  />
+                ) : (
+                  <NfseInvoicesEmbed
+                    onNewNfse={() => setNfseSubTab('emitir')}
+                  />
+                )}
+              </Suspense>
+            </TabsContent>
+          ) : null}
         </Tabs>
 
         {/* Invoice viewer dialog */}
