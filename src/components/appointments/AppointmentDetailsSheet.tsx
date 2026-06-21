@@ -11,9 +11,20 @@ import {
   Scissors,
   Trash2,
   User,
+  UserX,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -85,6 +96,8 @@ export function AppointmentDetailsSheet({
   const [isSaving, setIsSaving] = useState(false);
   const [isDeletingNote, setIsDeletingNote] = useState<string | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isNoShowDialogOpen, setIsNoShowDialogOpen] = useState(false);
+  const [isMarkingNoShow, setIsMarkingNoShow] = useState(false);
   const [serviceExecutionNotes, setServiceExecutionNotes] = useState('');
   const [clientFeedbackNotes, setClientFeedbackNotes] = useState('');
   const [internalFollowupNotes, setInternalFollowupNotes] = useState('');
@@ -141,6 +154,35 @@ export function AppointmentDetailsSheet({
     : 0;
 
   const flowMeta = appointment ? getServiceFlowMeta(appointment.status) : null;
+
+  const appointmentHasPassedByMinutes = (apt: typeof appointment, minutes: number): boolean => {
+    if (!apt) return false;
+    const dateKey = toDateKey(apt.date);
+    const [h, m] = apt.startTime.split(':').map(Number);
+    const aptDate = new Date(`${dateKey}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`);
+    return Date.now() - aptDate.getTime() >= minutes * 60 * 1000;
+  };
+
+  const showNoShowButton =
+    !!appointment &&
+    ['PENDING', 'CONFIRMED'].includes(appointment.status) &&
+    appointmentHasPassedByMinutes(appointment, 5);
+
+  const handleMarkNoShow = async () => {
+    if (!appointment) return;
+    setIsMarkingNoShow(true);
+    try {
+      await appointmentsApi.markAttendance(appointment.id, false);
+      toast.success('Agendamento marcado como nao compareceu.');
+      onStatusChange(appointment.id, 'NO_SHOW');
+      setIsNoShowDialogOpen(false);
+      onOpenChange(false);
+    } catch (error) {
+      toast.error(resolveUiError(error, 'Nao foi possivel registrar o nao comparecimento.').message);
+    } finally {
+      setIsMarkingNoShow(false);
+    }
+  };
   const careNotes = historyItem?.careNotes ?? [];
   const canRegisterNotes =
     !!appointment && !['CANCELLED', 'NO_SHOW'].includes(appointment.status);
@@ -766,6 +808,17 @@ export function AppointmentDetailsSheet({
                 ) : null}
               </div>
 
+              {showNoShowButton ? (
+                <Button
+                  variant="outline"
+                  className="col-span-full w-full border-destructive text-destructive hover:bg-destructive/10"
+                  onClick={() => setIsNoShowDialogOpen(true)}
+                >
+                  <UserX className="mr-2 h-4 w-4" />
+                  Nao compareceu
+                </Button>
+              ) : null}
+
               {!['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(appointment.status) ? (
                 <Button
                   variant="outline"
@@ -805,6 +858,37 @@ export function AppointmentDetailsSheet({
         professionals={professionals}
         onSuccess={() => { onEditSuccess?.(); }}
       />
+
+      <AlertDialog open={isNoShowDialogOpen} onOpenChange={setIsNoShowDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar nao comparecimento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso marcara o agendamento como nao compareceu e enviara uma mensagem ao cliente via WhatsApp, se configurado. Essa acao nao pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isMarkingNoShow}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isMarkingNoShow}
+              onClick={(e) => {
+                e.preventDefault();
+                void handleMarkNoShow();
+              }}
+            >
+              {isMarkingNoShow ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Registrando...
+                </>
+              ) : (
+                'Sim, nao compareceu'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sheet>
   );
 }

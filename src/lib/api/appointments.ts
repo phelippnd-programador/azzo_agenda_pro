@@ -233,4 +233,23 @@ export const appointmentsApi = {
     request<void>(`/appointments/${id}`, {
       method: "DELETE",
     }),
+  getPendingAttendanceConfirmation: () =>
+    request<PendingAttendanceAppointment[]>("/appointments/pending-attendance-confirmation"),
+  markAttendance: (id: string, attended: boolean) =>
+    request<Appointment>(`/appointments/${id}/attendance`, {
+      method: "PATCH",
+      body: JSON.stringify({ attended }),
+    }),
 };
+
+export interface PendingAttendanceAppointment {
+  id: string;
+  clientName: string;
+  clientPhoneMasked: string;
+  professionalName: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  status: "PENDING" | "CONFIRMED";
+  serviceNames: string[];
+}

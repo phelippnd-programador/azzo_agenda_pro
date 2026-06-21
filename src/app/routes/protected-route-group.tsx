@@ -61,6 +61,7 @@ import {
   Unauthorized,
   UserProfile,
   WhatsAppIntegration,
+  ReactivationSettings,
 } from "@/app/routes/lazy-pages";
 
 type RouteWrapperProps = {
@@ -159,6 +160,7 @@ export function ProtectedRouteGroup({
       <Route path={appRouteManifest.profiles.user} element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
       <Route path={appRouteManifest.profiles.salon} element={<ProtectedRoute><SalonProfile /></ProtectedRoute>} />
       <Route path={appRouteManifest.settings.whatsapp} element={<ProtectedRoute><WhatsAppIntegration /></ProtectedRoute>} />
+      <Route path={appRouteManifest.settings.reactivation} element={<ProtectedRoute><ReactivationSettings /></ProtectedRoute>} />
       <Route path={appRouteManifest.settings.systemAdmin} element={<ProtectedRoute><SystemAdminPage /></ProtectedRoute>} />
 
       {/* Pagina fiscal unificada */}

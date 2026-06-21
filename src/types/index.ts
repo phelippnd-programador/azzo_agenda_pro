@@ -100,6 +100,7 @@ export interface Client {
   cpfCnpj?: string;
   clientType?: 'PF' | 'PJ';
   address?: ClientAddress;
+  whatsAppOptIn?: boolean;
   topServices?: ClientTopService[];
   totalVisits: number;
   totalSpent: number;

@@ -6,6 +6,7 @@ import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NotificationsProvider } from "@/providers/NotificationsProvider";
+import { AttendanceConfirmationProvider } from "@/providers/AttendanceConfirmationProvider";
 import { AppRoutes } from "@/app/AppRoutes";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
@@ -20,8 +21,10 @@ const App = () => (
             <Toaster />
             <BrowserRouter>
               <NotificationsProvider>
-                <AppRoutes />
-                <CookieConsentBanner />
+                <AttendanceConfirmationProvider>
+                  <AppRoutes />
+                  <CookieConsentBanner />
+                </AttendanceConfirmationProvider>
               </NotificationsProvider>
             </BrowserRouter>
           </TooltipProvider>

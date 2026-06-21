@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MessageCircle } from 'lucide-react';
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogHeader, DialogSection, DialogStickyFooter, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,7 @@ type ClientUpsertPayload = {
   notes?: string;
   cpfCnpj?: string;
   clientType?: 'PF' | 'PJ';
+  whatsAppOptIn?: boolean;
   address: {
     zipCode?: string;
     street?: string;
@@ -60,6 +61,7 @@ export function ClientUpsertDialog({
   const [formEmail, setFormEmail] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formBirthDate, setFormBirthDate] = useState('');
+  const [formWhatsAppOptIn, setFormWhatsAppOptIn] = useState(false);
   const [formNotes, setFormNotes] = useState('');
   const [formCpfCnpj, setFormCpfCnpj] = useState('');
   const [formClientType, setFormClientType] = useState<'PF' | 'PJ'>('PF');
@@ -76,6 +78,7 @@ export function ClientUpsertDialog({
     setFormEmail('');
     setFormPhone('');
     setFormBirthDate('');
+    setFormWhatsAppOptIn(false);
     setFormNotes('');
     setFormCpfCnpj('');
     setFormClientType('PF');
@@ -99,6 +102,7 @@ export function ClientUpsertDialog({
     setFormEmail(initialClient?.email || '');
     setFormPhone(initialClient?.phone || '');
     setFormBirthDate((initialClient?.birthDate as string) || '');
+    setFormWhatsAppOptIn(initialClient?.whatsAppOptIn ?? false);
     setFormNotes(initialClient?.notes || '');
     setFormCpfCnpj(initialClient?.cpfCnpj || '');
     setFormClientType(initialClient?.clientType || 'PF');
@@ -156,6 +160,7 @@ export function ClientUpsertDialog({
           email: formEmail || undefined,
           phone: formPhone,
           birthDate: formBirthDate || undefined,
+          whatsAppOptIn: formWhatsAppOptIn,
           notes: formNotes || undefined,
           cpfCnpj: formCpfCnpj || undefined,
           clientType: formClientType,
@@ -239,6 +244,31 @@ export function ClientUpsertDialog({
                 value={formBirthDate}
                 onChange={(e) => setFormBirthDate(e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">Necessario para verificacoes de privacidade.</p>
+            </div>
+
+            <div className="rounded-xl border border-border/70 bg-muted/20 p-4 space-y-2">
+              <div className="flex items-start gap-3">
+                <input
+                  id="whatsapp-opt-in"
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 cursor-pointer rounded border-input accent-primary"
+                  checked={formWhatsAppOptIn}
+                  onChange={(e) => setFormWhatsAppOptIn(e.target.checked)}
+                />
+                <div className="space-y-1">
+                  <label
+                    htmlFor="whatsapp-opt-in"
+                    className="flex cursor-pointer items-center gap-2 text-sm font-medium text-foreground"
+                  >
+                    <MessageCircle className="h-4 w-4 text-emerald-600" />
+                    Aceito receber mensagens automaticas de lembrete de agendamento via WhatsApp
+                  </label>
+                  <p className="text-xs text-muted-foreground">
+                    Voce pode cancelar a qualquer momento respondendo PARE no WhatsApp.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

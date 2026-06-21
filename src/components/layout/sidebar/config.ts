@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   Lightbulb,
   MessageCircleMore,
+  MessageSquareDashed,
   Package,
   Receipt,
   Scissors,
@@ -180,6 +181,11 @@ export const MENU_REGISTRY = {
     label: "Configuracoes",
     path: appRouteManifest.settings.root,
   },
+  [appRouteManifest.settings.reactivation]: {
+    icon: MessageSquareDashed,
+    label: "Reativacao WhatsApp",
+    path: appRouteManifest.settings.reactivation,
+  },
   [appRouteManifest.profiles.user]: {
     icon: User,
     label: "Perfil",
@@ -222,6 +228,7 @@ export const MAIN_MENU_ORDER = [
   appRouteManifest.audit.root,
   appRouteManifest.audit.lgpd,
   appRouteManifest.settings.systemAdmin,
+  appRouteManifest.settings.reactivation,
 ] as const;
 
 export const FINANCIAL_GROUP_PATHS = [
@@ -269,6 +276,7 @@ export const ICON_REGISTRY: Record<string, LucideIcon> = {
   Boxes,
   User,
   MessageCircleMore,
+  MessageSquareDashed,
   Lightbulb,
   Wallet,
 };
