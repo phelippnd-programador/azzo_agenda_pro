@@ -101,7 +101,7 @@ export function NfseInvoiceFormEmbed({ onSaved }: NfseInvoiceFormEmbedProps) {
         appointmentId: invoice.appointmentId,
         ambiente: (invoice.ambiente || "HOMOLOGACAO") as "HOMOLOGACAO" | "PRODUCAO",
         municipioCodigoIbge: invoice.municipioCodigoIbge || "",
-        provedor: invoice.provedor || "",
+        // provedor omitido — backend seleciona automaticamente pelo município
         numeroRps: Number(invoice.numeroRps || 0),
         serieRps: invoice.serieRps || "",
         dataCompetencia: invoice.dataCompetencia || new Date().toISOString().slice(0, 10),
@@ -162,8 +162,9 @@ export function NfseInvoiceFormEmbed({ onSaved }: NfseInvoiceFormEmbedProps) {
         type: "CNPJ",
         document: data.cnpj || prev.customer?.document || "",
         name: data.razaoSocial || prev.customer?.name || "",
-        email: data.emailSugestao || prev.customer?.email,
-        phone: data.telefoneSugestao || prev.customer?.phone,
+        // email e telefone: NÃO preencher automaticamente (LGPD — MEI pode ter dados de PF)
+        email: prev.customer?.email,
+        phone: prev.customer?.phone,
       },
     }));
     const address = data.endereco;
@@ -222,13 +223,6 @@ export function NfseInvoiceFormEmbed({ onSaved }: NfseInvoiceFormEmbedProps) {
               onChange={(e) =>
                 setInvoice((prev) => ({ ...prev, municipioCodigoIbge: e.target.value }))
               }
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Provedor</Label>
-            <Input
-              value={invoice.provedor || ""}
-              onChange={(e) => setInvoice((prev) => ({ ...prev, provedor: e.target.value }))}
             />
           </div>
           <div className="space-y-2">
