@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { CnpjAutoFillField } from "@/components/shared/CnpjAutoFillField";
 import { NbsCatalogSearch } from "@/components/nfse/NbsCatalogSearch";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,9 @@ interface NfseInvoiceFormEmbedProps {
 }
 
 export function NfseInvoiceFormEmbed({ onSaved }: NfseInvoiceFormEmbedProps) {
+  const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
+  const [isEmitting, setIsEmitting] = useState(false);
   const [tomadorAddressPreview, setTomadorAddressPreview] = useState<string | null>(null);
   const [invoice, setInvoice] = useState<Partial<NfseInvoice>>({
     ambiente: "HOMOLOGACAO",
@@ -151,6 +154,74 @@ export function NfseInvoiceFormEmbed({ onSaved }: NfseInvoiceFormEmbedProps) {
       showError(error, "Erro ao salvar rascunho NFS-e");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleEmitir = async () => {
+    setIsEmitting(true);
+    try {
+      const saved = await (async () => {
+        setIsSaving(true);
+        try {
+          const item = invoice.items?.[0] || BASE_ITEM;
+          const payload = {
+            appointmentId: invoice.appointmentId,
+            ambiente: (invoice.ambiente || "HOMOLOGACAO") as "HOMOLOGACAO" | "PRODUCAO",
+            municipioCodigoIbge: invoice.municipioCodigoIbge || "",
+            numeroRps: Number(invoice.numeroRps || 0),
+            serieRps: invoice.serieRps || "",
+            dataCompetencia: invoice.dataCompetencia || new Date().toISOString().slice(0, 10),
+            naturezaOperacao: invoice.naturezaOperacao || "",
+            itemListaServico: invoice.itemListaServico || "",
+            valorServicos: preview.total,
+            valorDeducoes: Number(invoice.valorDeducoes || 0),
+            valorIss: preview.iss,
+            aliquotaIss: Number(invoice.aliquotaIss || item.aliquotaIss || 0),
+            issRetido: Boolean(invoice.issRetido),
+            notes: invoice.notes,
+            codigoTributacaoMunicipio: invoice.codigoTributacaoMunicipio,
+            customer: {
+              type: (invoice.customer?.type || "CPF") as "CPF" | "CNPJ" | "EXTERIOR",
+              document: invoice.customer?.document,
+              countryCode: invoice.customer?.countryCode,
+              documentType: invoice.customer?.documentType,
+              name: invoice.customer?.name || "",
+              email: invoice.customer?.email,
+              phone: invoice.customer?.phone,
+            },
+            items: [
+              {
+                lineNumber: 1,
+                descricaoServico: item.descricaoServico || "",
+                quantidade: Number(item.quantidade || 0),
+                valorUnitario: Number(item.valorUnitario || 0),
+                valorTotal: preview.total,
+                itemListaServico: item.itemListaServico || invoice.itemListaServico || "",
+                codigoTributacaoMunicipio:
+                  item.codigoTributacaoMunicipio || invoice.codigoTributacaoMunicipio,
+                aliquotaIss: Number(item.aliquotaIss || 0),
+                valorIss: preview.iss,
+              },
+            ],
+          };
+          return await nfseApi.createInvoice(payload);
+        } finally {
+          setIsSaving(false);
+        }
+      })();
+
+      if (!saved?.id) return;
+
+      await nfseApi.authorizeInvoice(saved.id, {});
+      toast.success("NFS-e emitida com sucesso!", {
+        description: "A nota foi enviada para autorizacao na prefeitura.",
+      });
+      onSaved?.(saved.id);
+      navigate(`/fiscal/nfse/${saved.id}`);
+    } catch (error) {
+      showError(error, "Erro ao emitir NFS-e");
+    } finally {
+      setIsEmitting(false);
     }
   };
 
@@ -402,8 +473,18 @@ export function NfseInvoiceFormEmbed({ onSaved }: NfseInvoiceFormEmbedProps) {
         </div>
 
         <div className="flex gap-2">
-          <Button onClick={() => void save()} disabled={isSaving}>
+          <Button onClick={() => void save()} disabled={isSaving || isEmitting}>
             {isSaving ? "Salvando..." : "Salvar rascunho"}
+          </Button>
+          <Button onClick={() => void handleEmitir()} disabled={isEmitting || isSaving}>
+            {isEmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Emitindo...
+              </>
+            ) : (
+              "Emitir NFS-e"
+            )}
           </Button>
           <Button variant="outline" asChild>
             <Link to="/fiscal/nfse/nova" target="_blank" rel="noopener noreferrer">
