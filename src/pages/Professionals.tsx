@@ -307,8 +307,8 @@ export default function Professionals() {
                               </AvatarFallback>
                             </Avatar>
                             <div className="min-w-0">
-                              <p className="truncate font-medium">{professional.name}</p>
-                              <p className="truncate text-xs text-muted-foreground">
+                              <p className="max-w-[220px] truncate font-medium">{professional.name}</p>
+                              <p className="max-w-[220px] truncate text-xs text-muted-foreground">
                                 {professional.email}
                               </p>
                             </div>
@@ -317,7 +317,7 @@ export default function Professionals() {
                         <TableCell className="hidden text-sm md:table-cell">
                           {professional.phone}
                         </TableCell>
-                        <TableCell className="hidden max-w-[280px] truncate lg:table-cell">
+                        <TableCell className="hidden max-w-[340px] truncate lg:table-cell">
                           {professional.specialties.length
                             ? professional.specialties.join(', ')
                             : 'Sem especialidades'}

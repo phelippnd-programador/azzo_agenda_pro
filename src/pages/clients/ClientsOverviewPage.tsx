@@ -258,7 +258,7 @@ export default function ClientsOverviewPage() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
-                          <p className="max-w-[120px] truncate text-sm font-medium sm:max-w-none">
+                          <p className="max-w-[160px] truncate text-sm font-medium sm:max-w-none">
                             {client.name}
                           </p>
                           <p className="text-xs text-muted-foreground sm:hidden">{maskPhoneBr(client.phone, false)}</p>
@@ -266,7 +266,7 @@ export default function ClientsOverviewPage() {
                       </div>
                     </TableCell>
                     <TableCell className="hidden text-sm sm:table-cell">{maskPhoneBr(client.phone, false)}</TableCell>
-                    <TableCell className="hidden max-w-[150px] truncate text-sm md:table-cell">
+                    <TableCell className="hidden max-w-[220px] truncate text-sm md:table-cell">
                       {maskEmail(client.email)}
                     </TableCell>
                     <TableCell className="text-center">

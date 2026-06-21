@@ -492,7 +492,7 @@ export default function Agenda() {
             </div>
 
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-              <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
                 <Button
                   variant="outline"
                   size="icon"
@@ -512,7 +512,9 @@ export default function Agenda() {
                 >
                   <ChevronRight className="w-4 h-4" />
                 </Button>
-                <span className="text-xs sm:text-base font-medium text-foreground capitalize truncate">{formattedDate}</span>
+                <span className="min-w-0 flex-1 text-xs font-medium text-foreground capitalize sm:text-base xl:max-w-[260px]">
+                  {formattedDate}
+                </span>
               </div>
 
               <div className="flex w-full flex-wrap items-center gap-2 sm:gap-3 xl:w-auto xl:justify-end">
@@ -570,7 +572,8 @@ export default function Agenda() {
 
             <Button size="sm" className="h-8 w-full gap-1 text-xs sm:h-9 sm:w-auto sm:gap-2 sm:text-sm" onClick={() => setIsNewAppointmentOpen(true)}>
               <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Novo</span> Agendamento
+              <span className="sm:hidden">Novo agendamento</span>
+              <span className="hidden sm:inline">Novo Agendamento</span>
             </Button>
               </div>
             </div>

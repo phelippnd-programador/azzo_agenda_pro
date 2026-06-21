@@ -297,23 +297,26 @@ export default function Financial() {
                   </Button>
                 ) : null}
 
-                <Button variant="outline" size="sm" className="h-9 gap-2" onClick={() => setShowCashFlow((value) => !value)}>
+                <Button variant="outline" size="sm" className="h-9 gap-2 whitespace-nowrap" onClick={() => setShowCashFlow((value) => !value)}>
                   <BarChart2 className="h-3.5 w-3.5" />
+                  <span className="sm:hidden">Fluxo</span>
                   <span className="hidden sm:inline">Fluxo de caixa</span>
                 </Button>
 
-                <Button variant="outline" size="sm" className="h-9 gap-2" onClick={handleExportCsv} disabled={isExporting}>
+                <Button variant="outline" size="sm" className="h-9 gap-2 whitespace-nowrap" onClick={handleExportCsv} disabled={isExporting}>
                   {isExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                  <span className="sm:hidden">CSV</span>
                   <span className="hidden sm:inline">Exportar CSV</span>
                 </Button>
 
-                <Button variant="outline" size="sm" className="h-9 gap-2" onClick={() => setIsCategoriesOpen(true)}>
+                <Button variant="outline" size="sm" className="h-9 gap-2 whitespace-nowrap" onClick={() => setIsCategoriesOpen(true)}>
                   <Tag className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Categorias</span>
+                  <span>Categorias</span>
                 </Button>
 
-                <Button variant="outline" size="sm" className="h-9 gap-2" onClick={() => setIsRecurringOpen(true)}>
+                <Button variant="outline" size="sm" className="h-9 gap-2 whitespace-nowrap" onClick={() => setIsRecurringOpen(true)}>
                   <RefreshCw className="h-3.5 w-3.5" />
+                  <span className="sm:hidden">Recorr.</span>
                   <span className="hidden sm:inline">Recorrentes</span>
                 </Button>
               </div>
@@ -331,19 +334,21 @@ export default function Financial() {
             <div className="mt-3 grid grid-cols-1 gap-2 sm:flex sm:justify-end">
               <Button
                 variant="outline"
-                className="gap-2 border-green-300 text-green-700 hover:bg-green-50 dark:border-green-500/30 dark:text-green-300 dark:hover:bg-green-500/10"
+                className="gap-2 whitespace-nowrap border-green-300 text-green-700 hover:bg-green-50 dark:border-green-500/30 dark:text-green-300 dark:hover:bg-green-500/10"
                 onClick={() => openNewTransaction('INCOME')}
               >
                 <ArrowUpCircle className="h-4 w-4" />
-                <span className="hidden sm:inline">Nova</span> Entrada
+                <span className="sm:hidden">Entrada</span>
+                <span className="hidden sm:inline">Nova Entrada</span>
               </Button>
               <Button
                 variant="outline"
-                className="gap-2 border-red-300 text-red-700 hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10"
+                className="gap-2 whitespace-nowrap border-red-300 text-red-700 hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10"
                 onClick={() => openNewTransaction('EXPENSE')}
               >
                 <ArrowDownCircle className="h-4 w-4" />
-                <span className="hidden sm:inline">Nova</span> Saida
+                <span className="sm:hidden">Saida</span>
+                <span className="hidden sm:inline">Nova Saida</span>
               </Button>
             </div>
           </div>
