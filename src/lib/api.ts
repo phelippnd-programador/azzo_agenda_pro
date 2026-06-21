@@ -129,3 +129,5 @@ export { checkoutApi, billingApi } from "./api/commerce";
 export { fiscalApi, nfseApi } from "./api/fiscal";
 export { publicBookingApi } from "./api/public-booking";
 export { resolveApiMediaUrl } from "./api/media";
+export type { SpecialClosure, ClosureImpact, AffectedAppointment, ClosureType } from "./api/closures";
+export { closuresApi } from "./api/closures";

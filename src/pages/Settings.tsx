@@ -5,6 +5,7 @@ import {
   Bell,
   Boxes,
   Building2,
+  CalendarOff,
   CheckCircle2,
   CircleAlert,
   Cpu,
@@ -29,6 +30,7 @@ import { SettingsLgpdTab } from '@/components/settings/SettingsLgpdTab';
 import { SettingsFeatureFlagsTab } from '@/components/settings/SettingsFeatureFlagsTab';
 import { SettingsEmailTemplatesTab } from '@/components/settings/SettingsEmailTemplatesTab';
 import { SettingsBusinessHoursTab } from '@/components/settings/SettingsBusinessHoursTab';
+import { SettingsClosuresTab } from '@/components/settings/SettingsClosuresTab';
 
 function SettingsDomainCard({
   icon: Icon,
@@ -118,6 +120,7 @@ export default function Settings() {
     if (canAccessSalonProfile) tabs.push('salon');
     if (isOwner) {
       tabs.push('business-hours');
+      tabs.push('closures');
       tabs.push('lgpd');
       tabs.push('features');
       tabs.push('email-templates');
@@ -237,6 +240,19 @@ export default function Settings() {
       });
     }
 
+    if (visibleTabs.includes('closures')) {
+      cards.push({
+        key: 'closures',
+        icon: CalendarOff,
+        title: 'Fechamentos Especiais',
+        description: 'Feriados, ferias e datas em que o salao nao ira atender.',
+        statusLabel: 'Restrito',
+        statusTone: 'default' as const,
+        actionLabel: 'Abrir fechamentos',
+        onAction: () => handleTabChange('closures', { scrollToSection: true }),
+      });
+    }
+
     if (visibleTabs.includes('lgpd')) {
       cards.push({
         key: 'lgpd',
@@ -353,6 +369,10 @@ export default function Settings() {
       'business-hours': {
         label: 'Horarios de Funcionamento',
         description: 'Horarios de atendimento do estabelecimento por dia da semana.',
+      },
+      closures: {
+        label: 'Fechamentos Especiais',
+        description: 'Feriados, ferias e datas em que o salao ou profissional nao ira atender.',
       },
       lgpd: {
         label: 'LGPD',
@@ -526,6 +546,9 @@ export default function Settings() {
                 ) : null}
                 {visibleTabs.includes('business-hours') ? (
                   <TabsTrigger value="business-hours" className="shrink-0 whitespace-nowrap">Horarios</TabsTrigger>
+                ) : null}
+                {visibleTabs.includes('closures') ? (
+                  <TabsTrigger value="closures" className="shrink-0 whitespace-nowrap">Fechamentos</TabsTrigger>
                 ) : null}
                 {visibleTabs.includes('lgpd') ? (
                   <TabsTrigger value="lgpd" className="shrink-0 whitespace-nowrap">LGPD</TabsTrigger>
@@ -747,6 +770,12 @@ export default function Settings() {
         {isOwner ? (
           <TabsContent value="business-hours">
             <SettingsBusinessHoursTab />
+          </TabsContent>
+        ) : null}
+
+        {isOwner ? (
+          <TabsContent value="closures">
+            <SettingsClosuresTab />
           </TabsContent>
         ) : null}
 

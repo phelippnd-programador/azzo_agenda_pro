@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,8 +19,7 @@ import {
   Facebook,
   Copy,
   ExternalLink,
-  Plus,
-  Trash2,
+  ArrowRight,
 } from 'lucide-react';
 import { SalonAddressCard, type AddressValues, type LockedAddressFields } from '@/components/salon/SalonAddressCard';
 import { SalonBusinessHoursCard, type BusinessHours } from '@/components/salon/SalonBusinessHoursCard';
@@ -63,26 +63,6 @@ const emptyLockedFields: LockedAddressFields = {
 
 const normalizeCep = (value: string) => value.replace(/\D/g, '').slice(0, 8);
 
-type SpecialClosureDate = {
-  date: string;
-  reason: string;
-};
-
-const sortSpecialClosureDates = (items: SpecialClosureDate[]) =>
-  [...items].sort((a, b) => a.date.localeCompare(b.date));
-
-const formatSpecialClosureDate = (value: string) => {
-  try {
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).format(new Date(`${value}T00:00:00`));
-  } catch {
-    return value;
-  }
-};
-
 export default function SalonProfile() {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -106,9 +86,6 @@ export default function SalonProfile() {
   const [salonLogoUrl, setSalonLogoUrl] = useState('');
   const [address, setAddress] = useState<AddressValues>(emptyAddress);
   const [businessHours, setBusinessHours] = useState<BusinessHours[]>(defaultBusinessHours);
-  const [specialClosureDates, setSpecialClosureDates] = useState<SpecialClosureDate[]>([]);
-  const [specialClosureDateInput, setSpecialClosureDateInput] = useState('');
-  const [specialClosureReasonInput, setSpecialClosureReasonInput] = useState('');
 
   const persistSalonSlug = (value: string) => {
     if (!value?.trim()) return;
@@ -148,14 +125,6 @@ export default function SalonProfile() {
     } else {
       setBusinessHours(defaultBusinessHours);
     }
-    setSpecialClosureDates(
-      sortSpecialClosureDates(
-        (data.specialClosureDates || []).map((item) => ({
-          date: item.date,
-          reason: item.reason || '',
-        })),
-      ),
-    );
   };
 
   useEffect(() => {
@@ -253,7 +222,6 @@ export default function SalonProfile() {
         state: address.state,
         zipCode: address.zipCode,
         businessHours,
-        specialClosureDates,
       };
 
       const updatedProfile = await salonApi.updateProfile(profileData);
@@ -302,32 +270,6 @@ export default function SalonProfile() {
     const updated = [...businessHours];
     updated[index] = { ...updated[index], [field]: value };
     setBusinessHours(updated);
-  };
-
-  const addSpecialClosureDate = () => {
-    if (!specialClosureDateInput) {
-      toast.error('Selecione uma data para marcar o fechamento especial');
-      return;
-    }
-    if (specialClosureDates.some((item) => item.date === specialClosureDateInput)) {
-      toast.error('Essa data ja foi marcada como fechamento especial');
-      return;
-    }
-    setSpecialClosureDates((current) =>
-      sortSpecialClosureDates([
-        ...current,
-        {
-          date: specialClosureDateInput,
-          reason: specialClosureReasonInput.trim(),
-        },
-      ]),
-    );
-    setSpecialClosureDateInput('');
-    setSpecialClosureReasonInput('');
-  };
-
-  const removeSpecialClosureDate = (date: string) => {
-    setSpecialClosureDates((current) => current.filter((item) => item.date !== date));
   };
 
   const copyBookingLink = () => {
@@ -593,73 +535,25 @@ export default function SalonProfile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <CalendarDays className="w-5 h-5 text-primary" />
-              Datas Especiais de Fechamento
+              Fechamentos Especiais
             </CardTitle>
             <CardDescription>
-              Marque feriados ou dias excepcionais em que o salao nao vai funcionar. Nessas datas, o sistema nao deve
-              oferecer horarios vagos nem permitir agendamento.
+              Gerencie feriados, ferias e datas excepcionais em que o salao nao ira funcionar.
+              O gerenciamento centralizado de fechamentos foi movido para as Configuracoes.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-[180px_1fr_auto]">
-              <div className="space-y-2">
-                <Label>Data</Label>
-                <Input
-                  type="date"
-                  value={specialClosureDateInput}
-                  onChange={(e) => setSpecialClosureDateInput(e.target.value)}
-                  data-testid="special-closure-date-input"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Motivo</Label>
-                <Input
-                  placeholder="Ex: Natal, feriado municipal, recesso..."
-                  value={specialClosureReasonInput}
-                  onChange={(e) => setSpecialClosureReasonInput(e.target.value)}
-                  maxLength={160}
-                  data-testid="special-closure-reason-input"
-                />
-              </div>
-              <div className="flex items-end">
-                <Button type="button" onClick={addSpecialClosureDate} className="gap-2 w-full md:w-auto">
-                  <Plus className="w-4 h-4" />
-                  Marcar fechado
-                </Button>
-              </div>
+            <div className="rounded-lg border bg-muted/20 p-4 text-sm text-muted-foreground">
+              Cadastre e edite fechamentos especiais, com suporte a tipo (feriado, ferias, recesso),
+              horario parcial e vinculo por profissional.
             </div>
-
-            <div className="space-y-3">
-              {specialClosureDates.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Nenhuma data especial fechada cadastrada.
-                </p>
-              ) : (
-                specialClosureDates.map((item) => (
-                  <div
-                    key={item.date}
-                    className="flex flex-col gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div className="min-w-0">
-                      <p className="font-medium text-foreground">{formatSpecialClosureDate(item.date)}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {item.reason?.trim() || 'Fechado o dia inteiro'}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeSpecialClosureDate(item.date)}
-                      className="gap-2 self-start sm:self-auto"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Remover
-                    </Button>
-                  </div>
-                ))
-              )}
-            </div>
+            <Button asChild variant="outline" className="gap-2">
+              <Link to="/configuracoes?tab=closures">
+                <CalendarDays className="h-4 w-4" />
+                Abrir Fechamentos Especiais
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
           </CardContent>
         </Card>
 
