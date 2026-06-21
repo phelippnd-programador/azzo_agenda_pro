@@ -54,6 +54,20 @@ export const formatDateLong = (value?: string | Date | null): string => {
   });
 };
 
+// ─── Parse de input monetário ─────────────────────────────────────────────────
+
+/** Converte string de input monetário para float em reais. Ex: "1.500,50" → 1500.50 */
+export function parseCurrencyInput(raw: string): number {
+  const digits = raw.replace(/\D/g, '');
+  if (!digits) return 0;
+  return parseInt(digits, 10) / 100;
+}
+
+/** Converte string de input monetário para centavos inteiros. Ex: "1.500,50" → 150050 */
+export function parseCurrencyInputToCents(raw: string): number {
+  return Math.round(parseCurrencyInput(raw) * 100);
+}
+
 // ─── Chave de data ────────────────────────────────────────────────────────────
 
 /**
