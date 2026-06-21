@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageErrorState } from '@/components/ui/page-states';
 import { HighlightMetricCard } from '@/components/ui/highlight-metric-card';
@@ -184,6 +186,34 @@ export default function Financial() {
   return (
     <MainLayout title="Financeiro" subtitle="Controle de caixa e transacoes">
       <div className="space-y-4 sm:space-y-6">
+        <ModuleIntro
+          eyebrow="Caixa e receita"
+          title="Leia o saldo primeiro, depois filtre a operação e só então entre no detalhe dos lançamentos."
+          description="A tela foi organizada para separar visão financeira, área de trabalho e lista operacional sem misturar tudo no mesmo bloco."
+          badges={[
+            { label: `${totalCount} lancamento(s)` },
+            { label: `${activeFilterCount} filtro(s)` },
+            { label: dateFilter },
+          ]}
+          points={[
+            {
+              eyebrow: 'Leitura principal',
+              title: 'Saldo e direção do caixa',
+              description: 'Comece pelo saldo e compare entradas e saídas antes de abrir filtros ou exportações.',
+            },
+            {
+              eyebrow: 'Operacao',
+              title: 'Filtre, registre e concilie',
+              description: 'Use a barra de ações para filtrar período, abrir o fluxo de caixa e registrar novos lançamentos.',
+            },
+            {
+              eyebrow: 'Proximo passo',
+              title: 'Revise a lista após aplicar contexto',
+              description: 'A lista de transações fica mais útil depois que você define recorte, categoria e profissional.',
+            },
+          ]}
+        />
+
         <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
           <HighlightMetricCard
             title="Entradas"
@@ -221,9 +251,22 @@ export default function Financial() {
           />
         </div>
 
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-3 sm:gap-4">
-            <div className="-mx-1 overflow-x-auto pb-1">
+        <WorkspaceNotice
+          title="Area de trabalho financeira"
+          description="Ajuste período, filtros, visões auxiliares e crie lançamentos sem perder o contexto do caixa atual."
+          badge={`Saldo atual: ${formatCurrencyCents(summary.balance)}`}
+        />
+
+        <div className="space-y-3">
+          <div className="rounded-2xl border border-border/70 bg-muted/15 p-3 sm:p-4">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Contexto e filtros</p>
+              <p className="text-sm text-muted-foreground">
+                Ajuste periodo, filtros e visoes auxiliares antes de descer para a lista de transacoes.
+              </p>
+            </div>
+
+            <div className="-mx-1 mt-3 overflow-x-auto pb-1">
               <div className="flex min-w-max gap-2 px-1">
                 <Select value={dateFilter} onValueChange={setDateFilter}>
                   <SelectTrigger className="h-9 w-36 text-sm sm:w-44">
@@ -275,8 +318,17 @@ export default function Financial() {
                 </Button>
               </div>
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 gap-2 sm:flex sm:justify-end">
+          <div className="rounded-2xl border border-border/70 bg-background/80 p-3 sm:p-4">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Lancamentos rapidos</p>
+              <p className="text-sm text-muted-foreground">
+                Registre entrada ou saida sem perder o contexto do saldo atual.
+              </p>
+            </div>
+
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:flex sm:justify-end">
               <Button
                 variant="outline"
                 className="gap-2 border-green-300 text-green-700 hover:bg-green-50 dark:border-green-500/30 dark:text-green-300 dark:hover:bg-green-500/10"

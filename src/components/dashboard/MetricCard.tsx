@@ -30,16 +30,16 @@ export function MetricCard({
   return (
     <Card
       className={cn(
-        'border-border/75 bg-card/96 shadow-[0_8px_24px_-22px_rgba(15,23,42,0.16)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_30px_-24px_rgba(15,23,42,0.18)] dark:bg-card/92',
+        'border-border/75 bg-card/96 shadow-[0_10px_26px_-24px_rgba(15,23,42,0.16)] transition-all hover:-translate-y-0.5 hover:border-border hover:shadow-[0_16px_34px_-26px_rgba(15,23,42,0.18)] dark:bg-card/92',
         className
       )}
     >
       <CardContent className={cn(compact ? 'p-4' : 'p-4 sm:p-6')}>
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start justify-between gap-3">
           <div className={cn('min-w-0 flex-1', compact ? 'space-y-1' : 'space-y-1 sm:space-y-2')}>
             <p
               className={cn(
-                'font-medium uppercase tracking-[0.14em] text-muted-foreground',
+                'font-medium uppercase tracking-[0.14em] text-muted-foreground/90',
                 compact ? 'line-clamp-2 text-[11px]' : 'truncate text-[11px] sm:text-xs'
               )}
             >
@@ -78,8 +78,8 @@ export function MetricCard({
           <div
             className={cn(
               compact
-                ? 'h-10 w-10 rounded-2xl flex items-center justify-center flex-shrink-0 ring-1 ring-white/60 shadow-[0_8px_18px_-16px_rgba(15,23,42,0.18)]'
-                : 'w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ring-1 ring-white/60 shadow-[0_8px_18px_-16px_rgba(15,23,42,0.18)]',
+                ? 'h-10 w-10 rounded-2xl flex items-center justify-center flex-shrink-0 ring-1 ring-white/60 shadow-[0_10px_18px_-16px_rgba(15,23,42,0.18)]'
+                : 'w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ring-1 ring-white/60 shadow-[0_10px_18px_-16px_rgba(15,23,42,0.18)]',
               iconClassName || 'bg-primary/12'
             )}
           >

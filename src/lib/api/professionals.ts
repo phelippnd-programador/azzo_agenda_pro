@@ -2,6 +2,12 @@ import type { Professional } from "@/types";
 import type { ListQueryParams, ListResponse, ProfessionalLimits } from "./contracts";
 import { buildListQuery, request } from "./core";
 
+export type ProfessionalUpsertPayload = Partial<Professional> & {
+  userId?: string;
+  createUser?: boolean;
+  accessPassword?: string;
+};
+
 export const professionalsApi = {
   getAll: (params?: ListQueryParams) => {
     const query = buildListQuery(params);
@@ -10,12 +16,12 @@ export const professionalsApi = {
   },
   getById: (id: string) => request<Professional>(`/professionals/${id}`),
   getLimits: () => request<ProfessionalLimits>("/professionals/limits"),
-  create: (data: Partial<Professional>) =>
+  create: (data: ProfessionalUpsertPayload) =>
     request<Professional>("/professionals", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  update: (id: string, data: Partial<Professional>) =>
+  update: (id: string, data: ProfessionalUpsertPayload) =>
     request<Professional>(`/professionals/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),

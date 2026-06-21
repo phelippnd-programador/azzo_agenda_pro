@@ -47,6 +47,7 @@ import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmation
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { toast } from 'sonner';
 import { formatCurrencyCents } from '@/lib/format';
+import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
 
 const categories = ['Todos', 'Cabelo', 'Barba', 'Unhas', 'Estetica', 'Maquiagem', 'Outros'];
 
@@ -248,29 +249,33 @@ export default function ServicesOverviewPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <Card className="border-border/70 bg-card/90 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.16)]">
-        <CardContent className="flex flex-col gap-4 py-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-1.5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              Catalogo
-            </p>
-            <p className="text-sm font-medium text-foreground">
-              Estruture o portifolio de servicos com preco, duracao, categoria e disponibilidade por equipe.
-            </p>
-            <p className="max-w-3xl text-sm text-muted-foreground">
-              Use a busca, os filtros e a alternancia entre cards e tabela para revisar o catalogo com menos atrito.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="bg-background/80">
-              {pagination.total} servico(s)
-            </Badge>
-            <Badge variant="outline" className="bg-background/80">
-              {selectedCategory}
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
+      <ModuleIntro
+        eyebrow="Catalogo"
+        title="Estruture o portifolio de servicos com preco, duracao, categoria e disponibilidade por equipe."
+        description="Use a busca, os filtros e a alternancia entre cards e tabela para revisar o catalogo com menos atrito."
+        badges={[
+          { label: `${pagination.total} servico(s)` },
+          { label: selectedCategory },
+          { label: viewMode === 'grid' ? 'Cards' : 'Lista' },
+        ]}
+        points={[
+          {
+            eyebrow: 'Catalogo',
+            title: 'Preco, duracao e contexto',
+            description: 'Mantenha nome, tempo e valor claros para reduzir duvidas no agendamento e na operacao.',
+          },
+          {
+            eyebrow: 'Equipe',
+            title: 'Disponibilidade por profissional',
+            description: 'Restrinja apenas quando o servico depender de pessoas especificas; no restante, mantenha amplo.',
+          },
+          {
+            eyebrow: 'Navegacao',
+            title: 'Cards para leitura, lista para manutencao',
+            description: 'Troque de visualizacao conforme a tarefa: revisar rapido ou editar em sequencia.',
+          },
+        ]}
+      />
 
       <Dialog
         open={isNewServiceOpen}
@@ -504,6 +509,16 @@ export default function ServicesOverviewPage() {
             ))}
           </div>
         </div>
+
+      <WorkspaceNotice
+        title="Area de trabalho de servicos"
+        description="Filtre por categoria, selecione itens em lote e abra o cadastro para ajustar preco, duracao e equipe."
+        badge={
+          selectedServiceIds.length
+            ? `${selectedServiceIds.length} selecionado(s)`
+            : `${filteredServices.length} em foco`
+        }
+      />
 
       {filteredServices.length === 0 ? (
         <PageEmptyState

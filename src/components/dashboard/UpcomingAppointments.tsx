@@ -33,9 +33,12 @@ export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingA
   };
 
   return (
-    <Card className="border-border/60 bg-background/95 shadow-sm">
+    <Card className="border-border/70 bg-background/95 shadow-none">
       <CardHeader className="flex flex-row items-start justify-between gap-3 pb-3">
         <div className="space-y-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            Agenda do dia
+          </p>
           <CardTitle className="text-base sm:text-lg">Proximos agendamentos</CardTitle>
           <p className="text-sm text-muted-foreground">
             Agenda do dia com acesso rapido para confirmacao e atendimento.
@@ -59,7 +62,7 @@ export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingA
           appointments.map((appointment) => (
             <div
               key={appointment.id}
-              className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-background/90 p-4 transition-colors hover:bg-muted/10 sm:flex-row sm:items-center"
+              className="flex flex-col gap-3 rounded-2xl border border-border/70 bg-card/70 p-4 transition-colors hover:bg-muted/10 sm:flex-row sm:items-center"
             >
               <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
                 <Avatar className="h-10 w-10 flex-shrink-0 sm:h-12 sm:w-12">
@@ -90,6 +93,11 @@ export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingA
                       <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
                       {appointment.startTime}
                     </span>
+                    {appointment.professional?.name ? (
+                      <span className="text-xs text-muted-foreground sm:hidden">
+                        {appointment.professional.name}
+                      </span>
+                    ) : null}
                     <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary sm:text-sm">
                       {formatCurrencyCents(appointment.totalPrice)}
                     </span>

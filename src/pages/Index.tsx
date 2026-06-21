@@ -1,6 +1,8 @@
 ﻿import { useCallback, useEffect, useState } from 'react';
 import { RankedBarCard } from '@/components/common/RankedBarCard';
+import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { UpcomingAppointments } from '@/components/dashboard/UpcomingAppointments';
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
@@ -11,9 +13,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PageErrorState, PageEmptyState } from '@/components/ui/page-states';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Calendar, DollarSign, Users, TrendingUp, Clock, CheckCircle, Route, UserCheck, CalendarClock, ClipboardCheck } from 'lucide-react';
+import { PageErrorState } from '@/components/ui/page-states';
+import { Calendar, DollarSign, Users, TrendingUp, Clock, CheckCircle, Route, UserCheck, CalendarClock, ClipboardCheck, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useDashboardWithOptions } from '@/hooks/useDashboard';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useProfessionals } from '@/hooks/useProfessionals';
@@ -155,6 +157,7 @@ function QuickSignalCard({
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
   const isProfessionalUser = user?.role === 'PROFESSIONAL';
   const [customerRanking, setCustomerRanking] = useState<DashboardCustomerRankingResponse | null>(null);
@@ -387,35 +390,62 @@ export default function Dashboard() {
   }
 
   return (
-        <MainLayout title="Dashboard" subtitle={formattedDate}>
+    <MainLayout title="Dashboard" subtitle={formattedDate}>
       <div className="space-y-5 sm:space-y-6">
-        <Card className="border-border/70 bg-card/90 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.16)]">
-          <CardContent className="flex flex-col gap-4 py-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-1.5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Visao executiva
-              </p>
-              <p className="text-sm font-medium text-foreground">
-                {isProfessionalUser
-                  ? 'Priorize pendências da agenda, volume concluído e comissão do período atual.'
-                  : 'Comece pelo que exige ação agora, depois desça para risco operacional e desempenho do mês.'}
-              </p>
-              <p className="max-w-3xl text-sm text-muted-foreground">
-                {isProfessionalUser
-                  ? 'A leitura foi organizada para destacar os sinais do dia antes dos blocos de apoio.'
-                  : 'O topo resume operação imediata; os blocos seguintes ajudam a localizar perda de conversão e concentração de receita.'}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline" className="w-fit bg-background/80">
-                Hoje
-              </Badge>
-              <Badge variant="outline" className="w-fit bg-background/80">
-                Mês atual
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
+        <ModuleIntro
+          eyebrow="Visao executiva"
+          title={
+            isProfessionalUser
+              ? 'Priorize agenda, volume entregue e comissao do periodo atual.'
+              : 'Comece pelo que exige acao agora e desca depois para risco operacional e desempenho do mes.'
+          }
+          description={
+            isProfessionalUser
+              ? 'A leitura foi organizada para destacar sinais do dia antes dos blocos de apoio.'
+              : 'O topo resume operacao imediata; os blocos seguintes ajudam a localizar perda de conversao e concentracao de receita.'
+          }
+          badges={[
+            { label: 'Hoje' },
+            { label: 'Mes atual' },
+            { label: `${todayAppointments.length} agendamento(s) no dia` },
+          ]}
+          actions={
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => navigate('/agenda')}>
+              Abrir agenda do dia
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          }
+          points={[
+            {
+              eyebrow: isProfessionalUser ? 'Leitura principal' : 'Primeira leitura',
+              title: isProfessionalUser ? 'Pendencias, entrega e agenda' : 'Agenda, equipe e gargalos',
+              description: isProfessionalUser
+                ? 'Confirme pendencias, acompanhe o volume concluido e ajuste sua agenda antes dos blocos analiticos.'
+                : 'Trate agenda, equipe e gargalos do funil antes de descer para os graficos e rankings.',
+            },
+            {
+              eyebrow: 'Atalho de operacao',
+              title: 'Bata o olho e decida rapido',
+              description: 'Use os cards do topo para ler volume, receita, clientes e pendencias sem trocar de tela.',
+            },
+            {
+              eyebrow: 'Proximo passo',
+              title: 'Entre pela agenda do dia',
+              description: 'Quando houver pendencias ou conflito de horario, a agenda continua sendo o ponto de acao mais rapido.',
+            },
+          ]}
+        />
+
+        <WorkspaceNotice
+          title="Area de trabalho do dashboard"
+          description={
+            isProfessionalUser
+              ? 'Use os indicadores do topo para decidir o foco do dia e desca apenas depois para os blocos de apoio.'
+              : 'Leia primeiro o operacional imediato e depois use os blocos abaixo para encontrar risco, conversao e concentracao de receita.'
+          }
+          badge={isProfessionalUser ? `${resolvedMetrics.pendingAppointments} pendencia(s)` : `${resolvedMetrics.notConcludedToday ?? 0} em risco hoje`}
+        />
+
         <DashboardSectionHeader
           eyebrow="Operacao"
           title="O que exige atencao hoje"
@@ -729,6 +759,12 @@ export default function Dashboard() {
               <WhatsAppReactivationChart />
             </div>
 
+            <WorkspaceNotice
+              title="Leitura de risco antes da performance"
+              description="Se abandono, WhatsApp em aberto ou no-show subirem, trate isso antes de usar os blocos abaixo para analisar crescimento e ranking."
+              badge={`${(resolvedMetrics.notConcludedToday ?? 0) + (resolvedMetrics.whatsAppOpenFlowsToday ?? 0)} sinais prioritarios`}
+            />
+
             <DashboardSectionHeader
               eyebrow="Performance"
               title="Receita e desempenho do mes"
@@ -793,22 +829,31 @@ export default function Dashboard() {
             />
 
             <Card className="border-border/70 bg-muted/15 shadow-none">
-              <CardHeader>
-                <CardTitle className="text-base sm:text-lg">Resumo da sua operação</CardTitle>
+              <CardHeader className="space-y-1 pb-3">
+                <CardTitle className="text-base sm:text-lg">Resumo da sua operacao</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Um checkpoint rapido para manter foco em entrega, agenda e conversao do dia.
+                </p>
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-muted-foreground">
-                <div className="rounded-xl border bg-background p-4">
-                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                <div className="rounded-xl border border-border/70 bg-background/85 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                     Leitura recomendada
                   </p>
-                  <p className="mt-2">
-                    Use os cards do topo para acompanhar volume entregue, receita gerada e comissão acumulada no mês atual.
+                  <p className="mt-2 font-medium text-foreground">
+                    Volume entregue, receita do periodo e comissao acumulada precisam ser lidos juntos.
+                  </p>
+                  <p className="mt-1">
+                    Use os cards do topo para acompanhar esses tres sinais sem perder o foco na agenda do dia.
                   </p>
                 </div>
-                <div className="rounded-xl border bg-background p-4">
-                  <p className="font-medium text-foreground">Próximo passo</p>
+                <div className="rounded-xl border border-border/70 bg-background/85 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Proximo passo
+                  </p>
+                  <p className="mt-2 font-medium text-foreground">Confirme pendencias e empurre conclusao.</p>
                   <p className="mt-1">
-                    Priorize confirmação de pendências na agenda e mantenha o foco em converter atendimentos agendados em serviços concluídos.
+                    Priorize confirmacao de pendencias na agenda e mantenha o foco em converter atendimentos agendados em servicos concluidos.
                   </p>
                 </div>
               </CardContent>

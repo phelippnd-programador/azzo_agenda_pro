@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useSpecialties } from "@/hooks/useSpecialties";
+import { ModuleIntro, WorkspaceNotice } from "@/components/layout/module-surfaces";
 
 export default function SpecialtiesOverviewPage() {
   const [name, setName] = useState("");
@@ -195,29 +196,33 @@ export default function SpecialtiesOverviewPage() {
   return (
     <>
       <div className="space-y-6">
-        <Card className="border-border/70 bg-card/90 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.16)]">
-          <CardContent className="flex flex-col gap-4 py-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-1.5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Organizacao
-              </p>
-              <p className="text-sm font-medium text-foreground">
-                Mantenha as especialidades claras para apoiar cadastro, filtros e leitura operacional.
-              </p>
-              <p className="max-w-3xl text-sm text-muted-foreground">
-                A busca ajuda a localizar termos rapidamente, enquanto cards e tabela servem para contextos diferentes de manutencao.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline" className="bg-background/80">
-                {specialties.length} especialidade(s)
-              </Badge>
-              <Badge variant="outline" className="bg-background/80">
-                {viewMode === "grid" ? "Cards" : "Lista"}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
+        <ModuleIntro
+          eyebrow="Organizacao"
+          title="Mantenha as especialidades claras para apoiar cadastro, filtros e leitura operacional."
+          description="A busca ajuda a localizar termos rapidamente, enquanto cards e tabela servem para contextos diferentes de manutencao."
+          badges={[
+            { label: `${specialties.length} especialidade(s)` },
+            { label: viewMode === "grid" ? "Cards" : "Lista" },
+            { label: `${filtered.length} em foco` },
+          ]}
+          points={[
+            {
+              eyebrow: "Catalogo",
+              title: "Nomes claros e poucos ruídos",
+              description: "Especialidades bem nomeadas melhoram leitura, filtros e organizacao do catalogo inteiro.",
+            },
+            {
+              eyebrow: "Navegacao",
+              title: "Busca rapida e manutencao direta",
+              description: "Use cards para leitura e lista para revisao em lote quando a limpeza da base for o foco.",
+            },
+            {
+              eyebrow: "Proximo passo",
+              title: "Revise, selecione e corrija",
+              description: "Aproveite a selecao em lote para reduzir atrito quando houver ajustes repetidos na base.",
+            },
+          ]}
+        />
 
         <Dialog
           open={isNewSpecialtyOpen}
@@ -321,6 +326,16 @@ export default function SpecialtiesOverviewPage() {
             </Button>
           </div>
         </div>
+
+        <WorkspaceNotice
+          title="Area de trabalho de especialidades"
+          description="Busque termos, alterne a visualizacao e aproveite a selecao em lote para limpar ou revisar a base."
+          badge={
+            selectedSpecialtyIds.length
+              ? `${selectedSpecialtyIds.length} selecionada(s)`
+              : `${filtered.length} em foco`
+          }
+        />
 
         {isLoading ? <PageListLoadingState itemCount={6} itemHeightClassName="h-24" /> : null}
 

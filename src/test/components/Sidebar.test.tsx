@@ -89,7 +89,7 @@ describe("Sidebar", () => {
   it("should organize navigation by sections and keep labels concise", async () => {
     render(
       <MemoryRouter initialEntries={["/financeiro"]}>
-        <Sidebar isMobileOpen={false} onToggleMobile={vi.fn()} isDesktopOpen />
+        <Sidebar isMobileOpen={false} onToggleMobile={vi.fn()} isDesktopOpen onToggleDesktop={vi.fn()} />
       </MemoryRouter>
     );
 
@@ -106,7 +106,7 @@ describe("Sidebar", () => {
   it("should keep only the child link active on nested finance routes", async () => {
     render(
       <MemoryRouter initialEntries={["/financeiro/comissoes"]}>
-        <Sidebar isMobileOpen={false} onToggleMobile={vi.fn()} isDesktopOpen />
+        <Sidebar isMobileOpen={false} onToggleMobile={vi.fn()} isDesktopOpen onToggleDesktop={vi.fn()} />
       </MemoryRouter>
     );
 
@@ -115,5 +115,17 @@ describe("Sidebar", () => {
 
     expect(resumoLink).not.toHaveAttribute("aria-current", "page");
     expect(comissoesLink).toHaveAttribute("aria-current", "page");
+  });
+
+  it("should keep navigation accessible when the desktop sidebar is collapsed", async () => {
+    render(
+      <MemoryRouter initialEntries={["/financeiro"]}>
+        <Sidebar isMobileOpen={false} onToggleMobile={vi.fn()} isDesktopOpen={false} onToggleDesktop={vi.fn()} />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole("button", { name: "Expandir menu lateral" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Resumo Financeiro" })).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Abrir site de agendamento" })).toBeInTheDocument();
   });
 });

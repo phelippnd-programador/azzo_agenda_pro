@@ -222,7 +222,18 @@ export default function ClientsOverviewPage() {
           ))}
         </div>
       ) : (
-        <Card className="border-border/70 shadow-none">
+        <Card className="border-border/70 bg-muted/15 shadow-none">
+          <div className="flex flex-col gap-3 border-b border-border/70 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Lista de clientes</p>
+              <p className="text-sm text-muted-foreground">
+                Compare contato, recorrencia e faturamento sem sair da mesma passada.
+              </p>
+            </div>
+            <Badge variant="outline" className="w-fit bg-background/80">
+              {filteredClients.length} visivel(is)
+            </Badge>
+          </div>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>

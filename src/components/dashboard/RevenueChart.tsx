@@ -42,10 +42,13 @@ export function RevenueChart() {
   const maxValue = useMemo(() => Math.max(...weeklyData.map((d) => d.value), 0), [weeklyData]);
 
   return (
-    <Card className="border-border/60 bg-background/95 shadow-sm">
+    <Card className="border-border/70 bg-background/95 shadow-none">
       <CardHeader className="pb-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="space-y-1">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Receita semanal
+            </p>
             <CardTitle className="text-base sm:text-lg">Faturamento da Semana</CardTitle>
             <p className="text-sm text-muted-foreground">
               Leitura rapida da semana atual com destaque para o dia em andamento.
