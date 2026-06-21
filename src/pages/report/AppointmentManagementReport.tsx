@@ -531,7 +531,7 @@ export default function AppointmentManagementReport() {
               </Alert>
             ) : null}
 
-            <div className="overflow-x-auto rounded-xl border">
+            <div className="overflow-x-auto">
               <Table className="min-w-[980px]">
                 <TableHeader>
                   <TableRow>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -380,47 +381,47 @@ export default function NoShowReport() {
               </Alert>
             ) : null}
 
-            <div className="overflow-x-auto rounded-xl border">
-              <table className="min-w-[720px] w-full text-sm">
-                <thead className="bg-muted/50 text-left">
-                  <tr>
-                    <th className="px-4 py-3 font-medium">Agrupamento</th>
-                    <th className="px-4 py-3 font-medium">Total no-show</th>
-                    <th className="px-4 py-3 font-medium">Receita em risco</th>
-                    <th className="px-4 py-3 font-medium">Participacao</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[720px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Agrupamento</TableHead>
+                    <TableHead>Total no-show</TableHead>
+                    <TableHead>Receita em risco</TableHead>
+                    <TableHead>Participacao</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {isLoading ? (
-                    <tr>
-                      <td colSpan={4} className="px-4 py-10 text-center text-muted-foreground">
+                    <TableRow>
+                      <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
                         Carregando resumo de no-show...
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ) : groups.length ? (
                     groups.map((group) => {
                       const percentage =
                         (report?.totalNoShows ?? 0) > 0 ? (group.totalNoShows / (report?.totalNoShows ?? 1)) * 100 : 0;
                       return (
-                        <tr key={`${group.key}-${group.label}`} className="border-t align-top">
-                          <td className="px-4 py-3 font-medium">
+                        <TableRow key={`${group.key}-${group.label}`} className="align-top">
+                          <TableCell className="font-medium">
                             {formatGroupLabel(activeFilters.groupBy, group.label)}
-                          </td>
-                          <td className="px-4 py-3">{group.totalNoShows}</td>
-                          <td className="px-4 py-3">{formatCurrency(group.revenueAtRisk)}</td>
-                          <td className="px-4 py-3">{percentage.toFixed(1)}%</td>
-                        </tr>
+                          </TableCell>
+                          <TableCell>{group.totalNoShows}</TableCell>
+                          <TableCell>{formatCurrency(group.revenueAtRisk)}</TableCell>
+                          <TableCell>{percentage.toFixed(1)}%</TableCell>
+                        </TableRow>
                       );
                     })
                   ) : (
-                    <tr>
-                      <td colSpan={4} className="px-4 py-10 text-center text-muted-foreground">
+                    <TableRow>
+                      <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
                         Nenhum registro de no-show encontrado para os filtros selecionados.
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>
