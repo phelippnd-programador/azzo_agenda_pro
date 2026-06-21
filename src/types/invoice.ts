@@ -1,4 +1,4 @@
-export type InvoiceType = 'NFE' | 'NFCE';
+export type InvoiceType = 'NFE' | 'NFCE' | 'NFSE';
 export type InvoiceStatus =
   | 'DRAFT'
   | 'GENERATED'

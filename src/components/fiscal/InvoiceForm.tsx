@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+
+const NfseInvoiceFormEmbed = lazy(() =>
+  import('@/components/fiscal/NfseInvoiceFormEmbed').then((m) => ({
+    default: m.NfseInvoiceFormEmbed,
+  })),
+);
 import { formatCurrency } from '@/lib/format';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -24,11 +30,12 @@ import { toast } from 'sonner';
 interface InvoiceFormProps {
   onSubmit: (data: InvoiceFormData, isDraft: boolean) => void;
   initialData?: Partial<InvoiceFormData>;
+  nfseEnabled?: boolean;
 }
 
-export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
+export function InvoiceForm({ onSubmit, initialData, nfseEnabled = false }: InvoiceFormProps) {
   const [regime, setRegime] = useState<TaxRegime>(TaxRegime.SIMPLES_NACIONAL);
-  const [type, setType] = useState<'NFE' | 'NFCE'>(initialData?.type || 'NFCE');
+  const [type, setType] = useState<'NFE' | 'NFCE' | 'NFSE'>(initialData?.type || 'NFCE');
   const [operationNature, setOperationNature] = useState(
     initialData?.operationNature || 'Prestacao de servicos'
   );
@@ -237,7 +244,7 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
           <CardTitle>Tipo de Nota Fiscal</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
+          <div className={`grid gap-4 ${nfseEnabled ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <Button
               variant={type === 'NFCE' ? 'default' : 'outline'}
               onClick={() => setType('NFCE')}
@@ -260,10 +267,36 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
                 <div className="text-xs opacity-70">Pessoa Juridica</div>
               </div>
             </Button>
+            {nfseEnabled ? (
+              <Button
+                variant={type === 'NFSE' ? 'default' : 'outline'}
+                onClick={() => setType('NFSE')}
+                className="h-20"
+              >
+                <div className="text-center">
+                  <div className="font-bold">NFS-e</div>
+                  <div className="text-xs">Servico</div>
+                  <div className="text-xs opacity-70">Nota Fiscal de Servico</div>
+                </div>
+              </Button>
+            ) : null}
           </div>
         </CardContent>
       </Card>
 
+      {type === 'NFSE' ? (
+        <Suspense
+          fallback={
+            <div className="p-8 text-center text-muted-foreground">Carregando...</div>
+          }
+        >
+          <NfseInvoiceFormEmbed />
+        </Suspense>
+      ) : null}
+
+      {/* Bloco principal NF-e / NFC-e */}
+      {type !== 'NFSE' ? (
+        <>
       {/* Customer Data */}
       <Card>
         <CardHeader>
@@ -541,6 +574,8 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
           Emitir Nota Fiscal
         </Button>
       </div>
+        </>
+      ) : null}
     </div>
   );
 }
