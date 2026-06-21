@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { CnpjAutoFillField } from "@/components/shared/CnpjAutoFillField";
 import { NbsCatalogSearch } from "@/components/nfse/NbsCatalogSearch";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { nfseApi, type NfseInvoice } from "@/lib/api";
+import type { CnpjConsultaResponse } from "@/lib/api/cnpj";
 import { resolveUiError } from "@/lib/error-utils";
 import { toast } from "sonner";
 
@@ -36,7 +38,6 @@ export default function NfseInvoiceForm() {
   const [searchParams] = useSearchParams();
   const mode: Mode = id ? "edit" : "create";
   const [isSaving, setIsSaving] = useState(false);
-  const [isLookingUpCnpj, setIsLookingUpCnpj] = useState(false);
   const [tomadorAddressPreview, setTomadorAddressPreview] = useState<string | null>(null);
   const [invoice, setInvoice] = useState<Partial<NfseInvoice>>({
     ambiente: "HOMOLOGACAO",
@@ -185,49 +186,33 @@ export default function NfseInvoiceForm() {
     }
   };
 
-  const lookupTomadorByCnpj = async () => {
-    const rawDocument = invoice.customer?.document || "";
-    const cnpj = rawDocument.replace(/\D/g, "");
-    if (cnpj.length !== 14) {
-      toast.error("Informe um CNPJ valido (14 digitos) para consultar.");
-      return;
-    }
-    try {
-      setIsLookingUpCnpj(true);
-      const data = await nfseApi.lookupTomadorByCnpj(cnpj);
-      setInvoice((prev) => ({
-        ...prev,
-        customer: {
-          ...(prev.customer as NfseInvoice["customer"]),
-          type: "CNPJ",
-          document: data.document || cnpj,
-          name: data.name || prev.customer?.name || "",
-          email: data.email || prev.customer?.email,
-          phone: data.phone || prev.customer?.phone,
-        },
-      }));
-      const address = data.address;
-      const addressText = address
-        ? [
-            address.street,
-            address.number,
-            address.complement,
-            address.neighborhood,
-            address.city,
-            address.state,
-            address.zipCode,
-          ]
-            .filter(Boolean)
-            .join(", ")
-        : null;
-      setTomadorAddressPreview(addressText || null);
-      toast.success("Dados do tomador preenchidos. Confira antes de emitir.");
-    } catch (error) {
-      setTomadorAddressPreview(null);
-      showError(error, "Nao foi possivel consultar CNPJ do tomador");
-    } finally {
-      setIsLookingUpCnpj(false);
-    }
+  const applyTomadorCnpjData = (data: CnpjConsultaResponse) => {
+    setInvoice((prev) => ({
+      ...prev,
+      customer: {
+        ...(prev.customer as NfseInvoice["customer"]),
+        type: "CNPJ",
+        document: data.cnpj || prev.customer?.document || "",
+        name: data.razaoSocial || prev.customer?.name || "",
+        email: data.emailSugestao || prev.customer?.email,
+        phone: data.telefoneSugestao || prev.customer?.phone,
+      },
+    }));
+    const address = data.endereco;
+    const addressText = address
+      ? [
+          address.logradouro,
+          address.numero,
+          address.complemento,
+          address.bairro,
+          address.municipio,
+          address.uf,
+          address.cep,
+        ]
+          .filter(Boolean)
+          .join(", ")
+      : null;
+    setTomadorAddressPreview(addressText || null);
   };
 
   const applyNbsCode = (code: string) => {
@@ -296,7 +281,35 @@ export default function NfseInvoiceForm() {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-2">
+              <Label>Tipo do tomador</Label>
+              <Select
+                value={invoice.customer?.type || "CPF"}
+                onValueChange={(value: "CPF" | "CNPJ" | "EXTERIOR") => {
+                  if (value !== "CNPJ") {
+                    setTomadorAddressPreview(null);
+                  }
+                  setInvoice((prev) => ({
+                    ...prev,
+                    customer: {
+                      ...(prev.customer as NfseInvoice["customer"]),
+                      type: value,
+                      document: value === "EXTERIOR" ? prev.customer?.document || "" : prev.customer?.document || "",
+                    },
+                  }));
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CPF">CPF</SelectItem>
+                  <SelectItem value="CNPJ">CNPJ</SelectItem>
+                  <SelectItem value="EXTERIOR">Exterior</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2">
               <Label>Tomador - nome</Label>
               <Input
@@ -313,29 +326,41 @@ export default function NfseInvoiceForm() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Tomador - documento</Label>
-              <Input
-                value={invoice.customer?.document || ""}
-                onChange={(e) =>
-                  setInvoice((prev) => ({
-                    ...prev,
-                    customer: {
-                      ...(prev.customer as NfseInvoice["customer"]),
-                      document: e.target.value,
-                    },
-                  }))
-                }
-              />
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => void lookupTomadorByCnpj()}
-                  disabled={isLookingUpCnpj}
-                >
-                  {isLookingUpCnpj ? "Consultando..." : "Buscar CNPJ"}
-                </Button>
-              </div>
+              {invoice.customer?.type === "CNPJ" ? (
+                <CnpjAutoFillField
+                  id="nfse-tomador-documento"
+                  label="Tomador - CNPJ"
+                  value={invoice.customer?.document || ""}
+                  onChange={(value) =>
+                    setInvoice((prev) => ({
+                      ...prev,
+                      customer: {
+                        ...(prev.customer as NfseInvoice["customer"]),
+                        type: "CNPJ",
+                        document: value,
+                      },
+                    }))
+                  }
+                  onDataLoaded={applyTomadorCnpjData}
+                />
+              ) : (
+                <>
+                  <Label>Tomador - documento</Label>
+                  <Input
+                    value={invoice.customer?.document || ""}
+                    onChange={(e) =>
+                      setInvoice((prev) => ({
+                        ...prev,
+                        customer: {
+                          ...(prev.customer as NfseInvoice["customer"]),
+                          document: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder={invoice.customer?.type === "CPF" ? "000.000.000-00" : "Documento do tomador"}
+                  />
+                </>
+              )}
             </div>
           </div>
 

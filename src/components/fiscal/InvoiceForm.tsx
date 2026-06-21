@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { CnpjAutoFillField } from '@/components/shared/CnpjAutoFillField';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -15,6 +16,7 @@ import {
 import { Plus, Trash2, AlertCircle } from 'lucide-react';
 import { InvoiceFormData, InvoiceItem, InvoiceCustomer } from '@/types/invoice';
 import { CFOP_CODES, CSOSN_CODES, CST_CODES, TaxRegime } from '@/types/fiscal';
+import type { CnpjConsultaResponse } from '@/lib/api/cnpj';
 import { fiscalApi } from '@/lib/api';
 import { maskCpf, maskCnpj, maskPhoneBr } from '@/lib/input-masks';
 import { toast } from 'sonner';
@@ -31,6 +33,7 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
     initialData?.operationNature || 'Prestacao de servicos'
   );
   const [notes, setNotes] = useState(initialData?.notes || '');
+  const [customerAddressPreview, setCustomerAddressPreview] = useState<string | null>(null);
 
   const [customer, setCustomer] = useState<InvoiceCustomer>(
     initialData?.customer || {
@@ -127,6 +130,43 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
 
   const calculateTotal = () => {
     return items.reduce((sum, item) => sum + item.totalPrice, 0);
+  };
+
+  const applyCustomerCnpjData = (data: CnpjConsultaResponse) => {
+    setCustomer((prev) => ({
+      ...prev,
+      type: 'CNPJ',
+      document: data.cnpj || prev.document,
+      name: data.razaoSocial || prev.name,
+      email: data.emailSugestao || prev.email,
+      phone: data.telefoneSugestao || prev.phone,
+      address: data.endereco
+        ? {
+            street: data.endereco.logradouro || '',
+            number: data.endereco.numero || '',
+            complement: data.endereco.complemento || undefined,
+            neighborhood: data.endereco.bairro || '',
+            city: data.endereco.municipio || '',
+            state: data.endereco.uf || '',
+            zipCode: data.endereco.cep || '',
+          }
+        : prev.address,
+    }));
+    setCustomerAddressPreview(
+      data.endereco
+        ? [
+            data.endereco.logradouro,
+            data.endereco.numero,
+            data.endereco.complemento,
+            data.endereco.bairro,
+            data.endereco.municipio,
+            data.endereco.uf,
+            data.endereco.cep,
+          ]
+            .filter(Boolean)
+            .join(', ')
+        : null,
+    );
   };
 
 
@@ -235,13 +275,16 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
               <Label>Tipo de Documento</Label>
               <Select
                 value={customer.type}
-                onValueChange={(value: 'CPF' | 'CNPJ') =>
+                onValueChange={(value: 'CPF' | 'CNPJ') => {
+                  if (value !== 'CNPJ') {
+                    setCustomerAddressPreview(null);
+                  }
                   setCustomer((prev) => ({
                     ...prev,
                     type: value,
                     document: value === 'CPF' ? maskCpf(prev.document) : maskCnpj(prev.document),
-                  }))
-                }
+                  }));
+                }}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -253,17 +296,35 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>{customer.type}</Label>
-              <Input
-                placeholder={customer.type === 'CPF' ? '000.000.000-00' : '00.000.000/0000-00'}
-                value={customer.document}
-                onChange={(e) =>
-                  setCustomer({
-                    ...customer,
-                    document: customer.type === 'CPF' ? maskCpf(e.target.value) : maskCnpj(e.target.value),
-                  })
-                }
-              />
+              {customer.type === 'CNPJ' ? (
+                <CnpjAutoFillField
+                  id="invoice-customer-cnpj"
+                  label="CNPJ"
+                  value={customer.document}
+                  onChange={(value) =>
+                    setCustomer((prev) => ({
+                      ...prev,
+                      type: 'CNPJ',
+                      document: value,
+                    }))
+                  }
+                  onDataLoaded={applyCustomerCnpjData}
+                />
+              ) : (
+                <>
+                  <Label>{customer.type}</Label>
+                  <Input
+                    placeholder="000.000.000-00"
+                    value={customer.document}
+                    onChange={(e) =>
+                      setCustomer({
+                        ...customer,
+                        document: maskCpf(e.target.value),
+                      })
+                    }
+                  />
+                </>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Nome/Razao Social</Label>
@@ -274,6 +335,12 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
               />
             </div>
           </div>
+          {customerAddressPreview ? (
+            <div className="rounded-md border bg-muted/30 p-3 text-sm">
+              <p className="font-medium">Endereco sugerido do tomador</p>
+              <p className="text-muted-foreground">{customerAddressPreview}</p>
+            </div>
+          ) : null}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Email (opcional)</Label>
