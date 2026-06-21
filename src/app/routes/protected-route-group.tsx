@@ -175,7 +175,7 @@ export function ProtectedRouteGroup({
       <Route path={appRouteManifest.fiscal.invoiceDetail} element={<ProtectedRoute><NfseInvoiceDetails /></ProtectedRoute>} />
       <Route path={appRouteManifest.fiscal.invoiceEdit} element={<ProtectedRoute><NfseInvoiceForm /></ProtectedRoute>} />
       <Route path={appRouteManifest.fiscal.invoicePdf} element={<ProtectedRoute><NfseInvoicePdf /></ProtectedRoute>} />
-      <Route path={appRouteManifest.fiscal.taxAlias} element={<Navigate to={appRouteManifest.settings.fiscalTaxes} replace />} />
+      <Route path={appRouteManifest.fiscal.taxAlias} element={<ProtectedRoute><Navigate to={appRouteManifest.settings.fiscalTaxes} replace /></ProtectedRoute>} />
       <Route path={appRouteManifest.fiscal.invoicePreview} element={<ProtectedRoute><InvoicePreview /></ProtectedRoute>} />
       <Route path={appRouteManifest.fiscal.invoiceEmission} element={<ProtectedRoute><InvoiceEmission /></ProtectedRoute>} />
       <Route path={appRouteManifest.fiscal.monthlyTaxStatement} element={<ProtectedRoute><ApuracaoMensal /></ProtectedRoute>} />

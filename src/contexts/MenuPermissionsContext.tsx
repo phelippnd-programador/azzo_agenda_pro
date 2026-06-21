@@ -154,9 +154,10 @@ export function MenuPermissionsProvider({ children }: { children: ReactNode }) {
 
   const canAccess = useCallback(
     (path: string) => {
-      if (ALWAYS_ALLOWED_ROUTES.includes(path)) return true;
+      const normalizedPath = normalizeRoute(path);
+      if (ALWAYS_ALLOWED_ROUTES.includes(normalizedPath)) return true;
       if (!isEnforced || !allowedRoutes) return false;
-      return allowedRoutes.some((allowedPath) => isSubRouteAllowed(path, allowedPath));
+      return allowedRoutes.some((allowedPath) => isSubRouteAllowed(normalizedPath, allowedPath));
     },
     [allowedRoutes, isEnforced]
   );
