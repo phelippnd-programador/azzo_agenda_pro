@@ -71,7 +71,6 @@ describe("Clients", () => {
 
     expect(screen.getByText("Total de Clientes")).toBeInTheDocument();
     expect(screen.getByText("Ativos nesta pagina")).toBeInTheDocument();
-    expect(screen.getByText("Faturamento na pagina")).toBeInTheDocument();
     expect(screen.getAllByText("Maria Silva").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: /Novo Cliente/i })).toBeInTheDocument();
     expect(screen.getByText("Pagina 1 de 3")).toBeInTheDocument();

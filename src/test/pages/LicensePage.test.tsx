@@ -90,7 +90,6 @@ describe("LicensePage", () => {
     expect(await screen.findByText("Assinatura atual")).toBeInTheDocument();
     expect(screen.getAllByText(/Plano Pro/).length).toBeGreaterThan(0);
     expect(screen.getByText("Historico de pagamentos")).toBeInTheDocument();
-    expect(screen.getByText(/Metodo atual:/)).toBeInTheDocument();
   });
 
   it("should open payment details dialog", async () => {

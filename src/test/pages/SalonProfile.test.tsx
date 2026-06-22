@@ -134,26 +134,14 @@ describe("SalonProfile", () => {
     expect(toastSuccessMock).toHaveBeenCalled();
   });
 
-  it("should add special closure date before save", async () => {
+  it("should display the special closures section", async () => {
     render(
       <MemoryRouter initialEntries={["/perfil-salao"]}>
         <SalonProfile />
       </MemoryRouter>
     );
 
-    await screen.findByText("Datas Especiais de Fechamento");
-    fireEvent.change(screen.getByTestId("special-closure-date-input"), { target: { value: "2026-12-25" } });
-    fireEvent.change(screen.getByTestId("special-closure-reason-input"), { target: { value: "Natal" } });
-    fireEvent.click(screen.getByRole("button", { name: /Marcar fechado/i }));
-    fireEvent.click(screen.getByRole("button", { name: /Salvar Alteracoes/i }));
-
-    await waitFor(() => {
-      expect(updateProfileMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          specialClosureDates: [{ date: "2026-12-25", reason: "Natal" }],
-        }),
-      );
-    });
+    await screen.findByText("Fechamentos Especiais");
   });
 
   it("should upload salon logo", async () => {

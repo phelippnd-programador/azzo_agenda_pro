@@ -91,7 +91,7 @@ describe("Financial", () => {
     );
 
     expect(await screen.findByText("Entradas")).toBeInTheDocument();
-    expect(screen.getByText(/Sa.das/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Sa.das/i).length).toBeGreaterThan(0);
     expect(screen.getByText("Venda de produto")).toBeInTheDocument();
     expect(screen.getByText(/Comiss.o vinculada/i)).toBeInTheDocument();
   });
@@ -107,7 +107,7 @@ describe("Financial", () => {
 
     await user.click(screen.getByRole("button", { name: /Nova Entrada/i }));
 
-    expect(await screen.findByText("Nova Entrada")).toBeInTheDocument();
+    expect((await screen.findAllByText("Nova Entrada")).length).toBeGreaterThan(0);
     expect(screen.getByPlaceholderText("Ex: Corte de cabelo - Maria")).toBeInTheDocument();
   });
 });

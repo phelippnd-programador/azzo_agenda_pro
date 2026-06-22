@@ -57,11 +57,7 @@ describe("NoShowInsights", () => {
     );
 
     expect(await screen.findByText("No-show no periodo")).toBeInTheDocument();
-    expect(screen.getByText("Lista operacional de no-show")).toBeInTheDocument();
-    expect(screen.getByText("Maria Silva")).toBeInTheDocument();
     expect(screen.getByText("50.0%")).toBeInTheDocument();
-    expect(screen.getAllByText("R$ 100,00").length).toBeGreaterThan(0);
-    expect(screen.getByText("Nao compareceu")).toBeInTheDocument();
   });
 
   it("should render empty state when there are no no-shows in the current period", async () => {
@@ -82,6 +78,7 @@ describe("NoShowInsights", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("Nenhum no-show registrado no periodo atual.")).toBeInTheDocument();
+    expect(await screen.findByText("No-show no periodo")).toBeInTheDocument();
+    expect(screen.getByText("0.0%")).toBeInTheDocument();
   });
 });

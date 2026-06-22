@@ -95,9 +95,9 @@ describe("Services", () => {
       </MemoryRouter>
     );
 
-    await user.click(await screen.findByRole("button", { name: /Novo Servico/i }));
+    await user.click(await screen.findByRole("button", { name: /Novo servico/i }));
 
-    expect(screen.getByText("Novo Servico")).toBeInTheDocument();
+    expect(screen.getAllByText("Novo servico").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: /Criar servico/i })).toBeInTheDocument();
   }, 10000);
 });

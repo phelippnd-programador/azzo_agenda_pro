@@ -55,6 +55,7 @@ describe("Login", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    sessionStorage.clear();
     mocks.me.mockResolvedValue({ id: "owner-1", role: "OWNER" });
     mocks.getCurrentBillingSubscription.mockResolvedValue({
       status: "ACTIVE",
@@ -96,7 +97,7 @@ describe("Login", () => {
     await user.click(screen.getByLabelText("Salvar e-mail neste dispositivo"));
     await user.click(screen.getByRole("button", { name: "Entrar" }));
 
-    expect(JSON.parse(localStorage.getItem("azzo_remembered_login") || "{}")).toEqual({
+    expect(JSON.parse(sessionStorage.getItem("azzo_remembered_login") || "{}")).toEqual({
       email: "owner@qa.local",
     });
   });
@@ -129,7 +130,7 @@ describe("Login", () => {
   });
 
   it("should sanitize legacy remembered credentials and preload only the email", () => {
-    localStorage.setItem(
+    sessionStorage.setItem(
       "azzo_remembered_login",
       JSON.stringify({
         email: "owner@qa.local",
@@ -145,7 +146,7 @@ describe("Login", () => {
 
     expect(screen.getByLabelText("E-mail")).toHaveValue("owner@qa.local");
     expect(screen.getByLabelText("Senha")).toHaveValue("");
-    expect(JSON.parse(localStorage.getItem("azzo_remembered_login") || "{}")).toEqual({
+    expect(JSON.parse(sessionStorage.getItem("azzo_remembered_login") || "{}")).toEqual({
       email: "owner@qa.local",
     });
   });
@@ -182,7 +183,7 @@ describe("Login", () => {
     await user.type(screen.getByLabelText("Senha"), "Pr14052019!");
     await user.click(screen.getByRole("button", { name: "Entrar" }));
 
-    expect(await screen.findByText("Verificacao adicional necessaria")).toBeInTheDocument();
-    expect(screen.getByLabelText(/Codigo MFA/i)).toBeInTheDocument();
+    expect(await screen.findByText("Verificação adicional necessária")).toBeInTheDocument();
+    expect(screen.getByLabelText(/Código MFA/i)).toBeInTheDocument();
   });
 });
