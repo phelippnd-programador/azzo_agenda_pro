@@ -40,22 +40,22 @@ export default function Login() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const raw = localStorage.getItem(REMEMBER_LOGIN_STORAGE_KEY);
+    const raw = sessionStorage.getItem(REMEMBER_LOGIN_STORAGE_KEY);
     if (!raw) return;
     try {
       const parsed = JSON.parse(raw) as { email?: string };
       if (parsed.email) {
         form.setValue("email", parsed.email);
         setRememberPassword(true);
-        localStorage.setItem(
+        sessionStorage.setItem(
           REMEMBER_LOGIN_STORAGE_KEY,
           JSON.stringify({ email: parsed.email })
         );
         return;
       }
-      localStorage.removeItem(REMEMBER_LOGIN_STORAGE_KEY);
+      sessionStorage.removeItem(REMEMBER_LOGIN_STORAGE_KEY);
     } catch {
-      localStorage.removeItem(REMEMBER_LOGIN_STORAGE_KEY);
+      sessionStorage.removeItem(REMEMBER_LOGIN_STORAGE_KEY);
     }
   }, [form]);
 
@@ -143,14 +143,14 @@ export default function Login() {
 
       if (typeof window !== "undefined") {
         if (rememberPassword) {
-          localStorage.setItem(
+          sessionStorage.setItem(
             REMEMBER_LOGIN_STORAGE_KEY,
             JSON.stringify({
               email: values.email.trim(),
             })
           );
         } else {
-          localStorage.removeItem(REMEMBER_LOGIN_STORAGE_KEY);
+          sessionStorage.removeItem(REMEMBER_LOGIN_STORAGE_KEY);
         }
       }
 
