@@ -45,12 +45,12 @@ export function ApuracaoMensalContent() {
   useEffect(() => {
     fiscalApi
       .getResumoAnual(anoSelecionado)
-      .then((data: any) =>
+      .then((data) =>
         setResumoAno({
-          totalServicos: toSafeNumber(data?.totalServicos ?? data?.valorTotalServicos),
-          totalImpostos: toSafeNumber(data?.totalImpostos ?? data?.valorTotalImpostos),
-          totalDocumentos: toSafeNumber(data?.totalDocumentos ?? data?.quantidadeDocumentos),
-          meses: Array.isArray(data?.meses) ? data.meses : [],
+          totalServicos: toSafeNumber(data.totalServicos),
+          totalImpostos: toSafeNumber(data.totalImpostos),
+          totalDocumentos: toSafeNumber(data.totalDocumentos),
+          meses: Array.isArray(data.meses) ? data.meses : [],
         })
       )
       .catch(() => setResumoAno(null));
