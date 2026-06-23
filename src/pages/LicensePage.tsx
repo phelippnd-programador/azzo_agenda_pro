@@ -35,8 +35,9 @@ import { ApiError, salonApi } from '@/lib/api';
 import { useCheckoutProducts } from '@/hooks/useCheckoutProducts';
 import { useLicenseAccess } from '@/hooks/useLicenseAccess';
 import { maskCpfCnpj } from '@/lib/input-masks';
+import { formatCurrencyCents } from '@/lib/format';
 import {
-  toDigits, formatCurrency, formatCurrencyCents, formatDate,
+  toDigits, formatCurrency, formatDate,
   getLicenseStatus, getCurrentPaymentStatus, getCurrentPaymentDueDate,
   isTrialSubscription, isSupportedBillingType, isOverdue, getRemainingDaysUntilDue,
   getScheduledPlanStartDate, resolveLicenseState, isSubscriptionActive,
