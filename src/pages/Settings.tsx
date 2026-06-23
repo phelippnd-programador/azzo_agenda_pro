@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   CircleAlert,
   Cpu,
-  Mail,
   PlugZap,
   Receipt,
   ShieldCheck,
@@ -29,7 +28,6 @@ import { AppointmentConflictSettingsCard } from '@/components/settings/Appointme
 import { CancellationPolicyCard } from '@/components/settings/CancellationPolicyCard';
 import { SettingsLgpdTab } from '@/components/settings/SettingsLgpdTab';
 import { SettingsFeatureFlagsTab } from '@/components/settings/SettingsFeatureFlagsTab';
-import { SettingsEmailTemplatesTab } from '@/components/settings/SettingsEmailTemplatesTab';
 import { SettingsBusinessHoursTab } from '@/components/settings/SettingsBusinessHoursTab';
 import { SettingsClosuresTab } from '@/components/settings/SettingsClosuresTab';
 
@@ -124,7 +122,6 @@ export default function Settings() {
       tabs.push('closures');
       tabs.push('lgpd');
       tabs.push('features');
-      tabs.push('email-templates');
     }
     return tabs;
   }, [
@@ -280,18 +277,6 @@ export default function Settings() {
       });
     }
 
-    if (visibleTabs.includes('email-templates')) {
-      cards.push({
-        key: 'email-templates',
-        icon: Mail,
-        title: 'Templates de E-mail',
-        description: 'Personalize os modelos de e-mail transacional do tenant.',
-        statusLabel: 'Restrito',
-        statusTone: 'default' as const,
-        actionLabel: 'Abrir templates',
-        onAction: () => handleTabChange('email-templates', { scrollToSection: true }),
-      });
-    }
 
     return cards;
   }, [
@@ -382,10 +367,6 @@ export default function Settings() {
       features: {
         label: 'Recursos',
         description: 'Integracao com pagamentos, armazenamento e retencao de dados do tenant.',
-      },
-      'email-templates': {
-        label: 'Templates de E-mail',
-        description: 'Personalize os modelos de e-mail transacional enviados pelo sistema.',
       },
     };
 
@@ -556,9 +537,6 @@ export default function Settings() {
                 ) : null}
                 {visibleTabs.includes('features') ? (
                   <TabsTrigger value="features" className="shrink-0 whitespace-nowrap">Recursos</TabsTrigger>
-                ) : null}
-                {visibleTabs.includes('email-templates') ? (
-                  <TabsTrigger value="email-templates" className="shrink-0 whitespace-nowrap">Templates de E-mail</TabsTrigger>
                 ) : null}
               </TabsList>
             </div>
@@ -793,11 +771,6 @@ export default function Settings() {
           </TabsContent>
         ) : null}
 
-        {isOwner ? (
-          <TabsContent value="email-templates">
-            <SettingsEmailTemplatesTab />
-          </TabsContent>
-        ) : null}
           </Tabs>
         </div>
 
