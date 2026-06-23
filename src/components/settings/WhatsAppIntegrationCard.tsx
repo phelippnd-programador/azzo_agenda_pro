@@ -857,7 +857,19 @@ export function WhatsAppIntegrationCard() {
                   name="usageProfile"
                   value={option.value}
                   checked={usageProfile === option.value}
-                  onChange={() => setUsageProfile(option.value)}
+                  onChange={() => {
+                    const newProfile = option.value;
+                    setUsageProfile(newProfile);
+                    whatsappApi.saveConfig({
+                      whatsappEnabled: activateIntegration,
+                      phoneNumberId: phoneNumberId.trim(),
+                      usageProfile: newProfile,
+                    }).then(() => {
+                      toast.success("Perfil de uso salvo");
+                    }).catch(() => {
+                      toast.error("Erro ao salvar perfil de uso");
+                    });
+                  }}
                   disabled={!activateIntegration || isSaving}
                   className="mt-0.5 accent-primary"
                 />
