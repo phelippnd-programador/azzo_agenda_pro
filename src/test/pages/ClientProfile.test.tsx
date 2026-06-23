@@ -204,7 +204,7 @@ describe("ClientProfile", () => {
     expect(await screen.findByText("Detalhes do Agendamento")).toBeInTheDocument();
     expect(screen.getByText("Timeline do agendamento")).toBeInTheDocument();
     expect(screen.getByText("Status atualizado")).toBeInTheDocument();
-    expect(screen.getByText(/Execucao: Corte finalizado sem intercorrencias/i)).toBeInTheDocument();
+    expect(screen.getByText((content) => content.includes("Corte finalizado sem intercorrencias"))).toBeInTheDocument();
     expect(appointmentGetByIdMock).toHaveBeenCalledWith("apt-1");
   });
 });

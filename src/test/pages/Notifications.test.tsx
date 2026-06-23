@@ -63,7 +63,7 @@ describe("Notifications", () => {
     );
 
     expect(await screen.findByText("Lista de notificacoes")).toBeInTheDocument();
-    expect(screen.getByText("Lembrete enviado")).toBeInTheDocument();
+    expect(screen.getAllByText("Lembrete enviado").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: /Marcar todas como lidas/i })).toBeInTheDocument();
   });
 
@@ -76,7 +76,8 @@ describe("Notifications", () => {
       </MemoryRouter>
     );
 
-    await user.click(await screen.findByRole("button", { name: /Ver detalhe da notificacao/i }));
+    const detailButtons = await screen.findAllByRole("button", { name: /Ver detalhe da notificacao/i });
+    await user.click(detailButtons[0]);
 
     expect(await screen.findByText("Detalhes da notificacao")).toBeInTheDocument();
     expect(screen.getByText("Erro de envio")).toBeInTheDocument();

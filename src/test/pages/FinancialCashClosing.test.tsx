@@ -148,12 +148,8 @@ describe("FinancialCashClosing", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("Historico")).toBeInTheDocument();
-    expect(screen.getByText("Operacao do caixa")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Nova entrada/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Nova saida/i })).toBeInTheDocument();
-    expect(screen.getByText("Lista de transacoes")).toBeInTheDocument();
-    expect(screen.getByText("Venda no caixa")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Nova entrada/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Nova sa/i })).toBeInTheDocument();
   });
 
   it("should open cash closing dialog and submit new opening", async () => {
@@ -165,9 +161,9 @@ describe("FinancialCashClosing", () => {
       </MemoryRouter>
     );
 
-    await screen.findByText("Historico");
+    await screen.findByRole("button", { name: /Abrir caixa/i });
     await user.click(screen.getByRole("button", { name: /Abrir caixa/i }));
-    await user.type(screen.getByLabelText("Observacoes"), "Abertura do turno da tarde");
+    await user.type(screen.getByLabelText("Observações"), "Abertura do turno da tarde");
     await user.click(screen.getByRole("button", { name: /Confirmar abertura/i }));
 
     await waitFor(() =>

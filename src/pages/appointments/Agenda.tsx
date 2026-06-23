@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { WorkspaceNotice } from '@/components/layout/module-surfaces';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -47,9 +46,20 @@ const APPOINTMENT_PAYMENT_METHODS: Array<{ value: PaymentMethod; label: string }
   { value: 'OTHER', label: 'Outro' },
 ];
 
+const AGENDA_HINTS_KEY = 'azzo:agenda:hints-dismissed';
+
 export default function Agenda() {
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  const [hintsDismissed, setHintsDismissed] = useState(() =>
+    localStorage.getItem(AGENDA_HINTS_KEY) === 'true',
+  );
+
+  const dismissHints = () => {
+    localStorage.setItem(AGENDA_HINTS_KEY, 'true');
+    setHintsDismissed(true);
+  };
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'month'>('day');
@@ -414,35 +424,43 @@ export default function Agenda() {
               </div>
             </div>
 
-            <div className="grid gap-3 lg:grid-cols-3">
-              <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  Leitura principal
-                </p>
-                <p className="mt-2 text-sm font-medium text-foreground">Volume, pendencias e execução</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Priorize pendências e atendimentos em andamento antes de descer para detalhes finos do dia.
-                </p>
+            {!hintsDismissed && (
+              <div className="grid gap-3 lg:grid-cols-3">
+                <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Leitura principal
+                  </p>
+                  <p className="mt-2 text-sm font-medium text-foreground">Volume, pendencias e execução</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Priorize pendências e atendimentos em andamento antes de descer para detalhes finos do dia.
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Navegacao
+                  </p>
+                  <p className="mt-2 text-sm font-medium text-foreground">Dia para execução, mês para distribuição</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Alterne a visão conforme a tarefa: operar horários ou enxergar concentração de demanda no calendário.
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border/70 bg-background/80 p-4 relative">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Proximo passo
+                  </p>
+                  <p className="mt-2 text-sm font-medium text-foreground">Defina contexto e então aja</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Primeiro escolha profissional, status e período; depois abra o agendamento ou registre um novo horário.
+                  </p>
+                  <button
+                    onClick={dismissHints}
+                    className="absolute right-3 top-3 text-[11px] text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
+                  >
+                    Não mostrar mais
+                  </button>
+                </div>
               </div>
-              <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  Navegacao
-                </p>
-                <p className="mt-2 text-sm font-medium text-foreground">Dia para execução, mês para distribuição</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Alterne a visão conforme a tarefa: operar horários ou enxergar concentração de demanda no calendário.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  Proximo passo
-                </p>
-                <p className="mt-2 text-sm font-medium text-foreground">Defina contexto e então aja</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Primeiro escolha profissional, status e período; depois abra o agendamento ou registre um novo horário.
-                </p>
-              </div>
-            </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               <div className="rounded-2xl border border-border/70 bg-muted/20 p-3">
@@ -580,19 +598,21 @@ export default function Agenda() {
           </CardContent>
         </Card>
 
-        <WorkspaceNotice
-          title="Area de trabalho da agenda"
-          description="Navegue no calendario, aplique contexto por profissional ou status e entao siga para o atendimento ou novo agendamento."
-          badge={viewMode === 'day' ? `${daySummary.pending} pendente(s)` : `${totalAppointmentsInMonth} agendamento(s) no mes`}
-        />
-
-        <Alert className="border-primary/20 bg-primary/5">
-          <Info className="h-4 w-4" />
-          <AlertTitle>Fluxo de atendimento</AlertTitle>
-          <AlertDescription>
-            {"Para concluir um atendimento, siga sempre esta sequencia: Confirmado -> Em atendimento -> Concluido."}
-          </AlertDescription>
-        </Alert>
+        {!hintsDismissed && (
+          <Alert className="border-primary/20 bg-primary/5">
+            <Info className="h-4 w-4" />
+            <AlertTitle>Fluxo de atendimento</AlertTitle>
+            <AlertDescription className="flex items-center justify-between gap-4">
+              <span>{"Para concluir um atendimento, siga sempre esta sequencia: Confirmado -> Em atendimento -> Concluido."}</span>
+              <button
+                onClick={dismissHints}
+                className="shrink-0 text-[11px] text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
+              >
+                Entendi
+              </button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Views */}
         {viewMode === 'month' ? (

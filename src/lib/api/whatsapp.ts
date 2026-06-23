@@ -2,6 +2,8 @@ import { request } from "./core";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export type WhatsAppUsageProfile = "REACTIVE_ONLY" | "NOTIFICATIONS" | "COMPLETE";
+
 export interface WhatsAppConfigRequest {
   whatsappEnabled: boolean;
   accessToken?: string;
@@ -10,6 +12,7 @@ export interface WhatsAppConfigRequest {
   businessId?: string;
   displayPhoneNumber?: string;
   webhookVerifyToken?: string;
+  usageProfile?: WhatsAppUsageProfile;
   canSchedule?: boolean;
   canCancel?: boolean;
   canReschedule?: boolean;
@@ -30,6 +33,7 @@ export interface WhatsAppConfigResponse {
   onboardingStatus?: string;
   tokenSource?: string;
   embeddedSignupEnabled?: boolean;
+  usageProfile?: WhatsAppUsageProfile;
   canSchedule?: boolean;
   canCancel?: boolean;
   canReschedule?: boolean;

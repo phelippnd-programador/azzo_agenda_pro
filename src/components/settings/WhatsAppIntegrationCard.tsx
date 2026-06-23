@@ -46,6 +46,7 @@ export function WhatsAppIntegrationCard() {
   const [setupMode, setSetupMode] = useState<SetupMode>("wizard");
   const [currentStep, setCurrentStep] = useState(1);
   const [activateIntegration, setActivateIntegration] = useState(false);
+  const [usageProfile, setUsageProfile] = useState<import("@/lib/api/whatsapp").WhatsAppUsageProfile>("COMPLETE");
   const [canSchedule, setCanSchedule] = useState(true);
   const [canCancel, setCanCancel] = useState(true);
   const [canReschedule, setCanReschedule] = useState(true);
@@ -137,6 +138,7 @@ export function WhatsAppIntegrationCard() {
         setEmbeddedStatus(embedded);
         setSetupMode(embeddedEnabled && tokenSource === "EMBEDDED_CODE_EXCHANGE" ? "meta" : "wizard");
         setActivateIntegration(Boolean(config.whatsappEnabled));
+        setUsageProfile((config.usageProfile as import("@/lib/api/whatsapp").WhatsAppUsageProfile) ?? "COMPLETE");
         setCanSchedule(config.canSchedule ?? true);
         setCanCancel(config.canCancel ?? true);
         setCanReschedule(config.canReschedule ?? true);
@@ -213,6 +215,7 @@ export function WhatsAppIntegrationCard() {
     setEmbeddedStatus(embedded);
     setSetupMode(embeddedEnabled && tokenSource === "EMBEDDED_CODE_EXCHANGE" ? "meta" : "wizard");
     setActivateIntegration(Boolean(config.whatsappEnabled));
+    setUsageProfile((config.usageProfile as import("@/lib/api/whatsapp").WhatsAppUsageProfile) ?? "COMPLETE");
     setCanSchedule(config.canSchedule ?? true);
     setCanCancel(config.canCancel ?? true);
     setCanReschedule(config.canReschedule ?? true);
@@ -396,6 +399,7 @@ export function WhatsAppIntegrationCard() {
         businessId: businessId.trim() || undefined,
         displayPhoneNumber: displayPhoneNumber.trim() || undefined,
         webhookVerifyToken: webhookVerifyToken.trim() || undefined,
+        usageProfile,
         canSchedule,
         canCancel,
         canReschedule,
@@ -406,6 +410,7 @@ export function WhatsAppIntegrationCard() {
 
       setConfigStatus(response);
       setActivateIntegration(Boolean(response.whatsappEnabled));
+      setUsageProfile((response.usageProfile as import("@/lib/api/whatsapp").WhatsAppUsageProfile) ?? usageProfile);
       setCanSchedule(response.canSchedule ?? canSchedule);
       setCanCancel(response.canCancel ?? canCancel);
       setCanReschedule(response.canReschedule ?? canReschedule);
@@ -812,6 +817,57 @@ export function WhatsAppIntegrationCard() {
             checked={activateIntegration}
             onCheckedChange={setActivateIntegration}
           />
+        </div>
+
+        <div className="rounded-lg border p-3">
+          <p className="text-sm font-medium">Como voce quer usar o WhatsApp?</p>
+          <p className="text-xs text-muted-foreground">
+            Escolha o perfil de uso. Ele determina quais mensagens automaticas serao enviadas e impacta o custo por conversa na Meta.
+          </p>
+          <div className="mt-3 space-y-2">
+            {(
+              [
+                {
+                  value: "REACTIVE_ONLY" as const,
+                  label: "Somente chat",
+                  description: "Apenas responde mensagens recebidas dos clientes. Custo ~R$ 0,06/conversa (cliente iniciou).",
+                },
+                {
+                  value: "NOTIFICATIONS" as const,
+                  label: "Notificacoes",
+                  description: "Envia lembretes, confirmacoes e avisos de cancelamento. Custo ~R$ 0,25/conversa (voce iniciou).",
+                },
+                {
+                  value: "COMPLETE" as const,
+                  label: "Completo",
+                  description: "Tudo acima mais reativacao de clientes que abandonaram o fluxo de agendamento.",
+                },
+              ] as const
+            ).map((option) => (
+              <label
+                key={option.value}
+                className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors ${
+                  usageProfile === option.value
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:bg-muted/50"
+                } ${!activateIntegration || isSaving ? "cursor-not-allowed opacity-50" : ""}`}
+              >
+                <input
+                  type="radio"
+                  name="usageProfile"
+                  value={option.value}
+                  checked={usageProfile === option.value}
+                  onChange={() => setUsageProfile(option.value)}
+                  disabled={!activateIntegration || isSaving}
+                  className="mt-0.5 accent-primary"
+                />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{option.label}</p>
+                  <p className="text-xs text-muted-foreground">{option.description}</p>
+                </div>
+              </label>
+            ))}
+          </div>
         </div>
 
         <div className="rounded-lg border p-3">
