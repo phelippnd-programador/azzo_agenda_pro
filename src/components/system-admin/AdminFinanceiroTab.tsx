@@ -336,7 +336,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
                           {payment.asaasPaymentId} - {payment.billingType}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Valor: R$ {(Number(payment.amountCents || 0) / 100).toFixed(2)} | Vencimento:{' '}
+                          Valor: {formatCurrencyCents(Number(payment.amountCents || 0))} | Vencimento:{' '}
                           {payment.dueDate || '-'}
                         </p>
                       </div>

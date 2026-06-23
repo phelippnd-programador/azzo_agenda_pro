@@ -371,7 +371,7 @@ export default function FinancialReportPage() {
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `R$${(v / 100).toFixed(0)}`} />
+                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `R$${v.toFixed(0)}`} />
                   <Tooltip
                     formatter={(v: number, name: string) => [formatCurrency(v), name]}
                     labelFormatter={(l: string) => `Data: ${l}`}

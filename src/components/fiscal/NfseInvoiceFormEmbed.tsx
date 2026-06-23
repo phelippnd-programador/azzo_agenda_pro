@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { nfseApi, type NfseInvoice } from "@/lib/api";
+import { formatCurrency } from "@/lib/format";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import type { CnpjConsultaResponse } from "@/lib/api/cnpj";
 import { resolveUiError } from "@/lib/error-utils";
@@ -465,10 +466,10 @@ export function NfseInvoiceFormEmbed({ onSaved }: NfseInvoiceFormEmbedProps) {
 
         <div className="rounded-md border p-3 text-sm">
           <p>
-            Total servicos: <strong>R$ {preview.total.toFixed(2)}</strong>
+            Total servicos: <strong>{formatCurrency(preview.total)}</strong>
           </p>
           <p>
-            ISS estimado: <strong>R$ {preview.iss.toFixed(2)}</strong>
+            ISS estimado: <strong>{formatCurrency(preview.iss)}</strong>
           </p>
         </div>
 

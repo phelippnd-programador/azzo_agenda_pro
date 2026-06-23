@@ -285,7 +285,7 @@ export default function SalesReportPage() {
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={chartData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v: number) => `R$${(v / 100).toFixed(0)}`} />
+                  <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v: number) => `R$${v.toFixed(0)}`} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
                   <Tooltip formatter={(v: number, name: string) => [name === "Receita" ? formatCurrency(v) : v, name]} />
                   <Bar dataKey="Receita" radius={[0, 3, 3, 0]}>

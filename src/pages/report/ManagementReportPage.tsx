@@ -293,7 +293,7 @@ export default function ManagementReportPage() {
                 <BarChart data={serieChartData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `R$${(v / 100).toFixed(0)}`} />
+                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `R$${v.toFixed(0)}`} />
                   <Tooltip formatter={(v: number, name: string) => [formatCurrency(v), name]} />
                   <Bar dataKey="Receita" fill="#10b981" radius={[3, 3, 0, 0]} />
                   <Bar dataKey="Despesa" fill="#ef4444" radius={[3, 3, 0, 0]} />
@@ -312,7 +312,7 @@ export default function ManagementReportPage() {
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={topServicosChart} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v: number) => `R$${(v / 100).toFixed(0)}`} />
+                    <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v: number) => `R$${v.toFixed(0)}`} />
                     <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={110} />
                     <Tooltip formatter={(v: number) => [formatCurrency(v), "Receita"]} />
                     <Bar dataKey="Receita" radius={[0, 3, 3, 0]}>
