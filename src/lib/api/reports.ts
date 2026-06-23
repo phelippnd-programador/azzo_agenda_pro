@@ -93,6 +93,7 @@ export type GerencialReportResponse = {
   topServicos: VendasServicoItem[];
   topProfissionais: VendasProfissionalItem[];
   serieDiaria: Array<{ date: string; receita: number; despesa: number }>;
+  occupancyRate?: number | null;
 };
 
 export type LicencaTenantItem = {

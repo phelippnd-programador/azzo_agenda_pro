@@ -1,5 +1,5 @@
 import { useRef, useEffect, useMemo, useState } from "react";
-import { Printer, RefreshCw, TrendingDown, TrendingUp, Wallet } from "lucide-react";
+import { BarChart2, Printer, RefreshCw, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -249,7 +249,7 @@ export default function ManagementReportPage() {
 
         {/* Appointments summary */}
         {data?.agendamentos && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             <Card>
               <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Agendamentos</CardTitle></CardHeader>
               <CardContent><p className="text-2xl font-bold">{data.agendamentos.totalAgendamentos}</p></CardContent>
@@ -265,6 +265,21 @@ export default function ManagementReportPage() {
             <Card>
               <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Ticket Medio</CardTitle></CardHeader>
               <CardContent><p className="text-2xl font-bold">{formatCurrency(data.agendamentos.ticketMedio)}</p></CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <BarChart2 className="w-4 h-4 text-violet-500" /> Taxa de Ocupacao
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Percentual de slots disponiveis que foram preenchidos com agendamentos concluidos no periodo
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-violet-600">
+                  {data.occupancyRate != null ? `${data.occupancyRate.toFixed(1)}%` : "N/A"}
+                </p>
+              </CardContent>
             </Card>
           </div>
         )}

@@ -81,6 +81,7 @@ export type {
   TenantFeatureFlags,
   EmailTemplateListItem,
   EmailTemplateDetail,
+  CancellationPolicy,
 } from "./api/settings";
 export type {
   DanfeJobResponse,

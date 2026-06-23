@@ -74,6 +74,12 @@ export type AppSettings = {
   >;
 };
 
+export type CancellationPolicy = {
+  cancellationPolicyEnabled: boolean;
+  cancellationMinHoursBefore: number;
+  cancellationFeePercent: number;
+};
+
 export const settingsApi = {
   get: () => request<AppSettings>("/settings"),
   update: (data: Partial<AppSettings>) =>
@@ -112,6 +118,13 @@ export const settingsApi = {
   getFeatureFlags: () => request<TenantFeatureFlags>("/settings/features"),
   updateFeatureFlags: (data: Partial<TenantFeatureFlags>) =>
     request<void>("/settings/features", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  getCancellationPolicy: () =>
+    request<CancellationPolicy>("/settings/cancellation-policy"),
+  updateCancellationPolicy: (data: CancellationPolicy) =>
+    request<CancellationPolicy>("/settings/cancellation-policy", {
       method: "PUT",
       body: JSON.stringify(data),
     }),

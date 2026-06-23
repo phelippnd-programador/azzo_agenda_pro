@@ -26,6 +26,7 @@ import { useMenuPermissions } from '@/contexts/MenuPermissionsContext';
 import { SettingsNotificationsTab } from '@/components/settings/SettingsNotificationsTab';
 import { SettingsAccountTab } from '@/components/settings/SettingsAccountTab';
 import { AppointmentConflictSettingsCard } from '@/components/settings/AppointmentConflictSettingsCard';
+import { CancellationPolicyCard } from '@/components/settings/CancellationPolicyCard';
 import { SettingsLgpdTab } from '@/components/settings/SettingsLgpdTab';
 import { SettingsFeatureFlagsTab } from '@/components/settings/SettingsFeatureFlagsTab';
 import { SettingsEmailTemplatesTab } from '@/components/settings/SettingsEmailTemplatesTab';
@@ -636,6 +637,7 @@ export default function Settings() {
                 </div>
               ) : null}
               {user?.role === 'OWNER' ? <AppointmentConflictSettingsCard /> : null}
+              {user?.role === 'OWNER' ? <CancellationPolicyCard /> : null}
             </CardContent>
           </Card>
         </TabsContent>
