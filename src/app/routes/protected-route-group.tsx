@@ -62,6 +62,7 @@ import {
   UserProfile,
   WhatsAppIntegration,
   ReactivationSettings,
+  OnboardingPage,
 } from "@/app/routes/lazy-pages";
 
 type RouteWrapperProps = {
@@ -184,6 +185,7 @@ export function ProtectedRouteGroup({
       <Route path={appRouteManifest.settings.fiscalCertificates} element={<ProtectedRoute><Navigate to={`${appRouteManifest.fiscal.root}?tab=config&subtab=certificados`} replace /></ProtectedRoute>} />
       <Route path={appRouteManifest.settings.fiscalNfse} element={<ProtectedRoute><Navigate to={`${appRouteManifest.fiscal.root}?tab=config&subtab=nfse`} replace /></ProtectedRoute>} />
 
+      <Route path={appRouteManifest.shell.onboarding} element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
       <Route path={appRouteManifest.shell.unauthorized} element={<ProtectedRoute><Unauthorized /></ProtectedRoute>} />
     </>
   );
