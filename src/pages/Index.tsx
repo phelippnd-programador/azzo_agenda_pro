@@ -1,5 +1,6 @@
 ﻿import { useCallback, useEffect, useState } from 'react';
 import { RankedBarCard } from '@/components/common/RankedBarCard';
+import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
@@ -445,6 +446,8 @@ export default function Dashboard() {
           }
           badge={isProfessionalUser ? `${resolvedMetrics.pendingAppointments} pendencia(s)` : `${resolvedMetrics.notConcludedToday ?? 0} em risco hoje`}
         />
+
+        {!isProfessionalUser && <OnboardingChecklist />}
 
         <DashboardSectionHeader
           eyebrow="Operacao"

@@ -71,6 +71,7 @@ export default function FinancialCashClosing() {
   const [error, setError] = useState<string | null>(null);
 
   const [isOpenDialogVisible, setIsOpenDialogVisible] = useState(false);
+  const [openDialogAutoTriggered, setOpenDialogAutoTriggered] = useState(false);
   const [openingDate, setOpeningDate] = useState(todayDateKey);
   const [openingNotes, setOpeningNotes] = useState("");
   const [isSubmittingOpen, setIsSubmittingOpen] = useState(false);
@@ -146,6 +147,15 @@ export default function FinancialCashClosing() {
   useEffect(() => {
     void loadClosings();
   }, []);
+
+  useEffect(() => {
+    if (isLoading) return;
+    const hasOpenCash = closings.some((item) => item.status === "OPEN");
+    if (!hasOpenCash) {
+      setOpenDialogAutoTriggered(true);
+      setIsOpenDialogVisible(true);
+    }
+  }, [isLoading, closings]);
 
   useEffect(() => {
     if (!isCloseDialogVisible || !selectedClosing) return;
@@ -540,11 +550,15 @@ export default function FinancialCashClosing() {
         )}
       </div>
 
-      <Dialog open={isOpenDialogVisible} onOpenChange={setIsOpenDialogVisible}>
+      <Dialog open={isOpenDialogVisible} onOpenChange={(open) => { setIsOpenDialogVisible(open); if (!open) setOpenDialogAutoTriggered(false); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Abrir caixa</DialogTitle>
-            <DialogDescription>Crie o registro do dia operacional antes de iniciar a movimentação e a conferência final.</DialogDescription>
+            <DialogDescription>
+              {openDialogAutoTriggered
+                ? "Nenhum caixa está aberto no momento. Confirme a abertura para iniciar a operação do dia."
+                : "Crie o registro do dia operacional antes de iniciar a movimentação e a conferência final."}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
