@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Download, RefreshCw } from "lucide-react";
+import { Download, Printer, RefreshCw } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -51,6 +51,21 @@ function downloadCsv(data: VendasReportResponse, from: string, to: string) {
   a.download = `relatorio-vendas-${from}-${to}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function handlePrintSales(from: string, to: string) {
+  const printHeader = document.getElementById("print-report-header");
+  if (printHeader) {
+    printHeader.innerHTML = `
+      <div class="print-logo">Azzo Agenda Pro</div>
+      <div>
+        <div style="font-weight:600">Relatorio de Vendas</div>
+        <div>Periodo: ${from} a ${to}</div>
+        <div>Emitido em: ${new Date().toLocaleDateString("pt-BR")}</div>
+      </div>
+    `;
+  }
+  window.print();
 }
 
 export default function SalesReportPage() {
@@ -145,8 +160,9 @@ export default function SalesReportPage() {
       title="Relatorio de vendas"
       subtitle="Leitura consolidada de servicos, receita e desempenho por profissional."
     >
-      <div className="space-y-6">
-        <Card>
+      <div className="print-region space-y-6">
+        <div id="print-report-header" className="print-header hidden" />
+        <Card className="print-hide">
           <CardHeader>
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <div>
@@ -166,14 +182,24 @@ export default function SalesReportPage() {
                   Atualizar
                 </Button>
                 {data && (
-                  <Button
-                    variant="outline"
-                    className="w-full sm:w-auto"
-                    onClick={() => downloadCsv(data, activeFilters.from, activeFilters.to)}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Exportar CSV
-                  </Button>
+                  <>
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                      onClick={() => downloadCsv(data, activeFilters.from, activeFilters.to)}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Exportar CSV
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                      onClick={() => handlePrintSales(activeFilters.from, activeFilters.to)}
+                    >
+                      <Printer className="mr-2 h-4 w-4" />
+                      Exportar PDF
+                    </Button>
+                  </>
                 )}
               </div>
             </div>

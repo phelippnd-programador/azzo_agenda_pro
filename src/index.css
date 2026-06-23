@@ -216,3 +216,69 @@
     background-color: hsl(var(--card) / 0.92);
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* CSS de impressao para relatórios (window.print())                   */
+/* ------------------------------------------------------------------ */
+@media print {
+  /* Oculta tudo por padrao */
+  body > * {
+    display: none !important;
+  }
+
+  /* Mostra apenas a regiao marcada para impressao */
+  .print-region,
+  .print-region * {
+    display: revert !important;
+    visibility: visible !important;
+  }
+
+  .print-region {
+    position: absolute !important;
+    inset: 0 !important;
+    padding: 1.5cm 2cm !important;
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Oculta acoes, filtros e componentes de navegacao dentro da regiao */
+  .print-region .print-hide {
+    display: none !important;
+  }
+
+  /* Garante que tabelas nao sejam cortadas */
+  table {
+    page-break-inside: auto !important;
+    width: 100% !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+  }
+
+  /* Remove bordas e sombras de cards para impressao limpa */
+  .print-region [class*="shadow"],
+  .print-region [class*="backdrop"] {
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Cabecalho de impressao (logo + data) */
+  .print-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    border-bottom: 2px solid #000 !important;
+    padding-bottom: 0.5cm !important;
+    margin-bottom: 0.75cm !important;
+    font-size: 10pt !important;
+  }
+
+  .print-header .print-logo {
+    font-size: 16pt !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
+  }
+}

@@ -28,6 +28,7 @@ import { AppointmentDetailsSheet } from '@/components/appointments/AppointmentDe
 import { ReassignAppointmentDialog } from '@/components/appointments/ReassignAppointmentDialog';
 import { AgendaDayView } from '@/components/appointments/AgendaDayView';
 import { AgendaMonthView } from '@/components/appointments/AgendaMonthView';
+import { AgendaWeekView } from '@/components/appointments/AgendaWeekView';
 import { useAppointments, type Appointment } from '@/hooks/useAppointments';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { useAuth } from '@/contexts/AuthContext';
@@ -62,7 +63,7 @@ export default function Agenda() {
   };
 
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'day' | 'month'>('day');
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
   const [dayAppointmentsFallback, setDayAppointmentsFallback] = useState<Appointment[] | null>(null);
 
   const [selectedProfessional, setSelectedProfessional] = useState<string>('all');
@@ -85,6 +86,15 @@ export default function Agenda() {
   const dateString = toDateKey(currentDate);
   const dateFilter = viewMode === 'day' ? dateString : undefined;
 
+  // Para visão semanal: calcula segunda-feira da semana atual
+  const weekStartDate = useMemo(() => {
+    const d = new Date(currentDate);
+    const day = d.getDay();
+    const diffToMonday = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diffToMonday);
+    return d;
+  }, [currentDate]);
+
   const {
     appointments,
     pagination,
@@ -104,6 +114,56 @@ export default function Agenda() {
     },
     { defaultLimit: 20, enabled: viewMode === 'day' },
   );
+
+  // Hook separado para a visão semanal (sem paginação, busca dia a dia via múltiplos requests)
+  // A API suporta busca por data única; buscamos todos os 7 dias da semana em paralelo
+  // Usando useAppointments com limit alto e sem filtro de data para capturar a semana inteira
+  // não é ideal — em vez disso fazemos 7 fetches individuais gerenciados localmente.
+  // Para simplificar e não quebrar o hook existente, filtramos client-side dos appointments
+  // já carregados quando o usuário navega do dia. Para a semana, carregamos via React Query
+  // diretamente com o appointmentsApi.
+  const [weekAppointments, setWeekAppointments] = useState<Appointment[]>([]);
+  const [isLoadingWeek, setIsLoadingWeek] = useState(false);
+
+  useEffect(() => {
+    if (viewMode !== 'week') return;
+    let active = true;
+    setIsLoadingWeek(true);
+
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(weekStartDate);
+      d.setDate(weekStartDate.getDate() + i);
+      return toDateKey(d);
+    });
+
+    Promise.all(
+      days.map((date) =>
+        appointmentsApi.getAll({
+          date,
+          page: 1,
+          limit: 100,
+          professionalId: selectedProfessional !== 'all' ? selectedProfessional : undefined,
+          status: selectedStatus !== 'all' ? selectedStatus : undefined,
+        }),
+      ),
+    )
+      .then((results) => {
+        if (!active) return;
+        const all = results.flatMap((r) =>
+          Array.isArray(r) ? r : ((r as { items?: Appointment[] }).items ?? []),
+        );
+        setWeekAppointments(all);
+      })
+      .catch(() => {
+        if (active) {
+          toast.error('Nao foi possivel carregar os agendamentos da semana.');
+          setWeekAppointments([]);
+        }
+      })
+      .finally(() => { if (active) setIsLoadingWeek(false); });
+
+    return () => { active = false; };
+  }, [viewMode, weekStartDate, selectedProfessional, selectedStatus]);
 
   const { professionals } = useProfessionals();
   const activeProfessionals = professionals.filter((p) => p.isActive);
@@ -129,6 +189,8 @@ export default function Agenda() {
     if (viewMode === 'day') {
       next.setDate(next.getDate() + (direction === 'next' ? 1 : -1));
       setDayAppointmentsFallback(null);
+    } else if (viewMode === 'week') {
+      next.setDate(next.getDate() + (direction === 'next' ? 7 : -7));
     } else {
       next.setMonth(next.getMonth() + (direction === 'next' ? 1 : -1));
     }
@@ -366,10 +428,17 @@ export default function Agenda() {
     [activeProfessionals, appointmentToReassign?.professionalId],
   );
 
-  const formattedDate =
-    viewMode === 'day'
-      ? currentDate.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
-      : currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const formattedDate = (() => {
+    if (viewMode === 'day') {
+      return currentDate.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    }
+    if (viewMode === 'week') {
+      const end = new Date(weekStartDate);
+      end.setDate(weekStartDate.getDate() + 6);
+      return `${weekStartDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })} — ${end.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+    }
+    return currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  })();
 
   if (isLoading) {
     return (
@@ -413,13 +482,17 @@ export default function Agenda() {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="bg-background/80">
-                  {viewMode === 'day' ? 'Visao diaria' : 'Visao mensal'}
+                  {viewMode === 'day' ? 'Visao diaria' : viewMode === 'week' ? 'Visao semanal' : 'Visao mensal'}
                 </Badge>
                 <Badge variant="outline" className="bg-background/80">
                   {formattedDate}
                 </Badge>
                 <Badge variant="outline" className="bg-background/80">
-                  {viewMode === 'day' ? `${daySummary.total} no dia` : `${totalAppointmentsInMonth} no mes`}
+                  {viewMode === 'day'
+                    ? `${daySummary.total} no dia`
+                    : viewMode === 'week'
+                    ? `${weekAppointments.length} na semana`
+                    : `${totalAppointmentsInMonth} no mes`}
                 </Badge>
               </div>
             </div>
@@ -516,7 +589,7 @@ export default function Agenda() {
                   size="icon"
                   onClick={() => navigateDate('prev')}
                   className="h-8 w-8 sm:h-9 sm:w-9"
-                  aria-label={viewMode === 'day' ? 'Ir para o dia anterior' : 'Ir para o mes anterior'}
+                  aria-label={viewMode === 'day' ? 'Ir para o dia anterior' : viewMode === 'week' ? 'Semana anterior' : 'Ir para o mes anterior'}
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
@@ -526,7 +599,7 @@ export default function Agenda() {
                   size="icon"
                   onClick={() => navigateDate('next')}
                   className="h-8 w-8 sm:h-9 sm:w-9"
-                  aria-label={viewMode === 'day' ? 'Ir para o proximo dia' : 'Ir para o proximo mes'}
+                  aria-label={viewMode === 'day' ? 'Ir para o proximo dia' : viewMode === 'week' ? 'Proxima semana' : 'Ir para o proximo mes'}
                 >
                   <ChevronRight className="w-4 h-4" />
                 </Button>
@@ -579,6 +652,14 @@ export default function Agenda() {
                 Dia
               </Button>
               <Button
+                variant={viewMode === 'week' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('week')}
+                className="rounded-none border-x text-xs sm:text-sm h-8 sm:h-9"
+              >
+                Semana
+              </Button>
+              <Button
                 variant={viewMode === 'month' ? 'secondary' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('month')}
@@ -623,6 +704,23 @@ export default function Agenda() {
             totalAppointmentsInMonth={totalAppointmentsInMonth}
             onDayClick={openDayView}
           />
+        ) : viewMode === 'week' ? (
+          isLoadingWeek ? (
+            <div className="space-y-3">
+              <div className="h-10 w-full animate-pulse rounded-xl bg-muted/40" />
+              <div className="h-96 w-full animate-pulse rounded-xl bg-muted/30" />
+            </div>
+          ) : (
+            <AgendaWeekView
+              currentDate={currentDate}
+              appointments={weekAppointments}
+              onAppointmentClick={(apt) => { setSelectedAppointment(apt); setIsDetailsOpen(true); }}
+              onNewAppointmentSlot={(date, _time) => {
+                setCurrentDate(date);
+                setIsNewAppointmentOpen(true);
+              }}
+            />
+          )
         ) : (
           <AgendaDayView
             appointments={filteredAppointments}

@@ -40,6 +40,7 @@ import {
   type EmbeddedSetupInfo,
   type SetupMode,
 } from "@/components/settings/whatsapp-integration/shared";
+import { TemplateEditor } from "@/components/settings/whatsapp-integration/TemplateEditor";
 
 export function WhatsAppIntegrationCard() {
   const queryClient = useQueryClient();
@@ -566,37 +567,32 @@ export function WhatsAppIntegrationCard() {
       </div>
 
       {/* Templates de mensagem */}
-      <div className="rounded-lg border p-4 space-y-3">
-        <p className="text-sm font-semibold">Templates de mensagem automática</p>
-        <p className="text-xs text-muted-foreground">Use {"{nome}"}, {"{data}"} e {"{hora}"}. Deixe em branco para usar o texto padrão.</p>
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-muted-foreground">Confirmação de agendamento</label>
-          <textarea
-            className="w-full rounded-md border px-3 py-2 text-sm min-h-[64px] resize-none"
-            placeholder="Olá, {nome}! Seu agendamento foi confirmado para {data} às {hora}. Aguardamos você!"
-            value={confirmationTemplate}
-            onChange={(e) => setConfirmationTemplate(e.target.value)}
-          />
+      <div className="rounded-lg border p-4 space-y-4">
+        <div>
+          <p className="text-sm font-semibold">Templates de mensagem automatica</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Clique nos chips para inserir variaveis na posicao do cursor. Deixe em branco para usar o texto padrao.
+          </p>
         </div>
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-muted-foreground">Cancelamento de agendamento</label>
-          <textarea
-            className="w-full rounded-md border px-3 py-2 text-sm min-h-[64px] resize-none"
-            placeholder="Olá, {nome}! Seu agendamento do dia {data} às {hora} foi cancelado."
-            value={cancellationTemplate}
-            onChange={(e) => setCancellationTemplate(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-muted-foreground">Lembrete (24h antes)</label>
-          <textarea
-            className="w-full rounded-md border px-3 py-2 text-sm min-h-[64px] resize-none"
-            placeholder="Olá, {nome}! Lembrando que você tem agendamento amanhã ({data}) às {hora}."
-            value={reminderTemplate}
-            onChange={(e) => setReminderTemplate(e.target.value)}
-          />
-        </div>
-        <Button size="sm" onClick={() => void handleSaveConfig()} disabled={isSaving}>
+        <TemplateEditor
+          label="Confirmacao de agendamento"
+          placeholder="Ola, {cliente}! Seu agendamento de {servico} foi confirmado para {data} as {hora} com {profissional}. Aguardamos voce no {salao}!"
+          value={confirmationTemplate}
+          onChange={setConfirmationTemplate}
+        />
+        <TemplateEditor
+          label="Cancelamento de agendamento"
+          placeholder="Ola, {cliente}! Seu agendamento de {servico} do dia {data} as {hora} foi cancelado. Para reagendar, e so nos chamar!"
+          value={cancellationTemplate}
+          onChange={setCancellationTemplate}
+        />
+        <TemplateEditor
+          label="Lembrete (24h antes)"
+          placeholder="Ola, {cliente}! Lembrando que voce tem {servico} amanha ({data}) as {hora} com {profissional} no {salao}."
+          value={reminderTemplate}
+          onChange={setReminderTemplate}
+        />
+        <Button size="sm" onClick={() => void handleSave()} disabled={isSaving}>
           {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Salvar templates
         </Button>

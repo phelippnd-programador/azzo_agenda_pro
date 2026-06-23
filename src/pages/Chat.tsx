@@ -1,5 +1,8 @@
 import { useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -12,10 +15,12 @@ import { chatMessageSchema, type ChatMessageForm } from "@/schemas/chat";
 import { ChatSidebar, type ConversationFilter } from "@/components/chat/ChatSidebar";
 import { ChatTimeline } from "@/components/chat/ChatTimeline";
 import { ChatMessageComposer } from "@/components/chat/ChatMessageComposer";
+import { ChatClientAppointments } from "@/components/chat/ChatClientAppointments";
 
 export default function ChatPage() {
   const navigate = useNavigate();
   const { conversationId } = useParams<{ conversationId?: string }>();
+  const isMobile = useIsMobile();
   const [error, setError] = useState<string | null>(null);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
   const [conversationQuery, setConversationQuery] = useState("");
@@ -245,94 +250,126 @@ export default function ChatPage() {
     );
   }
 
+  // No mobile: mostra sidebar quando nao ha conversa selecionada,
+  // ou mostra o chat quando ha conversa selecionada.
+  const showSidebar = !isMobile || !conversationId;
+  const showChat = !isMobile || !!conversationId;
+
+  const handleBackToList = () => navigate("/chat");
+
   return (
     <MainLayout title="Chat" subtitle="Historico completo de mensagens por cliente">
       <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
-        <div className="order-2 lg:order-1">
-          <ChatSidebar
-            conversations={conversations}
-            filteredConversations={filteredConversations}
-            selectedConversationId={selectedConversation?.id}
-            isLoading={isLoadingConversations}
-            query={conversationQuery}
-            onQueryChange={setConversationQuery}
-            filter={conversationFilter}
-            onFilterChange={setConversationFilter}
-            onSelectConversation={(nextConversationId) => navigate(`/chat/${nextConversationId}`)}
-            onReload={handleReloadConversations}
-            onClearFilters={() => {
-              setConversationQuery("");
-              setConversationFilter("all");
-            }}
-          />
-        </div>
+        {showSidebar && (
+          <div className="order-2 lg:order-1">
+            <ChatSidebar
+              conversations={conversations}
+              filteredConversations={filteredConversations}
+              selectedConversationId={selectedConversation?.id}
+              isLoading={isLoadingConversations}
+              query={conversationQuery}
+              onQueryChange={setConversationQuery}
+              filter={conversationFilter}
+              onFilterChange={setConversationFilter}
+              onSelectConversation={(nextConversationId) => navigate(`/chat/${nextConversationId}`)}
+              onReload={handleReloadConversations}
+              onClearFilters={() => {
+                setConversationQuery("");
+                setConversationFilter("all");
+              }}
+            />
+          </div>
+        )}
 
-        <Card className="order-1 min-h-[28rem] lg:order-2 lg:h-[calc(100vh-13rem)]">
-          {!selectedConversation ? (
-            <CardContent className="flex h-full items-center justify-center">
-              <PageEmptyState
-                title="Selecione uma conversa"
-                description="Escolha um cliente no painel lateral para ver o historico completo e responder pelo inbox."
-                action={
-                  defaultConversation
-                    ? {
-                        label: "Abrir primeira conversa",
-                        onClick: () => navigate(`/chat/${defaultConversation.id}`),
-                      }
-                    : undefined
-                }
-              />
-            </CardContent>
-          ) : (
-            <>
-              <CardHeader className="border-b">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <CardTitle className="truncate text-base">
-                      {selectedConversation.clientName || "Cliente"}
-                    </CardTitle>
-                    <p className="truncate text-sm text-muted-foreground">
-                      {selectedConversation.clientPhoneMasked || "Sem telefone"}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2 sm:justify-end">
-                    <Badge variant="outline" className="shrink-0">
-                      {messages.length} mensagens
-                    </Badge>
-                    {selectedConversation.manualModeEnabled ? (
-                      <Badge
-                        variant="outline"
-                        className="shrink-0 border-amber-400 text-amber-700 dark:border-amber-700 dark:text-amber-300"
-                      >
-                        Modo Manual
-                      </Badge>
-                    ) : null}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="flex h-[calc(100%-9rem)] min-h-[22rem] flex-col lg:h-[calc(100%-9rem)]">
-                <ChatTimeline
-                  messages={messages}
-                  isLoading={isLoadingMessages}
-                  isLoadingMore={isLoadingMoreMessages}
-                  hasNext={hasNextMessages}
-                  onLoadMore={() => conversationId && loadMoreMessages(conversationId)}
-                  onFocusComposer={() => form.setFocus("message")}
-                  containerRef={messagesContainerRef}
-                  onScroll={handleMessagesScroll}
-                />
-                <ChatMessageComposer
-                  form={form}
-                  isSending={isSending}
-                  isEmojiOpen={isEmojiOpen}
-                  onEmojiOpenChange={setIsEmojiOpen}
-                  onAppendEmoji={appendEmoji}
-                  onSubmit={onSend}
+        {showChat && (
+          <Card className="order-1 min-h-[28rem] lg:order-2 lg:h-[calc(100vh-13rem)]">
+            {!selectedConversation ? (
+              <CardContent className="flex h-full items-center justify-center">
+                <PageEmptyState
+                  title="Selecione uma conversa"
+                  description="Escolha um cliente no painel lateral para ver o historico completo e responder pelo inbox."
+                  action={
+                    defaultConversation
+                      ? {
+                          label: "Abrir primeira conversa",
+                          onClick: () => navigate(`/chat/${defaultConversation.id}`),
+                        }
+                      : undefined
+                  }
                 />
               </CardContent>
-            </>
-          )}
-        </Card>
+            ) : (
+              <>
+                <CardHeader className="border-b">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-center gap-2">
+                      {isMobile && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="shrink-0"
+                          onClick={handleBackToList}
+                          aria-label="Voltar para lista de conversas"
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <div className="min-w-0">
+                        <CardTitle className="truncate text-base">
+                          {selectedConversation.clientName || "Cliente"}
+                        </CardTitle>
+                        <p className="truncate text-sm text-muted-foreground">
+                          {selectedConversation.clientPhoneMasked || "Sem telefone"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 sm:justify-end">
+                      <Badge variant="outline" className="shrink-0">
+                        {messages.length} mensagens
+                      </Badge>
+                      {selectedConversation.manualModeEnabled ? (
+                        <Badge
+                          variant="outline"
+                          className="shrink-0 border-amber-400 text-amber-700 dark:border-amber-700 dark:text-amber-300"
+                        >
+                          Modo Manual
+                        </Badge>
+                      ) : null}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="flex h-[calc(100%-9rem)] min-h-[22rem] flex-col lg:h-[calc(100%-9rem)]">
+                  {selectedConversation.clientId && (
+                    <div className="shrink-0 pb-2">
+                      <ChatClientAppointments
+                        clientId={selectedConversation.clientId}
+                        clientName={selectedConversation.clientName}
+                      />
+                    </div>
+                  )}
+                  <ChatTimeline
+                    messages={messages}
+                    isLoading={isLoadingMessages}
+                    isLoadingMore={isLoadingMoreMessages}
+                    hasNext={hasNextMessages}
+                    onLoadMore={() => conversationId && loadMoreMessages(conversationId)}
+                    onFocusComposer={() => form.setFocus("message")}
+                    containerRef={messagesContainerRef}
+                    onScroll={handleMessagesScroll}
+                  />
+                  <ChatMessageComposer
+                    form={form}
+                    isSending={isSending}
+                    isEmojiOpen={isEmojiOpen}
+                    onEmojiOpenChange={setIsEmojiOpen}
+                    onAppendEmoji={appendEmoji}
+                    onSubmit={onSend}
+                  />
+                </CardContent>
+              </>
+            )}
+          </Card>
+        )}
       </div>
     </MainLayout>
   );

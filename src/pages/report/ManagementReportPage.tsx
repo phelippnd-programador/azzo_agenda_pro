@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { RefreshCw, TrendingDown, TrendingUp, Wallet } from "lucide-react";
+import { useRef, useEffect, useMemo, useState } from "react";
+import { Printer, RefreshCw, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -36,6 +36,21 @@ const getMonthRange = () => {
 };
 
 const CHART_COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#f97316"];
+
+function handlePrintReport(from: string, to: string, title: string) {
+  const printHeader = document.getElementById("print-report-header");
+  if (printHeader) {
+    printHeader.innerHTML = `
+      <div class="print-logo">Azzo Agenda Pro</div>
+      <div>
+        <div style="font-weight:600">${title}</div>
+        <div>Periodo: ${from} a ${to}</div>
+        <div>Emitido em: ${new Date().toLocaleDateString("pt-BR")}</div>
+      </div>
+    `;
+  }
+  window.print();
+}
 
 export default function ManagementReportPage() {
   const monthRange = useMemo(() => getMonthRange(), []);
@@ -116,24 +131,39 @@ export default function ManagementReportPage() {
       title="Relatorio gerencial"
       subtitle="Visao consolidada de financeiro, agendamentos, servicos e profissionais."
     >
-      <div className="space-y-6">
+      <div className="print-region space-y-6">
+        {/* Cabecalho visivel apenas na impressao */}
+        <div id="print-report-header" className="print-header hidden" />
+
         {/* Filters */}
-        <Card>
+        <Card className="print-hide">
           <CardHeader>
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <CardTitle>Periodo de analise</CardTitle>
                 <CardDescription>Ajuste o intervalo para consolidar as metricas do negocio.</CardDescription>
               </div>
-              <Button
-                variant="outline"
-                className="w-full sm:w-auto"
-                onClick={() => setReloadToken((t) => t + 1)}
-                disabled={isLoading}
-              >
-                <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-                Atualizar
-              </Button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  onClick={() => setReloadToken((t) => t + 1)}
+                  disabled={isLoading}
+                >
+                  <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+                  Atualizar
+                </Button>
+                {data && (
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                    onClick={() => handlePrintReport(activeFilters.from, activeFilters.to, "Relatorio Gerencial")}
+                  >
+                    <Printer className="mr-2 h-4 w-4" />
+                    Exportar PDF
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
