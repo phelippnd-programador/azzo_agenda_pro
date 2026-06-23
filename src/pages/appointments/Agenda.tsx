@@ -38,6 +38,7 @@ import { toDateKey } from '@/lib/format';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import type { PaymentMethod } from '@/types';
+import { OnboardingBanner } from '@/components/dashboard/OnboardingBanner';
 
 const APPOINTMENT_PAYMENT_METHODS: Array<{ value: PaymentMethod; label: string }> = [
   { value: 'PIX', label: 'Pix' },
@@ -465,6 +466,7 @@ export default function Agenda() {
 
   return (
     <MainLayout title="Agenda" subtitle="Gerencie seus agendamentos">
+      <OnboardingBanner />
       <div className="space-y-4 sm:space-y-6">
         <Card className="border-border/70 bg-card/90 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.16)]">
           <CardContent className="space-y-4 p-4 sm:p-5">

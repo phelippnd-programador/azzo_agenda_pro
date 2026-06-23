@@ -76,3 +76,4 @@ export const PublicBookingPage = lazy(() => import("@/pages/appointments/PublicB
 export const Agenda = lazy(() => import("@/pages/appointments/Agenda"));
 export const Financial = lazy(() => import("@/pages/Financial"));
 export const SystemAdminPage = lazy(() => import("@/pages/SystemAdmin"));
+export const OnboardingPage = lazy(() => import("@/pages/OnboardingPage"));

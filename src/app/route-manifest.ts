@@ -19,6 +19,7 @@ export const appRouteManifest = {
     agenda: "/agenda",
     suggestions: "/sugestoes",
     unauthorized: "/unauthorized",
+    onboarding: "/onboarding",
   },
   reports: {
     root: "/relatorio",
