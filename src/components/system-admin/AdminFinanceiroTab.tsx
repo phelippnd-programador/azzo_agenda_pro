@@ -357,34 +357,35 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{planForm.id ? 'Editar plano' : 'Novo plano'}</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2 md:col-span-2">
+          <div className="overflow-y-auto flex-1 pr-1">
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-1.5 md:col-span-2">
               <Label>Nome</Label>
               <Input
                 value={planForm.name}
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, name: e.target.value }))}
               />
             </div>
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-1.5 md:col-span-2">
               <Label>Descricao</Label>
               <Textarea
                 value={planForm.description}
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, description: e.target.value }))}
-                rows={3}
+                rows={2}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Moeda</Label>
               <Input
                 value={planForm.currency}
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, currency: e.target.value }))}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Preco em centavos</Label>
               <Input
                 type="number"
@@ -392,7 +393,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, priceCents: e.target.value }))}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Validade em meses</Label>
               <Input
                 type="number"
@@ -400,7 +401,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, validityMonths: e.target.value }))}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Validade em dias</Label>
               <Input
                 type="number"
@@ -408,7 +409,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, validityDays: e.target.value }))}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Prioridade</Label>
               <Input
                 type="number"
@@ -416,7 +417,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, priority: e.target.value }))}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Maximo de profissionais</Label>
               <Input
                 type="number"
@@ -424,19 +425,19 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, maxProfessionals: e.target.value }))}
               />
             </div>
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-1.5 md:col-span-2">
               <Label>Destaque</Label>
               <Input
                 value={planForm.highlight}
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, highlight: e.target.value }))}
               />
             </div>
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-1.5 md:col-span-2">
               <Label>Features JSON</Label>
               <Textarea
                 value={planForm.featuresJson}
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, featuresJson: e.target.value }))}
-                rows={4}
+                rows={3}
               />
             </div>
             <label className="flex items-center gap-2 text-sm">
@@ -454,7 +455,8 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
               Trial
             </label>
           </div>
-          <div className="flex justify-end gap-2">
+          </div>
+          <div className="flex justify-end gap-2 pt-2 border-t">
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancelar
             </Button>
