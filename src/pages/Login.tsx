@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff, Loader2, ShieldCheck, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { getCurrentBillingSubscription } from '@/services/billingService';
@@ -179,65 +179,39 @@ export default function Login() {
   });
 
   return (
-    <div className="auth-shell flex items-start justify-center sm:items-center">
-      <div className="absolute right-3 top-3 z-20 sm:right-6 sm:top-6">
-        <ThemeToggle className="theme-toggle-shell h-10 w-10" />
+    <div className="auth-shell flex items-center justify-center">
+      <div className="absolute right-3 top-3 z-20">
+        <ThemeToggle className="theme-toggle-shell h-8 w-8" />
       </div>
-      <div className="relative z-10 w-full max-w-md pt-2 sm:pt-0">
-        <div className="mb-6 space-y-3 text-center sm:mb-8">
-          <div className="flex justify-center">
-            <span className="brand-orbit-badge">
-              <span className="brand-orbit-dot" />
-              Console de operacao Azzo
-            </span>
-          </div>
-          <p className="section-eyebrow">Acesso seguro</p>
+      <div className="relative z-10 w-full max-w-md">
+        <div className="mb-3 space-y-1.5 text-center">
           <BrandLockup className="justify-center" caption="Operating System" />
-          <p className="mx-auto max-w-sm text-sm leading-6 text-muted-foreground">
-            Entre no mesmo ambiente usado para agenda, operação, clientes e financeiro.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-            <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[11px] font-medium tracking-wide text-primary">
+          <div className="flex flex-wrap items-center justify-center gap-1.5">
+            <span className="rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-medium tracking-wide text-primary">
               Acesso único
             </span>
-            <span className="rounded-full border border-border/70 bg-background/80 px-3 py-1 text-[11px] font-medium tracking-wide text-muted-foreground">
+            <span className="rounded-full border border-border/70 bg-background/80 px-2.5 py-0.5 text-[10px] font-medium tracking-wide text-muted-foreground">
               Sessão protegida
             </span>
-            <span className="rounded-full border border-border/70 bg-background/80 px-3 py-1 text-[11px] font-medium tracking-wide text-muted-foreground">
+            <span className="rounded-full border border-border/70 bg-background/80 px-2.5 py-0.5 text-[10px] font-medium tracking-wide text-muted-foreground">
               Retomada rápida
             </span>
           </div>
         </div>
 
         <Card className="auth-panel border-border/80">
-          <CardHeader className="text-center pb-2 sm:pb-4">
-            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-[2.1rem]">
+          <CardHeader className="text-center pb-1 pt-4">
+            <CardTitle className="text-xl font-semibold tracking-tight">
               Bem-vindo de volta!
             </CardTitle>
-            <CardDescription className="text-sm leading-6 sm:text-[15px]">
+            <CardDescription className="text-xs leading-5">
               Acesse sua operação sem perder contexto e retome de onde parou.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="mb-4 rounded-2xl border border-border/70 bg-muted/15 p-4">
-              <div className="flex items-start gap-3">
-                <div className="rounded-xl bg-primary/10 p-2 text-primary">
-                  <ShieldCheck className="h-4 w-4" />
-                </div>
-                <div className="space-y-1 text-left">
-                  <p className="text-sm font-medium text-foreground">
-                    Login direto no ambiente operacional
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Agenda, clientes, financeiro e configurações ficam no mesmo acesso, sem trocar de ambiente.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <form onSubmit={onSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm">E-mail</Label>
+          <CardContent className="pt-2">
+            <form onSubmit={onSubmit} className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-xs">E-mail</Label>
                 <Input
                   id="email"
                   type="email"
@@ -246,7 +220,7 @@ export default function Login() {
                   autoFocus
                   {...form.register('email')}
                   disabled={isLoading}
-                  className="h-10 sm:h-11"
+                  className="h-9"
                   aria-invalid={Boolean(errors.email)}
                   aria-describedby={errors.email ? 'login-email-error' : undefined}
                 />
@@ -257,12 +231,12 @@ export default function Login() {
                 ) : null}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-sm">Senha</Label>
+                  <Label htmlFor="password" className="text-xs">Senha</Label>
                   <Link
                     to="/recuperar-senha"
-                    className="text-xs sm:text-sm text-primary hover:opacity-90"
+                    className="text-xs text-primary hover:opacity-90"
                   >
                     Esqueceu a senha?
                   </Link>
@@ -275,7 +249,7 @@ export default function Login() {
                     autoComplete="current-password"
                     {...form.register('password')}
                     disabled={isLoading}
-                    className="h-10 sm:h-11 pr-10"
+                    className="h-9 pr-10"
                     aria-invalid={Boolean(errors.password)}
                     aria-describedby={errors.password ? 'login-password-error' : undefined}
                   />
@@ -331,7 +305,7 @@ export default function Login() {
                       },
                     })}
                     disabled={isLoading}
-                    className="h-10 sm:h-11"
+                    className="h-9"
                     aria-invalid={Boolean(errors.mfaCode)}
                     aria-describedby={errors.mfaCode ? 'login-mfa-error' : undefined}
                   />
@@ -350,24 +324,14 @@ export default function Login() {
                   onCheckedChange={(checked) => setRememberPassword(Boolean(checked))}
                   disabled={isLoading}
                 />
-                <Label htmlFor="rememberPassword" className="text-sm text-muted-foreground">
+                <Label htmlFor="rememberPassword" className="text-xs text-muted-foreground">
                   Salvar e-mail neste dispositivo
                 </Label>
               </div>
 
-              {rememberPassword && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Seu e-mail sera salvo neste dispositivo. Nao use em dispositivos compartilhados.
-                </p>
-              )}
-
-              <p className="text-xs text-muted-foreground">
-                Apenas seu e-mail pode ser lembrado neste navegador. Sua senha nunca é salva localmente.
-              </p>
-
               <Button
                 type="submit"
-                className="h-10 w-full sm:h-11"
+                className="h-9 w-full"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -379,15 +343,9 @@ export default function Login() {
                   'Entrar'
                 )}
               </Button>
-
-              <p className="text-center text-xs text-muted-foreground" aria-live="polite">
-                {isLoading
-                  ? 'Validando credenciais e preparando seu ambiente...'
-                  : 'Você volta para o fluxo certo assim que o acesso for liberado.'}
-              </p>
             </form>
 
-            <p className="text-center text-xs sm:text-sm text-muted-foreground mt-4 sm:mt-6">
+            <p className="text-center text-xs text-muted-foreground mt-3">
               Não tem uma conta?{' '}
               <Link to="/cadastro" className="text-primary hover:opacity-90 font-medium">
                 Cadastre-se gratis
@@ -396,7 +354,7 @@ export default function Login() {
           </CardContent>
         </Card>
 
-        <p className="mt-4 text-center text-xs text-muted-foreground sm:mt-6">
+        <p className="mt-2 text-center text-xs text-muted-foreground">
           Ao entrar, você concorda com nossos{' '}
           <Link to="/termos-de-uso" className="text-primary hover:underline">Termos de Uso</Link>
           {' '}e{' '}
