@@ -8,7 +8,6 @@ import {
   CalendarOff,
   CheckCircle2,
   CircleAlert,
-  Cpu,
   PlugZap,
   Receipt,
   ShieldCheck,
@@ -27,7 +26,6 @@ import { SettingsAccountTab } from '@/components/settings/SettingsAccountTab';
 import { AppointmentConflictSettingsCard } from '@/components/settings/AppointmentConflictSettingsCard';
 import { CancellationPolicyCard } from '@/components/settings/CancellationPolicyCard';
 import { SettingsLgpdTab } from '@/components/settings/SettingsLgpdTab';
-import { SettingsFeatureFlagsTab } from '@/components/settings/SettingsFeatureFlagsTab';
 import { SettingsBusinessHoursTab } from '@/components/settings/SettingsBusinessHoursTab';
 import { SettingsClosuresTab } from '@/components/settings/SettingsClosuresTab';
 
@@ -121,7 +119,6 @@ export default function Settings() {
       tabs.push('business-hours');
       tabs.push('closures');
       tabs.push('lgpd');
-      tabs.push('features');
     }
     return tabs;
   }, [
@@ -264,20 +261,6 @@ export default function Settings() {
       });
     }
 
-    if (visibleTabs.includes('features')) {
-      cards.push({
-        key: 'features',
-        icon: Cpu,
-        title: 'Recursos',
-        description: 'Feature flags e politicas de retencao de dados do tenant.',
-        statusLabel: 'Restrito',
-        statusTone: 'default' as const,
-        actionLabel: 'Abrir recursos',
-        onAction: () => handleTabChange('features', { scrollToSection: true }),
-      });
-    }
-
-
     return cards;
   }, [
     canAccessWhatsAppIntegration,
@@ -363,10 +346,6 @@ export default function Settings() {
       lgpd: {
         label: 'LGPD',
         description: 'Canal de contato, DPO e prazo de resposta para titulares de dados.',
-      },
-      features: {
-        label: 'Recursos',
-        description: 'Integracao com pagamentos, armazenamento e retencao de dados do tenant.',
       },
     };
 
@@ -534,9 +513,6 @@ export default function Settings() {
                 ) : null}
                 {visibleTabs.includes('lgpd') ? (
                   <TabsTrigger value="lgpd" className="shrink-0 whitespace-nowrap">LGPD</TabsTrigger>
-                ) : null}
-                {visibleTabs.includes('features') ? (
-                  <TabsTrigger value="features" className="shrink-0 whitespace-nowrap">Recursos</TabsTrigger>
                 ) : null}
               </TabsList>
             </div>
@@ -762,12 +738,6 @@ export default function Settings() {
         {isOwner ? (
           <TabsContent value="lgpd">
             <SettingsLgpdTab />
-          </TabsContent>
-        ) : null}
-
-        {isOwner ? (
-          <TabsContent value="features">
-            <SettingsFeatureFlagsTab />
           </TabsContent>
         ) : null}
 
