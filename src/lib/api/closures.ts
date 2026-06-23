@@ -35,29 +35,29 @@ export const closuresApi = {
   list: (from: string, to: string, professionalId?: string): Promise<SpecialClosure[]> => {
     const params = new URLSearchParams({ from, to });
     if (professionalId) params.set("professionalId", professionalId);
-    return request<SpecialClosure[]>(`/settings/closures?${params.toString()}`);
+    return request<SpecialClosure[]>(`/salon/closures?${params.toString()}`);
   },
 
   create: (data: SpecialClosure): Promise<ClosureImpact> =>
-    request<ClosureImpact>("/settings/closures", {
+    request<ClosureImpact>("/salon/closures", {
       method: "POST",
       body: JSON.stringify(data),
     }),
 
   confirm: (data: SpecialClosure): Promise<void> =>
-    request<void>("/settings/closures/confirm", {
+    request<void>("/salon/closures/confirm", {
       method: "POST",
       body: JSON.stringify(data),
     }),
 
   update: (id: string, data: SpecialClosure): Promise<void> =>
-    request<void>(`/settings/closures/${id}`, {
+    request<void>(`/salon/closures/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
 
   remove: (id: string): Promise<void> =>
-    request<void>(`/settings/closures/${id}`, {
+    request<void>(`/salon/closures/${id}`, {
       method: "DELETE",
     }),
 };
