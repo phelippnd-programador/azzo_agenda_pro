@@ -4,6 +4,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { MenuPermissionsProvider } from "@/contexts/MenuPermissionsContext";
 import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
 import { AppUpdateBanner } from "@/components/layout/AppUpdateBanner";
+import { PwaInstallBanner } from "@/components/layout/PwaInstallBanner";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NotificationsProvider } from "@/providers/NotificationsProvider";
@@ -25,6 +26,7 @@ const App = () => (
                 <AttendanceConfirmationProvider>
                   <AppUpdateBanner />
                   <AppRoutes />
+                  <PwaInstallBanner />
                   <CookieConsentBanner />
                 </AttendanceConfirmationProvider>
               </NotificationsProvider>
