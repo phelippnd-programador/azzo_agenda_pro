@@ -3,6 +3,7 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { MenuPermissionsProvider } from "@/contexts/MenuPermissionsContext";
 import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
+import { AppUpdateBanner } from "@/components/layout/AppUpdateBanner";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NotificationsProvider } from "@/providers/NotificationsProvider";
@@ -22,6 +23,7 @@ const App = () => (
             <BrowserRouter>
               <NotificationsProvider>
                 <AttendanceConfirmationProvider>
+                  <AppUpdateBanner />
                   <AppRoutes />
                   <CookieConsentBanner />
                 </AttendanceConfirmationProvider>
