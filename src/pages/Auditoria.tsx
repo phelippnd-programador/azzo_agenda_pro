@@ -17,6 +17,7 @@ import {
   actionMeta,
   buildDiffEntries,
   entityMeta,
+  maskIpAddress,
   moduleLabel,
   statusBadgeClass,
   statusLabel,
@@ -68,6 +69,7 @@ export default function Auditoria() {
   const [actionInput, setActionInput] = useState("");
   const [entityTypeInput, setEntityTypeInput] = useState("");
   const [requestIdInput, setRequestIdInput] = useState("");
+  const [ipInput, setIpInput] = useState("");
   const [searchInput, setSearchInput] = useState("");
 
   useEffect(() => {
@@ -145,6 +147,7 @@ export default function Auditoria() {
       actions: actionInput ? [actionInput] : undefined,
       entityTypes: entityTypeInput ? [entityTypeInput] : undefined,
       requestId: requestIdInput || undefined,
+      ip: ipInput || undefined,
       text: searchInput || undefined,
       cursor: undefined,
     };
@@ -254,11 +257,16 @@ export default function Auditoria() {
                 </select>
               </div>
             </div>
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-3">
               <Input
                 placeholder="Filtrar por request_id"
                 value={requestIdInput}
                 onChange={(e) => setRequestIdInput(e.target.value)}
+              />
+              <Input
+                placeholder="Filtrar por IP (ex: 192.168)"
+                value={ipInput}
+                onChange={(e) => setIpInput(e.target.value)}
               />
               <Input
                 placeholder="Busca textual (acao, erro, metadata)"
@@ -353,7 +361,7 @@ export default function Auditoria() {
             ) : (
               <TooltipProvider delayDuration={150}>
                 <div className="overflow-x-auto">
-                  <table className="min-w-[980px] w-full text-sm">
+                  <table className="min-w-[1100px] w-full text-sm">
                     <thead>
                       <tr className="border-b text-left text-muted-foreground">
                         <th className="py-2">Data</th>
@@ -362,6 +370,7 @@ export default function Auditoria() {
                         <th className="py-2">Registro afetado</th>
                         <th className="py-2">Status</th>
                         <th className="py-2">Ator</th>
+                        <th className="py-2">IP</th>
                         <th className="py-2">Request ID</th>
                         <th className="py-2 text-right">Detalhe</th>
                       </tr>
@@ -397,6 +406,9 @@ export default function Auditoria() {
                             </Badge>
                           </td>
                           <td className="py-2">{item.actorName || item.actorUserId || "-"}</td>
+                          <td className="py-2 font-mono text-xs text-muted-foreground">
+                            {maskIpAddress(item.ipAddress)}
+                          </td>
                           <td className="py-2 font-mono text-xs">{item.requestId}</td>
                           <td className="py-2 text-right">
                             <Button
