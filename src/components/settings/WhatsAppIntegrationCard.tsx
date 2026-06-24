@@ -441,6 +441,28 @@ export function WhatsAppIntegrationCard() {
     }
   };
 
+  // Persiste um campo isolado sem exigir phoneNumberId/token (já configurados)
+  const saveField = async (patch: Partial<Parameters<typeof whatsappApi.saveConfig>[0]>) => {
+    try {
+      setIsSaving(true);
+      await whatsappApi.saveConfig({
+        whatsappEnabled: activateIntegration,
+        phoneNumberId: phoneNumberId.trim() || undefined,
+        usageProfile,
+        canSchedule,
+        canCancel,
+        canReschedule,
+        ...patch,
+      });
+      toast.success("Configuracao salva");
+      await queryClient.invalidateQueries({ queryKey: ["whatsapp-config"] });
+    } catch (error) {
+      toast.error(resolveUiError(error, "Erro ao salvar configuracao").message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleTest = async () => {
     if (!activateIntegration) {
       toast.error("Ative a integracao para testar a conexao");
@@ -811,7 +833,11 @@ export function WhatsAppIntegrationCard() {
           </div>
           <Switch
             checked={activateIntegration}
-            onCheckedChange={setActivateIntegration}
+            disabled={isSaving}
+            onCheckedChange={(val) => {
+              setActivateIntegration(val);
+              void saveField({ whatsappEnabled: val });
+            }}
           />
         </div>
 
@@ -856,15 +882,7 @@ export function WhatsAppIntegrationCard() {
                   onChange={() => {
                     const newProfile = option.value;
                     setUsageProfile(newProfile);
-                    whatsappApi.saveConfig({
-                      whatsappEnabled: activateIntegration,
-                      phoneNumberId: phoneNumberId.trim(),
-                      usageProfile: newProfile,
-                    }).then(() => {
-                      toast.success("Perfil de uso salvo");
-                    }).catch(() => {
-                      toast.error("Erro ao salvar perfil de uso");
-                    });
+                    void saveField({ usageProfile: newProfile });
                   }}
                   disabled={!activateIntegration || isSaving}
                   className="mt-0.5 accent-primary"
@@ -893,8 +911,11 @@ export function WhatsAppIntegrationCard() {
               </div>
               <Switch
                 checked={canSchedule}
-                onCheckedChange={setCanSchedule}
                 disabled={!activateIntegration || isSaving}
+                onCheckedChange={(val) => {
+                  setCanSchedule(val);
+                  void saveField({ canSchedule: val });
+                }}
               />
             </div>
             <div className="flex items-start justify-between gap-4">
@@ -906,8 +927,11 @@ export function WhatsAppIntegrationCard() {
               </div>
               <Switch
                 checked={canCancel}
-                onCheckedChange={setCanCancel}
                 disabled={!activateIntegration || isSaving}
+                onCheckedChange={(val) => {
+                  setCanCancel(val);
+                  void saveField({ canCancel: val });
+                }}
               />
             </div>
             <div className="flex items-start justify-between gap-4">
@@ -919,8 +943,11 @@ export function WhatsAppIntegrationCard() {
               </div>
               <Switch
                 checked={canReschedule}
-                onCheckedChange={setCanReschedule}
                 disabled={!activateIntegration || isSaving}
+                onCheckedChange={(val) => {
+                  setCanReschedule(val);
+                  void saveField({ canReschedule: val });
+                }}
               />
             </div>
           </div>
