@@ -68,7 +68,10 @@ export function useProfessionals(options?: UseProfessionalsOptions) {
 
   const updateProfessional = async (id: string, data: ProfessionalUpsertPayload) => {
     try {
-      const result = await professionalsApi.update(id, data);
+      const isToggleOnly = Object.keys(data).length === 1 && "isActive" in data;
+      const result = isToggleOnly
+        ? await professionalsApi.toggleStatus(id, data.isActive as boolean)
+        : await professionalsApi.update(id, data);
       await _fetch({ page: pagination.page, limit: pagination.limit });
       toast.success("Profissional atualizado com sucesso!");
       return result;
