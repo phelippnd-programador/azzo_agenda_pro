@@ -17,6 +17,7 @@ import {
   Eye,
   Layers3,
   MoreVertical,
+  Plus,
   TriangleAlert,
 } from 'lucide-react';
 import {
@@ -70,6 +71,7 @@ interface AgendaDayViewProps {
   canReassignAppointments: boolean;
   columnMode?: boolean;
   activeProfessionals?: Professional[];
+  onNewAppointmentFromSlot?: (time: string, professionalId?: string) => void;
   onAppointmentClick: (appointment: Appointment) => void;
   onStatusChange: (id: string, status: Appointment['status']) => void;
   onDeleteRequest: (id: string) => void;
@@ -86,6 +88,7 @@ export function AgendaDayView({
   canReassignAppointments,
   columnMode = false,
   activeProfessionals,
+  onNewAppointmentFromSlot,
   onAppointmentClick,
   onStatusChange,
   onDeleteRequest,
@@ -399,6 +402,9 @@ export function AgendaDayView({
   if (columnMode && columnProfessionals.length > 1) {
     const colCount = columnProfessionals.length;
     const gridCols = `68px repeat(${colCount}, minmax(180px, 1fr))`;
+    const SLOT_HEIGHT = 64; // px por slot de 30 min
+    const dayStartMin = toMinutes(columnDisplayedSlots[0] ?? '08:00');
+    const totalHeight = columnDisplayedSlots.length * SLOT_HEIGHT;
 
     return (
       <Card className="border-border/70 bg-card/96 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.14)]">
@@ -441,105 +447,135 @@ export function AgendaDayView({
                 })}
               </div>
 
-              {/* Grade de horários */}
-              <div className="max-h-[600px] overflow-y-auto divide-y divide-border/40">
-                {columnDisplayedSlots.map((time) => {
-                  const hasAnyApt = columnProfessionals.some(
-                    (p) => (appointmentsByProfessional.get(p.id)?.get(time)?.length ?? 0) > 0,
-                  );
-                  return (
-                    <div
-                      key={time}
-                      className={`grid min-h-[72px] ${hasAnyApt ? '' : 'min-h-[52px]'}`}
-                      style={{ gridTemplateColumns: gridCols }}
-                    >
-                      <div className="border-r border-border/60 bg-muted/25 px-2 py-3 text-center text-xs font-medium text-muted-foreground flex-shrink-0">
-                        <span className="inline-flex rounded-full bg-background/85 px-1.5 py-0.5 shadow-sm text-[11px]">
+              {/* Grade de horários com altura proporcional à duração */}
+              <div className="max-h-[600px] overflow-y-auto">
+                <div className="grid" style={{ gridTemplateColumns: gridCols }}>
+                  {/* Eixo de tempo */}
+                  <div className="border-r border-border/60 bg-muted/25 relative flex-shrink-0" style={{ height: totalHeight }}>
+                    {columnDisplayedSlots.map((time, idx) => (
+                      <div
+                        key={time}
+                        className="absolute left-0 right-0 border-b border-border/30 flex items-start justify-center pt-1"
+                        style={{ top: idx * SLOT_HEIGHT, height: SLOT_HEIGHT }}
+                      >
+                        <span className="inline-flex rounded-full bg-background/85 px-1.5 py-0.5 shadow-sm text-[11px] font-medium text-muted-foreground">
                           {time}
                         </span>
                       </div>
-                      {columnProfessionals.map((prof, idx) => {
-                        const color = PROFESSIONAL_COLORS[idx % PROFESSIONAL_COLORS.length];
-                        const slotApts = appointmentsByProfessional.get(prof.id)?.get(time) ?? [];
-                        return (
+                    ))}
+                  </div>
+
+                  {/* Colunas por profissional */}
+                  {columnProfessionals.map((prof, idx) => {
+                    const color = PROFESSIONAL_COLORS[idx % PROFESSIONAL_COLORS.length];
+                    const profApts = appointments.filter((a) => a.professionalId === prof.id);
+
+                    return (
+                      <div
+                        key={prof.id}
+                        className={`border-r border-border/40 last:border-r-0 relative ${color.bg}`}
+                        style={{ height: totalHeight }}
+                      >
+                        {/* Linhas de slot clicáveis (fundo) */}
+                        {columnDisplayedSlots.map((time, slotIdx) => (
                           <div
-                            key={prof.id}
-                            className={`border-r border-border/40 last:border-r-0 p-1.5 ${color.bg}`}
+                            key={time}
+                            className="absolute left-0 right-0 border-b border-border/30 cursor-pointer group hover:bg-primary/5 transition-colors"
+                            style={{ top: slotIdx * SLOT_HEIGHT, height: SLOT_HEIGHT }}
+                            onClick={() => onNewAppointmentFromSlot?.(time, prof.id)}
                           >
-                            {slotApts.map((apt) => {
-                              const client = apt.client ?? null;
-                              const serviceLabel = getAppointmentServiceLabel(apt);
-                              return (
-                                <div
-                                  key={apt.id}
-                                  className={`rounded-md p-2 mb-1 last:mb-0 cursor-pointer hover:shadow-md hover:-translate-y-px transition-all duration-150 border ${color.border} ${getStatusColor(apt.status)}`}
-                                  onClick={() => onAppointmentClick(apt)}
-                                >
-                                  <div className="flex items-start justify-between gap-1">
-                                    <div className="min-w-0 flex-1">
-                                      <p className="font-semibold text-[11px] leading-tight truncate">
-                                        {client?.name || 'Cliente'}
-                                      </p>
-                                      <p className="text-[10px] opacity-75 truncate leading-tight mt-0.5">
-                                        {serviceLabel}
-                                      </p>
-                                      <p className="text-[10px] opacity-50 mt-0.5">
-                                        {normalizeTime(apt.startTime)} – {normalizeTime(apt.endTime)}
-                                      </p>
-                                    </div>
-                                    <div className="flex items-center gap-0.5 flex-shrink-0">
+                            <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                              <Plus className="w-3.5 h-3.5 text-primary/40" />
+                            </span>
+                          </div>
+                        ))}
+
+                        {/* Cards de agendamento com altura proporcional */}
+                        {profApts.map((apt) => {
+                          const startMin = toMinutes(normalizeTime(apt.startTime) || '08:00');
+                          const endMin = apt.endTime
+                            ? toMinutes(normalizeTime(apt.endTime) || '08:30')
+                            : startMin + 30;
+                          const durationMin = Math.max(endMin - startMin, 30);
+                          const top = (startMin - dayStartMin) / 30 * SLOT_HEIGHT;
+                          const height = Math.max(durationMin / 30 * SLOT_HEIGHT - 3, 40);
+                          const client = apt.client ?? null;
+                          const serviceLabel = getAppointmentServiceLabel(apt);
+
+                          return (
+                            <div
+                              key={apt.id}
+                              className={`absolute left-1 right-1 rounded-md p-1.5 cursor-pointer hover:shadow-md hover:-translate-y-px transition-all duration-150 border overflow-hidden z-10 ${color.border} ${getStatusColor(apt.status)}`}
+                              style={{ top: top + 2, height: height - 2 }}
+                              onClick={() => onAppointmentClick(apt)}
+                            >
+                              <div className="flex items-start justify-between gap-1 h-full">
+                                <div className="min-w-0 flex-1 overflow-hidden">
+                                  <p className="font-semibold text-[11px] leading-tight truncate">
+                                    {client?.name || 'Cliente'}
+                                  </p>
+                                  {height > 48 && (
+                                    <p className="text-[10px] opacity-75 truncate leading-tight mt-0.5">
+                                      {serviceLabel}
+                                    </p>
+                                  )}
+                                  {height > 64 && (
+                                    <p className="text-[10px] opacity-50 mt-0.5">
+                                      {normalizeTime(apt.startTime)} – {normalizeTime(apt.endTime)}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex items-start gap-0.5 flex-shrink-0">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-5 w-5"
+                                    onClick={(e) => { e.stopPropagation(); onAppointmentClick(apt); }}
+                                  >
+                                    <Eye className="w-3 h-3" />
+                                  </Button>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
                                       <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-6 w-6"
-                                        onClick={(e) => { e.stopPropagation(); onAppointmentClick(apt); }}
+                                        className="h-5 w-5"
+                                        onClick={(e) => e.stopPropagation()}
                                       >
-                                        <Eye className="w-3 h-3" />
+                                        <MoreVertical className="w-3 h-3" />
                                       </Button>
-                                      <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-6 w-6"
-                                            onClick={(e) => e.stopPropagation()}
-                                          >
-                                            <MoreVertical className="w-3 h-3" />
-                                          </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                          {(allowedTransitions[apt.status] ?? []).includes('CONFIRMED') && (
-                                            <DropdownMenuItem onClick={() => onStatusChange(apt.id, 'CONFIRMED')}>Confirmar</DropdownMenuItem>
-                                          )}
-                                          {(allowedTransitions[apt.status] ?? []).includes('IN_PROGRESS') && (
-                                            <DropdownMenuItem onClick={() => onStatusChange(apt.id, 'IN_PROGRESS')}>Iniciar atendimento</DropdownMenuItem>
-                                          )}
-                                          {(allowedTransitions[apt.status] ?? []).includes('COMPLETED') && (
-                                            <DropdownMenuItem onClick={() => onStatusChange(apt.id, 'COMPLETED')}>Concluir</DropdownMenuItem>
-                                          )}
-                                          {(allowedTransitions[apt.status] ?? []).includes('NO_SHOW') && (
-                                            <DropdownMenuItem onClick={() => onStatusChange(apt.id, 'NO_SHOW')}>Não compareceu</DropdownMenuItem>
-                                          )}
-                                          {!isProfessionalUser && canReassignAppointments && (
-                                            <DropdownMenuItem onClick={() => onReassignRequest(apt)}>Realocar profissional</DropdownMenuItem>
-                                          )}
-                                          {(allowedTransitions[apt.status] ?? []).includes('CANCELLED') && (
-                                            <DropdownMenuItem className="text-red-600" onClick={() => onStatusChange(apt.id, 'CANCELLED')}>Cancelar</DropdownMenuItem>
-                                          )}
-                                          <DropdownMenuItem className="text-red-600" onClick={() => onDeleteRequest(apt.id)}>Excluir</DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                      </DropdownMenu>
-                                    </div>
-                                  </div>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      {(allowedTransitions[apt.status] ?? []).includes('CONFIRMED') && (
+                                        <DropdownMenuItem onClick={() => onStatusChange(apt.id, 'CONFIRMED')}>Confirmar</DropdownMenuItem>
+                                      )}
+                                      {(allowedTransitions[apt.status] ?? []).includes('IN_PROGRESS') && (
+                                        <DropdownMenuItem onClick={() => onStatusChange(apt.id, 'IN_PROGRESS')}>Iniciar atendimento</DropdownMenuItem>
+                                      )}
+                                      {(allowedTransitions[apt.status] ?? []).includes('COMPLETED') && (
+                                        <DropdownMenuItem onClick={() => onStatusChange(apt.id, 'COMPLETED')}>Concluir</DropdownMenuItem>
+                                      )}
+                                      {(allowedTransitions[apt.status] ?? []).includes('NO_SHOW') && (
+                                        <DropdownMenuItem onClick={() => onStatusChange(apt.id, 'NO_SHOW')}>Não compareceu</DropdownMenuItem>
+                                      )}
+                                      {!isProfessionalUser && canReassignAppointments && (
+                                        <DropdownMenuItem onClick={() => onReassignRequest(apt)}>Realocar profissional</DropdownMenuItem>
+                                      )}
+                                      {(allowedTransitions[apt.status] ?? []).includes('CANCELLED') && (
+                                        <DropdownMenuItem className="text-red-600" onClick={() => onStatusChange(apt.id, 'CANCELLED')}>Cancelar</DropdownMenuItem>
+                                      )}
+                                      <DropdownMenuItem className="text-red-600" onClick={() => onDeleteRequest(apt.id)}>Excluir</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
                                 </div>
-                              );
-                            })}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
@@ -593,7 +629,18 @@ export function AgendaDayView({
                       <div className="p-2 sm:p-3">
                         {slotAppointments.length > 1
                           ? renderOverlapGroup(time, slotAppointments)
-                          : slotAppointments.map(renderSingleAppointment)}
+                          : slotAppointments.length === 1
+                          ? slotAppointments.map(renderSingleAppointment)
+                          : (
+                            <button
+                              type="button"
+                              className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-muted-foreground opacity-0 hover:opacity-100 hover:bg-primary/5 transition-all duration-150 cursor-pointer"
+                              onClick={() => onNewAppointmentFromSlot?.(time)}
+                            >
+                              <Plus className="w-3 h-3 text-primary/50" />
+                              Novo agendamento às {time}
+                            </button>
+                          )}
                       </div>
                     </div>
                   );

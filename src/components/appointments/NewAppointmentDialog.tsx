@@ -43,6 +43,8 @@ export function NewAppointmentDialog({
   loggedProfessional,
   activeProfessionals,
   createAppointment,
+  initialTime,
+  initialProfessionalId,
 }: NewAppointmentDialogProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [newClientId, setNewClientId] = useState('');
@@ -231,6 +233,12 @@ export function NewAppointmentDialog({
   useEffect(() => {
     setNewDate(toDateKey(currentDate));
   }, [currentDate]);
+
+  useEffect(() => {
+    if (!open) return;
+    if (initialProfessionalId) setNewProfessionalId(initialProfessionalId);
+    if (initialTime) setNewStartTime(initialTime);
+  }, [open, initialProfessionalId, initialTime]);
 
   useEffect(() => {
     if (!newServiceId) return;
