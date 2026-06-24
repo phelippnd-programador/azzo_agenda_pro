@@ -20,7 +20,6 @@ import { SettingsNotificationsTab } from '@/components/settings/SettingsNotifica
 import { SettingsAccountTab } from '@/components/settings/SettingsAccountTab';
 import { AppointmentConflictSettingsCard } from '@/components/settings/AppointmentConflictSettingsCard';
 import { CancellationPolicyCard } from '@/components/settings/CancellationPolicyCard';
-import { SettingsLgpdTab } from '@/components/settings/SettingsLgpdTab';
 import { SettingsBusinessHoursTab } from '@/components/settings/SettingsBusinessHoursTab';
 import { SettingsClosuresTab } from '@/components/settings/SettingsClosuresTab';
 
@@ -48,7 +47,6 @@ export default function Settings() {
     if (isOwner) tabs.push('agenda');
     if (canAccessWhatsApp || canAccessStock) tabs.push('integrations');
     if (canAccessTax || canAccessCerts || canAccessNfseConfig || canAccessNfseModule) tabs.push('fiscal');
-    if (isOwner) tabs.push('lgpd');
     return tabs;
   }, [canAccessSalon, isOwner, canAccessWhatsApp, canAccessStock, canAccessTax, canAccessCerts, canAccessNfseConfig, canAccessNfseModule]);
 
@@ -80,7 +78,6 @@ export default function Settings() {
     agenda:       'Agenda',
     integrations: 'Integrações',
     fiscal:       'Fiscal',
-    lgpd:         'LGPD',
   };
 
   return (
@@ -311,12 +308,6 @@ export default function Settings() {
             </div>
           </TabsContent>
 
-          {/* ── LGPD ── */}
-          {isOwner && (
-            <TabsContent value="lgpd">
-              <SettingsLgpdTab />
-            </TabsContent>
-          )}
         </Tabs>
       </div>
     </MainLayout>
