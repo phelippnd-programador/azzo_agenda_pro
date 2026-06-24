@@ -24,6 +24,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { whatsappApi } from "@/lib/api/whatsapp";
+import { toggleApi } from "@/lib/api/toggle";
+import type { TenantToggleKey } from "@/lib/api/toggle";
 import type {
   WhatsAppConfigResponse,
   WhatsAppEmbeddedSignupStatusResponse,
@@ -441,11 +443,11 @@ export function WhatsAppIntegrationCard() {
     }
   };
 
-  // Persiste preferências simples via PATCH — sem tocar em token ou phoneNumberId
-  const saveField = async (patch: import("@/lib/api/whatsapp").WhatsAppSettingsPatch) => {
+  // Persiste um toggle isolado via endpoint genérico — não toca em token nem phoneNumberId
+  const saveToggle = async (key: TenantToggleKey, value: boolean | string) => {
     try {
       setIsSaving(true);
-      await whatsappApi.patchSettings(patch);
+      await toggleApi.apply(key, value);
       toast.success("Configuracao salva");
       await queryClient.invalidateQueries({ queryKey: ["whatsapp-config"] });
     } catch (error) {
@@ -828,7 +830,7 @@ export function WhatsAppIntegrationCard() {
             disabled={isSaving}
             onCheckedChange={(val) => {
               setActivateIntegration(val);
-              void saveField({ whatsappEnabled: val });
+              void saveToggle("WHATSAPP_ENABLED", val);
             }}
           />
         </div>
@@ -874,7 +876,7 @@ export function WhatsAppIntegrationCard() {
                   onChange={() => {
                     const newProfile = option.value;
                     setUsageProfile(newProfile);
-                    void saveField({ usageProfile: newProfile });
+                    void saveToggle("WHATSAPP_USAGE_PROFILE", newProfile);
                   }}
                   disabled={!activateIntegration || isSaving}
                   className="mt-0.5 accent-primary"
@@ -906,7 +908,7 @@ export function WhatsAppIntegrationCard() {
                 disabled={!activateIntegration || isSaving}
                 onCheckedChange={(val) => {
                   setCanSchedule(val);
-                  void saveField({ canSchedule: val });
+                  void saveToggle("WHATSAPP_CAN_SCHEDULE", val);
                 }}
               />
             </div>
@@ -922,7 +924,7 @@ export function WhatsAppIntegrationCard() {
                 disabled={!activateIntegration || isSaving}
                 onCheckedChange={(val) => {
                   setCanCancel(val);
-                  void saveField({ canCancel: val });
+                  void saveToggle("WHATSAPP_CAN_CANCEL", val);
                 }}
               />
             </div>
@@ -938,7 +940,7 @@ export function WhatsAppIntegrationCard() {
                 disabled={!activateIntegration || isSaving}
                 onCheckedChange={(val) => {
                   setCanReschedule(val);
-                  void saveField({ canReschedule: val });
+                  void saveToggle("WHATSAPP_CAN_RESCHEDULE", val);
                 }}
               />
             </div>
