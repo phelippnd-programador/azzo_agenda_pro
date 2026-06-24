@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import type { AuditEventDetailDto } from "@/types/auditoria";
 import { actionMeta, entityMeta, maskIpAddress, moduleLabel } from "@/lib/audit-helpers";
+import { useProfessionals } from "@/hooks/useProfessionals";
 
 interface DiffEntry {
   key: string;
@@ -33,6 +34,13 @@ export function AuditEventDetailDialog({
   detailError,
   diffEntries,
 }: AuditEventDetailDialogProps) {
+  const { professionals } = useProfessionals();
+
+  const affectedProfessionalName =
+    eventDetail?.module === "PROFESSIONAL" && eventDetail.entityId
+      ? (professionals.find((p) => p.id === eventDetail.entityId)?.name ?? null)
+      : null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden p-0">
@@ -70,6 +78,9 @@ export function AuditEventDetailDialog({
                 <p>
                   <span className="font-medium">Registro afetado:</span>{" "}
                   {entityMeta(eventDetail.entityType).label}
+                  {affectedProfessionalName && (
+                    <span className="ml-1 text-muted-foreground">— {affectedProfessionalName}</span>
+                  )}
                 </p>
                 <p>
                   <span className="font-medium">Request ID:</span>{" "}
