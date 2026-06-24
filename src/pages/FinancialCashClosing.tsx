@@ -293,7 +293,7 @@ export default function FinancialCashClosing() {
 
   return (
     <MainLayout title="Fechamento de Caixa" subtitle="Caixa operacional do dia e conferência final">
-      <div className="space-y-4 sm:space-y-6">
+      <div className="min-w-0 space-y-4 sm:space-y-6">
         <div className="grid gap-3 sm:grid-cols-3">
           <Card className="surface-panel border">
             <CardHeader className="pb-2">
@@ -320,10 +320,10 @@ export default function FinancialCashClosing() {
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-sm text-muted-foreground">
-            Esta página agora concentra a operação do caixa do dia e o fechamento final por forma de pagamento.
+          <div className="min-w-0 text-sm text-muted-foreground">
+            Esta página concentra a operação do caixa do dia e o fechamento final por forma de pagamento.
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => void loadClosings(true)} disabled={isRefreshing}>
               {isRefreshing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
               Atualizar
@@ -355,8 +355,8 @@ export default function FinancialCashClosing() {
                       <TableRow>
                         <TableHead>Data</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Esperado</TableHead>
-                        <TableHead>Diferença</TableHead>
+                        <TableHead className="hidden sm:table-cell">Esperado</TableHead>
+                        <TableHead className="hidden sm:table-cell">Diferença</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -374,8 +374,8 @@ export default function FinancialCashClosing() {
                                 {closing.status === "OPEN" ? "Aberto" : "Fechado"}
                               </Badge>
                             </TableCell>
-                            <TableCell>{formatCurrencyCents(closing.totalExpected)}</TableCell>
-                            <TableCell className={closing.totalDifference === 0 ? "" : "text-orange-700"}>
+                            <TableCell className="hidden sm:table-cell">{formatCurrencyCents(closing.totalExpected)}</TableCell>
+                            <TableCell className={cn("hidden sm:table-cell", closing.totalDifference === 0 ? "" : "text-orange-700")}>
                               {formatCurrencyCents(closing.totalDifference)}
                             </TableCell>
                           </TableRow>
@@ -423,9 +423,10 @@ export default function FinancialCashClosing() {
                           Registre entradas e saídas do dia aqui. O fechamento continua sendo a etapa final.
                         </p>
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex shrink-0 flex-wrap gap-2">
                         <Button
                           variant="outline"
+                          size="sm"
                           className="border-green-300 text-green-700 hover:bg-green-50"
                           onClick={() => openNewTransaction("INCOME")}
                           disabled={!isSelectedCashOpen}
@@ -435,6 +436,7 @@ export default function FinancialCashClosing() {
                         </Button>
                         <Button
                           variant="outline"
+                          size="sm"
                           className="border-red-300 text-red-700 hover:bg-red-50"
                           onClick={() => openNewTransaction("EXPENSE")}
                           disabled={!isSelectedCashOpen}
@@ -503,24 +505,24 @@ export default function FinancialCashClosing() {
                         <Button onClick={() => setIsCloseDialogVisible(true)}>Fechar caixa</Button>
                       ) : null}
                     </div>
-                    <div className="overflow-x-auto rounded-2xl border">
+                    <div className="rounded-2xl border">
                       <Table>
                         <TableHeader>
                           <TableRow>
                             <TableHead>Método</TableHead>
                             <TableHead>Esperado</TableHead>
-                            <TableHead>Contado</TableHead>
-                            <TableHead>Diferença</TableHead>
+                            <TableHead className="hidden sm:table-cell">Contado</TableHead>
+                            <TableHead className="hidden sm:table-cell">Diferença</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {PAYMENT_METHODS.map((method) => (
                             <TableRow key={method.key}>
-                              <TableCell>{method.label}</TableCell>
+                              <TableCell className="font-medium">{method.label}</TableCell>
                               <TableCell>{formatCurrencyCents(selectedClosing.expectedTotals[method.key] ?? 0)}</TableCell>
-                              <TableCell>{formatCurrencyCents(selectedClosing.countedTotals[method.key] ?? 0)}</TableCell>
+                              <TableCell className="hidden sm:table-cell">{formatCurrencyCents(selectedClosing.countedTotals[method.key] ?? 0)}</TableCell>
                               <TableCell
-                                className={(selectedClosing.differenceTotals[method.key] ?? 0) === 0 ? "" : "text-orange-700"}
+                                className={cn("hidden sm:table-cell", (selectedClosing.differenceTotals[method.key] ?? 0) === 0 ? "" : "text-orange-700")}
                               >
                                 {formatCurrencyCents(selectedClosing.differenceTotals[method.key] ?? 0)}
                               </TableCell>
