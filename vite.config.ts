@@ -5,6 +5,20 @@ import { viteSourceLocator } from "@metagptx/vite-plugin-source-locator";
 import { atoms } from "@metagptx/web-sdk/plugins";
 import fs from "node:fs";
 
+// Grava public/version.json com o timestamp do build atual
+function viteVersionPlugin() {
+  return {
+    name: "vite-version-plugin",
+    buildStart() {
+      const version = { buildTime: Date.now() };
+      fs.writeFileSync(
+        path.resolve(__dirname, "public/version.json"),
+        JSON.stringify(version),
+      );
+    },
+  };
+}
+
 const DEV_TLS_KEY_PATH =
   "C:/Users/phelipp/Projetos/azzo-agenda/backend/azzo-agenda-pro/key.pem";
 const DEV_TLS_CERT_PATH =
@@ -18,6 +32,7 @@ export default defineConfig(({ command }) => ({
         prefix: "mgx",
       }),
       react(),
+      viteVersionPlugin(),
       ...(Array.isArray(atomPlugins) ? atomPlugins : [atomPlugins]),
     ];
   })(),
