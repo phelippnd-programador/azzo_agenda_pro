@@ -71,6 +71,7 @@ export default function Agenda() {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
+  const [prefilledSlot, setPrefilledSlot] = useState<{ time: string; professionalId?: string } | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [appointmentToReassign, setAppointmentToReassign] = useState<Appointment | null>(null);
@@ -208,6 +209,11 @@ export default function Agenda() {
   const goToToday = () => {
     setDayAppointmentsFallback(null);
     setCurrentDate(new Date());
+  };
+
+  const handleNewFromSlot = (time: string, professionalId?: string) => {
+    setPrefilledSlot({ time, professionalId });
+    setIsNewAppointmentOpen(true);
   };
 
   const openDayView = (date: Date, fallback?: Appointment[]) => {
@@ -740,6 +746,7 @@ export default function Agenda() {
             canReassignAppointments={canReassignAppointments}
             columnMode={isColumnMode}
             activeProfessionals={activeProfessionals}
+            onNewAppointmentFromSlot={handleNewFromSlot}
             onAppointmentClick={(apt) => { setSelectedAppointment(apt); setIsDetailsOpen(true); }}
             onStatusChange={handleStatusChange}
             onDeleteRequest={handleDeleteRequest}
@@ -751,12 +758,14 @@ export default function Agenda() {
         {/* Dialogs */}
         <NewAppointmentDialog
           open={isNewAppointmentOpen}
-          onOpenChange={setIsNewAppointmentOpen}
+          onOpenChange={(open) => { setIsNewAppointmentOpen(open); if (!open) setPrefilledSlot(null); }}
           currentDate={currentDate}
           isProfessionalUser={isProfessionalUser}
           loggedProfessional={loggedProfessional}
           activeProfessionals={activeProfessionals}
           createAppointment={createAppointment}
+          initialTime={prefilledSlot?.time}
+          initialProfessionalId={prefilledSlot?.professionalId}
         />
 
         <AppointmentDetailsSheet

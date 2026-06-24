@@ -33,6 +33,8 @@ export interface NewAppointmentDialogProps {
   loggedProfessional: Professional | null;
   activeProfessionals: Professional[];
   createAppointment: (payload: CreateAppointmentPayload) => Promise<void>;
+  initialTime?: string;
+  initialProfessionalId?: string;
 }
 
 export const stepItems = [
