@@ -302,7 +302,7 @@ export default function SalePage() {
               <ThemeToggle className="theme-toggle-shell h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground" />
               <Link
                 to="/login"
-                className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline-flex"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
                 Entrar
               </Link>
