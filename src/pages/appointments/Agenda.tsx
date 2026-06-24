@@ -113,7 +113,8 @@ export default function Agenda() {
       professionalId: selectedProfessional !== 'all' ? selectedProfessional : undefined,
       status: selectedStatus !== 'all' ? selectedStatus : undefined,
     },
-    { defaultLimit: 20, enabled: viewMode === 'day' },
+    // Sem filtro de profissional na view dia: carrega mais para cobrir todos os profissionais
+    { defaultLimit: viewMode === 'day' && selectedProfessional === 'all' ? 200 : 20, enabled: viewMode === 'day' },
   );
 
   // Hook separado para a visão semanal (sem paginação, busca dia a dia via múltiplos requests)
@@ -175,6 +176,12 @@ export default function Agenda() {
     [activeProfessionals, user?.id],
   );
   const isProfessionalUser = user?.role === 'PROFESSIONAL';
+
+  const isColumnMode =
+    viewMode === 'day' &&
+    !isProfessionalUser &&
+    selectedProfessional === 'all' &&
+    activeProfessionals.length > 1;
 
   const effectiveSelectedProfessional = isProfessionalUser
     ? loggedProfessional?.id || ''
@@ -731,6 +738,8 @@ export default function Agenda() {
             pagination={pagination}
             isProfessionalUser={isProfessionalUser}
             canReassignAppointments={canReassignAppointments}
+            columnMode={isColumnMode}
+            activeProfessionals={activeProfessionals}
             onAppointmentClick={(apt) => { setSelectedAppointment(apt); setIsDetailsOpen(true); }}
             onStatusChange={handleStatusChange}
             onDeleteRequest={handleDeleteRequest}
