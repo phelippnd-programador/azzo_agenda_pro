@@ -143,6 +143,17 @@ export const appointmentsApi = {
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return request<AppointmentManagementReportResponse>(`/appointments/management-report${suffix}`);
   },
+  getMyHistory: (params?: Pick<AppointmentManagementReportParams, "from" | "to" | "status" | "limit" | "page" | "pageSize">) => {
+    const query = new URLSearchParams();
+    if (params?.from) query.set("from", params.from);
+    if (params?.to) query.set("to", params.to);
+    if (params?.status && params.status !== "all") query.set("status", params.status);
+    if (params?.limit) query.set("limit", String(params.limit));
+    if (params?.page !== undefined) query.set("page", String(params.page));
+    if (params?.pageSize !== undefined) query.set("pageSize", String(params.pageSize));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<AppointmentManagementReportResponse>(`/appointments/my-history${suffix}`);
+  },
   exportManagementReport: (params?: AppointmentManagementReportParams) => {
     const query = new URLSearchParams();
     if (params?.from) query.set("from", params.from);

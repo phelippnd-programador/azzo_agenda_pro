@@ -54,6 +54,7 @@ export const appRouteManifest = {
     root: "/profissionais",
     profile: "/profissionais/:id",
     commission: "/profissionais/:id/comissao",
+    myHistory: "/minha-producao",
   },
   clients: {
     root: "/clientes",

@@ -33,6 +33,7 @@ import {
   ProfessionalCommissionReport,
   ProfessionalCommissionSettings,
   ProfessionalFinancial,
+  MinhaProducao,
   ProfessionalProfile,
   Professionals,
   SalonProfile,
@@ -151,6 +152,7 @@ export function ProtectedRouteGroup({
       <Route path={appRouteManifest.finance.commissions} element={<ProtectedRoute><FinancialCommissions /></ProtectedRoute>} />
       <Route path={appRouteManifest.finance.professionalCommission} element={<ProtectedRoute><ProfessionalCommissionReport /></ProtectedRoute>} />
       <Route path={appRouteManifest.finance.professionals} element={<ProtectedRoute><ProfessionalFinancial /></ProtectedRoute>} />
+      <Route path={appRouteManifest.professionals.myHistory} element={<ProtectedRoute><MinhaProducao /></ProtectedRoute>} />
       <Route path={appRouteManifest.finance.license} element={<ProtectedRoute><LicensePage /></ProtectedRoute>} />
 
       <Route path={appRouteManifest.audit.root} element={<ProtectedRoute><Auditoria /></ProtectedRoute>} />
