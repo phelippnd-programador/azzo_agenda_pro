@@ -22,6 +22,7 @@ import {
   ShieldCheck,
   Tag,
   type LucideIcon,
+  TrendingUp,
   User,
   UserCircle,
   Users,
@@ -110,6 +111,11 @@ export const MENU_REGISTRY = {
     icon: Users,
     label: "Profissionais",
     path: appRouteManifest.professionals.root,
+  },
+  [appRouteManifest.professionals.myHistory]: {
+    icon: TrendingUp,
+    label: "Minha Producao",
+    path: appRouteManifest.professionals.myHistory,
   },
   [appRouteManifest.clients.root]: {
     icon: UserCircle,
@@ -215,6 +221,7 @@ export const MAIN_MENU_ORDER = [
   appRouteManifest.services.root,
   appRouteManifest.specialties.root,
   appRouteManifest.professionals.root,
+  appRouteManifest.professionals.myHistory,
   appRouteManifest.clients.root,
   appRouteManifest.shell.suggestions,
   appRouteManifest.chat.root,
@@ -357,6 +364,7 @@ export const SIDEBAR_SECTIONS = [
       appRouteManifest.audit.root,
       appRouteManifest.settings.systemAdmin,
       appRouteManifest.fiscal.root,
+      appRouteManifest.professionals.myHistory,
     ]),
   },
 ] as const;
