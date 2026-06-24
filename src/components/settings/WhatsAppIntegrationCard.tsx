@@ -441,19 +441,11 @@ export function WhatsAppIntegrationCard() {
     }
   };
 
-  // Persiste um campo isolado sem exigir phoneNumberId/token (já configurados)
-  const saveField = async (patch: Partial<Parameters<typeof whatsappApi.saveConfig>[0]>) => {
+  // Persiste preferências simples via PATCH — sem tocar em token ou phoneNumberId
+  const saveField = async (patch: import("@/lib/api/whatsapp").WhatsAppSettingsPatch) => {
     try {
       setIsSaving(true);
-      await whatsappApi.saveConfig({
-        whatsappEnabled: activateIntegration,
-        phoneNumberId: phoneNumberId.trim() || undefined,
-        usageProfile,
-        canSchedule,
-        canCancel,
-        canReschedule,
-        ...patch,
-      });
+      await whatsappApi.patchSettings(patch);
       toast.success("Configuracao salva");
       await queryClient.invalidateQueries({ queryKey: ["whatsapp-config"] });
     } catch (error) {

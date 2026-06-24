@@ -116,6 +116,14 @@ export interface WhatsAppTestMessageResponse {
   providerMessageId?: string;
 }
 
+export interface WhatsAppSettingsPatch {
+  whatsappEnabled?: boolean;
+  usageProfile?: WhatsAppUsageProfile;
+  canSchedule?: boolean;
+  canCancel?: boolean;
+  canReschedule?: boolean;
+}
+
 // ─── API Client ───────────────────────────────────────────────────────────────
 
 export const whatsappApi = {
@@ -125,6 +133,12 @@ export const whatsappApi = {
   saveConfig: (data: WhatsAppConfigRequest) =>
     request<WhatsAppConfigResponse>("/tenant/whatsapp", {
       method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  patchSettings: (data: WhatsAppSettingsPatch) =>
+    request<WhatsAppConfigResponse>("/tenant/whatsapp/settings", {
+      method: "PATCH",
       body: JSON.stringify(data),
     }),
 
