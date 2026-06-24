@@ -39,6 +39,8 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import type { PaymentMethod } from '@/types';
 import { OnboardingBanner } from '@/components/dashboard/OnboardingBanner';
+import { useCashClosingGuard } from '@/hooks/useCashClosingGuard';
+import { CashClosingGuardDialog } from '@/components/financial/CashClosingGuardDialog';
 
 const APPOINTMENT_PAYMENT_METHODS: Array<{ value: PaymentMethod; label: string }> = [
   { value: 'PIX', label: 'Pix' },
@@ -81,6 +83,15 @@ export default function Agenda() {
   const [isDeletingAppointment, setIsDeletingAppointment] = useState(false);
   const [completionAppointmentId, setCompletionAppointmentId] = useState<string | null>(null);
   const [completionPaymentMethod, setCompletionPaymentMethod] = useState<PaymentMethod | ''>('');
+
+  const {
+    guardState,
+    checkAfterCompletion,
+    dismissGuard,
+    openCashForToday,
+    closeStaleAndOpenToday,
+    keepStaleOpen,
+  } = useCashClosingGuard();
 
   const [monthlyMetrics, setMonthlyMetrics] = useState<Array<{ dia: number; quantidadeAgendamentos: number }>>([]);
   const [isLoadingMonthlyMetrics, setIsLoadingMonthlyMetrics] = useState(false);
@@ -393,6 +404,7 @@ export default function Agenda() {
       if (apt) await handleNfseOnAppointmentCompleted(apt);
       setCompletionAppointmentId(null);
       setCompletionPaymentMethod('');
+      void checkAfterCompletion();
     } catch {
       // tratado no hook
     }
@@ -858,6 +870,14 @@ export default function Agenda() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <CashClosingGuardDialog
+        guardState={guardState}
+        onOpenToday={openCashForToday}
+        onCloseStaleAndOpenToday={closeStaleAndOpenToday}
+        onKeepStaleOpen={keepStaleOpen}
+        onDismiss={dismissGuard}
+      />
     </MainLayout>
   );
 }
