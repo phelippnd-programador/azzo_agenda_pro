@@ -49,6 +49,18 @@ const toMinutes = (time: string) => {
   return Number(h) * 60 + Number(m);
 };
 
+// Paleta de cores para identificação visual de profissionais nas colunas
+const PROFESSIONAL_COLORS = [
+  { bg: 'bg-violet-50 dark:bg-violet-950/30', border: 'border-violet-200 dark:border-violet-800/50', dot: 'bg-violet-500', header: 'bg-violet-100/70 dark:bg-violet-900/40' },
+  { bg: 'bg-sky-50 dark:bg-sky-950/30', border: 'border-sky-200 dark:border-sky-800/50', dot: 'bg-sky-500', header: 'bg-sky-100/70 dark:bg-sky-900/40' },
+  { bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-800/50', dot: 'bg-emerald-500', header: 'bg-emerald-100/70 dark:bg-emerald-900/40' },
+  { bg: 'bg-rose-50 dark:bg-rose-950/30', border: 'border-rose-200 dark:border-rose-800/50', dot: 'bg-rose-500', header: 'bg-rose-100/70 dark:bg-rose-900/40' },
+  { bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200 dark:border-amber-800/50', dot: 'bg-amber-500', header: 'bg-amber-100/70 dark:bg-amber-900/40' },
+  { bg: 'bg-indigo-50 dark:bg-indigo-950/30', border: 'border-indigo-200 dark:border-indigo-800/50', dot: 'bg-indigo-500', header: 'bg-indigo-100/70 dark:bg-indigo-900/40' },
+  { bg: 'bg-teal-50 dark:bg-teal-950/30', border: 'border-teal-200 dark:border-teal-800/50', dot: 'bg-teal-500', header: 'bg-teal-100/70 dark:bg-teal-900/40' },
+  { bg: 'bg-orange-50 dark:bg-orange-950/30', border: 'border-orange-200 dark:border-orange-800/50', dot: 'bg-orange-500', header: 'bg-orange-100/70 dark:bg-orange-900/40' },
+];
+
 interface AgendaDayViewProps {
   appointments: Appointment[];
   professionals: Professional[];
@@ -56,6 +68,8 @@ interface AgendaDayViewProps {
   pagination: PaginationState;
   isProfessionalUser: boolean;
   canReassignAppointments: boolean;
+  columnMode?: boolean;
+  activeProfessionals?: Professional[];
   onAppointmentClick: (appointment: Appointment) => void;
   onStatusChange: (id: string, status: Appointment['status']) => void;
   onDeleteRequest: (id: string) => void;
@@ -70,6 +84,8 @@ export function AgendaDayView({
   pagination,
   isProfessionalUser,
   canReassignAppointments,
+  columnMode = false,
+  activeProfessionals,
   onAppointmentClick,
   onStatusChange,
   onDeleteRequest,
@@ -346,6 +362,191 @@ export function AgendaDayView({
   };
 
   const totalPages = Math.ceil(pagination.total / pagination.limit);
+
+  // --- Modo colunas por profissional ---
+  const columnProfessionals = useMemo(() => {
+    const base = activeProfessionals ?? professionals;
+    if (!base.length) return professionals;
+    // Mostra apenas profissionais que têm agendamento no dia OU todos os ativos (para ver slots livres)
+    return base;
+  }, [activeProfessionals, professionals]);
+
+  const appointmentsByProfessional = useMemo(() => {
+    const map = new Map<string, Map<string, Appointment[]>>();
+    for (const prof of columnProfessionals) {
+      map.set(prof.id, new Map());
+    }
+    for (const apt of appointments) {
+      if (!apt.professionalId) continue;
+      if (!map.has(apt.professionalId)) map.set(apt.professionalId, new Map());
+      const profMap = map.get(apt.professionalId)!;
+      const key = normalizeTime(apt.startTime);
+      if (!key) continue;
+      const existing = profMap.get(key) ?? [];
+      profMap.set(key, [...existing, apt]);
+    }
+    return map;
+  }, [appointments, columnProfessionals]);
+
+  const columnDisplayedSlots = useMemo(() => {
+    const appointmentTimes = appointments
+      .map((a) => normalizeTime(a.startTime))
+      .filter(Boolean);
+    const unique = new Set([...timeSlots, ...appointmentTimes]);
+    return Array.from(unique).sort((a, b) => toMinutes(a) - toMinutes(b));
+  }, [appointments]);
+
+  if (columnMode && columnProfessionals.length > 1) {
+    const colCount = columnProfessionals.length;
+    const gridCols = `68px repeat(${colCount}, minmax(180px, 1fr))`;
+
+    return (
+      <Card className="border-border/70 bg-card/96 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.14)]">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <div style={{ minWidth: `${68 + colCount * 180}px` }}>
+              {/* Cabeçalho de profissionais */}
+              <div
+                className="grid border-b border-border/60 bg-muted/25 sticky top-0 z-10"
+                style={{ gridTemplateColumns: gridCols }}
+              >
+                <div className="border-r border-border/60 p-3 flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                </div>
+                {columnProfessionals.map((prof, idx) => {
+                  const color = PROFESSIONAL_COLORS[idx % PROFESSIONAL_COLORS.length];
+                  const count = appointments.filter((a) => a.professionalId === prof.id).length;
+                  return (
+                    <div
+                      key={prof.id}
+                      className={`border-r border-border/60 last:border-r-0 p-3 ${color.header}`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="relative flex-shrink-0">
+                          <Avatar className="w-8 h-8">
+                            <AvatarImage src={prof.avatar} />
+                            <AvatarFallback className="text-xs font-semibold">
+                              {prof.name?.slice(0, 2).toUpperCase() ?? '??'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-background ${color.dot}`} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold truncate leading-tight">{prof.name}</p>
+                          <p className="text-[10px] text-muted-foreground">{count} agend.</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Grade de horários */}
+              <div className="max-h-[600px] overflow-y-auto divide-y divide-border/40">
+                {columnDisplayedSlots.map((time) => {
+                  const hasAnyApt = columnProfessionals.some(
+                    (p) => (appointmentsByProfessional.get(p.id)?.get(time)?.length ?? 0) > 0,
+                  );
+                  return (
+                    <div
+                      key={time}
+                      className={`grid min-h-[72px] ${hasAnyApt ? '' : 'min-h-[52px]'}`}
+                      style={{ gridTemplateColumns: gridCols }}
+                    >
+                      <div className="border-r border-border/60 bg-muted/25 px-2 py-3 text-center text-xs font-medium text-muted-foreground flex-shrink-0">
+                        <span className="inline-flex rounded-full bg-background/85 px-1.5 py-0.5 shadow-sm text-[11px]">
+                          {time}
+                        </span>
+                      </div>
+                      {columnProfessionals.map((prof, idx) => {
+                        const color = PROFESSIONAL_COLORS[idx % PROFESSIONAL_COLORS.length];
+                        const slotApts = appointmentsByProfessional.get(prof.id)?.get(time) ?? [];
+                        return (
+                          <div
+                            key={prof.id}
+                            className={`border-r border-border/40 last:border-r-0 p-1.5 ${color.bg}`}
+                          >
+                            {slotApts.map((apt) => {
+                              const client = apt.client ?? null;
+                              const serviceLabel = getAppointmentServiceLabel(apt);
+                              return (
+                                <div
+                                  key={apt.id}
+                                  className={`rounded-md p-2 mb-1 last:mb-0 cursor-pointer hover:shadow-md hover:-translate-y-px transition-all duration-150 border ${color.border} ${getStatusColor(apt.status)}`}
+                                  onClick={() => onAppointmentClick(apt)}
+                                >
+                                  <div className="flex items-start justify-between gap-1">
+                                    <div className="min-w-0 flex-1">
+                                      <p className="font-semibold text-[11px] leading-tight truncate">
+                                        {client?.name || 'Cliente'}
+                                      </p>
+                                      <p className="text-[10px] opacity-75 truncate leading-tight mt-0.5">
+                                        {serviceLabel}
+                                      </p>
+                                      <p className="text-[10px] opacity-50 mt-0.5">
+                                        {normalizeTime(apt.startTime)} – {normalizeTime(apt.endTime)}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-0.5 flex-shrink-0">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6"
+                                        onClick={(e) => { e.stopPropagation(); onAppointmentClick(apt); }}
+                                      >
+                                        <Eye className="w-3 h-3" />
+                                      </Button>
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            <MoreVertical className="w-3 h-3" />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                          {(allowedTransitions[apt.status] ?? []).includes('CONFIRMED') && (
+                                            <DropdownMenuItem onClick={() => onStatusChange(apt.id, 'CONFIRMED')}>Confirmar</DropdownMenuItem>
+                                          )}
+                                          {(allowedTransitions[apt.status] ?? []).includes('IN_PROGRESS') && (
+                                            <DropdownMenuItem onClick={() => onStatusChange(apt.id, 'IN_PROGRESS')}>Iniciar atendimento</DropdownMenuItem>
+                                          )}
+                                          {(allowedTransitions[apt.status] ?? []).includes('COMPLETED') && (
+                                            <DropdownMenuItem onClick={() => onStatusChange(apt.id, 'COMPLETED')}>Concluir</DropdownMenuItem>
+                                          )}
+                                          {(allowedTransitions[apt.status] ?? []).includes('NO_SHOW') && (
+                                            <DropdownMenuItem onClick={() => onStatusChange(apt.id, 'NO_SHOW')}>Não compareceu</DropdownMenuItem>
+                                          )}
+                                          {!isProfessionalUser && canReassignAppointments && (
+                                            <DropdownMenuItem onClick={() => onReassignRequest(apt)}>Realocar profissional</DropdownMenuItem>
+                                          )}
+                                          {(allowedTransitions[apt.status] ?? []).includes('CANCELLED') && (
+                                            <DropdownMenuItem className="text-red-600" onClick={() => onStatusChange(apt.id, 'CANCELLED')}>Cancelar</DropdownMenuItem>
+                                          )}
+                                          <DropdownMenuItem className="text-red-600" onClick={() => onDeleteRequest(apt.id)}>Excluir</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <>
