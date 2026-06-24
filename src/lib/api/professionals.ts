@@ -26,6 +26,11 @@ export const professionalsApi = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+  toggleStatus: (id: string, isActive: boolean) =>
+    request<Professional>(`/professionals/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ isActive }),
+    }),
   delete: (id: string) =>
     request<void>(`/professionals/${id}`, {
       method: "DELETE",
