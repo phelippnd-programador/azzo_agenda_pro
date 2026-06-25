@@ -350,7 +350,6 @@ export default function ServicesOverviewPage() {
                     <div className="space-y-2">
                       <Label>Preco (R$) *</Label>
                       <CurrencyInput
-                        cents
                         value={formPrice}
                         onChange={(val) => setFormPrice(val)}
                       />
