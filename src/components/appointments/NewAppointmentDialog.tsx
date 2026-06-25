@@ -149,8 +149,6 @@ export function NewAppointmentDialog({
     !!selectedNewService &&
     hasProfessionalsForSelectedService &&
     isEffectiveProfessionalValid;
-  const noSlotsForDate = canFetch && !isLoadingSlots && !slotsError && slots.length === 0;
-  const canChooseSlot = canChooseDate && !!newDate && !noSlotsForDate;
   const canSubmit =
     !!newClientId &&
     !!newServiceId &&
@@ -181,6 +179,9 @@ export function NewAppointmentDialog({
     bufferMinutes: 0,
     mode: 'manual',
   });
+
+  const noSlotsForDate = canFetch && !isLoadingSlots && !slotsError && slots.length === 0;
+  const canChooseSlot = canChooseDate && !!newDate && !noSlotsForDate;
 
   const selectedSlot = useMemo(
     () =>
