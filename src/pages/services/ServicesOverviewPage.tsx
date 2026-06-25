@@ -117,7 +117,7 @@ export default function ServicesOverviewPage() {
     setFormName(service.name);
     setFormDescription(service.description);
     setFormDuration(String(service.duration));
-    setFormPrice(service.price);
+    setFormPrice(Math.round(service.price * 100));
     setFormCategory(service.category);
     setFormProfessionalIds(Array.isArray(service.professionalIds) ? service.professionalIds : []);
     setFormIsActive(service.isActive);
@@ -145,7 +145,7 @@ export default function ServicesOverviewPage() {
         name: formName,
         description: formDescription,
         duration: parseInt(formDuration),
-        price: formPrice,
+        price: formPrice / 100,
         category: formCategory,
         professionalIds: formProfessionalIds,
         isActive: formIsActive,
@@ -350,6 +350,7 @@ export default function ServicesOverviewPage() {
                     <div className="space-y-2">
                       <Label>Preco (R$) *</Label>
                       <CurrencyInput
+                        cents
                         value={formPrice}
                         onChange={(val) => setFormPrice(val)}
                       />
