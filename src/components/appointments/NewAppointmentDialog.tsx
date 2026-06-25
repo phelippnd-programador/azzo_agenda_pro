@@ -149,7 +149,8 @@ export function NewAppointmentDialog({
     !!selectedNewService &&
     hasProfessionalsForSelectedService &&
     isEffectiveProfessionalValid;
-  const canChooseSlot = canChooseDate && !!newDate;
+  const noSlotsForDate = canFetch && !isLoadingSlots && !slotsError && slots.length === 0;
+  const canChooseSlot = canChooseDate && !!newDate && !noSlotsForDate;
   const canSubmit =
     !!newClientId &&
     !!newServiceId &&
@@ -484,6 +485,7 @@ export function NewAppointmentDialog({
             canChooseProfessional={canChooseProfessional}
             canChooseDate={canChooseDate}
             canChooseSlot={canChooseSlot}
+            noSlotsForDate={noSlotsForDate}
             selectedServiceDuration={selectedServiceDuration}
             selectedServicePrice={selectedServicePrice}
             discountInput={newDiscountInput}

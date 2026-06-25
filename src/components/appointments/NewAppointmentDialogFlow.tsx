@@ -56,6 +56,7 @@ type NewAppointmentDialogFlowProps = {
   canChooseProfessional: boolean;
   canChooseDate: boolean;
   canChooseSlot: boolean;
+  noSlotsForDate: boolean;
   selectedServiceDuration: number;
   selectedServicePrice: number;
   discountInput: number;
@@ -103,6 +104,7 @@ export function NewAppointmentDialogFlow({
   canChooseProfessional,
   canChooseDate,
   canChooseSlot,
+  noSlotsForDate,
   selectedServiceDuration,
   selectedServicePrice,
   discountInput,
@@ -406,9 +408,15 @@ export function NewAppointmentDialogFlow({
           <Input
             type="date"
             value={newDate}
+            min={new Date().toISOString().slice(0, 10)}
             disabled={!canChooseDate}
             onChange={(event) => onDateChange(event.target.value)}
           />
+          {noSlotsForDate && (
+            <p className="text-xs text-destructive">
+              Nenhum horario disponivel nesta data. Escolha outra data.
+            </p>
+          )}
         </div>
 
         <div
