@@ -187,7 +187,7 @@ export default function MinhaProducao() {
                 <p className="text-2xl font-bold text-red-500">{data.totalCancelled}</p>
                 <p className="text-xs text-muted-foreground">
                   {data.cancellationRate != null
-                    ? `${(data.cancellationRate * 100).toFixed(1)}% de cancelamento`
+                    ? `${(data.cancellationRate).toFixed(1)}% de cancelamento`
                     : "-"}
                 </p>
               </CardContent>
