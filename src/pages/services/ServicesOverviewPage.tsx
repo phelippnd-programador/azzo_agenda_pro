@@ -42,7 +42,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, Clock, MoreVertical, Scissors, Loader2 } from 'lucide-react';
-import { CurrencyInput } from '@/components/ui/currency-input';
 import { useServices } from '@/hooks/useServices';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { useProfessionals } from '@/hooks/useProfessionals';
@@ -117,7 +116,7 @@ export default function ServicesOverviewPage() {
     setFormName(service.name);
     setFormDescription(service.description);
     setFormDuration(String(service.duration));
-    setFormPrice(Math.round(service.price * 100));
+    setFormPrice(service.price);
     setFormCategory(service.category);
     setFormProfessionalIds(Array.isArray(service.professionalIds) ? service.professionalIds : []);
     setFormIsActive(service.isActive);
@@ -145,7 +144,7 @@ export default function ServicesOverviewPage() {
         name: formName,
         description: formDescription,
         duration: parseInt(formDuration),
-        price: formPrice / 100,
+        price: formPrice,
         category: formCategory,
         professionalIds: formProfessionalIds,
         isActive: formIsActive,
@@ -349,10 +348,14 @@ export default function ServicesOverviewPage() {
                     </div>
                     <div className="space-y-2">
                       <Label>Preco (R$) *</Label>
-                      <CurrencyInput
-                        cents
-                        value={formPrice}
-                        onChange={(val) => setFormPrice(val)}
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        min="0"
+                        value={formPrice || ''}
+                        onChange={(e) => setFormPrice(parseFloat(e.target.value) || 0)}
+                        placeholder="0,00"
                       />
                     </div>
                   </div>
