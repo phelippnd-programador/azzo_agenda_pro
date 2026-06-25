@@ -506,6 +506,7 @@ export function NewAppointmentDialogFlow({
             <TabsContent value="suggested" className="space-y-3">
               <AvailableSlotsList
                 slots={slots}
+                date={newDate}
                 isLoading={isLoadingSlots}
                 error={slotsError}
                 canFetch={canFetch}

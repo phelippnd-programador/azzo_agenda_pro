@@ -4,6 +4,7 @@ import type { ManualTimeSlotResponse } from "@/types/available-slots";
 
 type AvailableSlotsListProps = {
   slots: ManualTimeSlotResponse[];
+  date: string;
   isLoading: boolean;
   error: string | null;
   canFetch: boolean;
@@ -13,12 +14,18 @@ type AvailableSlotsListProps = {
 
 export function AvailableSlotsList({
   slots,
+  date,
   isLoading,
   error,
   canFetch,
   selectedStartTime,
   onSelect,
 }: AvailableSlotsListProps) {
+  const today = new Date().toISOString().slice(0, 10);
+  const nowTime = new Date().toTimeString().slice(0, 5);
+  const visibleSlots = date === today
+    ? slots.filter((slot) => String(slot.startTime).slice(0, 5) > nowTime)
+    : slots;
   if (!canFetch) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -35,12 +42,12 @@ export function AvailableSlotsList({
     return <p className="text-sm text-red-600">{error}</p>;
   }
 
-  if (!slots.length) {
+  if (!visibleSlots.length) {
     return <p className="text-sm text-muted-foreground">Nenhum horario disponivel para esta selecao.</p>;
   }
 
-  const availableSlots = slots.filter((slot) => !slot.conflicting);
-  const conflictSlots = slots.filter((slot) => slot.conflicting);
+  const availableSlots = visibleSlots.filter((slot) => !slot.conflicting);
+  const conflictSlots = visibleSlots.filter((slot) => slot.conflicting);
 
   const renderSlotButton = (slot: ManualTimeSlotResponse, index: number, highlighted = false) => (
     <Button
