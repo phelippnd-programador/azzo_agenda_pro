@@ -9,29 +9,26 @@ const buildPath = (basePath: string, slug: string) => {
   return normalizedBasePath ? `/${normalizedBasePath}/agendar/${slug}` : `/agendar/${slug}`;
 };
 
-export const resolvePublicAppBaseUrl = () => {
-  const raw =
-    (import.meta.env.NEXT_PUBLIC_APP_URL as string | undefined) ||
-    (import.meta.env.VITE_PUBLIC_BOOKING_BASE_URL as string | undefined) ||
-    window.location.origin;
-
-  const normalized = normalizeBaseUrl(raw || "");
-  if (!normalized) {
-    throw new Error("NEXT_PUBLIC_APP_URL nao configurada");
-  }
-
-  let url: URL;
+const resolveCandidate = (raw: string | undefined): URL | null => {
+  if (!raw) return null;
   try {
-    url = new URL(normalized);
+    const url = new URL(normalizeBaseUrl(raw));
+    if (import.meta.env.PROD && isLocalHost(url.hostname)) return null;
+    return url;
   } catch {
-    throw new Error("NEXT_PUBLIC_APP_URL invalida");
+    return null;
   }
+};
 
-  if (import.meta.env.PROD && isLocalHost(url.hostname)) {
-    throw new Error("NEXT_PUBLIC_APP_URL nao pode usar localhost em producao");
-  }
+export const resolvePublicAppBaseUrl = (): string => {
+  const fromEnv =
+    resolveCandidate(import.meta.env.NEXT_PUBLIC_APP_URL as string | undefined) ??
+    resolveCandidate(import.meta.env.VITE_PUBLIC_BOOKING_BASE_URL as string | undefined);
 
-  return normalizeBaseUrl(url.toString());
+  if (fromEnv) return normalizeBaseUrl(fromEnv.toString());
+
+  // Fallback seguro: o browser sempre conhece a URL real, inclusive em producao
+  return normalizeBaseUrl(window.location.origin);
 };
 
 export const buildPublicBookingUrl = (salonSlug: string, absoluteBaseUrl?: string) => {
