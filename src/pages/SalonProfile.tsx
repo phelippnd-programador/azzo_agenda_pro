@@ -90,6 +90,7 @@ export default function SalonProfile() {
   const persistSalonSlug = (value: string) => {
     if (!value?.trim()) return;
     localStorage.setItem('salon_public_slug', value.trim());
+    window.dispatchEvent(new CustomEvent('salon_slug_updated', { detail: value.trim() }));
   };
 
   const unlockAddressFields = () => setLockedAddressFields(emptyLockedFields);

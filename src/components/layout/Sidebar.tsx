@@ -124,6 +124,12 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
     if (cachedSlug?.trim()) {
       setSalonSlug(cachedSlug.trim());
     }
+
+    const handleSlugUpdate = (e: CustomEvent<string>) => {
+      if (e.detail?.trim()) setSalonSlug(e.detail.trim());
+    };
+    window.addEventListener("salon_slug_updated", handleSlugUpdate as EventListener);
+    return () => window.removeEventListener("salon_slug_updated", handleSlugUpdate as EventListener);
   }, []);
 
   const handleLogout = async () => {
