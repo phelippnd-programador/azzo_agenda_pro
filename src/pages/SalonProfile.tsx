@@ -202,6 +202,15 @@ export default function SalonProfile() {
   };
 
   const handleSave = async () => {
+    const digits = onlyDigits(salonCpfCnpj);
+    if (!digits) {
+      toast.error("CPF ou CNPJ do salão é obrigatório");
+      return;
+    }
+    if (digits.length !== 11 && digits.length !== 14) {
+      toast.error("CPF deve ter 11 dígitos ou CNPJ deve ter 14 dígitos");
+      return;
+    }
     setIsLoading(true);
     try {
       const profileData: Partial<SalonProfileData> = {

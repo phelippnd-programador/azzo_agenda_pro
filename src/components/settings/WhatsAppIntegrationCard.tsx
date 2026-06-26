@@ -2,6 +2,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
+  AlertTriangle,
   CheckCircle2,
   Loader2,
   Phone,
@@ -888,6 +889,19 @@ export function WhatsAppIntegrationCard() {
               </label>
             ))}
           </div>
+
+          {(usageProfile === "REACTIVE_ONLY" || usageProfile === "COMPLETE") && (
+            <Alert className="mt-3 border-amber-200 bg-amber-50 text-amber-900">
+              <AlertTriangle className="h-4 w-4 !text-amber-700" />
+              <AlertTitle className="text-amber-800">Aviso de Privacidade</AlertTitle>
+              <AlertDescription className="text-amber-700">
+                Ao ativar o assistente IA, as mensagens recebidas via WhatsApp serao
+                processadas por um servico de inteligencia artificial externo (Groq, EUA)
+                para gerar respostas automaticas. As mensagens nao sao armazenadas
+                permanentemente pelo servico externo.
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
 
         <div className="rounded-lg border p-3">
