@@ -46,7 +46,7 @@ import { useServices } from '@/hooks/useServices';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { toast } from 'sonner';
-import { formatCurrencyCents } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
 
 const categories = ['Todos', 'Cabelo', 'Barba', 'Unhas', 'Estetica', 'Maquiagem', 'Outros'];
@@ -610,7 +610,7 @@ export default function ServicesOverviewPage() {
                     <span className="text-xs sm:text-sm">{service.duration} min</span>
                   </div>
                   <div className="flex items-center gap-1 font-semibold text-primary">
-                    <span className="text-sm sm:text-base">{formatCurrencyCents(service.price)}</span>
+                    <span className="text-sm sm:text-base">{formatCurrency(service.price)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -668,7 +668,7 @@ export default function ServicesOverviewPage() {
                       {service.duration} min
                     </TableCell>
                     <TableCell className="text-right font-medium text-primary">
-                      {formatCurrencyCents(service.price)}
+                      {formatCurrency(service.price)}
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant={service.isActive ? 'default' : 'outline'} className="text-[10px] sm:text-xs">
