@@ -38,7 +38,7 @@ import { FinancialFiltersPanel, type FinancialFilters } from '@/components/finan
 import { useTransactions, useTransactionCategories, getDateRangeFromFilter } from '@/hooks/useTransactions';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { transactionsApi } from '@/lib/api';
-import { formatCurrencyCents } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 import { toast } from 'sonner';
 import type { Transaction } from '@/types';
 
@@ -188,8 +188,8 @@ export default function Financial() {
       <div className="space-y-4 sm:space-y-6">
         <ModuleIntro
           eyebrow="Caixa e receita"
-          title="Leia o saldo primeiro, depois filtre a operação e só então entre no detalhe dos lançamentos."
-          description="A tela foi organizada para separar visão financeira, área de trabalho e lista operacional sem misturar tudo no mesmo bloco."
+          title="Leia o saldo primeiro, depois filtre a operaÃ§Ã£o e sÃ³ entÃ£o entre no detalhe dos lanÃ§amentos."
+          description="A tela foi organizada para separar visÃ£o financeira, Ã¡rea de trabalho e lista operacional sem misturar tudo no mesmo bloco."
           badges={[
             { label: `${totalCount} lancamento(s)` },
             { label: `${activeFilterCount} filtro(s)` },
@@ -198,18 +198,18 @@ export default function Financial() {
           points={[
             {
               eyebrow: 'Leitura principal',
-              title: 'Saldo e direção do caixa',
-              description: 'Comece pelo saldo e compare entradas e saídas antes de abrir filtros ou exportações.',
+              title: 'Saldo e direÃ§Ã£o do caixa',
+              description: 'Comece pelo saldo e compare entradas e saÃ­das antes de abrir filtros ou exportaÃ§Ãµes.',
             },
             {
               eyebrow: 'Operacao',
               title: 'Filtre, registre e concilie',
-              description: 'Use a barra de ações para filtrar período, abrir o fluxo de caixa e registrar novos lançamentos.',
+              description: 'Use a barra de aÃ§Ãµes para filtrar perÃ­odo, abrir o fluxo de caixa e registrar novos lanÃ§amentos.',
             },
             {
               eyebrow: 'Proximo passo',
-              title: 'Revise a lista após aplicar contexto',
-              description: 'A lista de transações fica mais útil depois que você define recorte, categoria e profissional.',
+              title: 'Revise a lista apÃ³s aplicar contexto',
+              description: 'A lista de transaÃ§Ãµes fica mais Ãºtil depois que vocÃª define recorte, categoria e profissional.',
             },
           ]}
         />
@@ -217,7 +217,7 @@ export default function Financial() {
         <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
           <HighlightMetricCard
             title="Entradas"
-            value={formatCurrencyCents(summary.totalIncome)}
+            value={formatCurrency(summary.totalIncome)}
             icon={TrendingUp}
             className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 dark:border-green-500/20 dark:from-green-500/10 dark:to-emerald-500/5"
             titleClassName="text-green-700 dark:text-green-300"
@@ -227,7 +227,7 @@ export default function Financial() {
           />
           <HighlightMetricCard
             title="Saidas"
-            value={formatCurrencyCents(summary.totalExpenses)}
+            value={formatCurrency(summary.totalExpenses)}
             icon={TrendingDown}
             className="border-red-200 bg-gradient-to-br from-red-50 to-rose-50 dark:border-red-500/20 dark:from-red-500/10 dark:to-rose-500/5"
             titleClassName="text-red-700 dark:text-red-300"
@@ -237,7 +237,7 @@ export default function Financial() {
           />
           <HighlightMetricCard
             title="Saldo"
-            value={formatCurrencyCents(summary.balance)}
+            value={formatCurrency(summary.balance)}
             icon={Wallet}
             className={
               summary.balance >= 0
@@ -253,8 +253,8 @@ export default function Financial() {
 
         <WorkspaceNotice
           title="Area de trabalho financeira"
-          description="Ajuste período, filtros, visões auxiliares e crie lançamentos sem perder o contexto do caixa atual."
-          badge={`Saldo atual: ${formatCurrencyCents(summary.balance)}`}
+          description="Ajuste perÃ­odo, filtros, visÃµes auxiliares e crie lanÃ§amentos sem perder o contexto do caixa atual."
+          badge={`Saldo atual: ${formatCurrency(summary.balance)}`}
         />
 
         <div className="space-y-3">

@@ -24,7 +24,7 @@ import {
   Smartphone,
   Wallet,
 } from 'lucide-react';
-import { formatCurrencyCents, formatDateOnly } from '@/lib/format';
+import { formatCurrency, formatDateOnly } from '@/lib/format';
 import type { Transaction } from '@/types';
 
 const PAYMENT_METHODS = [
@@ -163,7 +163,7 @@ export function TransactionList({
                           }`}
                         >
                           {isIncome ? '+' : '-'}
-                          {formatCurrencyCents(transaction.amount)}
+                          {formatCurrency(transaction.amount)}
                         </p>
                         <p className="text-[10px] text-muted-foreground sm:text-xs">{formatDateOnly(transaction.date)}</p>
                       </div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { formatCurrencyCents } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useProfessionals } from "@/hooks/useProfessionals";
 import { useAuth } from "@/contexts/AuthContext";
@@ -457,7 +457,7 @@ export default function ProfessionalFinancial() {
               <CardContent className="flex items-start justify-between gap-3 p-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Faturamento</p>
-                  <p className="text-xl font-bold text-foreground">{formatCurrencyCents(totals.revenue)}</p>
+                  <p className="text-xl font-bold text-foreground">{formatCurrency(totals.revenue)}</p>
                 </div>
                 <DollarSign className="h-5 w-5 text-muted-foreground" />
               </CardContent>
@@ -467,7 +467,7 @@ export default function ProfessionalFinancial() {
             <CardContent className="flex items-start justify-between gap-3 p-4">
               <div>
                 <p className="text-sm text-muted-foreground">Comissao total</p>
-                <p className="text-xl font-bold text-primary">{formatCurrencyCents(totals.commission)}</p>
+                <p className="text-xl font-bold text-primary">{formatCurrency(totals.commission)}</p>
               </div>
               <DollarSign className="h-5 w-5 text-primary/70" />
             </CardContent>
@@ -515,7 +515,7 @@ export default function ProfessionalFinancial() {
                             }).format(Number(value))
                           }
                         />
-                        <Tooltip formatter={(value) => formatCurrencyCents(Number(value))} />
+                        <Tooltip formatter={(value) => formatCurrency(Number(value))} />
                         <Legend />
                         <Bar dataKey="revenue" fill="#7c3aed" name="Faturamento" radius={[6, 6, 0, 0]} />
                         <Bar dataKey="commission" fill="#0ea5e9" name="Comissao" radius={[6, 6, 0, 0]} />
@@ -569,7 +569,7 @@ export default function ProfessionalFinancial() {
                     </p>
                     {metricItem ? (
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {metricItem.totalAppointments} ag. • {metricItem.completedAppointments} concl. •{" "}
+                        {metricItem.totalAppointments} ag. â€¢ {metricItem.completedAppointments} concl. â€¢{" "}
                         {metricItem.canceledAppointments} cancel.
                       </p>
                     ) : null}
@@ -613,7 +613,7 @@ export default function ProfessionalFinancial() {
                             | (typeof servicesChartData)[number]
                             | undefined;
                           if (!item) return label;
-                          return `${label} - Total ${item.totalAppointments} - ${formatCurrencyCents(
+                          return `${label} - Total ${item.totalAppointments} - ${formatCurrency(
                             item.revenueTotal
                           )}`;
                         }}
@@ -709,7 +709,7 @@ export default function ProfessionalFinancial() {
                         Faturamento
                       </span>
                       <span className="hidden text-muted-foreground md:inline">Faturamento:</span>{" "}
-                      {formatCurrencyCents(item.revenue)}
+                      {formatCurrency(item.revenue)}
                     </div>
                   ) : null}
                   <div className="rounded-md bg-muted/30 px-3 py-2 text-sm text-muted-foreground md:bg-transparent md:p-0">
@@ -717,7 +717,7 @@ export default function ProfessionalFinancial() {
                       Comissao
                     </span>
                     <span className="hidden text-muted-foreground md:inline">Comissao:</span>{" "}
-                    {formatCurrencyCents(item.commission)}
+                    {formatCurrency(item.commission)}
                   </div>
                   <div className="rounded-md bg-muted/30 px-3 py-2 text-sm text-muted-foreground md:bg-transparent md:p-0">
                     <span className="block text-xs uppercase tracking-wide text-muted-foreground/80 md:hidden">

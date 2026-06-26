@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MetricCard } from "@/components/dashboard/MetricCard";
-import { formatCurrencyCents, formatDateOnly } from "@/lib/format";
+import { formatCurrency, formatDateOnly } from "@/lib/format";
 
 const calculateGrowthPercent = (current: number, previous?: number | null): number | null => {
   if (!previous || previous <= 0) return null;
@@ -91,7 +91,7 @@ export function NoShowInsights() {
           />
           <MetricCard
             title="Receita em risco"
-            value={isLoading ? "..." : formatCurrencyCents(data?.revenueAtRisk ?? 0)}
+            value={isLoading ? "..." : formatCurrency(data?.revenueAtRisk ?? 0)}
             icon={ReceiptText}
             iconClassName="bg-slate-700 dark:bg-slate-200"
             className="tone-surface border-slate-200 dark:border-slate-700"
@@ -131,7 +131,7 @@ export function NoShowInsights() {
                     <div>
                       <p className="font-medium text-slate-900">{appointment.clientName || "Cliente nao identificado"}</p>
                       <p className="text-sm text-muted-foreground">
-                        {(appointment.serviceNames || []).join(", ") || "Servico nao identificado"} • {appointment.professionalName || "Profissional nao identificado"}
+                        {(appointment.serviceNames || []).join(", ") || "Servico nao identificado"} â€¢ {appointment.professionalName || "Profissional nao identificado"}
                       </p>
                     </div>
                     <Badge variant="outline" className="border-rose-200 bg-rose-50 text-rose-800">
@@ -141,7 +141,7 @@ export function NoShowInsights() {
                   <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
                     <span>{appointment.date ? formatDateOnly(appointment.date) : "-"}</span>
                     <span>{appointment.startTime} - {appointment.endTime}</span>
-                    <span>{formatCurrencyCents(appointment.totalPrice || 0)}</span>
+                    <span>{formatCurrency(appointment.totalPrice || 0)}</span>
                   </div>
                 </div>
               ))}

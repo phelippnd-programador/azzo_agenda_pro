@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { RankedBarCard } from '@/components/common/RankedBarCard';
 import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
 import { useNavigate } from 'react-router-dom';
@@ -25,7 +25,7 @@ import { dashboardApi } from '@/lib/api';
 import { shouldForceLogoutOnDashboardRetry } from '@/lib/dashboard-auth-retry';
 import type { DashboardCustomerRankingResponse } from '@/types';
 import type { DashboardProfessionalMetricsResponse } from '@/lib/api';
-import { formatCurrency, formatCurrencyCents } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 
 const normalizeDateToIso = (value: unknown) => {
   if (!value) return '';
@@ -292,7 +292,7 @@ export default function Dashboard() {
             professionalAppointments.length > 0 ? `${professionalAppointments.length} atendimento(s)` : undefined,
           metaText:
             professionalAppointments.length > 0
-              ? `${formatCurrencyCents(revenueTotal)} · ${clientsServed} cliente(s)`
+              ? `${formatCurrency(revenueTotal)} · ${clientsServed} cliente(s)`
               : undefined,
         };
       })
@@ -479,7 +479,7 @@ export default function Dashboard() {
             />
             <MetricCard
               title={isProfessionalUser ? 'Faturamento no periodo' : 'Faturamento Hoje'}
-              value={isProfessionalUser ? formatCurrencyCents(resolvedMetrics.todayRevenue) : formatCurrency(resolvedMetrics.todayRevenue)}
+              value={isProfessionalUser ? formatCurrency(resolvedMetrics.todayRevenue) : formatCurrency(resolvedMetrics.todayRevenue)}
               icon={DollarSign}
               trend={
                 isProfessionalUser
@@ -512,7 +512,7 @@ export default function Dashboard() {
             />
             <MetricCard
               title={isProfessionalUser ? 'Comissao no periodo' : 'Faturamento Mensal'}
-              value={isProfessionalUser ? formatCurrencyCents(resolvedMetrics.monthlyRevenue) : formatCurrency(resolvedMetrics.monthlyRevenue)}
+              value={isProfessionalUser ? formatCurrency(resolvedMetrics.monthlyRevenue) : formatCurrency(resolvedMetrics.monthlyRevenue)}
               icon={TrendingUp}
               trend={
                 isProfessionalUser
@@ -788,7 +788,7 @@ export default function Dashboard() {
                   id: item.clientId,
                   name: item.clientName,
                   value: item.completedServices,
-                  badgeText: formatCurrencyCents(item.revenueTotal),
+                  badgeText: formatCurrency(item.revenueTotal),
                   metaText: `${item.completedServices} serviço(s) - ${item.completedAppointments} atendimento(s) - última: ${item.lastAppointmentDate ? new Date(`${item.lastAppointmentDate}T12:00:00`).toLocaleDateString('pt-BR') : '-'
                     }`,
                 }))}
@@ -821,7 +821,7 @@ export default function Dashboard() {
                 id: item.clientId,
                 name: item.clientName,
                 value: item.completedServices,
-                badgeText: formatCurrencyCents(item.revenueTotal),
+                badgeText: formatCurrency(item.revenueTotal),
                 metaText: `${item.completedServices} serviço(s) - ${item.completedAppointments} atendimento(s) - última: ${item.lastAppointmentDate ? new Date(`${item.lastAppointmentDate}T12:00:00`).toLocaleDateString('pt-BR') : '-'
                   }`,
               }))}
