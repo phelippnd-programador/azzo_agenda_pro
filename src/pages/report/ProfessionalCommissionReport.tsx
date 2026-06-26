@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { commissionApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import type { CommissionProfessionalReportResponse } from "@/types/commission";
-import { formatCurrencyCents as formatCurrency, toDateKey } from "@/lib/format";
+import { formatCurrency, toDateKey } from "@/lib/format";
 
 const getOriginLabel = (originType: string) => {
   if (originType === "SERVICE") return "Servico";

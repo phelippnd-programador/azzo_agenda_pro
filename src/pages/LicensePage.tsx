@@ -35,7 +35,7 @@ import { ApiError, salonApi } from '@/lib/api';
 import { useCheckoutProducts } from '@/hooks/useCheckoutProducts';
 import { useLicenseAccess } from '@/hooks/useLicenseAccess';
 import { maskCpfCnpj } from '@/lib/input-masks';
-import { formatCurrencyCents } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 import {
   toDigits, formatCurrency, formatDate,
   getLicenseStatus, getCurrentPaymentStatus, getCurrentPaymentDueDate,
@@ -445,7 +445,7 @@ export default function LicensePage() {
                     <div className="rounded-lg border p-3">
                       <p className="text-xs text-muted-foreground">Valor</p>
                       <p className="mt-1 font-medium text-foreground">
-                        {formatCurrencyCents(result?.amountCents || selectedPlan?.amountCents || 0)}
+                        {formatCurrency(result?.amountCents || selectedPlan?.amountCents || 0)}
                       </p>
                     </div>
                   </CardContent>

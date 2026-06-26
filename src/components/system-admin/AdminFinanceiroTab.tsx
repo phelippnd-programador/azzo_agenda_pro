@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { billingApi, systemAdminApi } from '@/lib/api';
-import { formatCurrencyCents } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 import { toast } from 'sonner';
 import type { SystemPlanItem, SystemPlanUpsertRequest } from '@/types/system-admin';
 import type { BillingPaymentItem } from '@/types/billing';
@@ -262,7 +262,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
                             {plan.trial ? 'TRIAL' : 'PAGO'}
                           </Badge>
                         </td>
-                        <td className="px-3 py-2">{formatCurrencyCents(Number(plan.priceCents || 0))}</td>
+                        <td className="px-3 py-2">{formatCurrency(Number(plan.priceCents || 0))}</td>
                         <td className="px-3 py-2">{plan.validityDays || plan.validityMonths * 30} dias</td>
                         <td className="px-3 py-2">{plan.maxProfessionals ?? '-'}</td>
                         <td className="px-3 py-2">{plan.priority}</td>
@@ -336,7 +336,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
                           {payment.asaasPaymentId} - {payment.billingType}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Valor: {formatCurrencyCents(Number(payment.amountCents || 0))} | Vencimento:{' '}
+                          Valor: {formatCurrency(Number(payment.amountCents || 0))} | Vencimento:{' '}
                           {payment.dueDate || '-'}
                         </p>
                       </div>

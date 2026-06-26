@@ -7,10 +7,6 @@
 export const formatCurrency = (value: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
-/** Formata um valor em centavos. Ex: 150000 → "R$ 1.500,00" */
-export const formatCurrencyCents = (valueCents: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valueCents / 100);
-
 // ─── Data / Hora ──────────────────────────────────────────────────────────────
 
 /**

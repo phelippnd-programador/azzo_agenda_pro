@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { systemAdminApi } from '@/lib/api';
 import { toast } from 'sonner';
 import type { AdminTenantItem, CommercialOverview } from '@/types/system-admin';
-import { formatCurrencyCents } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 
 interface AdminContextoTabProps {
   selectedTenantId: string;
@@ -119,7 +119,7 @@ export function AdminContextoTab({
                 <div className="rounded-md border p-3">
                   <p className="text-xs text-muted-foreground">Recebido 30d</p>
                   <p className="text-xl font-semibold">
-                    {formatCurrencyCents(Number(commercialOverview.revenueReceived30dCents || 0))}
+                    {formatCurrency(Number(commercialOverview.revenueReceived30dCents || 0))}
                   </p>
                 </div>
               </div>

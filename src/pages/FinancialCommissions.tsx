@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { commissionApi, servicesApi, stockApi } from "@/lib/api";
 import { useProfessionals } from "@/hooks/useProfessionals";
 import { resolveUiError } from "@/lib/error-utils";
-import { formatCurrencyCents as formatCurrency, toDateKey } from "@/lib/format";
+import { formatCurrency, toDateKey } from "@/lib/format";
 import type { Service } from "@/types";
 import type { StockItem } from "@/types/stock";
 import type {
