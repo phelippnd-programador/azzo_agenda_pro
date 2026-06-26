@@ -1,6 +1,6 @@
 import { CalendarDays, Clock3, Scissors, UserRound } from 'lucide-react';
 import { Service, Professional } from '@/lib/api';
-import { formatCurrencyCents } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 
 interface BookingSummaryCardProps {
   title: string;
@@ -151,7 +151,7 @@ export function BookingSummaryCard({
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">Total estimado</p>
             <p className="text-lg font-semibold text-foreground">
-              {formatCurrencyCents(selectedServiceTotal)}
+              {formatCurrency(selectedServiceTotal)}
             </p>
           </div>
           <p className="max-w-[11rem] text-right text-xs text-muted-foreground">

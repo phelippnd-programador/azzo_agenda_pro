@@ -2,7 +2,7 @@ import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Professional, Service } from '@/lib/api';
-import { formatCurrencyCents } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 
 interface BookingSuccessScreenProps {
   selectedServicesData: Service[];
@@ -74,7 +74,7 @@ export function BookingSuccessScreen({
               <div className="flex items-start justify-between gap-3 border-t border-border/70 pt-3 text-sm">
                 <span className="text-muted-foreground">Total</span>
                 <span className="font-bold text-primary">
-                  {formatCurrencyCents(selectedServiceTotal)}
+                  {formatCurrency(selectedServiceTotal)}
                 </span>
               </div>
             </div>

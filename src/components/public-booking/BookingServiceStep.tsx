@@ -5,7 +5,7 @@ import { CardContent, CardDescription, CardHeader, CardTitle } from '@/component
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Service } from '@/lib/api';
-import { formatCurrencyCents } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 
 interface BookingServiceStepProps {
   services: Service[];
@@ -133,7 +133,7 @@ export function BookingServiceStep({
                         Valor
                       </span>
                       <span className="whitespace-nowrap text-base font-bold text-primary sm:text-lg">
-                        {formatCurrencyCents(service.price)}
+                        {formatCurrency(service.price)}
                       </span>
                     </div>
                   </div>
@@ -189,7 +189,7 @@ export function BookingServiceStep({
           <div className="mt-2 flex items-center justify-between gap-3 text-sm">
             <span className="text-muted-foreground">Valor total</span>
             <span className="font-semibold text-primary">
-              {formatCurrencyCents(selectedServiceTotal)}
+              {formatCurrency(selectedServiceTotal)}
             </span>
           </div>
           {selectedServicesData.length ? (

@@ -1,6 +1,6 @@
 import { CalendarDays, ChevronUp, Clock3, Scissors } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { formatCurrencyCents } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 
 interface BookingStickySummaryBarProps {
   selectedServicesCount: number;
@@ -59,7 +59,7 @@ export function BookingStickySummaryBar({
                 <span>Total</span>
               </div>
               <p className="mt-1 truncate font-semibold text-foreground">
-                {formatCurrencyCents(selectedServiceTotal)}
+                {formatCurrency(selectedServiceTotal)}
               </p>
             </div>
           </div>
