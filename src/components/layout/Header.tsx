@@ -32,7 +32,7 @@ export function Header({
   const { user, logout } = useAuth();
   const { summaryItems, unreadCount, refreshSummary } = useNotifications();
   const isOwner = user?.role === "OWNER";
-  const displayName = user?.salonName || user?.name || "Azzo";
+  const displayName = user?.name || user?.salonName || "Azzo";
   const initials =
     displayName
       .split(" ")

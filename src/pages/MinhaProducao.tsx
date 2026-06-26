@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CalendarDays, TrendingUp, CheckCircle2, XCircle, AlertCircle, Clock } from "lucide-react";
+import { CalendarDays, TrendingUp, CheckCircle2, XCircle, AlertCircle, Clock, UserX } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -145,7 +145,7 @@ export default function MinhaProducao() {
 
         {/* Summary cards */}
         {data && (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
             <Card>
               <CardHeader className="pb-1 pt-4 px-4">
                 <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
@@ -188,6 +188,23 @@ export default function MinhaProducao() {
                 <p className="text-xs text-muted-foreground">
                   {data.cancellationRate != null
                     ? `${(data.cancellationRate).toFixed(1)}% de cancelamento`
+                    : "-"}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-1 pt-4 px-4">
+                <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                  <UserX className="h-3.5 w-3.5 text-orange-400" />
+                  Nao compareceu
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-4">
+                <p className="text-2xl font-bold text-orange-500">{data.totalNoShow ?? 0}</p>
+                <p className="text-xs text-muted-foreground">
+                  {data.noShowRate != null
+                    ? `${(data.noShowRate).toFixed(1)}% de no-show`
                     : "-"}
                 </p>
               </CardContent>
