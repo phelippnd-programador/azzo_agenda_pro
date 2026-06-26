@@ -42,7 +42,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { appointmentsApi, clientsApi } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
-import { formatCurrencyCents, toDateKey } from '@/lib/format';
+import { formatCurrency, toDateKey } from '@/lib/format';
 import {
   appointmentStatusBadgeToneMap,
   appointmentStatusLabelMap,
@@ -458,7 +458,7 @@ export function AppointmentDetailsSheet({
                           <span className="text-muted-foreground">
                             Valor bruto:
                           </span>
-                          <span>{formatCurrencyCents(itemGrossAmount)}</span>
+                          <span>{formatCurrency(itemGrossAmount)}</span>
                         </div>
 
                         {itemDiscountAmount > 0 ? (
@@ -467,7 +467,7 @@ export function AppointmentDetailsSheet({
                               Desconto aplicado:
                             </span>
                             <span>
-                              - {formatCurrencyCents(itemDiscountAmount)}
+                              - {formatCurrency(itemDiscountAmount)}
                             </span>
                           </div>
                         ) : null}
@@ -477,7 +477,7 @@ export function AppointmentDetailsSheet({
                             Liquido do item:
                           </span>
                           <span className="font-medium">
-                            {formatCurrencyCents(itemNetAmount)}
+                            {formatCurrency(itemNetAmount)}
                           </span>
                         </div>
 
@@ -540,18 +540,18 @@ export function AppointmentDetailsSheet({
                   <>
                     <div className="mb-2 flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Bruto:</span>
-                      <span>{formatCurrencyCents(totalGrossPrice)}</span>
+                      <span>{formatCurrency(totalGrossPrice)}</span>
                     </div>
                     <div className="mb-2 flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Desconto:</span>
-                      <span>- {formatCurrencyCents(totalDiscountPrice)}</span>
+                      <span>- {formatCurrency(totalDiscountPrice)}</span>
                     </div>
                   </>
                 ) : null}
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <span className="text-muted-foreground">Total:</span>
                   <span className="text-2xl font-bold text-primary">
-                    {formatCurrencyCents(totalPrice)}
+                    {formatCurrency(totalPrice)}
                   </span>
                 </div>
               </div>

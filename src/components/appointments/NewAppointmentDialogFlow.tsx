@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatCurrencyCents } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import type { ManualTimeSlotResponse } from "@/types/available-slots";
 import {
   stepItems,
@@ -289,7 +289,7 @@ export function NewAppointmentDialogFlow({
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <span className="font-medium">{service.name}</span>
                     <span className="text-sm text-primary">
-                      {formatCurrencyCents(service.price)}
+                      {formatCurrency(service.price)}
                     </span>
                   </div>
                   <div className="mt-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
@@ -313,7 +313,7 @@ export function NewAppointmentDialogFlow({
               <div className="mt-1 flex items-center justify-between">
                 <span className="text-muted-foreground">Valor bruto</span>
                 <span className="font-medium text-primary">
-                  {formatCurrencyCents(Number(selectedNewService.price))}
+                  {formatCurrency(Number(selectedNewService.price))}
                 </span>
               </div>
               <div className="mt-3 space-y-2">
@@ -328,7 +328,7 @@ export function NewAppointmentDialogFlow({
               <div className="mt-2 flex items-center justify-between">
                 <span className="text-muted-foreground">Liquido do item</span>
                 <span className="font-medium text-foreground">
-                  {formatCurrencyCents(netServicePriceCents)}
+                  {formatCurrency(netServicePriceCents)}
                 </span>
               </div>
             </div>
@@ -456,19 +456,19 @@ export function NewAppointmentDialogFlow({
               <div className="mt-1 flex items-center justify-between gap-3">
                 <span className="text-muted-foreground">Valor bruto</span>
                 <span className="font-medium text-primary">
-                  {formatCurrencyCents(selectedServicePrice)}
+                  {formatCurrency(selectedServicePrice)}
                 </span>
               </div>
               <div className="mt-1 flex items-center justify-between gap-3">
                 <span className="text-muted-foreground">Desconto</span>
                 <span className="font-medium">
-                  {formatCurrencyCents(discountAmountCents)}
+                  {formatCurrency(discountAmountCents)}
                 </span>
               </div>
               <div className="mt-1 flex items-center justify-between gap-3">
                 <span className="text-muted-foreground">Liquido</span>
                 <span className="font-medium text-foreground">
-                  {formatCurrencyCents(netServicePriceCents)}
+                  {formatCurrency(netServicePriceCents)}
                 </span>
               </div>
             </div>
@@ -607,7 +607,7 @@ export function NewAppointmentDialogFlow({
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {selectedServiceDuration} min {" - "}
-                {formatCurrencyCents(selectedServicePrice)}
+                {formatCurrency(selectedServicePrice)}
               </p>
             </div>
             <div className="rounded-lg border bg-muted/20 p-4">
@@ -622,12 +622,12 @@ export function NewAppointmentDialogFlow({
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Valores
               </p>
-              <p className="mt-2 font-medium">Bruto: {formatCurrencyCents(selectedServicePrice)}</p>
+              <p className="mt-2 font-medium">Bruto: {formatCurrency(selectedServicePrice)}</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Desconto: {formatCurrencyCents(discountAmountCents)}
+                Desconto: {formatCurrency(discountAmountCents)}
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Liquido: {formatCurrencyCents(netServicePriceCents)}
+                Liquido: {formatCurrency(netServicePriceCents)}
               </p>
             </div>
             <div className="rounded-lg border bg-muted/20 p-4">
