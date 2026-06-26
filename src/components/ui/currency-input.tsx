@@ -24,14 +24,23 @@ function formatDisplay(value: number): string {
 }
 
 /**
- * Extrai apenas dígitos e converte para float em reais.
- * Os dois últimos dígitos são sempre centavos.
- * Ex: "1.500,50" → 1500.50 | "80" → 0.80 | "8000" → 80.00
+ * Modo caixa registradora (cents=true): os dois últimos dígitos são centavos.
+ * Ex: "6500" → 65.00 | "65" → 0.65
  */
-function parseInput(raw: string): number {
+function parseInputCents(raw: string): number {
   const digits = raw.replace(/\D/g, '');
   if (!digits) return 0;
   return parseInt(digits, 10) / 100;
+}
+
+/**
+ * Modo reais (cents=false): aceita valor decimal direto.
+ * Ex: "65" → 65.00 | "65,50" ou "65.50" → 65.50
+ */
+function parseInputReais(raw: string): number {
+  const cleaned = raw.replace(/[^\d,.]/, '').replace(',', '.');
+  const value = parseFloat(cleaned);
+  return isNaN(value) ? 0 : value;
 }
 
 export function CurrencyInput({
@@ -47,7 +56,6 @@ export function CurrencyInput({
   const [display, setDisplay] = useState(() => (realValue > 0 ? formatDisplay(realValue) : ''));
   const isFocused = useRef(false);
 
-  // Sincroniza display quando o valor muda externamente (ex: carregar dados de edição)
   useEffect(() => {
     if (!isFocused.current) {
       setDisplay(realValue > 0 ? formatDisplay(realValue) : '');
@@ -56,10 +64,15 @@ export function CurrencyInput({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
-    const parsed = parseInput(raw);
-    const formatted = parsed > 0 ? formatDisplay(parsed) : '';
-    setDisplay(formatted);
-    onChange(cents ? Math.round(parsed * 100) : parsed);
+    if (cents) {
+      const parsed = parseInputCents(raw);
+      setDisplay(parsed > 0 ? formatDisplay(parsed) : '');
+      onChange(Math.round(parsed * 100));
+    } else {
+      // Modo reais: não reformata durante digitação para não atrapalhar o cursor
+      setDisplay(raw);
+      onChange(parseInputReais(raw));
+    }
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -78,7 +91,7 @@ export function CurrencyInput({
     <Input
       {...props}
       type="text"
-      inputMode="numeric"
+      inputMode={cents ? 'numeric' : 'decimal'}
       value={display}
       onChange={handleChange}
       onFocus={handleFocus}

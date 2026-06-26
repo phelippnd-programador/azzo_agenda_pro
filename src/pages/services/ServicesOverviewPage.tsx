@@ -47,6 +47,7 @@ import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmation
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/format';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
 
 const categories = ['Todos', 'Cabelo', 'Barba', 'Unhas', 'Estetica', 'Maquiagem', 'Outros'];
@@ -348,14 +349,9 @@ export default function ServicesOverviewPage() {
                     </div>
                     <div className="space-y-2">
                       <Label>Preco (R$) *</Label>
-                      <Input
-                        type="number"
-                        inputMode="decimal"
-                        step="0.01"
-                        min="0"
-                        value={formPrice || ''}
-                        onChange={(e) => setFormPrice(parseFloat(e.target.value) || 0)}
-                        placeholder="0,00"
+                      <CurrencyInput
+                        value={formPrice}
+                        onChange={(val) => setFormPrice(val)}
                       />
                     </div>
                   </div>
