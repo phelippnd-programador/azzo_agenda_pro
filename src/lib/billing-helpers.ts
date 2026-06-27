@@ -34,8 +34,8 @@ export function toDigits(value: string) {
   return onlyDigits(value);
 }
 
-export function formatCurrency(amountCents: number) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amountCents / 100);
+export function formatCurrency(amount: number) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount);
 }
 
 export function formatDate(value?: string | null) {

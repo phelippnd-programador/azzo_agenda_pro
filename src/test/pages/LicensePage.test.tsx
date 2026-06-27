@@ -43,12 +43,12 @@ vi.mock("@/hooks/useLicenseAccess", () => ({
 
 vi.mock("@/services/billingService", () => ({
   createBillingSubscription: vi.fn(),
-  getBillingPayments: vi.fn().mockResolvedValue({ items: [{ id: "pay-1", amountCents: 9900, billingType: "PIX", status: "PENDING", referenceMonth: "2026-03", dueDate: "2026-03-20", createdAt: "2026-03-14T00:00:00Z", pixPayload: "pix-code" }] }),
+  getBillingPayments: vi.fn().mockResolvedValue({ items: [{ id: "pay-1", amount: 99, billingType: "PIX", status: "PENDING", referenceMonth: "2026-03", dueDate: "2026-03-20", createdAt: "2026-03-14T00:00:00Z", pixPayload: "pix-code" }] }),
   getBillingErrorMessage: vi.fn().mockImplementation(() => "Erro billing"),
   getCurrentBillingSubscription: vi.fn().mockResolvedValue({
     productId: "plan-pro",
     planCode: "plan-pro",
-    amountCents: 9900,
+    amount: 99,
     status: "ACTIVE",
     paymentStatus: "CONFIRMED",
     currentPaymentStatus: "CONFIRMED",
@@ -90,6 +90,7 @@ describe("LicensePage", () => {
     expect(await screen.findByText("Assinatura atual")).toBeInTheDocument();
     expect(screen.getAllByText(/Plano Pro/).length).toBeGreaterThan(0);
     expect(screen.getByText("Historico de pagamentos")).toBeInTheDocument();
+    expect(screen.getAllByText("R$ 99,00").length).toBeGreaterThan(0);
   });
 
   it("should open payment details dialog", async () => {

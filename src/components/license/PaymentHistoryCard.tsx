@@ -11,8 +11,9 @@ import { BoletoPaymentView } from '@/components/billing/BoletoPaymentView';
 import type { BillingPaymentItem } from '@/types/billing';
 import {
   BILLING_TYPE_LABELS, PAYMENT_STATUS_LABELS,
-  formatCurrency, formatDate, formatReferenceMonth,
+  formatDate, formatReferenceMonth,
 } from '@/lib/billing-helpers';
+import { formatCurrency } from '@/lib/format';
 import { toast } from 'sonner';
 
 interface PaymentHistoryCardProps {
@@ -65,7 +66,7 @@ export function PaymentHistoryCard({ paymentHistory, historyError }: PaymentHist
               >
                 <div className="min-w-0 space-y-1">
                   <p className="text-sm font-medium text-foreground">
-                    {formatCurrency(payment.amountCents)} - {BILLING_TYPE_LABELS[payment.billingType] ?? payment.billingType}
+                    {formatCurrency(payment.amount)} - {BILLING_TYPE_LABELS[payment.billingType] ?? payment.billingType}
                   </p>
                   <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                     <span>Status: {PAYMENT_STATUS_LABELS[payment.status] ?? payment.status}</span>
@@ -100,7 +101,7 @@ export function PaymentHistoryCard({ paymentHistory, historyError }: PaymentHist
           {selectedPayment ? (
             <div className="space-y-4">
               <div className="grid gap-3 text-sm sm:grid-cols-2">
-                <p><strong>Valor:</strong> {formatCurrency(selectedPayment.amountCents)}</p>
+                <p><strong>Valor:</strong> {formatCurrency(selectedPayment.amount)}</p>
                 <p><strong>Metodo:</strong> {BILLING_TYPE_LABELS[selectedPayment.billingType] ?? selectedPayment.billingType}</p>
                 <p><strong>Status:</strong> {PAYMENT_STATUS_LABELS[selectedPayment.status] ?? selectedPayment.status}</p>
                 <p><strong>ID pagamento:</strong> {selectedPayment.asaasPaymentId || selectedPayment.id}</p>

@@ -14,6 +14,7 @@ import {
   UserX,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/lib/format';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import {
   AlertDialog,
@@ -42,7 +43,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { appointmentsApi, clientsApi } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
-import { formatCurrency, toDateKey } from '@/lib/format';
+import { toDateKey } from '@/lib/format';
 import {
   appointmentStatusBadgeToneMap,
   appointmentStatusLabelMap,
@@ -466,9 +467,7 @@ export function AppointmentDetailsSheet({
                             <span className="text-muted-foreground">
                               Desconto aplicado:
                             </span>
-                            <span>
-                              - {formatCurrency(itemDiscountAmount)}
-                            </span>
+                              <span>- {formatCurrency(itemDiscountAmount)}</span>
                           </div>
                         ) : null}
 
@@ -477,7 +476,7 @@ export function AppointmentDetailsSheet({
                             Liquido do item:
                           </span>
                           <span className="font-medium">
-                            {formatCurrency(itemNetAmount)}
+                              {formatCurrency(itemNetAmount)}
                           </span>
                         </div>
 

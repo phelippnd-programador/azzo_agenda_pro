@@ -159,8 +159,8 @@ export function TransactionDialog({
       return;
     }
 
-    const amountCents = formAmount;
-    if (!amountCents || amountCents <= 0) {
+    const amount = formAmount;
+    if (!amount || amount <= 0) {
       toast.error('Informe um valor maior que zero');
       return;
     }
@@ -178,7 +178,7 @@ export function TransactionDialog({
     const payload = {
       type: transactionType,
       description: formDescription,
-      amountCents,
+      amount,
       category: formCategory,
       paymentMethod: formPaymentMethod as 'PIX' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'CASH' | 'OTHER',
       date: formDate,

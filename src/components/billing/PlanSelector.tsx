@@ -37,7 +37,7 @@ export function PlanSelector({
               </div>
               <p className="text-sm text-muted-foreground">{plan.description}</p>
               <p className="text-2xl font-bold text-foreground">
-                {formatCurrency(plan.amountCents)}
+                {formatCurrency(plan.amount)}
                 <span className="ml-1 text-sm font-normal text-muted-foreground">/mes</span>
               </p>
             </CardHeader>
@@ -65,4 +65,3 @@ export function PlanSelector({
     </div>
   );
 }
-

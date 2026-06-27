@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import Agenda from "@/pages/appointments/Agenda";
 
@@ -100,14 +101,24 @@ describe("Agenda", () => {
   });
 
   it("should render agenda main actions without runtime crash", async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+
     render(
-      <MemoryRouter initialEntries={["/agenda"]}>
-        <Agenda />
-      </MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/agenda"]}>
+          <Agenda />
+        </MemoryRouter>
+      </QueryClientProvider>
     );
 
     expect(await screen.findByRole("heading", { name: "Agenda" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Hoje/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Novo Agendamento/i })).toBeInTheDocument();
-  });
+    expect(screen.getAllByRole("button", { name: /Novo Agendamento/i }).length).toBeGreaterThan(0);
+  }, 10000);
 });

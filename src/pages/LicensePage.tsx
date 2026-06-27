@@ -37,7 +37,7 @@ import { useLicenseAccess } from '@/hooks/useLicenseAccess';
 import { maskCpfCnpj } from '@/lib/input-masks';
 import { formatCurrency } from '@/lib/format';
 import {
-  toDigits, formatCurrency, formatDate,
+  toDigits, formatDate,
   getLicenseStatus, getCurrentPaymentStatus, getCurrentPaymentDueDate,
   isTrialSubscription, isSupportedBillingType, isOverdue, getRemainingDaysUntilDue,
   getScheduledPlanStartDate, resolveLicenseState, isSubscriptionActive,
@@ -105,7 +105,7 @@ export default function LicensePage() {
     () => products.map((product) => ({
       code: product.id, name: product.name,
       description: product.description || 'Plano disponivel para assinatura.',
-      amountCents: product.price,
+      amount: product.price,
       features: product.features || [], highlight: product.highlight || undefined,
     })),
     [products]
@@ -445,7 +445,7 @@ export default function LicensePage() {
                     <div className="rounded-lg border p-3">
                       <p className="text-xs text-muted-foreground">Valor</p>
                       <p className="mt-1 font-medium text-foreground">
-                        {formatCurrency(result?.amountCents || selectedPlan?.amountCents || 0)}
+                        {formatCurrency(result?.amount ?? selectedPlan?.amount ?? 0)}
                       </p>
                     </div>
                   </CardContent>

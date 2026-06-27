@@ -55,7 +55,7 @@ export interface CreateBillingSubscriptionResponse {
   billingType: BillingType;
   cycle?: string | null;
   nextDueDate: string;
-  amountCents: number;
+  amount: number;
   paymentLink?: string | null;
   cancelledAt?: string | null;
   createdAt?: string | null;
@@ -83,8 +83,8 @@ export interface BillingPaymentItem {
   referenceMonth?: string | null;
   billingType: BillingType | string;
   status: BillingPaymentStatus | string;
-  amountCents: number;
-  netAmountCents?: number | null;
+  amount: number;
+  netAmount?: number | null;
   dueDate?: string | null;
   paidAt?: string | null;
   expiresAt?: string | null;

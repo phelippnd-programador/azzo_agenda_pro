@@ -124,7 +124,7 @@ export default function FinancialCommissions() {
       setIsSubmittingAdjustment(true);
       await commissionApi.createAdjustment({
         professionalId: adjustmentProfessionalId,
-        amountCents: adjustmentAmount,
+        amount: adjustmentAmount,
         reason: adjustmentReason.trim(),
       });
       toast.success("Ajuste manual registrado.");
@@ -235,7 +235,7 @@ export default function FinancialCommissions() {
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Total apurado</p>
               <p className="text-xl font-bold text-foreground">
-                {formatCurrency(report?.totalAmountCents || 0)}
+                {formatCurrency(report?.totalAmount || 0)}
               </p>
             </CardContent>
           </Card>
@@ -243,7 +243,7 @@ export default function FinancialCommissions() {
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Total em aberto</p>
               <p className="text-xl font-bold text-amber-700">
-                {formatCurrency(report?.totalOpenAmountCents || 0)}
+                {formatCurrency(report?.totalOpenAmount || 0)}
               </p>
             </CardContent>
           </Card>
@@ -251,7 +251,7 @@ export default function FinancialCommissions() {
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Total pago</p>
               <p className="text-xl font-bold text-emerald-700">
-                {formatCurrency(report?.totalPaidAmountCents || 0)}
+                {formatCurrency(report?.totalPaidAmount || 0)}
               </p>
             </CardContent>
           </Card>
@@ -301,22 +301,22 @@ export default function FinancialCommissions() {
                         <TableRow key={item.professionalId}>
                           <TableCell className="font-medium">{item.professionalName}</TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(item.serviceAmountCents)}
+                            {formatCurrency(item.serviceAmount)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(item.productAmountCents)}
+                            {formatCurrency(item.productAmount)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(item.manualAdjustmentAmountCents)}
+                            {formatCurrency(item.manualAdjustmentAmount)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(item.openAmountCents)}
+                            {formatCurrency(item.openAmount)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(item.paidAmountCents)}
+                            {formatCurrency(item.paidAmount)}
                           </TableCell>
                           <TableCell className="text-right font-semibold">
-                            {formatCurrency(item.totalAmountCents)}
+                            {formatCurrency(item.totalAmount)}
                           </TableCell>
                           <TableCell className="text-right">
                             <Button

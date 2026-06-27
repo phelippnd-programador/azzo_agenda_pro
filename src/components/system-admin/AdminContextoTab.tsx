@@ -119,7 +119,7 @@ export function AdminContextoTab({
                 <div className="rounded-md border p-3">
                   <p className="text-xs text-muted-foreground">Recebido 30d</p>
                   <p className="text-xl font-semibold">
-                    {formatCurrency(Number(commercialOverview.revenueReceived30dCents || 0))}
+                    {formatCurrency(Number(commercialOverview.revenueReceived30d || 0))}
                   </p>
                 </div>
               </div>

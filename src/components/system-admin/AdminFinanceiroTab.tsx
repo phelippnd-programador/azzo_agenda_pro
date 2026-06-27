@@ -19,7 +19,7 @@ type PlanFormState = {
   name: string;
   description: string;
   currency: string;
-  priceCents: string;
+  price: string;
   validityMonths: string;
   validityDays: string;
   highlight: string;
@@ -34,7 +34,7 @@ const createEmptyPlanForm = (): PlanFormState => ({
   name: '',
   description: '',
   currency: 'BRL',
-  priceCents: '0',
+  price: '0',
   validityMonths: '1',
   validityDays: '',
   highlight: '',
@@ -112,7 +112,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
       name: plan.name || '',
       description: plan.description || '',
       currency: plan.currency || 'BRL',
-      priceCents: String(plan.priceCents ?? 0),
+      price: String(plan.price ?? 0),
       validityMonths: String(plan.validityMonths ?? 1),
       validityDays: plan.validityDays != null ? String(plan.validityDays) : '',
       highlight: plan.highlight || '',
@@ -129,7 +129,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
     name: planForm.name.trim(),
     description: planForm.description.trim() || undefined,
     currency: planForm.currency.trim().toUpperCase() || 'BRL',
-    priceCents: Number(planForm.priceCents || 0),
+    price: Number(planForm.price || 0),
     validityMonths: Number(planForm.validityMonths || 1),
     validityDays: planForm.validityDays.trim() ? Number(planForm.validityDays) : undefined,
     highlight: planForm.highlight.trim() || undefined,
@@ -262,7 +262,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
                             {plan.trial ? 'TRIAL' : 'PAGO'}
                           </Badge>
                         </td>
-                        <td className="px-3 py-2">{formatCurrency(Number(plan.priceCents || 0))}</td>
+                        <td className="px-3 py-2">{formatCurrency(Number(plan.price || 0))}</td>
                         <td className="px-3 py-2">{plan.validityDays || plan.validityMonths * 30} dias</td>
                         <td className="px-3 py-2">{plan.maxProfessionals ?? '-'}</td>
                         <td className="px-3 py-2">{plan.priority}</td>
@@ -336,7 +336,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
                           {payment.asaasPaymentId} - {payment.billingType}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Valor: {formatCurrency(Number(payment.amountCents || 0))} | Vencimento:{' '}
+                          Valor: {formatCurrency(Number(payment.amount || 0))} | Vencimento:{' '}
                           {payment.dueDate || '-'}
                         </p>
                       </div>
@@ -389,8 +389,8 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
               <Label>Preco em centavos</Label>
               <Input
                 type="number"
-                value={planForm.priceCents}
-                onChange={(e) => setPlanForm((prev) => ({ ...prev, priceCents: e.target.value }))}
+                value={planForm.price}
+                onChange={(e) => setPlanForm((prev) => ({ ...prev, price: e.target.value }))}
               />
             </div>
             <div className="space-y-1.5">

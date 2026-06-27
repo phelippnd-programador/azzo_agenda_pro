@@ -49,7 +49,7 @@ export function CommissionCyclesTab({
               </Badge>
               {currentCycle ? (
                 <span className="text-xs text-muted-foreground">
-                  {formatCurrency(currentCycle.totalAmountCents)} - {currentCycle.entryCount}{" "}
+                  {formatCurrency(currentCycle.totalAmount)} - {currentCycle.entryCount}{" "}
                   lancamentos
                 </span>
               ) : null}
@@ -84,7 +84,7 @@ export function CommissionCyclesTab({
                       {cycle.periodStart} ate {cycle.periodEnd}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {formatCurrency(cycle.totalAmountCents)} - {cycle.entryCount} lancamentos
+                      {formatCurrency(cycle.totalAmount)} - {cycle.entryCount} lancamentos
                     </p>
                   </div>
                   <div className="flex items-center gap-2">

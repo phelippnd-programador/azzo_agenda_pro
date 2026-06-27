@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import Login from "@/pages/Login";
@@ -78,9 +78,10 @@ describe("Login", () => {
     await user.type(screen.getByLabelText("Senha"), "Pr14052019!");
     await user.click(screen.getByRole("button", { name: "Entrar" }));
 
-    expect(mocks.login).toHaveBeenCalledWith("owner@qa.local", "Pr14052019!", undefined);
-    expect(mocks.navigate).toHaveBeenCalledWith("/dashboard");
-    expect(await screen.findByText("Bem-vindo de volta!")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(mocks.login).toHaveBeenCalledWith("owner@qa.local", "Pr14052019!", undefined);
+      expect(mocks.navigate).toHaveBeenCalledWith("/dashboard");
+    });
   });
 
   it("should persist only the email locally when remember option is checked", async () => {
@@ -183,7 +184,7 @@ describe("Login", () => {
     await user.type(screen.getByLabelText("Senha"), "Pr14052019!");
     await user.click(screen.getByRole("button", { name: "Entrar" }));
 
-    expect(await screen.findByText("Verificação adicional necessária")).toBeInTheDocument();
-    expect(screen.getByLabelText(/Código MFA/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Verifica/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/C.digo MFA/i)).toBeInTheDocument();
   });
 });

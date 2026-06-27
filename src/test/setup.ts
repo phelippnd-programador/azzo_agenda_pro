@@ -26,3 +26,11 @@ if (typeof window !== "undefined" && typeof window.matchMedia === "undefined") {
     }),
   });
 }
+
+if (typeof URL.createObjectURL !== "function") {
+  URL.createObjectURL = (() => "blob:test") as typeof URL.createObjectURL;
+}
+
+if (typeof URL.revokeObjectURL !== "function") {
+  URL.revokeObjectURL = (() => undefined) as typeof URL.revokeObjectURL;
+}

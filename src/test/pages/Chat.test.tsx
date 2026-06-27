@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import ChatPage from "@/pages/Chat";
 import type { ChatConversation, ChatMessage } from "@/types/chat";
@@ -20,6 +21,26 @@ const mocks = vi.hoisted(() => ({
 }));
 
 let eventSourceInstances: MockEventSourceInstance[] = [];
+
+const renderChatPage = (initialEntries: string[] = ["/chat/conv-1"]) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={initialEntries}>
+        <Routes>
+          <Route path="/chat/:conversationId" element={<ChatPage />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>
+  );
+};
 
 const buildConversation = (overrides: Partial<ChatConversation> = {}): ChatConversation => ({
   id: "conv-1",
@@ -158,13 +179,7 @@ describe("ChatPage", () => {
   });
 
   it("should render selected conversation with manual mode and failed message status", async () => {
-    render(
-      <MemoryRouter initialEntries={["/chat/conv-1"]}>
-        <Routes>
-          <Route path="/chat/:conversationId" element={<ChatPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderChatPage();
 
     expect(await screen.findByText("Modo Manual")).toBeInTheDocument();
     expect(screen.getByText("Todas as conversas")).toBeInTheDocument();
@@ -187,13 +202,7 @@ describe("ChatPage", () => {
   it("should filter conversations by search and quick filters", async () => {
     const user = userEvent.setup();
 
-    render(
-      <MemoryRouter initialEntries={["/chat/conv-1"]}>
-        <Routes>
-          <Route path="/chat/:conversationId" element={<ChatPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderChatPage();
 
     const searchInput = await screen.findByLabelText("Buscar conversas");
     const conversationsList = screen.getByLabelText("Lista de conversas");
@@ -214,13 +223,7 @@ describe("ChatPage", () => {
   }, 10000);
 
   it("should refresh only the active messages for realtime events on the opened conversation", async () => {
-    render(
-      <MemoryRouter initialEntries={["/chat/conv-1"]}>
-        <Routes>
-          <Route path="/chat/:conversationId" element={<ChatPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderChatPage();
 
     await screen.findByText("Modo Manual");
     mocks.loadConversations.mockClear();
@@ -239,13 +242,7 @@ describe("ChatPage", () => {
   });
 
   it("should refresh only the conversation list for marker updates and background conversations", async () => {
-    render(
-      <MemoryRouter initialEntries={["/chat/conv-1"]}>
-        <Routes>
-          <Route path="/chat/:conversationId" element={<ChatPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderChatPage();
 
     await screen.findByText("Modo Manual");
     mocks.loadConversations.mockClear();
@@ -290,13 +287,7 @@ describe("ChatPage", () => {
       })
     );
 
-    render(
-      <MemoryRouter initialEntries={["/chat/conv-1"]}>
-        <Routes>
-          <Route path="/chat/:conversationId" element={<ChatPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderChatPage();
 
     expect(await screen.findByText("80/80")).toBeInTheDocument();
     expect(screen.getByText("180 mensagens")).toBeInTheDocument();
@@ -317,13 +308,7 @@ describe("ChatPage", () => {
       buildConversation({ id: "conv-2", clientId: "client-2", clientName: "Joao", unreadCount: 0 }),
     ];
 
-    render(
-      <MemoryRouter initialEntries={["/chat/conv-1"]}>
-        <Routes>
-          <Route path="/chat/:conversationId" element={<ChatPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderChatPage();
 
     await screen.findByText("Modo Manual");
     const badges = screen.getAllByText("3");
@@ -331,26 +316,14 @@ describe("ChatPage", () => {
   }, 10000);
 
   it("chama loadMessages ao abrir conversa e zera unreadCount localmente", async () => {
-    render(
-      <MemoryRouter initialEntries={["/chat/conv-1"]}>
-        <Routes>
-          <Route path="/chat/:conversationId" element={<ChatPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderChatPage();
 
     await screen.findByText("Modo Manual");
     expect(mocks.loadMessages).toHaveBeenCalledWith("conv-1");
   }, 10000);
 
   it("botao Carregar mensagens anteriores aparece quando hasNextMessages=true", async () => {
-    const { rerender } = render(
-      <MemoryRouter initialEntries={["/chat/conv-1"]}>
-        <Routes>
-          <Route path="/chat/:conversationId" element={<ChatPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderChatPage();
 
     // por padrao hasNextMessages = false no mock, botao nao aparece
     await screen.findByText("Modo Manual");

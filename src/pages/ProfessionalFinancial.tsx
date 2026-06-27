@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { formatCurrency } from "@/lib/format";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useProfessionals } from "@/hooks/useProfessionals";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,6 +7,7 @@ import {
   type DashboardServiceMetricItem,
   type DashboardServicesMetricsResponse,
 } from "@/lib/api";
+import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -512,7 +512,7 @@ export default function ProfessionalFinancial() {
                             new Intl.NumberFormat("pt-BR", {
                               notation: "compact",
                               compactDisplay: "short",
-                            }).format(Number(value))
+                            }).format(Number(value) / 100)
                           }
                         />
                         <Tooltip formatter={(value) => formatCurrency(Number(value))} />

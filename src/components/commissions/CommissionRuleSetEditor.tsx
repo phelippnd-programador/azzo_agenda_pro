@@ -62,7 +62,7 @@ const toEditableRule = (rule: CommissionRuleItemResponse): EditableRule => ({
   targetId: rule.targetId || "",
   targetCode: rule.targetCode || "",
   percentValue: String(rule.percentValue ?? 0),
-  fixedAmount: rule.fixedAmountCents ?? 0,
+  fixedAmount: rule.fixedAmount ?? 0,
   percentBaseType: rule.percentBaseType,
   refundPolicy: rule.refundPolicy,
   active: rule.active,
@@ -79,7 +79,7 @@ const normalizeRule = (rule: EditableRule): CommissionRuleRequest => ({
       ? rule.targetCode.trim() || null
       : null,
   percentValue: Number(rule.percentValue || 0),
-  fixedAmountCents: rule.fixedAmount,
+  fixedAmount: rule.fixedAmount,
   percentBaseType: rule.percentBaseType,
   refundPolicy: rule.refundPolicy,
   active: rule.active,

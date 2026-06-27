@@ -148,8 +148,8 @@ describe("Dashboard", () => {
       startDate: "2026-03-01",
       endDate: "2026-03-31",
       professionalId: "professional-1",
-      revenueTotal: 1800,
-      commissionTotal: 540,
+      revenueTotal: 18,
+      commissionTotal: 5.4,
       completedServices: 22,
       clientsServed: 14,
     });

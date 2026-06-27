@@ -5,9 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { CreateBillingSubscriptionResponse } from '@/types/billing';
 import type { BillingPlanOption } from '@/components/billing/types';
+import { formatCurrency } from '@/lib/format';
 import {
   SUBSCRIPTION_STATUS_LABELS, PAYMENT_STATUS_LABELS, BILLING_TYPE_LABELS,
-  formatCurrency, formatDate, getCurrentPaymentStatus, getCurrentPaymentDueDate,
+  formatDate, getCurrentPaymentStatus, getCurrentPaymentDueDate,
   isTrialSubscription, isOverdue, getLicenseStatus, resolveLicenseState,
 } from '@/lib/billing-helpers';
 
@@ -76,7 +77,7 @@ export function SubscriptionStatusCard({
           <div className="rounded-lg border p-3">
             <p className="text-xs text-muted-foreground">Valor mensal</p>
             <p className="mt-1 text-sm font-semibold text-foreground">
-              {result ? formatCurrency(result.amountCents) : 'Nao informado'}
+              {result ? formatCurrency(result.amount) : 'Nao informado'}
             </p>
           </div>
           <div className="rounded-lg border p-3">

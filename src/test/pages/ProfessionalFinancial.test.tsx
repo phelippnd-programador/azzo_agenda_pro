@@ -83,8 +83,8 @@ describe("ProfessionalFinancial", () => {
       startDate: "2026-04-01",
       endDate: "2026-04-30",
       professionalId: "professional-1",
-      revenueTotal: 10000,
-      commissionTotal: 3000,
+      revenueTotal: 100,
+      commissionTotal: 30,
       completedServices: 1,
       clientsServed: 1,
     });
@@ -101,7 +101,7 @@ describe("ProfessionalFinancial", () => {
     });
   });
 
-  it("should render dashboard professional monetary values as cents-based financial values", async () => {
+  it("should render dashboard professional monetary values in reais", async () => {
     render(
       <MemoryRouter initialEntries={["/financeiro/profissionais"]}>
         <ProfessionalFinancial />
@@ -109,9 +109,9 @@ describe("ProfessionalFinancial", () => {
     );
 
     expect(await screen.findByText("Detalhamento por profissional")).toBeInTheDocument();
-    expect(screen.getAllByText("R$ 100,00").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("R$ 30,00").length).toBeGreaterThan(0);
-    expect(screen.queryByText("R$ 1,00")).not.toBeInTheDocument();
+    expect(screen.getAllByText(/R\$\s*100,00/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/R\$\s*30,00/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/R\$\s*10\.000,00/)).not.toBeInTheDocument();
   });
 
   it("should allow manual refresh of professional financial metrics", async () => {

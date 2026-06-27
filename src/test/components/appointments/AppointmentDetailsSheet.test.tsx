@@ -44,17 +44,17 @@ describe('AppointmentDetailsSheet', () => {
           startTime: '09:00',
           endTime: '10:00',
           status: 'COMPLETED',
-          totalPrice: 8500,
+          totalPrice: 85,
           createdAt: new Date('2026-04-24T12:00:00'),
           items: [
             {
               id: 'item-1',
               serviceId: 'service-1',
               durationMinutes: 60,
-              unitPrice: 10000,
-              grossAmount: 10000,
-              discountAmount: 1500,
-              totalPrice: 8500,
+              unitPrice: 100,
+              grossAmount: 100,
+              discountAmount: 15,
+              totalPrice: 85,
             },
           ],
         }}
@@ -80,7 +80,7 @@ describe('AppointmentDetailsSheet', () => {
             name: 'Corte QA',
             description: 'Servico com desconto',
             duration: 60,
-            price: 10000,
+            price: 100,
             category: 'Corte',
             professionalIds: ['professional-1'],
             isActive: true,
@@ -95,7 +95,7 @@ describe('AppointmentDetailsSheet', () => {
             email: 'cliente@qa.com',
             phone: '11999999999',
             totalVisits: 3,
-            totalSpent: 25000,
+            totalSpent: 250,
             createdAt: new Date('2026-04-24T12:00:00'),
           },
         ]}
@@ -114,8 +114,8 @@ describe('AppointmentDetailsSheet', () => {
 
     expect(screen.getByText(/Desconto aplicado:/i)).toBeInTheDocument();
     expect(screen.getByText(/Liquido do item:/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/R\$\s*100,00/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/-\s*R\$\s*15,00/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/R\$\s*85,00/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText((_, element) => element?.textContent === "R$\u00A0100,00").length).toBeGreaterThan(0);
+    expect(screen.getAllByText((_, element) => element?.textContent === "- R$\u00A015,00").length).toBeGreaterThan(0);
+    expect(screen.getAllByText((_, element) => element?.textContent === "R$\u00A085,00").length).toBeGreaterThan(0);
   });
 });

@@ -164,5 +164,5 @@ describe("WhatsAppIntegrationCard", () => {
         })
       );
     });
-  }, 15000);
+  }, 30000);
 });

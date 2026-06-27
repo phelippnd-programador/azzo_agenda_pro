@@ -130,10 +130,10 @@ describe("Settings", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByRole("tab", { name: "Notificacoes" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Integracoes" })).toBeInTheDocument();
+    expect(await screen.findByRole("tab", { name: /Notifica/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Integra/i })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Fiscal" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Perfil do Salao" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Sal/i })).toBeInTheDocument();
   });
 
   it("should save notifications settings", async () => {
@@ -182,11 +182,11 @@ describe("Settings", () => {
       </MemoryRouter>
     );
 
-    const integrationButtons = await screen.findAllByRole("button", { name: /Abrir integracoes/i });
-    await user.click(integrationButtons[0]);
+    await user.click(await screen.findByRole("tab", { name: /Integra/i }));
 
-    expect(await screen.findByRole("tab", { name: "Integracoes", selected: true })).toBeInTheDocument();
-    expect(screen.getByText(/Acompanhe o estado das integracoes operacionais/i)).toBeInTheDocument();
-    expect(scrollIntoViewMock).toHaveBeenCalled();
+    expect(await screen.findByRole("tab", { name: /Integra/i, selected: true })).toBeInTheDocument();
+    expect(screen.getByText(/WhatsApp Business/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Configurar WhatsApp/i })).toBeInTheDocument();
+    expect(scrollIntoViewMock).not.toHaveBeenCalled();
   });
 });

@@ -4,7 +4,7 @@ export interface BillingPlanOption {
   code: string;
   name: string;
   description: string;
-  amountCents: number;
+  amount: number;
   features: string[];
   highlight?: string;
 }

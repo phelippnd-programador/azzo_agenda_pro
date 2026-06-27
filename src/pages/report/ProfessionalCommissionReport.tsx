@@ -126,15 +126,15 @@ export default function ProfessionalCommissionReport() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total</p>
-              <p className="text-lg font-bold text-foreground">{formatCurrency(report.totalAmountCents)}</p>
+              <p className="text-lg font-bold text-foreground">{formatCurrency(report.totalAmount)}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Em aberto</p>
-              <p className="text-lg font-bold text-amber-700 dark:text-amber-400">{formatCurrency(report.totalOpenAmountCents)}</p>
+              <p className="text-lg font-bold text-amber-700 dark:text-amber-400">{formatCurrency(report.totalOpenAmount)}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Pago</p>
-              <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400">{formatCurrency(report.totalPaidAmountCents)}</p>
+              <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400">{formatCurrency(report.totalPaidAmount)}</p>
             </div>
           </CardContent>
         </Card>
@@ -171,12 +171,12 @@ export default function ProfessionalCommissionReport() {
                         </div>
                       </TableCell>
                       <TableCell>{entry.periodKey}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(entry.baseAmountCents)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(entry.baseAmount)}</TableCell>
                       <TableCell className="text-right">
-                        {entry.percentValue}% ({formatCurrency(entry.percentAmountCents)})
+                        {entry.percentValue}% ({formatCurrency(entry.percentAmount)})
                       </TableCell>
-                      <TableCell className="text-right">{formatCurrency(entry.fixedAmountCents)}</TableCell>
-                      <TableCell className="text-right font-semibold">{formatCurrency(entry.totalAmountCents)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(entry.fixedAmount)}</TableCell>
+                      <TableCell className="text-right font-semibold">{formatCurrency(entry.totalAmount)}</TableCell>
                       <TableCell>
                         <Badge variant={entry.entryStatus === "PAID" ? "default" : entry.entryStatus === "REVERSED" ? "secondary" : "outline"}>
                           {getStatusLabel(entry.entryStatus)}

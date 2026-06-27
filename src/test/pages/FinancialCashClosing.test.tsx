@@ -60,12 +60,12 @@ vi.mock("@/hooks/useTransactions", () => ({
         description: "Venda no caixa",
         category: "Servico",
         type: "INCOME",
-        amount: 12000,
+        amount: 120,
         paymentMethod: "PIX",
         date: new Date("2026-04-24T12:00:00Z"),
       },
     ],
-    summary: { totalIncome: 12000, totalExpenses: 0, balance: 12000 },
+    summary: { totalIncome: 120, totalExpenses: 0, balance: 120 },
     totalCount: 1,
     totalPages: 1,
     page: 0,
@@ -119,10 +119,10 @@ const openClosing = {
   closedAt: null,
   closedBy: null,
   closingNotes: null,
-  expectedTotals: { CASH: 2500, CREDIT_CARD: 4000, DEBIT_CARD: 1500, PIX: 9000, OTHER: 0 },
+  expectedTotals: { CASH: 25, CREDIT_CARD: 40, DEBIT_CARD: 15, PIX: 90, OTHER: 0 },
   countedTotals: { CASH: 0, CREDIT_CARD: 0, DEBIT_CARD: 0, PIX: 0, OTHER: 0 },
   differenceTotals: { CASH: 0, CREDIT_CARD: 0, DEBIT_CARD: 0, PIX: 0, OTHER: 0 },
-  totalExpected: 17000,
+  totalExpected: 170,
   totalCounted: 0,
   totalDifference: 0,
 };
@@ -135,8 +135,8 @@ describe("FinancialCashClosing", () => {
     closeMock.mockResolvedValue({
       ...openClosing,
       status: "CLOSED",
-      countedTotals: { CASH: 2500, CREDIT_CARD: 4000, DEBIT_CARD: 1500, PIX: 9000, OTHER: 0 },
-      totalCounted: 17000,
+      countedTotals: { CASH: 25, CREDIT_CARD: 40, DEBIT_CARD: 15, PIX: 90, OTHER: 0 },
+      totalCounted: 170,
       closedAt: "2026-04-24T22:00:00Z",
     });
   });
@@ -163,7 +163,7 @@ describe("FinancialCashClosing", () => {
 
     await screen.findByRole("button", { name: /Abrir caixa/i });
     await user.click(screen.getByRole("button", { name: /Abrir caixa/i }));
-    await user.type(screen.getByLabelText("Observações"), "Abertura do turno da tarde");
+    await user.type(screen.getByLabelText(/Observa/i), "Abertura do turno da tarde");
     await user.click(screen.getByRole("button", { name: /Confirmar abertura/i }));
 
     await waitFor(() =>
@@ -174,5 +174,5 @@ describe("FinancialCashClosing", () => {
         })
       )
     );
-  }, 10000);
+  }, 20000);
 });

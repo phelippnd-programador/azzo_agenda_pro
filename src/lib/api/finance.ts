@@ -44,8 +44,7 @@ export type TransactionMutationInput = {
   type: "INCOME" | "EXPENSE";
   category: string;
   description: string;
-  amount?: number;
-  amountCents?: number;
+  amount: number;
   paymentMethod: "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "PIX" | "OTHER";
   date: string;
 };
