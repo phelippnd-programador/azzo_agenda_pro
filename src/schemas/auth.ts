@@ -10,9 +10,23 @@ export const forgotPasswordSchema = z.object({
 
 export type ForgotPasswordForm = z.infer<typeof forgotPasswordSchema>;
 
+export const PASSWORD_RULES = [
+  { id: "length",   label: "Minimo de 8 caracteres",   test: (p: string) => p.length >= 8 },
+  { id: "upper",    label: "Letra maiuscula (A-Z)",     test: (p: string) => /[A-Z]/.test(p) },
+  { id: "lower",    label: "Letra minuscula (a-z)",     test: (p: string) => /[a-z]/.test(p) },
+  { id: "digit",    label: "Numero (0-9)",              test: (p: string) => /\d/.test(p) },
+  { id: "special",  label: "Caractere especial (!@#$%)", test: (p: string) => /[^A-Za-z0-9]/.test(p) },
+] as const;
+
 export const resetPasswordSchema = z
   .object({
-    password: z.string().min(8, "A senha deve ter pelo menos 8 caracteres."),
+    password: z
+      .string()
+      .min(8, "A senha deve ter pelo menos 8 caracteres.")
+      .refine((p) => /[A-Z]/.test(p), "A senha deve conter ao menos uma letra maiuscula.")
+      .refine((p) => /[a-z]/.test(p), "A senha deve conter ao menos uma letra minuscula.")
+      .refine((p) => /\d/.test(p), "A senha deve conter ao menos um numero.")
+      .refine((p) => /[^A-Za-z0-9]/.test(p), "A senha deve conter ao menos um caractere especial (!@#$%...)."),
     confirmPassword: z.string().min(1, "Confirme sua nova senha."),
   })
   .superRefine((data, ctx) => {
