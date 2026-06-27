@@ -5,6 +5,8 @@ export interface BillingPlanOption {
   name: string;
   description: string;
   amount: number;
+  validityDays?: number | null;
+  validityMonths?: number | null;
   features: string[];
   highlight?: string;
 }

@@ -30,7 +30,7 @@ vi.mock("@/contexts/AuthContext", () => ({
 
 vi.mock("@/hooks/useCheckoutProducts", () => ({
   useCheckoutProducts: () => ({
-    products: [{ id: "plan-pro", name: "Plano Pro", description: "Plano principal", price: 99, features: ["Agenda", "Financeiro"] }],
+    products: [{ id: "plan-pro", name: "Plano Pro", description: "Plano principal", price: 99, validityMonths: 2, features: ["Agenda", "Financeiro"] }],
     isLoading: false,
     error: null,
     refetch: vi.fn(),
@@ -106,5 +106,17 @@ describe("LicensePage", () => {
 
     expect(await screen.findByText("Detalhes do pagamento")).toBeInTheDocument();
     expect(screen.getAllByText("PixPaymentViewMock").length).toBeGreaterThan(1);
+  });
+
+  it("should show plan billing cycle and validity when regularizing payment", async () => {
+    render(
+      <MemoryRouter initialEntries={["/financeiro/licenca?mode=PAY"]}>
+        <LicensePage />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText("Regularizar pagamento")).toBeInTheDocument();
+    expect(screen.getByText(/por 2 meses/i)).toBeInTheDocument();
+    expect(screen.getByText(/Validade de 2 meses apos a contratacao/i)).toBeInTheDocument();
   });
 });

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
+import { formatPlanBillingCycle, formatPlanValidity } from "@/lib/billing-helpers";
 import type { BillingPlanOption } from "@/components/billing/types";
 
 type PlanSelectorProps = {
@@ -38,7 +39,12 @@ export function PlanSelector({
               <p className="text-sm text-muted-foreground">{plan.description}</p>
               <p className="text-2xl font-bold text-foreground">
                 {formatCurrency(plan.amount)}
-                <span className="ml-1 text-sm font-normal text-muted-foreground">/mes</span>
+                <span className="ml-1 text-sm font-normal text-muted-foreground">
+                  {formatPlanBillingCycle(plan.validityMonths, plan.validityDays)}
+                </span>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {formatPlanValidity(plan.validityMonths, plan.validityDays)}
               </p>
             </CardHeader>
             <CardContent className="space-y-3">

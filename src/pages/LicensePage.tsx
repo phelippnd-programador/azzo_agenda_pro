@@ -42,7 +42,7 @@ import {
   isTrialSubscription, isSupportedBillingType, isOverdue, getRemainingDaysUntilDue,
   getScheduledPlanStartDate, resolveLicenseState, isSubscriptionActive,
   syncPlanExpiredBlock, SUBSCRIPTION_STATUS_LABELS, PAYMENT_STATUS_LABELS,
-  BILLING_TYPE_LABELS,
+  BILLING_TYPE_LABELS, formatPlanBillingCycle, formatPlanValidity,
 } from '@/lib/billing-helpers';
 import { SubscriptionStatusCard } from '@/components/license/SubscriptionStatusCard';
 import { PaymentHistoryCard } from '@/components/license/PaymentHistoryCard';
@@ -106,6 +106,8 @@ export default function LicensePage() {
       code: product.id, name: product.name,
       description: product.description || 'Plano disponivel para assinatura.',
       amount: product.price,
+      validityDays: product.validityDays,
+      validityMonths: product.validityMonths,
       features: product.features || [], highlight: product.highlight || undefined,
     })),
     [products]
@@ -446,6 +448,21 @@ export default function LicensePage() {
                       <p className="text-xs text-muted-foreground">Valor</p>
                       <p className="mt-1 font-medium text-foreground">
                         {formatCurrency(result?.amount ?? selectedPlan?.amount ?? 0)}
+                        <span className="ml-1 text-sm font-normal text-muted-foreground">
+                          {formatPlanBillingCycle(
+                            (managedPlan ?? selectedPlan)?.validityMonths,
+                            (managedPlan ?? selectedPlan)?.validityDays
+                          )}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="rounded-lg border p-3 sm:col-span-2">
+                      <p className="text-xs text-muted-foreground">Validade do plano</p>
+                      <p className="mt-1 font-medium text-foreground">
+                        {formatPlanValidity(
+                          (managedPlan ?? selectedPlan)?.validityMonths,
+                          (managedPlan ?? selectedPlan)?.validityDays
+                        )}
                       </p>
                     </div>
                   </CardContent>
