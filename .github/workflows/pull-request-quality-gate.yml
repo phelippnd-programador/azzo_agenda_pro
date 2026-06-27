@@ -1,0 +1,70 @@
+name: Pull Request Quality Gate
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend-unit-tests:
+    name: frontend-unit-tests
+    if: github.base_ref == 'develop'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+
+      - name: Configurar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8.10.0
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Rodar testes unitarios
+        run: pnpm test:run
+
+  frontend-full-tests:
+    name: frontend-full-tests
+    if: github.base_ref == 'master'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+
+      - name: Configurar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8.10.0
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Rodar testes completos
+        run: pnpm test:run
+
+      - name: Validar build
+        run: pnpm build
