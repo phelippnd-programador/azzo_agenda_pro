@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -19,7 +20,7 @@ type PlanFormState = {
   name: string;
   description: string;
   currency: string;
-  price: string;
+  price: number;
   validityMonths: string;
   validityDays: string;
   highlight: string;
@@ -34,7 +35,7 @@ const createEmptyPlanForm = (): PlanFormState => ({
   name: '',
   description: '',
   currency: 'BRL',
-  price: '0',
+  price: 0,
   validityMonths: '1',
   validityDays: '',
   highlight: '',
@@ -112,7 +113,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
       name: plan.name || '',
       description: plan.description || '',
       currency: plan.currency || 'BRL',
-      price: String(plan.price ?? 0),
+      price: Number(plan.price ?? 0),
       validityMonths: String(plan.validityMonths ?? 1),
       validityDays: plan.validityDays != null ? String(plan.validityDays) : '',
       highlight: plan.highlight || '',
@@ -125,27 +126,37 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
     setIsDialogOpen(true);
   };
 
-  const buildPayload = (): SystemPlanUpsertRequest => ({
-    name: planForm.name.trim(),
-    description: planForm.description.trim() || undefined,
-    currency: planForm.currency.trim().toUpperCase() || 'BRL',
-    price: Number(planForm.price || 0),
-    validityMonths: Number(planForm.validityMonths || 1),
-    validityDays: planForm.validityDays.trim() ? Number(planForm.validityDays) : undefined,
-    highlight: planForm.highlight.trim() || undefined,
-    featuresJson: planForm.featuresJson.trim() || '[]',
-    active: planForm.active,
-    trial: planForm.trial,
-    priority: Number(planForm.priority || 0),
-    maxProfessionals: planForm.maxProfessionals.trim() ? Number(planForm.maxProfessionals) : undefined,
-  });
+  const buildPayload = (): SystemPlanUpsertRequest => {
+    if (!Number.isFinite(planForm.price)) {
+      throw new Error('Informe um preco valido em reais.');
+    }
+
+    return {
+      name: planForm.name.trim(),
+      description: planForm.description.trim() || undefined,
+      currency: planForm.currency.trim().toUpperCase() || 'BRL',
+      price: planForm.price,
+      validityMonths: Number(planForm.validityMonths || 1),
+      validityDays: planForm.validityDays.trim() ? Number(planForm.validityDays) : undefined,
+      highlight: planForm.highlight.trim() || undefined,
+      featuresJson: planForm.featuresJson.trim() || '[]',
+      active: planForm.active,
+      trial: planForm.trial,
+      priority: Number(planForm.priority || 0),
+      maxProfessionals: planForm.maxProfessionals.trim() ? Number(planForm.maxProfessionals) : undefined,
+    };
+  };
 
   const savePlan = async () => {
-    if (!planForm.name.trim()) {
-      toast.error('Nome do plano obrigatorio.');
-      return;
-    }
-    setIsSavingPlan(true);
+      if (!planForm.name.trim()) {
+        toast.error('Nome do plano obrigatorio.');
+        return;
+      }
+      if (!Number.isFinite(planForm.price)) {
+        toast.error('Informe um preco valido em reais.');
+        return;
+      }
+      setIsSavingPlan(true);
     try {
       const payload = buildPayload();
       if (planForm.id) {
@@ -384,15 +395,16 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
                 value={planForm.currency}
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, currency: e.target.value }))}
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Preco em centavos</Label>
-              <Input
-                type="number"
-                value={planForm.price}
-                onChange={(e) => setPlanForm((prev) => ({ ...prev, price: e.target.value }))}
-              />
-            </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="system-plan-price">Preco em reais</Label>
+                <CurrencyInput
+                  id="system-plan-price"
+                  value={planForm.price}
+                  onChange={(value) => setPlanForm((prev) => ({ ...prev, price: value }))}
+                  placeholder="0,00"
+                />
+              </div>
             <div className="space-y-1.5">
               <Label>Validade em meses</Label>
               <Input

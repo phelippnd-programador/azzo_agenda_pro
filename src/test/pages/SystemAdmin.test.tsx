@@ -3,6 +3,12 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import SystemAdminPage from "@/pages/SystemAdmin";
 
+const { listPlansMock, createPlanMock, updatePlanMock } = vi.hoisted(() => ({
+  listPlansMock: vi.fn(),
+  createPlanMock: vi.fn(),
+  updatePlanMock: vi.fn(),
+}));
+
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({
     user: { id: "admin-1", role: "ADMIN", name: "Admin QA", email: "admin@qa.local" },
@@ -38,9 +44,9 @@ vi.mock("@/lib/api", async () => {
     },
     systemAdminApi: {
       ...actual.systemAdminApi,
-      listPlans: vi.fn().mockResolvedValue({ items: [] }),
-      createPlan: vi.fn(),
-      updatePlan: vi.fn(),
+      listPlans: listPlansMock,
+      createPlan: createPlanMock,
+      updatePlan: updatePlanMock,
       updatePlanActive: vi.fn(),
       getCommercialOverview: vi.fn().mockResolvedValue({
         totalTenants: 0,
@@ -73,6 +79,15 @@ vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/components/chat/ChatInboxNotifier", () => ({ ChatInboxNotifier: () => null }));
 
 describe("SystemAdminPage", () => {
+  beforeEach(() => {
+    listPlansMock.mockReset();
+    createPlanMock.mockReset();
+    updatePlanMock.mockReset();
+    listPlansMock.mockResolvedValue({ items: [] });
+    createPlanMock.mockResolvedValue({});
+    updatePlanMock.mockResolvedValue({});
+  });
+
   it(
     "should render admin tabs and critical sections",
     async () => {
@@ -91,6 +106,57 @@ describe("SystemAdminPage", () => {
       expect(screen.getByRole("button", { name: /Novo menu/i })).toBeInTheDocument();
       await user.click(screen.getByRole("tab", { name: "Financeiro" }));
       expect(screen.getByRole("button", { name: /Novo plano/i })).toBeInTheDocument();
+    },
+    10000
+  );
+
+  it(
+    "should send plan price in reais when editing with brazilian decimal input",
+    async () => {
+      const user = userEvent.setup();
+      listPlansMock.mockResolvedValue({
+        items: [
+          {
+            id: "plan-1",
+            name: "Azzo Pro",
+            description: "Plano teste",
+            currency: "BRL",
+            price: 49.9,
+            validityMonths: 1,
+            validityDays: null,
+            highlight: null,
+            featuresJson: "[]",
+            active: true,
+            trial: false,
+            priority: 0,
+            maxProfessionals: 5,
+          },
+        ],
+      });
+
+      render(
+        <MemoryRouter initialEntries={["/configuracoes/admin-sistema"]}>
+          <SystemAdminPage />
+        </MemoryRouter>
+      );
+
+      await user.click(await screen.findByRole("tab", { name: "Financeiro" }));
+      await user.click(await screen.findByRole("button", { name: /editar/i }));
+
+      const priceInput = screen.getByPlaceholderText("0,00");
+      expect(priceInput).toHaveValue("49,90");
+      await user.clear(priceInput);
+      await user.type(priceInput, "56,00");
+      expect(priceInput).toHaveValue("56,00");
+
+      await user.click(screen.getByRole("button", { name: "Salvar" }));
+
+      expect(updatePlanMock).toHaveBeenCalledWith(
+        "plan-1",
+        expect.objectContaining({
+          price: 56,
+        })
+      );
     },
     10000
   );
