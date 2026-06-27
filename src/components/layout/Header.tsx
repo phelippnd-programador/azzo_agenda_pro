@@ -32,6 +32,7 @@ export function Header({
   const { user, logout } = useAuth();
   const { summaryItems, unreadCount, refreshSummary } = useNotifications();
   const isOwner = user?.role === "OWNER";
+  const isProfessional = user?.role === "PROFESSIONAL";
   const displayName = user?.name || user?.salonName || "Azzo";
   const initials =
     displayName
@@ -166,14 +167,18 @@ export function Header({
                 <User className="mr-2 h-4 w-4 opacity-60" />
                 Perfil
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/configuracoes")}>
-                <Settings className="mr-2 h-4 w-4 opacity-60" />
-                Configuracoes
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/financeiro/licenca")}>
-                <CreditCard className="mr-2 h-4 w-4 opacity-60" />
-                Plano e Faturamento
-              </DropdownMenuItem>
+              {!isProfessional ? (
+                <DropdownMenuItem onClick={() => navigate("/configuracoes")}>
+                  <Settings className="mr-2 h-4 w-4 opacity-60" />
+                  Configuracoes
+                </DropdownMenuItem>
+              ) : null}
+              {!isProfessional ? (
+                <DropdownMenuItem onClick={() => navigate("/financeiro/licenca")}>
+                  <CreditCard className="mr-2 h-4 w-4 opacity-60" />
+                  Plano e Faturamento
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
