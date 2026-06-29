@@ -127,12 +127,12 @@ export default function StockInventoriesPage() {
   };
 
   useEffect(() => {
-    if (inventoryId) {
+    if (inventoryId && !isCreateRoute) {
       void loadCounts(inventoryId);
     } else {
       setCounts([]);
     }
-  }, [inventoryId]);
+  }, [inventoryId, isCreateRoute]);
 
   const handleUpdateCount = async () => {
     if (!selectedInventory || !editingCount) return;
