@@ -30,6 +30,7 @@ export default function Login() {
   const [rememberPassword, setRememberPassword] = useState(false);
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
+    mode: "onTouched",
     defaultValues: {
       email: '',
       password: '',

@@ -67,6 +67,7 @@ export default function Register() {
 
   const form = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
+    mode: "onTouched",
     defaultValues: {
       name: "",
       email: "",
@@ -109,8 +110,7 @@ export default function Register() {
       "acceptedLegalTerms",
     ]);
     if (!isValid) {
-      const firstError = Object.values(form.formState.errors)[0];
-      if (firstError?.message) toast.error(firstError.message);
+      toast.error("Corrija os campos indicados antes de continuar.");
       return;
     }
     setStep(2);
