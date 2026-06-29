@@ -322,12 +322,18 @@ export default function StockInventoriesPage() {
                   onChange={(e) => setCountForm((prev) => ({ ...prev, itemEstoqueId: e.target.value }))}
                 >
                   <option value="">Selecione</option>
-                  {items.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.nome} ({item.unidadeMedida})
-                    </option>
-                  ))}
+                  {items.map((item) => {
+                    const jaContado = counts.some((c) => c.itemEstoqueId === item.id);
+                    return (
+                      <option key={item.id} value={item.id} disabled={jaContado}>
+                        {item.nome} ({item.unidadeMedida}){jaContado ? " — ja contado" : ""}
+                      </option>
+                    );
+                  })}
                 </select>
+                {countForm.itemEstoqueId && counts.some((c) => c.itemEstoqueId === countForm.itemEstoqueId) && (
+                  <p className="text-xs text-amber-600">Este item ja foi contado. Use o botao Editar na tabela abaixo.</p>
+                )}
               </div>
               <div className="space-y-1">
                 <Label>Quantidade contada</Label>
@@ -353,9 +359,18 @@ export default function StockInventoriesPage() {
               />
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button onClick={() => void handleRegisterCount()} disabled={isSavingCount || selectedInventory.status === "FECHADO" || selectedInventory.status === "CANCELADO"}>
-                {isSavingCount ? "Salvando..." : "Registrar contagem"}
-              </Button>
+              {(() => {
+                const itemJaContado = !!countForm.itemEstoqueId && counts.some((c) => c.itemEstoqueId === countForm.itemEstoqueId);
+                const inventarioFinalizado = selectedInventory.status === "FECHADO" || selectedInventory.status === "CANCELADO";
+                return (
+                  <Button
+                    onClick={() => void handleRegisterCount()}
+                    disabled={isSavingCount || inventarioFinalizado || itemJaContado}
+                  >
+                    {isSavingCount ? "Salvando..." : "Registrar contagem"}
+                  </Button>
+                );
+              })()}
               <Button
                 variant="outline"
                 onClick={() => void handleCloseInventory()}
