@@ -122,6 +122,21 @@ export type CreateStockInventoryRequest = {
   observacao?: string;
 };
 
+export type StockInventoryPageResponse = {
+  items: StockInventory[];
+  page: number;
+  totalPages: number;
+  total: number;
+  hasNext: boolean;
+};
+
+export type StockInventoryFilters = {
+  search?: string;
+  status?: StockInventoryStatus | "";
+  page?: number;
+  limit?: number;
+};
+
 export type StockInventoryCountRequest = {
   itemEstoqueId: string;
   quantidadeContada: number;
