@@ -335,11 +335,11 @@ export default function StockInventoriesPage() {
                   type="number"
                   min="0"
                   step="0.0001"
-                  value={countForm.quantidadeContada}
+                  value={countForm.quantidadeContada === 0 ? "" : countForm.quantidadeContada}
                   onChange={(e) =>
                     setCountForm((prev) => ({
                       ...prev,
-                      quantidadeContada: Number(e.target.value || 0),
+                      quantidadeContada: e.target.value === "" ? 0 : Number(e.target.value),
                     }))
                   }
                 />
@@ -452,8 +452,8 @@ export default function StockInventoriesPage() {
                 type="number"
                 min="0"
                 step="0.0001"
-                value={editForm.quantidadeContada}
-                onChange={(e) => setEditForm((prev) => ({ ...prev, quantidadeContada: Number(e.target.value || 0) }))}
+                value={editForm.quantidadeContada === 0 ? "" : editForm.quantidadeContada}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, quantidadeContada: e.target.value === "" ? 0 : Number(e.target.value) }))}
               />
             </div>
             <div className="space-y-1">
