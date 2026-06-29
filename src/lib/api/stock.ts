@@ -24,7 +24,9 @@ import type {
   StockImportTemplateFormat,
   StockImportType,
   StockInventory,
+  StockInventoryCount,
   StockInventoryCountRequest,
+  UpdateStockInventoryCountRequest,
   StockItem,
   StockMovement,
   StockPurchaseOrder,
@@ -116,6 +118,13 @@ export const stockApi = {
   closeInventory: (id: string) =>
     request<StockInventory>(`/estoque/inventarios/${id}/fechamento`, {
       method: "POST",
+    }),
+  listInventoryCounts: (inventoryId: string) =>
+    request<StockInventoryCount[]>(`/estoque/inventarios/${inventoryId}/contagens`),
+  updateInventoryCount: (inventoryId: string, countId: string, payload: UpdateStockInventoryCountRequest) =>
+    request<StockInventoryCount>(`/estoque/inventarios/${inventoryId}/contagens/${countId}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
     }),
   listSuppliers: (params?: ListQueryParams & { cursorCreatedAt?: string; cursorId?: string }) => {
     const query = buildListQuery(params);

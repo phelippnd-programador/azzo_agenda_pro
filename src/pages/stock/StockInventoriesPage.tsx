@@ -15,8 +15,10 @@ import { resolveUiError } from "@/lib/error-utils";
 import type {
   CreateStockInventoryRequest,
   StockInventory,
+  StockInventoryCount,
   StockItem,
   StockInventoryCountRequest,
+  UpdateStockInventoryCountRequest,
 } from "@/types/stock";
 import { formatDateTime } from "./utils";
 
@@ -55,6 +57,12 @@ export default function StockInventoriesPage() {
   const pageSize = 8;
   const [inventoryForm, setInventoryForm] = useState<CreateStockInventoryRequest>(initialInventoryForm);
   const [countForm, setCountForm] = useState<StockInventoryCountRequest>(initialCountForm);
+
+  const [counts, setCounts] = useState<StockInventoryCount[]>([]);
+  const [isLoadingCounts, setIsLoadingCounts] = useState(false);
+  const [editingCount, setEditingCount] = useState<StockInventoryCount | null>(null);
+  const [editForm, setEditForm] = useState<UpdateStockInventoryCountRequest>({ quantidadeContada: 0, observacao: "" });
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   const load = async () => {
     try {
@@ -106,6 +114,48 @@ export default function StockInventoriesPage() {
     }
   }, [inventoryId, selectedInventory, isLoading]);
 
+  const loadCounts = async (id: string) => {
+    try {
+      setIsLoadingCounts(true);
+      const result = await stockApi.listInventoryCounts(id);
+      setCounts(result || []);
+    } catch {
+      setCounts([]);
+    } finally {
+      setIsLoadingCounts(false);
+    }
+  };
+
+  useEffect(() => {
+    if (inventoryId) {
+      void loadCounts(inventoryId);
+    } else {
+      setCounts([]);
+    }
+  }, [inventoryId]);
+
+  const handleUpdateCount = async () => {
+    if (!selectedInventory || !editingCount) return;
+    if (editForm.quantidadeContada < 0) {
+      toast.error("Quantidade deve ser maior ou igual a zero.");
+      return;
+    }
+    try {
+      setIsSavingEdit(true);
+      const updated = await stockApi.updateInventoryCount(selectedInventory.id, editingCount.id, {
+        quantidadeContada: Number(editForm.quantidadeContada),
+        observacao: editForm.observacao?.trim() || undefined,
+      });
+      setCounts((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+      setEditingCount(null);
+      toast.success("Contagem atualizada.");
+    } catch (error) {
+      toast.error(resolveUiError(error, "Nao foi possivel atualizar contagem.").message);
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
   const handleCreate = async () => {
     if (!inventoryForm.nome?.trim()) {
       toast.error("Informe o nome do inventario.");
@@ -151,6 +201,7 @@ export default function StockInventoriesPage() {
       setCountForm(initialCountForm);
       toast.success("Contagem registrada com sucesso.");
       await load();
+      void loadCounts(selectedInventory.id);
     } catch (error) {
       toast.error(resolveUiError(error, "Nao foi possivel registrar contagem.").message);
     } finally {
@@ -316,6 +367,111 @@ export default function StockInventoriesPage() {
           </CardContent>
         </Card>
       ) : null}
+
+      {selectedInventory && (
+        <Card className="border-border/80">
+          <CardHeader>
+            <CardTitle className="text-base">Contagens registradas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoadingCounts ? (
+              <Skeleton className="h-24 w-full" />
+            ) : counts.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma contagem registrada neste inventario.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border/60 text-left text-xs text-muted-foreground">
+                      <th className="pb-2 pr-4 font-medium">Item</th>
+                      <th className="pb-2 pr-4 font-medium text-right">Esperado</th>
+                      <th className="pb-2 pr-4 font-medium text-right">Contado</th>
+                      <th className="pb-2 pr-4 font-medium text-right">Diferenca</th>
+                      <th className="pb-2 pr-4 font-medium">Observacao</th>
+                      <th className="pb-2 font-medium">Data</th>
+                      {selectedInventory.status !== "FECHADO" && selectedInventory.status !== "CANCELADO" && (
+                        <th className="pb-2" />
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/40">
+                    {counts.map((count) => {
+                      const diff = count.diferenca ?? (count.quantidadeContada - count.quantidadeEsperada);
+                      return (
+                        <tr key={count.id} className="align-middle">
+                          <td className="py-2 pr-4 font-medium">
+                            {count.itemNome ?? count.itemEstoqueId}
+                            {count.itemUnidadeMedida ? (
+                              <span className="ml-1 text-xs text-muted-foreground">({count.itemUnidadeMedida})</span>
+                            ) : null}
+                          </td>
+                          <td className="py-2 pr-4 text-right tabular-nums">{Number(count.quantidadeEsperada).toFixed(2)}</td>
+                          <td className="py-2 pr-4 text-right tabular-nums">{Number(count.quantidadeContada).toFixed(2)}</td>
+                          <td className={`py-2 pr-4 text-right tabular-nums font-medium ${diff > 0 ? "text-green-600" : diff < 0 ? "text-red-600" : "text-muted-foreground"}`}>
+                            {diff > 0 ? "+" : ""}{Number(diff).toFixed(2)}
+                          </td>
+                          <td className="py-2 pr-4 text-muted-foreground max-w-[160px] truncate">{count.observacao || "—"}</td>
+                          <td className="py-2 pr-4 text-muted-foreground whitespace-nowrap text-xs">{formatDateTime(count.createdAt)}</td>
+                          {selectedInventory.status !== "FECHADO" && selectedInventory.status !== "CANCELADO" && (
+                            <td className="py-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setEditingCount(count);
+                                  setEditForm({ quantidadeContada: count.quantidadeContada, observacao: count.observacao || "" });
+                                }}
+                              >
+                                Editar
+                              </Button>
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      <Dialog open={!!editingCount} onOpenChange={(open) => { if (!open) setEditingCount(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar contagem</DialogTitle>
+            <DialogDescription>
+              {editingCount?.itemNome ?? "Item"} — ajuste a quantidade contada.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label>Quantidade contada</Label>
+              <Input
+                type="number"
+                min="0"
+                step="0.0001"
+                value={editForm.quantidadeContada}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, quantidadeContada: Number(e.target.value || 0) }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Observacao (opcional)</Label>
+              <Input
+                value={editForm.observacao || ""}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, observacao: e.target.value }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingCount(null)}>Cancelar</Button>
+            <Button onClick={() => void handleUpdateCount()} disabled={isSavingEdit}>
+              {isSavingEdit ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={isCreateOpen}

@@ -128,6 +128,27 @@ export type StockInventoryCountRequest = {
   observacao?: string;
 };
 
+export type StockInventoryCount = {
+  id: string;
+  inventarioId: string;
+  itemEstoqueId: string;
+  itemNome?: string | null;
+  itemUnidadeMedida?: string | null;
+  quantidadeEsperada: number;
+  quantidadeContada: number;
+  diferenca: number;
+  observacao?: string | null;
+  usuarioId?: string | null;
+  usuarioAtualizacaoId?: string | null;
+  createdAt: string;
+  updatedAt?: string | null;
+};
+
+export type UpdateStockInventoryCountRequest = {
+  quantidadeContada: number;
+  observacao?: string;
+};
+
 export type StockSupplier = {
   id: string;
   nome: string;
