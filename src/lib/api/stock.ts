@@ -23,6 +23,7 @@ import type {
   StockImportJob,
   StockImportTemplateFormat,
   StockImportType,
+  CancelStockInventoryRequest,
   StockInventory,
   StockInventoryCount,
   StockInventoryCountRequest,
@@ -118,6 +119,11 @@ export const stockApi = {
   closeInventory: (id: string) =>
     request<StockInventory>(`/estoque/inventarios/${id}/fechamento`, {
       method: "POST",
+    }),
+  cancelInventory: (id: string, payload: CancelStockInventoryRequest) =>
+    request<StockInventory>(`/estoque/inventarios/${id}/cancelamento`, {
+      method: "POST",
+      body: JSON.stringify(payload),
     }),
   listInventoryCounts: (inventoryId: string) =>
     request<StockInventoryCount[]>(`/estoque/inventarios/${inventoryId}/contagens`),

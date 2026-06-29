@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import type {
+  CancelStockInventoryRequest,
   CreateStockInventoryRequest,
   StockInventory,
   StockInventoryCount,
@@ -63,6 +64,10 @@ export default function StockInventoriesPage() {
   const [editingCount, setEditingCount] = useState<StockInventoryCount | null>(null);
   const [editForm, setEditForm] = useState<UpdateStockInventoryCountRequest>({ quantidadeContada: 0, observacao: "" });
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  const [isCancelOpen, setIsCancelOpen] = useState(false);
+  const [cancelForm, setCancelForm] = useState<CancelStockInventoryRequest>({ senha: "", motivo: "" });
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const load = async () => {
     try {
@@ -223,6 +228,29 @@ export default function StockInventoriesPage() {
     }
   };
 
+  const handleCancelInventory = async () => {
+    if (!selectedInventory) return;
+    if (!cancelForm.senha.trim()) {
+      toast.error("Informe sua senha para confirmar o cancelamento.");
+      return;
+    }
+    try {
+      setIsCancelling(true);
+      const updated = await stockApi.cancelInventory(selectedInventory.id, {
+        senha: cancelForm.senha,
+        motivo: cancelForm.motivo?.trim() || undefined,
+      });
+      setInventories((prev) => prev.map((inv) => (inv.id === updated.id ? updated : inv)));
+      setIsCancelOpen(false);
+      setCancelForm({ senha: "", motivo: "" });
+      toast.success("Inventario cancelado.");
+    } catch (error) {
+      toast.error(resolveUiError(error, "Nao foi possivel cancelar inventario.").message);
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   const getStatusVariant = (status: StockInventory["status"]) => {
     if (status === "FECHADO") return "secondary" as const;
     if (status === "CANCELADO") return "destructive" as const;
@@ -378,6 +406,14 @@ export default function StockInventoriesPage() {
               >
                 {isClosing ? "Fechando..." : "Fechar inventario"}
               </Button>
+              <Button
+                variant="outline"
+                className="text-destructive hover:text-destructive"
+                onClick={() => { setCancelForm({ senha: "", motivo: "" }); setIsCancelOpen(true); }}
+                disabled={selectedInventory.status === "FECHADO" || selectedInventory.status === "CANCELADO"}
+              >
+                Cancelar inventario
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -483,6 +519,44 @@ export default function StockInventoriesPage() {
             <Button variant="outline" onClick={() => setEditingCount(null)}>Cancelar</Button>
             <Button onClick={() => void handleUpdateCount()} disabled={isSavingEdit}>
               {isSavingEdit ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCancelOpen} onOpenChange={(open) => { setIsCancelOpen(open); if (!open) setCancelForm({ senha: "", motivo: "" }); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Cancelar inventario</DialogTitle>
+            <DialogDescription>
+              Esta acao e irreversivel. O inventario sera marcado como cancelado e nao podera ser reaberto. Confirme com sua senha.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label>Motivo do cancelamento (opcional)</Label>
+              <Input
+                value={cancelForm.motivo || ""}
+                onChange={(e) => setCancelForm((prev) => ({ ...prev, motivo: e.target.value }))}
+                placeholder="Ex.: Inventario criado por engano"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Sua senha</Label>
+              <Input
+                type="password"
+                value={cancelForm.senha}
+                onChange={(e) => setCancelForm((prev) => ({ ...prev, senha: e.target.value }))}
+                onKeyDown={(e) => { if (e.key === "Enter") void handleCancelInventory(); }}
+                placeholder="Digite sua senha para confirmar"
+                autoComplete="current-password"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCancelOpen(false)}>Voltar</Button>
+            <Button variant="destructive" onClick={() => void handleCancelInventory()} disabled={isCancelling || !cancelForm.senha.trim()}>
+              {isCancelling ? "Cancelando..." : "Confirmar cancelamento"}
             </Button>
           </DialogFooter>
         </DialogContent>

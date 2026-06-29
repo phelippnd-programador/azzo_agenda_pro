@@ -149,6 +149,11 @@ export type UpdateStockInventoryCountRequest = {
   observacao?: string;
 };
 
+export type CancelStockInventoryRequest = {
+  senha: string;
+  motivo?: string;
+};
+
 export type StockSupplier = {
   id: string;
   nome: string;
