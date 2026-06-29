@@ -126,9 +126,18 @@ export function buildDynamicSidebarMenu(
     roots.push({ node, displayOrder: item.displayOrder });
   });
 
-  return moveStandaloneRoutesToEnd(
-    sortMenuNodes(roots).map(({ node }) => node)
+  const sortedRoots = sortMenuNodes(roots).map(({ node }) => node);
+
+  const childPaths = new Set<string>();
+  sortedRoots.forEach((node) => {
+    node.children.forEach((child) => childPaths.add(child.path));
+  });
+
+  const deduplicatedRoots = sortedRoots.filter(
+    (node) => !(node.children.length === 0 && childPaths.has(node.path))
   );
+
+  return moveStandaloneRoutesToEnd(deduplicatedRoots);
 }
 
 export function buildFallbackSidebarMenu(allowedSet: Set<string>): SidebarMenuNode[] {
