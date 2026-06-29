@@ -27,6 +27,8 @@ import type {
   StockInventory,
   StockInventoryCount,
   StockInventoryCountRequest,
+  StockInventoryFilters,
+  StockInventoryPageResponse,
   UpdateStockInventoryCountRequest,
   StockItem,
   StockMovement,
@@ -98,12 +100,14 @@ export const stockApi = {
     const suffix = query.toString() ? `?${query.toString()}` : "";
     return request<StockDashboardResponse>(`/estoque/dashboard${suffix}`);
   },
-  listInventories: (params?: ListQueryParams & { cursorCreatedAt?: string; cursorId?: string }) => {
-    const query = buildListQuery(params);
-    if (params?.cursorCreatedAt) query.set("cursorCreatedAt", params.cursorCreatedAt);
-    if (params?.cursorId) query.set("cursorId", params.cursorId);
+  listInventories: (params?: StockInventoryFilters) => {
+    const query = new URLSearchParams();
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.limit) query.set("limit", String(params.limit));
+    if (params?.search?.trim()) query.set("search", params.search.trim());
+    if (params?.status) query.set("status", params.status);
     const suffix = query.toString() ? `?${query.toString()}` : "";
-    return request<StockInventory[]>(`/estoque/inventarios${suffix}`);
+    return request<StockInventoryPageResponse>(`/estoque/inventarios${suffix}`);
   },
   createInventory: (payload: CreateStockInventoryRequest) =>
     request<StockInventory>("/estoque/inventarios", {
