@@ -134,8 +134,11 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
 
   const handleLogout = async () => {
     persistScrollPosition();
-    await logout();
-    navigate(appRouteManifest.public.login);
+    try {
+      await logout();
+    } finally {
+      navigate(appRouteManifest.public.login, { replace: true });
+    }
   };
 
   return (

@@ -15,6 +15,7 @@ vi.mock("@/hooks/useProfessionals", () => ({
         phone: "(11) 99999-0000",
         specialties: ["Cabelo"],
         isActive: true,
+        accessUserCreated: true,
         workingHours: [],
       },
     ],
@@ -121,5 +122,8 @@ describe("Professionals", () => {
 
     expect(screen.getByText("Novo Profissional")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Criar profissional/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(/o sistema cria o acesso do profissional automaticamente/i)
+    ).toBeInTheDocument();
   }, 10000);
 });

@@ -43,6 +43,7 @@ type ProfessionalData = {
   phone: string;
   specialties: string[];
   isActive: boolean;
+  accessUserCreated?: boolean;
   workingHours: WorkingHours[];
 };
 
@@ -215,6 +216,14 @@ export default function Professionals() {
           badge={`${activeProfessionalsCount} ativo(s) no momento`}
         />
 
+        <Alert className="border-emerald-200/70 bg-emerald-50/70 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Acesso do profissional</AlertTitle>
+          <AlertDescription>
+            Novo profissional recebe acesso automatico quando voce informa um e-mail valido. A senha temporaria e enviada por e-mail e pode ser reenviada pela acao <strong>Resetar senha</strong>.
+          </AlertDescription>
+        </Alert>
+
         <CrudListToolbar
           searchPlaceholder="Buscar profissionais..."
           searchValue={searchTerm}
@@ -291,6 +300,7 @@ export default function Professionals() {
                       <TableHead>Profissional</TableHead>
                       <TableHead className="hidden md:table-cell">Telefone</TableHead>
                       <TableHead className="hidden lg:table-cell">Especialidades</TableHead>
+                      <TableHead className="hidden xl:table-cell">Acesso</TableHead>
                       <TableHead className="text-center">Status</TableHead>
                       <TableHead className="w-10" />
                     </TableRow>
@@ -321,6 +331,11 @@ export default function Professionals() {
                           {professional.specialties.length
                             ? professional.specialties.join(', ')
                             : 'Sem especialidades'}
+                        </TableCell>
+                        <TableCell className="hidden xl:table-cell">
+                          <Badge variant="outline">
+                            {professional.accessUserCreated ? 'Acesso ativo' : 'Sem acesso'}
+                          </Badge>
                         </TableCell>
                         <TableCell className="text-center">
                           <Badge

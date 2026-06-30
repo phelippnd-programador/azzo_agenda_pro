@@ -31,7 +31,14 @@ const scrollToSection = (id: string, source?: string) => {
   if (source) {
     trackMarketingEvent('sale_cta_clicked', { source, target: id });
   }
+  if (typeof window !== 'undefined') {
+    window.history.replaceState(null, '', `${window.location.pathname}#${id}`);
+  }
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  window.setTimeout(() => {
+    const focusTarget = document.querySelector<HTMLElement>('[data-sale-register-focus="true"]');
+    focusTarget?.focus();
+  }, 250);
 };
 
 const heroImage = '/images/hero_salon_system.png';

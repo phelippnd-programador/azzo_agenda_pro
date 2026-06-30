@@ -35,6 +35,7 @@ export interface Professional {
   commissionRate: number;
   workingHours: WorkingHours[];
   isActive: boolean;
+  accessUserCreated?: boolean;
   createdAt: Date;
 }
 

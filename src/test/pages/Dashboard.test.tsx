@@ -10,6 +10,7 @@ const {
   dashboardState,
   authState,
   professionalsState,
+  appointmentsState,
 } = vi.hoisted(() => ({
   logoutMock: vi.fn(),
   refetchMock: vi.fn(),
@@ -48,6 +49,9 @@ const {
   professionalsState: {
     professionals: [],
   },
+  appointmentsState: {
+    appointments: [],
+  },
 }));
 
 vi.mock("@/components/dashboard/UpcomingAppointments", () => ({
@@ -72,7 +76,7 @@ vi.mock("@/hooks/useDashboard", () => ({
 
 vi.mock("@/hooks/useAppointments", () => ({
   useAppointments: () => ({
-    appointments: [],
+    appointments: appointmentsState.appointments,
     isLoading: false,
     updateAppointmentStatus: vi.fn(),
   }),
@@ -134,6 +138,7 @@ describe("Dashboard", () => {
   beforeEach(() => {
     authState.user = { id: "owner-1", role: "OWNER", name: "Owner QA" };
     professionalsState.professionals = [];
+    appointmentsState.appointments = [];
     dashboardState.error = null;
     dashboardState.refetch = refetchMock;
     refetchMock.mockReset();
@@ -220,6 +225,28 @@ describe("Dashboard", () => {
       expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
       "professional-1"
     );
+  });
+
+  it("should prioritize live day appointments for owner operational cards", async () => {
+    const todayIso = new Date().toISOString().split("T")[0];
+    appointmentsState.appointments = [
+      {
+        id: "apt-1",
+        date: todayIso,
+        startTime: "10:00",
+        status: "PENDING",
+      },
+    ];
+
+    render(
+      <MemoryRouter initialEntries={["/dashboard"]}>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText("1 agendamento(s) no dia")).toBeInTheDocument();
+    expect(screen.getByText("Agendamentos Hoje")).toBeInTheDocument();
+    expect(screen.getByText("Pendentes")).toBeInTheDocument();
   });
 });
 

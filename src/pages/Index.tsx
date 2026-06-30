@@ -328,7 +328,16 @@ export default function Dashboard() {
     whatsAppStoppedAtFinalReview: 0,
   };
 
-  const resolvedMetrics = isProfessionalUser ? professionalScopedMetrics : metrics;
+  const ownerScopedMetrics = {
+    ...metrics,
+    todayAppointments: todayAppointments.length,
+    pendingAppointments: todayAppointments.filter(
+      (appointment) => appointment.status === 'PENDING' || appointment.status === 'CONFIRMED'
+    ).length,
+    completedToday: todayAppointments.filter((appointment) => appointment.status === 'COMPLETED').length,
+  };
+
+  const resolvedMetrics = isProfessionalUser ? professionalScopedMetrics : ownerScopedMetrics;
 
   const formattedDate = new Date().toLocaleDateString('pt-BR', {
     weekday: 'long',

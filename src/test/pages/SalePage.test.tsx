@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import SalePage from '@/pages/SalePage';
+import { COOKIE_CONSENT_STORAGE_KEY, COOKIE_CONSENT_VERSION } from '@/lib/cookie-consent';
 
 const mocks = vi.hoisted(() => ({
   register: vi.fn().mockResolvedValue(undefined),
@@ -53,6 +54,15 @@ describe('SalePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     Element.prototype.scrollIntoView = vi.fn();
+    localStorage.setItem(
+      COOKIE_CONSENT_STORAGE_KEY,
+      JSON.stringify({
+        choice: 'accepted',
+        version: COOKIE_CONSENT_VERSION,
+        createdAt: '2026-03-01T00:00:00.000Z',
+        expiresAt: '2026-12-01T00:00:00.000Z',
+      })
+    );
   });
 
   it(
@@ -131,4 +141,22 @@ describe('SalePage', () => {
     },
     15000
   );
+
+  it('should show inline validation when required signup fields are missing', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={['/compras']}>
+        <SalePage />
+      </MemoryRouter>
+    );
+
+    await user.click(await screen.findByRole('button', { name: /Continuar para dados do salao/i }));
+
+    expect(screen.getByText(/Informe seu nome completo/i)).toBeInTheDocument();
+    expect(screen.getByText(/Informe um e-mail valido/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Informe uma senha/i)).toBeInTheDocument();
+    expect(screen.getByText(/Confirme a senha/i)).toBeInTheDocument();
+    expect(screen.getByText(/Voce precisa aceitar os termos para continuar/i)).toBeInTheDocument();
+  });
 });

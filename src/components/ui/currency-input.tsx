@@ -27,7 +27,7 @@ function formatDisplay(value: number): string {
  * Modo caixa registradora (cents=true): os dois últimos dígitos são centavos.
  * Ex: "6500" → 65.00 | "65" → 0.65
  */
-function parseInputCents(raw: string): number {
+export function parseInputCents(raw: string): number {
   const digits = raw.replace(/\D/g, '');
   if (!digits) return 0;
   return parseInt(digits, 10) / 100;
@@ -37,10 +37,26 @@ function parseInputCents(raw: string): number {
  * Modo reais (cents=false): aceita valor decimal direto.
  * Ex: "65" → 65.00 | "65,50" ou "65.50" → 65.50
  */
-function parseInputReais(raw: string): number {
-  const cleaned = raw.replace(/[^\d,.]/, '').replace(',', '.');
-  const value = parseFloat(cleaned);
-  return isNaN(value) ? 0 : value;
+export function parseInputReais(raw: string): number {
+  const cleaned = raw.replace(/[^\d,.\s]/g, '').trim();
+  if (!cleaned) return 0;
+
+  const lastComma = cleaned.lastIndexOf(',');
+  const lastDot = cleaned.lastIndexOf('.');
+  const decimalIndex = Math.max(lastComma, lastDot);
+
+  if (decimalIndex >= 0) {
+    const integerPart = cleaned.slice(0, decimalIndex).replace(/[^\d]/g, '');
+    const decimalPart = cleaned.slice(decimalIndex + 1).replace(/[^\d]/g, '');
+    const normalized = `${integerPart || '0'}.${decimalPart || '0'}`;
+    const value = Number.parseFloat(normalized);
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  const digits = cleaned.replace(/[^\d]/g, '');
+  if (!digits) return 0;
+  const value = Number.parseFloat(digits);
+  return Number.isFinite(value) ? value : 0;
 }
 
 export function CurrencyInput({

@@ -51,6 +51,11 @@ import { CurrencyInput } from '@/components/ui/currency-input';
 import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
 
 const categories = ['Todos', 'Cabelo', 'Barba', 'Unhas', 'Estetica', 'Maquiagem', 'Outros'];
+type ServiceFormErrors = {
+  name?: string;
+  duration?: string;
+  price?: string;
+};
 
 export default function ServicesOverviewPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -74,6 +79,7 @@ export default function ServicesOverviewPage() {
   const [formCategory, setFormCategory] = useState('Cabelo');
   const [formProfessionalIds, setFormProfessionalIds] = useState<string[]>([]);
   const [formIsActive, setFormIsActive] = useState(true);
+  const [formErrors, setFormErrors] = useState<ServiceFormErrors>({});
 
   const {
     services,
@@ -110,6 +116,7 @@ export default function ServicesOverviewPage() {
     setFormCategory('Cabelo');
     setFormProfessionalIds([]);
     setFormIsActive(true);
+    setFormErrors({});
     setEditingService(null);
   };
 
@@ -134,17 +141,32 @@ export default function ServicesOverviewPage() {
   };
 
   const handleSubmit = async () => {
-    if (!formName || !formPrice || !formDuration || formPrice <= 0) {
+    const nextErrors: ServiceFormErrors = {};
+    const durationValue = Number.parseInt(formDuration, 10);
+
+    if (!formName.trim()) {
+      nextErrors.name = 'Informe o nome do servico.';
+    }
+    if (!formDuration.trim() || !Number.isFinite(durationValue) || durationValue <= 0) {
+      nextErrors.duration = 'Informe uma duracao valida em minutos.';
+    }
+    if (!Number.isFinite(formPrice) || formPrice <= 0) {
+      nextErrors.price = 'Informe um preco maior que zero.';
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setFormErrors(nextErrors);
       toast.error('Preencha todos os campos obrigatorios');
       return;
     }
 
+    setFormErrors({});
     setIsSubmitting(true);
     try {
       const serviceData = {
-        name: formName,
+        name: formName.trim(),
         description: formDescription,
-        duration: parseInt(formDuration),
+        duration: durationValue,
         price: formPrice,
         category: formCategory,
         professionalIds: formProfessionalIds,
@@ -323,8 +345,17 @@ export default function ServicesOverviewPage() {
                     <Input
                       placeholder="Ex: Corte Feminino"
                       value={formName}
-                      onChange={(e) => setFormName(e.target.value)}
+                      onChange={(e) => {
+                        setFormName(e.target.value);
+                        if (formErrors.name) {
+                          setFormErrors((current) => ({ ...current, name: undefined }));
+                        }
+                      }}
+                      aria-invalid={Boolean(formErrors.name)}
                     />
+                    {formErrors.name ? (
+                      <p className="text-xs text-destructive">{formErrors.name}</p>
+                    ) : null}
                   </div>
 
                   <div className="space-y-2">
@@ -344,15 +375,33 @@ export default function ServicesOverviewPage() {
                         type="number"
                         placeholder="60"
                         value={formDuration}
-                        onChange={(e) => setFormDuration(e.target.value)}
+                        onChange={(e) => {
+                          setFormDuration(e.target.value);
+                          if (formErrors.duration) {
+                            setFormErrors((current) => ({ ...current, duration: undefined }));
+                          }
+                        }}
+                        aria-invalid={Boolean(formErrors.duration)}
                       />
+                      {formErrors.duration ? (
+                        <p className="text-xs text-destructive">{formErrors.duration}</p>
+                      ) : null}
                     </div>
                     <div className="space-y-2">
                       <Label>Preco (R$) *</Label>
                       <CurrencyInput
                         value={formPrice}
-                        onChange={(val) => setFormPrice(val)}
+                        onChange={(val) => {
+                          setFormPrice(val);
+                          if (formErrors.price) {
+                            setFormErrors((current) => ({ ...current, price: undefined }));
+                          }
+                        }}
+                        aria-invalid={Boolean(formErrors.price)}
                       />
+                      {formErrors.price ? (
+                        <p className="text-xs text-destructive">{formErrors.price}</p>
+                      ) : null}
                     </div>
                   </div>
 

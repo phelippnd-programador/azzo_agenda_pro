@@ -202,6 +202,13 @@ export function ProfessionalFormDialog({
             <p className="mt-1 text-sm text-muted-foreground">
               E-mail, telefone e horario de trabalho ajudam a deixar o perfil pronto para operacao desde o primeiro acesso.
             </p>
+            {!editingProfessional ? (
+              <div className="mt-3 rounded-xl border border-emerald-200/70 bg-emerald-50/80 p-3 text-sm text-emerald-900 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-100">
+                {linkCurrentUser
+                  ? 'Este profissional vai usar o mesmo login da sua conta atual, mantendo as permissoes administrativas.'
+                  : 'Ao salvar, o sistema cria o acesso do profissional automaticamente e envia uma senha temporaria para o e-mail informado.'}
+              </div>
+            ) : null}
           </DialogSection>
 
           <DialogSection className="bg-transparent">
@@ -277,7 +284,11 @@ export function ProfessionalFormDialog({
               <p className="text-xs text-muted-foreground">
                 O e-mail fica travado porque sera compartilhado com o seu usuario atual.
               </p>
-            ) : null}
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Use um e-mail valido. Ele recebera a senha temporaria do primeiro acesso.
+              </p>
+            )}
           </DialogSection>
 
           <DialogSection className="bg-transparent">

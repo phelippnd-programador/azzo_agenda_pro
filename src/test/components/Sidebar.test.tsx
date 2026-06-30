@@ -1,11 +1,16 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { Sidebar } from "@/components/layout/Sidebar";
+
+const { logoutMock } = vi.hoisted(() => ({
+  logoutMock: vi.fn().mockResolvedValue(undefined),
+}));
 
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({
     user: { role: "OWNER" },
-    logout: vi.fn().mockResolvedValue(undefined),
+    logout: logoutMock,
   }),
 }));
 
@@ -72,6 +77,8 @@ vi.mock("@/contexts/MenuPermissionsContext", () => ({
 
 describe("Sidebar", () => {
   beforeEach(() => {
+    logoutMock.mockReset();
+    logoutMock.mockResolvedValue(undefined);
     Object.defineProperty(window, "innerWidth", {
       configurable: true,
       writable: true,
@@ -127,5 +134,19 @@ describe("Sidebar", () => {
     expect(screen.getByRole("button", { name: "Expandir menu lateral" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Resumo Financeiro" })).toBeInTheDocument();
     expect(await screen.findByRole("link", { name: "Abrir site de agendamento" })).toBeInTheDocument();
+  });
+
+  it("should trigger logout from the sidebar footer", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/financeiro"]}>
+        <Sidebar isMobileOpen={false} onToggleMobile={vi.fn()} isDesktopOpen onToggleDesktop={vi.fn()} />
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole("button", { name: "Sair da conta" }));
+
+    expect(logoutMock).toHaveBeenCalledTimes(1);
   });
 });

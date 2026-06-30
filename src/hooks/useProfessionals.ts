@@ -57,7 +57,11 @@ export function useProfessionals(options?: UseProfessionalsOptions) {
       const result = await professionalsApi.create(data);
       await _fetch({ page: pagination.page, limit: pagination.limit });
       await fetchProfessionalLimits();
-      toast.success("Profissional adicionado com sucesso!");
+      if (result.accessUserCreated && result.email) {
+        toast.success(`Profissional criado. O acesso foi liberado e a senha temporaria foi enviada para ${result.email}.`);
+      } else {
+        toast.success("Profissional adicionado com sucesso!");
+      }
       return result;
     } catch (err) {
       if (!isPlanExpiredApiError(err))

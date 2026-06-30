@@ -46,8 +46,11 @@ export function Header({
     (user?.avatar?.startsWith("http://") || user?.avatar?.startsWith("https://") ? user.avatar : undefined);
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/login");
+    try {
+      await logout();
+    } finally {
+      navigate("/login", { replace: true });
+    }
   };
 
   return (

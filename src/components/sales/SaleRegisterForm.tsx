@@ -22,6 +22,17 @@ import { maskCpfCnpj, maskPhoneBr } from '@/lib/input-masks';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { toast } from 'sonner';
 
+type SaleRegisterErrors = {
+  accountName?: string;
+  accountEmail?: string;
+  accountPassword?: string;
+  accountConfirmPassword?: string;
+  acceptedLegalTerms?: string;
+  accountSalonName?: string;
+  accountPhone?: string;
+  accountCpfCnpj?: string;
+};
+
 function getPasswordStrengthStatus(value: string) {
   let score = 0;
   if (value.length >= 8) score += 1;
@@ -71,6 +82,7 @@ export function SaleRegisterForm() {
   const [acceptedLegalTerms, setAcceptedLegalTerms] = useState(false);
   const [termsOfUseVersion, setTermsOfUseVersion] = useState('');
   const [privacyPolicyVersion, setPrivacyPolicyVersion] = useState('');
+  const [errors, setErrors] = useState<SaleRegisterErrors>({});
 
   const passwordStrength = useMemo(() => getPasswordStrengthStatus(accountPassword), [accountPassword]);
 
@@ -89,22 +101,39 @@ export function SaleRegisterForm() {
   }, []);
 
   const validateStepOne = () => {
-    if (!accountName.trim() || !accountEmail.trim() || !accountPassword.trim() || !accountConfirmPassword.trim()) {
+    const nextErrors: SaleRegisterErrors = {};
+
+    if (!accountName.trim()) nextErrors.accountName = 'Informe seu nome completo.';
+    if (!accountEmail.trim()) nextErrors.accountEmail = 'Informe um e-mail valido.';
+    if (!accountPassword.trim()) nextErrors.accountPassword = 'Informe uma senha.';
+    if (!accountConfirmPassword.trim()) nextErrors.accountConfirmPassword = 'Confirme a senha.';
+    if (!acceptedLegalTerms) nextErrors.acceptedLegalTerms = 'Voce precisa aceitar os termos para continuar.';
+
+    if (accountPassword.trim() && accountPassword.trim().length < 8) {
+      nextErrors.accountPassword = 'A senha deve ter pelo menos 8 caracteres.';
+    }
+    if (
+      accountPassword.trim() &&
+      accountConfirmPassword.trim() &&
+      accountPassword.trim() !== accountConfirmPassword.trim()
+    ) {
+      nextErrors.accountConfirmPassword = 'As senhas nao conferem.';
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors((current) => ({ ...current, ...nextErrors }));
       toast.error('Preencha nome, e-mail e senha para continuar.');
       return false;
     }
-    if (!acceptedLegalTerms) {
-      toast.error('Voce precisa aceitar os Termos de Uso e a Politica de Privacidade.');
-      return false;
-    }
-    if (accountPassword.trim().length < 8) {
-      toast.error('A senha deve ter pelo menos 8 caracteres.');
-      return false;
-    }
-    if (accountPassword.trim() !== accountConfirmPassword.trim()) {
-      toast.error('As senhas nao conferem.');
-      return false;
-    }
+
+    setErrors((current) => ({
+      ...current,
+      accountName: undefined,
+      accountEmail: undefined,
+      accountPassword: undefined,
+      accountConfirmPassword: undefined,
+      acceptedLegalTerms: undefined,
+    }));
     return true;
   };
 
@@ -120,14 +149,27 @@ export function SaleRegisterForm() {
   const handleCreateAccount = async () => {
     const cpfCnpjDigits = accountCpfCnpj.replace(/\D/g, '');
     if (!validateStepOne()) return;
-    if (!accountSalonName.trim() || !accountPhone.trim() || !cpfCnpjDigits) {
+    const nextErrors: SaleRegisterErrors = {};
+    if (!accountSalonName.trim()) nextErrors.accountSalonName = 'Informe o nome do salao.';
+    if (!accountPhone.trim()) nextErrors.accountPhone = 'Informe telefone ou WhatsApp.';
+    if (!cpfCnpjDigits) {
+      nextErrors.accountCpfCnpj = 'Informe um CPF ou CNPJ valido.';
+    } else if (![11, 14].includes(cpfCnpjDigits.length)) {
+      nextErrors.accountCpfCnpj = 'Informe um CPF ou CNPJ valido.';
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors((current) => ({ ...current, ...nextErrors }));
       toast.error('Informe os dados do salao para concluir a criacao da conta.');
       return;
     }
-    if (![11, 14].includes(cpfCnpjDigits.length)) {
-      toast.error('Informe um CPF ou CNPJ valido.');
-      return;
-    }
+
+    setErrors((current) => ({
+      ...current,
+      accountSalonName: undefined,
+      accountPhone: undefined,
+      accountCpfCnpj: undefined,
+    }));
     if (!termsOfUseVersion || !privacyPolicyVersion) {
       toast.error('Nao foi possivel carregar as versoes dos termos legais.');
       return;
@@ -229,11 +271,17 @@ export function SaleRegisterForm() {
                   <Label htmlFor="sale-account-name">Nome completo</Label>
                   <Input
                     id="sale-account-name"
+                    data-sale-register-focus="true"
                     value={accountName}
-                    onChange={(e) => setAccountName(e.target.value)}
+                    onChange={(e) => {
+                      setAccountName(e.target.value);
+                      if (errors.accountName) setErrors((current) => ({ ...current, accountName: undefined }));
+                    }}
                     placeholder="Seu nome"
                     disabled={isCreatingAccount}
+                    aria-invalid={Boolean(errors.accountName)}
                   />
+                  {errors.accountName ? <p className="text-xs text-destructive">{errors.accountName}</p> : null}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="sale-account-email">E-mail</Label>
@@ -241,10 +289,15 @@ export function SaleRegisterForm() {
                     id="sale-account-email"
                     type="email"
                     value={accountEmail}
-                    onChange={(e) => setAccountEmail(e.target.value)}
+                    onChange={(e) => {
+                      setAccountEmail(e.target.value);
+                      if (errors.accountEmail) setErrors((current) => ({ ...current, accountEmail: undefined }));
+                    }}
                     placeholder="seu@email.com"
                     disabled={isCreatingAccount}
+                    aria-invalid={Boolean(errors.accountEmail)}
                   />
+                  {errors.accountEmail ? <p className="text-xs text-destructive">{errors.accountEmail}</p> : null}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="sale-account-password">Senha</Label>
@@ -252,10 +305,17 @@ export function SaleRegisterForm() {
                     id="sale-account-password"
                     type="password"
                     value={accountPassword}
-                    onChange={(e) => setAccountPassword(e.target.value)}
+                    onChange={(e) => {
+                      setAccountPassword(e.target.value);
+                      if (errors.accountPassword) setErrors((current) => ({ ...current, accountPassword: undefined }));
+                    }}
                     placeholder="Minimo 8 caracteres"
                     disabled={isCreatingAccount}
+                    aria-invalid={Boolean(errors.accountPassword)}
                   />
+                  {errors.accountPassword ? (
+                    <p className="text-xs text-destructive">{errors.accountPassword}</p>
+                  ) : null}
                   {accountPassword ? (
                     <div className="space-y-1">
                       <div className="h-1.5 w-full rounded bg-muted">
@@ -276,10 +336,19 @@ export function SaleRegisterForm() {
                     id="sale-account-confirm-password"
                     type="password"
                     value={accountConfirmPassword}
-                    onChange={(e) => setAccountConfirmPassword(e.target.value)}
+                    onChange={(e) => {
+                      setAccountConfirmPassword(e.target.value);
+                      if (errors.accountConfirmPassword) {
+                        setErrors((current) => ({ ...current, accountConfirmPassword: undefined }));
+                      }
+                    }}
                     placeholder="Repita a senha"
                     disabled={isCreatingAccount}
+                    aria-invalid={Boolean(errors.accountConfirmPassword)}
                   />
+                  {errors.accountConfirmPassword ? (
+                    <p className="text-xs text-destructive">{errors.accountConfirmPassword}</p>
+                  ) : null}
                 </div>
 
                 {step === 2 ? (
@@ -289,30 +358,53 @@ export function SaleRegisterForm() {
                       <Input
                         id="sale-account-phone"
                         value={accountPhone}
-                        onChange={(e) => setAccountPhone(maskPhoneBr(e.target.value))}
+                        onChange={(e) => {
+                          setAccountPhone(maskPhoneBr(e.target.value));
+                          if (errors.accountPhone) setErrors((current) => ({ ...current, accountPhone: undefined }));
+                        }}
                         placeholder="(11) 99999-0000"
                         disabled={isCreatingAccount}
+                        aria-invalid={Boolean(errors.accountPhone)}
                       />
+                      {errors.accountPhone ? <p className="text-xs text-destructive">{errors.accountPhone}</p> : null}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="sale-account-salon">Nome do salao</Label>
                       <Input
                         id="sale-account-salon"
                         value={accountSalonName}
-                        onChange={(e) => setAccountSalonName(e.target.value)}
+                        onChange={(e) => {
+                          setAccountSalonName(e.target.value);
+                          if (errors.accountSalonName) {
+                            setErrors((current) => ({ ...current, accountSalonName: undefined }));
+                          }
+                        }}
                         placeholder="Ex.: Bella Studio"
                         disabled={isCreatingAccount}
+                        aria-invalid={Boolean(errors.accountSalonName)}
                       />
+                      {errors.accountSalonName ? (
+                        <p className="text-xs text-destructive">{errors.accountSalonName}</p>
+                      ) : null}
                     </div>
                     <div className="space-y-2 md:col-span-2">
                       <Label htmlFor="sale-account-cpf-cnpj">CPF/CNPJ</Label>
                       <Input
                         id="sale-account-cpf-cnpj"
                         value={accountCpfCnpj}
-                        onChange={(e) => setAccountCpfCnpj(maskCpfCnpj(e.target.value))}
+                        onChange={(e) => {
+                          setAccountCpfCnpj(maskCpfCnpj(e.target.value));
+                          if (errors.accountCpfCnpj) {
+                            setErrors((current) => ({ ...current, accountCpfCnpj: undefined }));
+                          }
+                        }}
                         placeholder="000.000.000-00 ou 00.000.000/0000-00"
                         disabled={isCreatingAccount}
+                        aria-invalid={Boolean(errors.accountCpfCnpj)}
                       />
+                      {errors.accountCpfCnpj ? (
+                        <p className="text-xs text-destructive">{errors.accountCpfCnpj}</p>
+                      ) : null}
                     </div>
                   </>
                 ) : null}
@@ -322,7 +414,12 @@ export function SaleRegisterForm() {
                 <Checkbox
                   id="sale-accept-legal-terms"
                   checked={acceptedLegalTerms}
-                  onCheckedChange={(checked) => setAcceptedLegalTerms(Boolean(checked))}
+                  onCheckedChange={(checked) => {
+                    setAcceptedLegalTerms(Boolean(checked));
+                    if (errors.acceptedLegalTerms) {
+                      setErrors((current) => ({ ...current, acceptedLegalTerms: undefined }));
+                    }
+                  }}
                 />
                 <Label htmlFor="sale-accept-legal-terms" className="text-xs leading-relaxed text-muted-foreground">
                   Li e aceito os{' '}
@@ -336,6 +433,9 @@ export function SaleRegisterForm() {
                   .
                 </Label>
               </div>
+              {errors.acceptedLegalTerms ? (
+                <p className="text-xs text-destructive">{errors.acceptedLegalTerms}</p>
+              ) : null}
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 {step === 2 ? (

@@ -30,13 +30,7 @@ import {
 import type { Appointment } from '@/hooks/useAppointments';
 import type { Professional } from '@/lib/api';
 import type { PaginationState } from '@/hooks/useResourceList';
-
-const timeSlots = [
-  '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
-  '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
-  '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
-  '17:00', '17:30', '18:00', '18:30', '19:00', '19:30',
-];
+import type { WorkingHours } from '@/types';
 
 const normalizeTime = (value?: string | null) => {
   if (!value) return '';
@@ -49,6 +43,65 @@ const toMinutes = (time: string) => {
   const [h = '0', m = '0'] = time.split(':');
   return Number(h) * 60 + Number(m);
 };
+
+const toSlotLabel = (minutes: number) => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+};
+
+const getWorkingWindow = (workingHours: WorkingHours[] | undefined) => {
+  if (!Array.isArray(workingHours) || workingHours.length === 0) {
+    return null;
+  }
+
+  const ranges = workingHours
+    .filter((item) => item.isWorking && item.startTime && item.endTime && item.startTime < item.endTime)
+    .map((item) => ({
+      start: toMinutes(normalizeTime(item.startTime)),
+      end: toMinutes(normalizeTime(item.endTime)),
+    }))
+    .filter((item) => Number.isFinite(item.start) && Number.isFinite(item.end) && item.end > item.start);
+
+  if (ranges.length === 0) {
+    return null;
+  }
+
+  return {
+    start: Math.min(...ranges.map((item) => item.start)),
+    end: Math.max(...ranges.map((item) => item.end)),
+  };
+};
+
+export function buildAgendaTimeSlots(appointments: Appointment[], professionals: Professional[]) {
+  const appointmentTimes = appointments
+    .map((appointment) => normalizeTime(appointment.startTime))
+    .filter(Boolean);
+
+  const windows = professionals
+    .map((professional) => getWorkingWindow(professional.workingHours))
+    .filter((window): window is { start: number; end: number } => window !== null);
+
+  const slotMinutes = new Set<number>();
+
+  windows.forEach((window) => {
+    for (let cursor = window.start; cursor < window.end; cursor += 30) {
+      slotMinutes.add(cursor);
+    }
+  });
+
+  appointmentTimes.forEach((time) => slotMinutes.add(toMinutes(time)));
+
+  if (slotMinutes.size === 0) {
+    for (let cursor = toMinutes('08:00'); cursor < toMinutes('20:00'); cursor += 30) {
+      slotMinutes.add(cursor);
+    }
+  }
+
+  return Array.from(slotMinutes)
+    .sort((a, b) => a - b)
+    .map(toSlotLabel);
+}
 
 // Paleta de cores para identificação visual de profissionais nas colunas
 const PROFESSIONAL_COLORS = [
@@ -108,13 +161,10 @@ export function AgendaDayView({
     [appointments],
   );
 
-  const displayedTimeSlots = useMemo(() => {
-    const appointmentTimes = appointments
-      .map((appointment) => normalizeTime(appointment.startTime))
-      .filter(Boolean);
-    const unique = new Set([...timeSlots, ...appointmentTimes]);
-    return Array.from(unique).sort((a, b) => toMinutes(a) - toMinutes(b));
-  }, [appointments]);
+  const displayedTimeSlots = useMemo(
+    () => buildAgendaTimeSlots(appointments, activeProfessionals ?? professionals),
+    [activeProfessionals, appointments, professionals],
+  );
 
   const getAppointmentServiceLabel = (appointment: Appointment) => {
     const items = getAppointmentItems(appointment);
@@ -391,13 +441,10 @@ export function AgendaDayView({
     return map;
   }, [appointments, columnProfessionals]);
 
-  const columnDisplayedSlots = useMemo(() => {
-    const appointmentTimes = appointments
-      .map((a) => normalizeTime(a.startTime))
-      .filter(Boolean);
-    const unique = new Set([...timeSlots, ...appointmentTimes]);
-    return Array.from(unique).sort((a, b) => toMinutes(a) - toMinutes(b));
-  }, [appointments]);
+  const columnDisplayedSlots = useMemo(
+    () => buildAgendaTimeSlots(appointments, columnProfessionals),
+    [appointments, columnProfessionals],
+  );
 
   if (columnMode && columnProfessionals.length > 1) {
     const colCount = columnProfessionals.length;
