@@ -171,6 +171,19 @@ export default function Login() {
         toast.error('Sua conta esta bloqueada ou desativada. Entre em contato com o administrador do salao para reativar o acesso.');
         return;
       }
+      if (error instanceof ApiError && (error.code === 'ACCOUNT_PENDING' || error.status === 409)) {
+        toast.error(
+          'Seu cadastro esta incompleto. Conclua o cadastro para acessar o sistema.',
+          {
+            action: {
+              label: 'Continuar cadastro',
+              onClick: () => navigate('/cadastro'),
+            },
+            duration: 8000,
+          }
+        );
+        return;
+      }
       const uiError = resolveUiError(error, 'Credenciais inválidas.');
       toast.error(uiError.message);
     } finally {

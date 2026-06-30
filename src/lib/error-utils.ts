@@ -28,8 +28,8 @@ const mapKnownApiCodeToMessage = (code?: string): string | null => {
   if (normalized === "PLAN_EXPIRED") {
     return "Plano vencido. Regularize o pagamento para continuar.";
   }
-  if (normalized === "ASAAS_ERROR") {
-    return "Erro ao integrar os dados de pagamento. Verifique o CPF/CNPJ informado e tente novamente.";
+  if (normalized === "REGISTRATION_ERROR") {
+    return "Nao foi possivel concluir o cadastro. Verifique os dados informados e tente novamente.";
   }
   return null;
 };
