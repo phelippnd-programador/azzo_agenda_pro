@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Navigate, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { RouteContentLoader } from "@/components/ui/route-content-loader";
 import { useAuth } from "@/contexts/AuthContext";
@@ -160,6 +160,14 @@ export function AppRoutes() {
         PublicLazyRoute,
       })}
       {ProtectedRouteGroup({ ProtectedRoute })}
+      <Route
+        path="*"
+        element={
+          <ProtectedRoute>
+            <Navigate to={appRouteManifest.shell.dashboard} replace />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }
