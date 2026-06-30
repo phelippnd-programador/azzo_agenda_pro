@@ -167,6 +167,10 @@ export default function Login() {
         toast.error('Digite o código de 6 dígitos do seu aplicativo autenticador.');
         return;
       }
+      if (error instanceof ApiError && error.status === 403) {
+        toast.error('Sua conta esta bloqueada ou desativada. Entre em contato com o administrador do salao para reativar o acesso.');
+        return;
+      }
       const uiError = resolveUiError(error, 'Credenciais inválidas.');
       toast.error(uiError.message);
     } finally {
