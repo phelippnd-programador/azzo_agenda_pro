@@ -83,6 +83,8 @@ export default function Agenda() {
   const [isDeletingAppointment, setIsDeletingAppointment] = useState(false);
   const [completionAppointmentId, setCompletionAppointmentId] = useState<string | null>(null);
   const [completionPaymentMethod, setCompletionPaymentMethod] = useState<PaymentMethod | ''>('');
+  const [isNfseConfirmOpen, setIsNfseConfirmOpen] = useState(false);
+  const [nfseConfirmUrl, setNfseConfirmUrl] = useState('');
 
   const {
     guardState,
@@ -355,13 +357,16 @@ export default function Agenda() {
 
       sessionStorage.setItem('nfseDraftPrefill', JSON.stringify(prefill));
 
+      const targetUrl = `/fiscal/nfse/nova?appointmentId=${encodeURIComponent(appointment.id)}`;
+
       if (config.emissionMode === 'ASK_ON_CLOSE') {
-        const shouldOpen = window.confirm('Atendimento concluido. Deseja abrir a emissao da NFS-e agora?');
-        if (!shouldOpen) return;
+        setNfseConfirmUrl(targetUrl);
+        setIsNfseConfirmOpen(true);
+        return;
       }
 
       toast.info('Fluxo NFS-e preparado a partir do agendamento concluido.');
-      navigate(`/fiscal/nfse/nova?appointmentId=${encodeURIComponent(appointment.id)}`);
+      navigate(targetUrl);
     } catch (err) {
       const uiError = resolveUiError(err, 'Nao foi possivel preparar a emissao automatica de NFS-e.');
       toast.warning(`${uiError.code ? `[${uiError.code}] ` : ''}${uiError.message}`);
@@ -870,6 +875,31 @@ export default function Agenda() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <Dialog open={isNfseConfirmOpen} onOpenChange={setIsNfseConfirmOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Emitir NFS-e</DialogTitle>
+            <DialogDescription>
+              Atendimento concluido. Deseja abrir a emissao da NFS-e agora?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNfseConfirmOpen(false)}>
+              Agora nao
+            </Button>
+            <Button
+              onClick={() => {
+                setIsNfseConfirmOpen(false);
+                toast.info('Fluxo NFS-e preparado a partir do agendamento concluido.');
+                navigate(nfseConfirmUrl);
+              }}
+            >
+              Emitir NFS-e
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <CashClosingGuardDialog
         guardState={guardState}
