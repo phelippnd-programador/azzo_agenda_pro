@@ -71,7 +71,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       pathname === "/compras" ||
       pathname.startsWith("/compras/") ||
       pathname === "/success" ||
-      pathname === "/error";
+      pathname === "/error" ||
+      pathname === "/login" ||
+      pathname === "/cadastro" ||
+      pathname === "/recuperar-senha" ||
+      pathname === "/redefinir-senha" ||
+      pathname === "/termos-de-uso" ||
+      pathname === "/politica-privacidade";
 
     if (isPublicRoute) {
       setIsLoading(false);
