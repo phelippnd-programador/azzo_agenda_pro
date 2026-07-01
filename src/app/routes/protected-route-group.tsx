@@ -143,6 +143,7 @@ export function ProtectedRouteGroup({
         <Route path={appRouteManifest.stock.suppliers} element={<StockSuppliersPage />} />
         <Route path={appRouteManifest.stock.purchaseOrders} element={<StockPurchaseOrdersPage />} />
         <Route path={appRouteManifest.stock.purchaseOrderDetail} element={<StockPurchaseOrdersPage />} />
+        <Route path="pedidos" element={<Navigate to={`${appRouteManifest.stock.root}/pedidos-compra`} replace />} />
         <Route path={appRouteManifest.stock.transfers} element={<StockTransfersPage />} />
         <Route path={appRouteManifest.stock.settingsAlias} element={<Navigate to={appRouteManifest.settings.stock} replace />} />
       </Route>
