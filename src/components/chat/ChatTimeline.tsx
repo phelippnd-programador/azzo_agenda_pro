@@ -120,8 +120,8 @@ export function ChatTimeline({
           {timelineItems.map((item) => {
             if (item.type === "day") {
               return (
-                <div key={item.key} className="sticky top-0 z-10 flex justify-center py-1">
-                  <Badge variant="outline" className="bg-background/95 backdrop-blur">
+                <div key={item.key} className="flex justify-center py-1">
+                  <Badge variant="outline" className="bg-background">
                     {item.label}
                   </Badge>
                 </div>
