@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,7 @@ import { formatCurrency } from '@/lib/format';
 
 export default function ClientsOverviewPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
@@ -296,12 +298,14 @@ export default function ClientsOverviewPage() {
                           <DropdownMenuItem onClick={() => openProfilePage(client.id)}>
                             Ver Historico
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() => openDeleteDialog(client.id)}
-                          >
-                            Excluir
-                          </DropdownMenuItem>
+                          {user?.role !== 'PROFESSIONAL' && (
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onClick={() => openDeleteDialog(client.id)}
+                            >
+                              Excluir
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
