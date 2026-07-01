@@ -37,7 +37,7 @@ export function ChatSidebar({
   onClearFilters,
 }: ChatSidebarProps) {
   return (
-    <Card className="flex h-[calc(100vh-13rem)] flex-col overflow-hidden">
+    <Card className="flex h-[calc(100dvh-8rem)] flex-col overflow-hidden lg:h-[calc(100vh-13rem)]">
       <CardHeader className="pb-2">
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">

@@ -90,13 +90,14 @@ export default function ChatPage() {
   }, [loadConversations]);
 
   useEffect(() => {
+    if (isMobile) return;
     if (isLoadingConversations) return;
     if (!conversations.length) return;
     if (conversationId && selectedConversation) return;
     const firstConversation = conversations[0];
     if (!firstConversation) return;
     navigate(`/chat/${firstConversation.id}`, { replace: true });
-  }, [conversations, conversationId, isLoadingConversations, navigate, selectedConversation]);
+  }, [conversations, conversationId, isMobile, isLoadingConversations, navigate, selectedConversation]);
 
   useEffect(() => {
     if (!conversationId || !selectedConversation) return;
@@ -282,7 +283,7 @@ export default function ChatPage() {
         )}
 
         {showChat && (
-          <Card className="order-1 min-h-[28rem] lg:order-2 lg:h-[calc(100vh-13rem)]">
+          <Card className="order-1 flex h-[calc(100dvh-8rem)] flex-col lg:order-2 lg:h-[calc(100vh-13rem)]">
             {!selectedConversation ? (
               <CardContent className="flex h-full items-center justify-center">
                 <PageEmptyState
@@ -300,7 +301,7 @@ export default function ChatPage() {
               </CardContent>
             ) : (
               <>
-                <CardHeader className="border-b">
+                <CardHeader className="shrink-0 border-b">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex min-w-0 items-center gap-2">
                       {isMobile && (
@@ -338,7 +339,7 @@ export default function ChatPage() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="flex h-[calc(100%-9rem)] min-h-[22rem] flex-col lg:h-[calc(100%-9rem)]">
+                <CardContent className="flex flex-1 min-h-0 flex-col">
                   {selectedConversation.clientId && (
                     <div className="shrink-0 pb-2">
                       <ChatClientAppointments

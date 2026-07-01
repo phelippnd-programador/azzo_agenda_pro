@@ -45,7 +45,7 @@ export function ChatMessageComposer({
   const watchedMessage = form.watch("message");
 
   return (
-    <form onSubmit={onSubmit} className="flex gap-2 border-t pt-3">
+    <form onSubmit={onSubmit} className="flex shrink-0 gap-2 border-t pt-3">
       <Input
         {...form.register("message")}
         placeholder="Digite a mensagem para o cliente..."
