@@ -260,7 +260,7 @@ export default function ChatPage() {
 
   return (
     <MainLayout title="Chat" subtitle="Historico completo de mensagens por cliente">
-      <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[340px_1fr]">
         {showSidebar && (
           <div className="order-2 lg:order-1">
             <ChatSidebar
