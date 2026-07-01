@@ -19,9 +19,10 @@ type ClientCardProps = {
   onOpenProfile: (clientId: string) => void;
   onEdit: (client: Client) => void;
   onDelete: (clientId: string) => void;
+  canDelete?: boolean;
 };
 
-export function ClientCard({ client, onOpenProfile, onEdit, onDelete }: ClientCardProps) {
+export function ClientCard({ client, onOpenProfile, onEdit, onDelete, canDelete = true }: ClientCardProps) {
   const avatarSrc = resolveApiMediaUrl(client.avatarUrl);
   const hasContact = Boolean(client.email || client.phone);
 
@@ -69,9 +70,11 @@ export function ClientCard({ client, onOpenProfile, onEdit, onDelete }: ClientCa
             <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
               <DropdownMenuItem onClick={() => onEdit(client)}>Editar</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onOpenProfile(client.id)}>Ver perfil</DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600" onClick={() => onDelete(client.id)}>
-                Excluir
-              </DropdownMenuItem>
+              {canDelete && (
+                <DropdownMenuItem className="text-red-600" onClick={() => onDelete(client.id)}>
+                  Excluir
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

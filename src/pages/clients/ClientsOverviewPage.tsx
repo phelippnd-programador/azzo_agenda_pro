@@ -220,6 +220,7 @@ export default function ClientsOverviewPage() {
               onOpenProfile={openProfilePage}
               onEdit={openEditDialog}
               onDelete={openDeleteDialog}
+              canDelete={user?.role !== 'PROFESSIONAL'}
             />
           ))}
         </div>
