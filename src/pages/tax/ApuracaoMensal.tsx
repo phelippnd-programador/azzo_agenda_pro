@@ -18,7 +18,7 @@ import { ApuracaoMensal as ApuracaoMensalType, ApuracaoResumo, MESES_PT } from '
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function ApuracaoMensal() {
+export function ApuracaoMensalContent() {
   const toSafeNumber = (value: unknown) => {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : 0;
@@ -45,12 +45,12 @@ export default function ApuracaoMensal() {
   useEffect(() => {
     fiscalApi
       .getResumoAnual(anoSelecionado)
-      .then((data: any) =>
+      .then((data) =>
         setResumoAno({
-          totalServicos: toSafeNumber(data?.totalServicos ?? data?.valorTotalServicos),
-          totalImpostos: toSafeNumber(data?.totalImpostos ?? data?.valorTotalImpostos),
-          totalDocumentos: toSafeNumber(data?.totalDocumentos ?? data?.quantidadeDocumentos),
-          meses: Array.isArray(data?.meses) ? data.meses : [],
+          totalServicos: toSafeNumber(data.totalServicos),
+          totalImpostos: toSafeNumber(data.totalImpostos),
+          totalDocumentos: toSafeNumber(data.totalDocumentos),
+          meses: Array.isArray(data.meses) ? data.meses : [],
         })
       )
       .catch(() => setResumoAno(null));
@@ -106,84 +106,90 @@ export default function ApuracaoMensal() {
   const anosDisponiveis = [2024, 2025, 2026];
 
   return (
-    <MainLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Apuracao Mensal de Impostos</h1>
-          <Button onClick={handleRecalculate} disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Recalcular
-          </Button>
-        </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Apuracao Mensal de Impostos</h1>
+        <Button onClick={handleRecalculate} disabled={isLoading}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          Recalcular
+        </Button>
+      </div>
 
-        {apuracaoExibida && (
-          <>
-            <ApuracaoCard apuracao={apuracaoExibida} />
-            <ApuracaoImpostoList impostos={apuracaoExibida.impostos} showZeroValues={true} />
-          </>
-        )}
+      {apuracaoExibida && (
+        <>
+          <ApuracaoCard apuracao={apuracaoExibida} />
+          <ApuracaoImpostoList impostos={apuracaoExibida.impostos} showZeroValues={true} />
+        </>
+      )}
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Historico</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="max-w-[180px]">
+            <Select value={String(anoSelecionado)} onValueChange={(v) => setAnoSelecionado(Number(v))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {anosDisponiveis.map((ano) => (
+                  <SelectItem key={ano} value={String(ano)}>
+                    {ano}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {historico
+              .filter((item) => item.ano === anoSelecionado)
+              .map((item) => (
+                <button
+                  key={`${item.ano}-${item.mes}`}
+                  onClick={() => setMesSelecionado(item.mes)}
+                  className="text-left p-3 border rounded-lg hover:bg-muted/70"
+                >
+                  <p className="font-medium">{MESES_PT[item.mes]}</p>
+                  <p className="text-sm text-muted-foreground">Servicos: {formatCurrency(item.valorTotalServicos)}</p>
+                  <p className="text-sm text-muted-foreground">Impostos: {formatCurrency(item.valorTotalImpostos)}</p>
+                  <p className="text-sm text-muted-foreground">Notas: {item.quantidadeDocumentos}</p>
+                </button>
+              ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {resumoAno && (
         <Card>
           <CardHeader>
-            <CardTitle>Historico</CardTitle>
+            <CardTitle>Resumo do Ano {anoSelecionado}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="max-w-[180px]">
-              <Select value={String(anoSelecionado)} onValueChange={(v) => setAnoSelecionado(Number(v))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {anosDisponiveis.map((ano) => (
-                    <SelectItem key={ano} value={String(ano)}>
-                      {ano}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 bg-primary/10 rounded-lg text-center">
+              <p className="text-sm text-muted-foreground">Total de Servicos</p>
+              <p className="text-2xl font-bold text-primary">{formatCurrency(resumoAno.totalServicos)}</p>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {historico
-                .filter((item) => item.ano === anoSelecionado)
-                .map((item) => (
-                  <button
-                    key={`${item.ano}-${item.mes}`}
-                    onClick={() => setMesSelecionado(item.mes)}
-                    className="text-left p-3 border rounded-lg hover:bg-muted/70"
-                  >
-                    <p className="font-medium">{MESES_PT[item.mes]}</p>
-                    <p className="text-sm text-muted-foreground">Servicos: {formatCurrency(item.valorTotalServicos)}</p>
-                    <p className="text-sm text-muted-foreground">Impostos: {formatCurrency(item.valorTotalImpostos)}</p>
-                    <p className="text-sm text-muted-foreground">Notas: {item.quantidadeDocumentos}</p>
-                  </button>
-                ))}
+            <div className="p-4 bg-destructive/10 rounded-lg text-center">
+              <p className="text-sm text-muted-foreground">Total de Impostos</p>
+              <p className="text-2xl font-bold text-destructive">{formatCurrency(resumoAno.totalImpostos)}</p>
+            </div>
+            <div className="p-4 bg-secondary rounded-lg text-center">
+              <p className="text-sm text-muted-foreground">Total de Notas</p>
+              <p className="text-2xl font-bold text-secondary-foreground">{resumoAno.totalDocumentos}</p>
             </div>
           </CardContent>
         </Card>
+      )}
+    </div>
+  );
+}
 
-        {resumoAno && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Resumo do Ano {anoSelecionado}</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 bg-primary/10 rounded-lg text-center">
-                <p className="text-sm text-muted-foreground">Total de Servicos</p>
-                <p className="text-2xl font-bold text-primary">{formatCurrency(resumoAno.totalServicos)}</p>
-              </div>
-              <div className="p-4 bg-destructive/10 rounded-lg text-center">
-                <p className="text-sm text-muted-foreground">Total de Impostos</p>
-                <p className="text-2xl font-bold text-destructive">{formatCurrency(resumoAno.totalImpostos)}</p>
-              </div>
-              <div className="p-4 bg-secondary rounded-lg text-center">
-                <p className="text-sm text-muted-foreground">Total de Notas</p>
-                <p className="text-2xl font-bold text-secondary-foreground">{resumoAno.totalDocumentos}</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+export default function ApuracaoMensal() {
+  return (
+    <MainLayout>
+      <ApuracaoMensalContent />
     </MainLayout>
   );
 }

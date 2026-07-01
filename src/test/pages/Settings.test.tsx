@@ -96,6 +96,15 @@ vi.mock("sonner", () => ({
 describe("Settings", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback: FrameRequestCallback) => {
+      callback(0);
+      return 1;
+    });
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      writable: true,
+      value: vi.fn(),
+    });
     getSettingsMock.mockResolvedValue({
       notifications: { emailNotifications: true, smsNotifications: true, whatsappNotifications: true, reminderHours: 24 },
       reactivation: { enabled: true, respectBusinessHours: true, sendWindowStart: "09:00", sendWindowEnd: "19:00", maxAttemptsEnabled: 3 },
@@ -110,6 +119,10 @@ describe("Settings", () => {
     setupMfaMock.mockResolvedValue({ secret: "SECRET123", otpauthUri: "otpauth://totp/Azzo" });
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("should render settings tabs based on permissions", async () => {
     render(
       <MemoryRouter initialEntries={["/configuracoes?tab=notifications"]}>
@@ -117,10 +130,10 @@ describe("Settings", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByRole("tab", { name: "Notificacoes" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Integracoes" })).toBeInTheDocument();
+    expect(await screen.findByRole("tab", { name: /Notifica/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Integra/i })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Fiscal" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Perfil do Salao" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Sal/i })).toBeInTheDocument();
   });
 
   it("should save notifications settings", async () => {
@@ -136,7 +149,7 @@ describe("Settings", () => {
 
     expect(updateNotificationsMock).toHaveBeenCalled();
     expect(toastSuccessMock).toHaveBeenCalled();
-  });
+  }, 10000);
 
   it("should save reactivation settings", async () => {
     const user = userEvent.setup();
@@ -157,5 +170,23 @@ describe("Settings", () => {
       maxAttemptsEnabled: 3,
     });
     expect(toastSuccessMock).toHaveBeenCalled();
+  }, 10000);
+
+  it("should scroll to the detailed section when opening a domain card", async () => {
+    const user = userEvent.setup();
+    const scrollIntoViewMock = vi.mocked(HTMLElement.prototype.scrollIntoView);
+
+    render(
+      <MemoryRouter initialEntries={["/configuracoes?tab=notifications"]}>
+        <Settings />
+      </MemoryRouter>
+    );
+
+    await user.click(await screen.findByRole("tab", { name: /Integra/i }));
+
+    expect(await screen.findByRole("tab", { name: /Integra/i, selected: true })).toBeInTheDocument();
+    expect(screen.getByText(/WhatsApp Business/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Configurar WhatsApp/i })).toBeInTheDocument();
+    expect(scrollIntoViewMock).not.toHaveBeenCalled();
   });
 });

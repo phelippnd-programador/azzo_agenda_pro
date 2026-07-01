@@ -11,8 +11,9 @@ import { BoletoPaymentView } from '@/components/billing/BoletoPaymentView';
 import type { BillingPaymentItem } from '@/types/billing';
 import {
   BILLING_TYPE_LABELS, PAYMENT_STATUS_LABELS,
-  formatCurrency, formatDate, formatReferenceMonth,
+  formatDate, formatReferenceMonth,
 } from '@/lib/billing-helpers';
+import { formatCurrency } from '@/lib/format';
 import { toast } from 'sonner';
 
 interface PaymentHistoryCardProps {
@@ -50,7 +51,7 @@ export function PaymentHistoryCard({ paymentHistory, historyError }: PaymentHist
         </CardHeader>
         <CardContent className="space-y-3">
           {historyError ? (
-            <Alert className="border-red-200 bg-red-50">
+            <Alert className="border-red-200 bg-red-50 dark:border-red-900/70 dark:bg-red-950/40">
               <AlertTitle>Nao foi possivel carregar o historico</AlertTitle>
               <AlertDescription>{historyError}</AlertDescription>
             </Alert>
@@ -59,23 +60,29 @@ export function PaymentHistoryCard({ paymentHistory, historyError }: PaymentHist
             <p className="text-sm text-muted-foreground">Nenhum pagamento registrado ainda.</p>
           ) : (
             orderedHistory.map((payment) => (
-              <div key={payment.id} className="flex items-center justify-between gap-2 rounded-lg border p-3">
-                <div className="min-w-0">
+              <div
+                key={payment.id}
+                className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0 space-y-1">
                   <p className="text-sm font-medium text-foreground">
-                    {formatCurrency(payment.amountCents)}  -  {BILLING_TYPE_LABELS[payment.billingType] ?? payment.billingType}
+                    {formatCurrency(payment.amount)} - {BILLING_TYPE_LABELS[payment.billingType] ?? payment.billingType}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    Status: {PAYMENT_STATUS_LABELS[payment.status] ?? payment.status}  -  Competencia:{' '}
-                    {formatReferenceMonth(payment.referenceMonth)}  -  Vencimento:{' '}
-                    {formatDate(payment.dueDate)}
-                  </p>
+                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                    <span>Status: {PAYMENT_STATUS_LABELS[payment.status] ?? payment.status}</span>
+                    <span>Competencia: {formatReferenceMonth(payment.referenceMonth)}</span>
+                    <span>Vencimento: {formatDate(payment.dueDate)}</span>
+                  </div>
                 </div>
                 <Button
-                  type="button" variant="outline" size="icon"
+                  type="button"
+                  variant="outline"
                   onClick={() => setSelectedPayment(payment)}
                   aria-label="Ver detalhes do pagamento"
+                  className="w-full gap-2 sm:w-auto"
                 >
                   <Eye className="h-4 w-4" />
+                  Detalhes
                 </Button>
               </div>
             ))
@@ -93,8 +100,8 @@ export function PaymentHistoryCard({ paymentHistory, historyError }: PaymentHist
           </DialogHeader>
           {selectedPayment ? (
             <div className="space-y-4">
-              <div className="grid gap-2 text-sm sm:grid-cols-2">
-                <p><strong>Valor:</strong> {formatCurrency(selectedPayment.amountCents)}</p>
+              <div className="grid gap-3 text-sm sm:grid-cols-2">
+                <p><strong>Valor:</strong> {formatCurrency(selectedPayment.amount)}</p>
                 <p><strong>Metodo:</strong> {BILLING_TYPE_LABELS[selectedPayment.billingType] ?? selectedPayment.billingType}</p>
                 <p><strong>Status:</strong> {PAYMENT_STATUS_LABELS[selectedPayment.status] ?? selectedPayment.status}</p>
                 <p><strong>ID pagamento:</strong> {selectedPayment.asaasPaymentId || selectedPayment.id}</p>

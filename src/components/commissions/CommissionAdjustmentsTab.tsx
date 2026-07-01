@@ -1,7 +1,7 @@
 import { Coins, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -16,11 +16,11 @@ import type { Professional } from "@/types";
 interface CommissionAdjustmentsTabProps {
   professionals: Professional[];
   adjustmentProfessionalId: string;
-  adjustmentAmount: string;
+  adjustmentAmount: number;
   adjustmentReason: string;
   isSubmittingAdjustment: boolean;
   onChangeProfessionalId: (value: string) => void;
-  onChangeAmount: (value: string) => void;
+  onChangeAmount: (value: number) => void;
   onChangeReason: (value: string) => void;
   onSubmit: () => void;
 }
@@ -59,11 +59,10 @@ export function CommissionAdjustmentsTab({
         </div>
         <div className="space-y-2">
           <Label>Valor do ajuste (R$)</Label>
-          <Input
-            type="number"
-            step="0.01"
+          <CurrencyInput
+            cents
             value={adjustmentAmount}
-            onChange={(e) => onChangeAmount(e.target.value)}
+            onChange={onChangeAmount}
           />
         </div>
         <div className="space-y-2 md:col-span-2">

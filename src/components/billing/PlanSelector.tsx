@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { formatCurrencyCents as formatCurrency } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
+import { formatPlanBillingCycle, formatPlanValidity } from "@/lib/billing-helpers";
 import type { BillingPlanOption } from "@/components/billing/types";
 
 type PlanSelectorProps = {
@@ -37,8 +38,13 @@ export function PlanSelector({
               </div>
               <p className="text-sm text-muted-foreground">{plan.description}</p>
               <p className="text-2xl font-bold text-foreground">
-                {formatCurrency(plan.amountCents)}
-                <span className="ml-1 text-sm font-normal text-muted-foreground">/mes</span>
+                {formatCurrency(plan.amount)}
+                <span className="ml-1 text-sm font-normal text-muted-foreground">
+                  {formatPlanBillingCycle(plan.validityMonths, plan.validityDays)}
+                </span>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {formatPlanValidity(plan.validityMonths, plan.validityDays)}
               </p>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -65,4 +71,3 @@ export function PlanSelector({
     </div>
   );
 }
-

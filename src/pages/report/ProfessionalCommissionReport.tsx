@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Settings2 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageErrorState } from "@/components/ui/page-states";
@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { commissionApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import type { CommissionProfessionalReportResponse } from "@/types/commission";
-import { formatCurrencyCents as formatCurrency } from "@/lib/format";
+import { formatCurrency, toDateKey } from "@/lib/format";
 
 const getOriginLabel = (originType: string) => {
   if (originType === "SERVICE") return "Servico";
@@ -34,8 +34,8 @@ const getMonthRange = () => {
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
   return {
-    from: start.toISOString().slice(0, 10),
-    to: end.toISOString().slice(0, 10),
+    from: toDateKey(start),
+    to: toDateKey(end),
   };
 };
 
@@ -48,7 +48,7 @@ export default function ProfessionalCommissionReport() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!professionalId) {
       setError("Profissional nao informado.");
       setIsLoading(false);
@@ -64,11 +64,11 @@ export default function ProfessionalCommissionReport() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [from, professionalId, to]);
 
   useEffect(() => {
     void load();
-  }, [professionalId, from, to]);
+  }, [load]);
 
   if (isLoading) {
     return (
@@ -111,7 +111,11 @@ export default function ProfessionalCommissionReport() {
         </div>
 
         <Card>
-          <CardContent className="grid gap-4 p-4 md:grid-cols-3 lg:grid-cols-5">
+          <CardHeader>
+            <CardTitle>Filtro e resumo</CardTitle>
+            <CardDescription>Recorte o periodo e acompanhe o total consolidado da comissao.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-5">
             <div className="space-y-2">
               <Label>Data inicial</Label>
               <Input type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
@@ -122,15 +126,15 @@ export default function ProfessionalCommissionReport() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total</p>
-              <p className="text-lg font-bold text-foreground">{formatCurrency(report.totalAmountCents)}</p>
+              <p className="text-lg font-bold text-foreground">{formatCurrency(report.totalAmount)}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Em aberto</p>
-              <p className="text-lg font-bold text-amber-700">{formatCurrency(report.totalOpenAmountCents)}</p>
+              <p className="text-lg font-bold text-amber-700 dark:text-amber-400">{formatCurrency(report.totalOpenAmount)}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Pago</p>
-              <p className="text-lg font-bold text-emerald-700">{formatCurrency(report.totalPaidAmountCents)}</p>
+              <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400">{formatCurrency(report.totalPaidAmount)}</p>
             </div>
           </CardContent>
         </Card>
@@ -143,7 +147,8 @@ export default function ProfessionalCommissionReport() {
             {!report.entries.length ? (
               <p className="text-sm text-muted-foreground">Nenhum lancamento encontrado no periodo.</p>
             ) : (
-              <Table>
+              <div className="overflow-x-auto">
+              <Table className="min-w-[960px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Origem</TableHead>
@@ -166,12 +171,12 @@ export default function ProfessionalCommissionReport() {
                         </div>
                       </TableCell>
                       <TableCell>{entry.periodKey}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(entry.baseAmountCents)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(entry.baseAmount)}</TableCell>
                       <TableCell className="text-right">
-                        {entry.percentValue}% ({formatCurrency(entry.percentAmountCents)})
+                        {entry.percentValue}% ({formatCurrency(entry.percentAmount)})
                       </TableCell>
-                      <TableCell className="text-right">{formatCurrency(entry.fixedAmountCents)}</TableCell>
-                      <TableCell className="text-right font-semibold">{formatCurrency(entry.totalAmountCents)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(entry.fixedAmount)}</TableCell>
+                      <TableCell className="text-right font-semibold">{formatCurrency(entry.totalAmount)}</TableCell>
                       <TableCell>
                         <Badge variant={entry.entryStatus === "PAID" ? "default" : entry.entryStatus === "REVERSED" ? "secondary" : "outline"}>
                           {getStatusLabel(entry.entryStatus)}
@@ -184,6 +189,7 @@ export default function ProfessionalCommissionReport() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </CardContent>
         </Card>

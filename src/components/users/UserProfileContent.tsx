@@ -262,20 +262,22 @@ export function UserProfileContent() {
             />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="truncate text-xl font-bold text-foreground sm:text-2xl">{user?.name || "Usuario"}</h2>
+                <h2 className="min-w-0 text-xl font-bold text-foreground sm:text-2xl">
+                  {user?.name || "Usuario"}
+                </h2>
                 <Badge variant="secondary">{user?.role || "USER"}</Badge>
               </div>
               <div className="mt-2 flex flex-col gap-2 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  <span>{user?.email || "-"}</span>
+                <div className="flex min-w-0 items-start gap-2">
+                  <Mail className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span className="break-all">{user?.email || "-"}</span>
+                </div>
+                <div className="flex min-w-0 items-start gap-2">
+                  <Building2 className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span className="break-words">{user?.salonName || "-"}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Building2 className="h-4 w-4" />
-                  <span>{user?.salonName || "-"}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4" />
+                  <CalendarDays className="h-4 w-4 shrink-0" />
                   <span>Criado em {formatCreatedAt(user?.createdAt)}</span>
                 </div>
               </div>
@@ -315,7 +317,7 @@ export function UserProfileContent() {
               <Input value={user?.role || ""} readOnly />
             </div>
           </div>
-          <Button onClick={handleSaveProfile} disabled={isSavingProfile} className="gap-2">
+          <Button onClick={handleSaveProfile} disabled={isSavingProfile} className="w-full gap-2 sm:w-auto">
             {isSavingProfile ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -358,7 +360,12 @@ export function UserProfileContent() {
             onChange={(event) => setConfirmPassword(event.target.value)}
             autoComplete="new-password"
           />
-          <Button variant="outline" onClick={handleChangePassword} disabled={isChangingPassword}>
+          <Button
+            variant="outline"
+            onClick={handleChangePassword}
+            disabled={isChangingPassword}
+            className="w-full sm:w-auto"
+          >
             {isChangingPassword ? "Alterando..." : "Alterar senha"}
           </Button>
         </CardContent>
@@ -385,7 +392,12 @@ export function UserProfileContent() {
 
             {!mfaEnabled ? (
               <>
-                <Button variant="outline" onClick={handlePrepareMfa} disabled={isMfaLoading}>
+                <Button
+                  variant="outline"
+                  onClick={handlePrepareMfa}
+                  disabled={isMfaLoading}
+                  className="w-full sm:w-auto"
+                >
                   Preparar MFA
                 </Button>
 
@@ -402,7 +414,7 @@ export function UserProfileContent() {
                     {mfaQrCodeDataUrl ? (
                       <div className="space-y-2">
                         <Label>QR Code</Label>
-                        <div className="inline-flex rounded-md border bg-white p-2">
+                        <div className="inline-flex rounded-md border bg-background p-2">
                           <img src={mfaQrCodeDataUrl} alt="QR Code MFA" className="h-[180px] w-[180px]" />
                         </div>
                       </div>
@@ -415,7 +427,7 @@ export function UserProfileContent() {
                         placeholder="000000"
                       />
                     </div>
-                    <Button onClick={handleEnableMfa} disabled={isMfaLoading}>
+                    <Button onClick={handleEnableMfa} disabled={isMfaLoading} className="w-full sm:w-auto">
                       Confirmar e habilitar MFA
                     </Button>
                   </div>
@@ -436,7 +448,12 @@ export function UserProfileContent() {
                   value={mfaDisableCode}
                   onChange={(event) => setMfaDisableCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
                 />
-                <Button variant="destructive" onClick={handleDisableMfa} disabled={isMfaLoading}>
+                <Button
+                  variant="destructive"
+                  onClick={handleDisableMfa}
+                  disabled={isMfaLoading}
+                  className="w-full sm:w-auto"
+                >
                   Desabilitar MFA
                 </Button>
               </div>

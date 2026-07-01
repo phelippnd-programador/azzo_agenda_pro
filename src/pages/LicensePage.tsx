@@ -11,6 +11,12 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { billingApi } from '@/lib/api/commerce';
+import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from '@/components/ui/form';
 import { CreditCardForm } from '@/components/billing/CreditCardForm';
@@ -29,13 +35,14 @@ import { ApiError, salonApi } from '@/lib/api';
 import { useCheckoutProducts } from '@/hooks/useCheckoutProducts';
 import { useLicenseAccess } from '@/hooks/useLicenseAccess';
 import { maskCpfCnpj } from '@/lib/input-masks';
+import { formatCurrency } from '@/lib/format';
 import {
-  toDigits, formatCurrency, formatDate,
+  toDigits, formatDate,
   getLicenseStatus, getCurrentPaymentStatus, getCurrentPaymentDueDate,
   isTrialSubscription, isSupportedBillingType, isOverdue, getRemainingDaysUntilDue,
   getScheduledPlanStartDate, resolveLicenseState, isSubscriptionActive,
   syncPlanExpiredBlock, SUBSCRIPTION_STATUS_LABELS, PAYMENT_STATUS_LABELS,
-  BILLING_TYPE_LABELS,
+  BILLING_TYPE_LABELS, formatPlanBillingCycle, formatPlanValidity,
 } from '@/lib/billing-helpers';
 import { SubscriptionStatusCard } from '@/components/license/SubscriptionStatusCard';
 import { PaymentHistoryCard } from '@/components/license/PaymentHistoryCard';
@@ -92,12 +99,15 @@ export default function LicensePage() {
   const [paymentHistory, setPaymentHistory] = useState<BillingPaymentItem[]>([]);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [hasAppliedQueryDefaults, setHasAppliedQueryDefaults] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const plans = useMemo<BillingPlanOption[]>(
     () => products.map((product) => ({
       code: product.id, name: product.name,
       description: product.description || 'Plano disponivel para assinatura.',
-      amountCents: Math.round(product.price * 100),
+      amount: product.price,
+      validityDays: product.validityDays,
+      validityMonths: product.validityMonths,
       features: product.features || [], highlight: product.highlight || undefined,
     })),
     [products]
@@ -256,6 +266,20 @@ export default function LicensePage() {
     }
   };
 
+  const handleCancelSubscription = async () => {
+    try {
+      setIsCancelling(true);
+      const res = await billingApi.cancelarAssinatura();
+      toast.success(res.message || 'Assinatura cancelada com sucesso.');
+      await Promise.all([loadCurrentSubscription(), loadPaymentHistory()]);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Nao foi possivel cancelar a assinatura.';
+      toast.error(msg);
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   const onSubmit = form.handleSubmit(async (values) => {
     if (actionMode === 'CHANGE' && hasPaidAccess) {
       toast.error('Nao e possivel trocar de plano com assinatura ativa.'); return;
@@ -316,7 +340,7 @@ export default function LicensePage() {
     >
       <div className="space-y-6">
         {fetchError ? (
-          <Alert className="border-red-200 bg-red-50">
+          <Alert className="border-red-200 bg-red-50 dark:border-red-900/70 dark:bg-red-950/40">
             <AlertTitle>Nao foi possivel carregar sua assinatura</AlertTitle>
             <AlertDescription>{fetchError}</AlertDescription>
           </Alert>
@@ -336,6 +360,45 @@ export default function LicensePage() {
           onRefreshStatus={handleRefreshStatus}
           onRefetchPlans={refetchPlans}
         />
+
+        {result && !isTrialSubscription(result) && result.status !== 'CANCELLED' && hasPaidAccess
+          && result.billingType !== 'CHECKOUT' ? (
+          <Card className="border-destructive/30">
+            <CardHeader>
+              <CardTitle className="text-destructive text-base">Cancelar assinatura</CardTitle>
+              <CardDescription>
+                Ao cancelar, seu acesso permanece ativo ate o fim do periodo vigente. Nao ha reembolso proporcional.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" disabled={isCancelling} className="w-full sm:w-auto">
+                    {isCancelling ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Cancelando...</> : 'Cancelar assinatura'}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirmar cancelamento</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza que deseja cancelar sua assinatura? Voce continuara tendo acesso ate o vencimento atual,
+                      mas nao sera renovado automaticamente.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Voltar</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={handleCancelSubscription}
+                    >
+                      Sim, cancelar
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </CardContent>
+          </Card>
+        ) : null}
 
         {actionMode !== 'IDLE' ? (
           <Card>
@@ -357,7 +420,7 @@ export default function LicensePage() {
                       onSelect={(code) => form.setValue('planCode', code, { shouldValidate: true })}
                     />
                     {scheduledPlanStartDate ? (
-                      <Alert className="border-blue-200 bg-blue-50">
+                      <Alert className="border-primary/25 bg-primary/5 dark:border-primary/20 dark:bg-primary/10">
                         <AlertTitle>Inicio programado do novo plano</AlertTitle>
                         <AlertDescription>
                           O novo plano iniciara em <strong>{formatDate(scheduledPlanStartDate.toISOString())}</strong>,
@@ -374,9 +437,34 @@ export default function LicensePage() {
                 )
               ) : (
                 <Card className="border-border">
-                  <CardContent className="pt-6 text-sm space-y-1">
-                    <p><strong>Plano para pagamento:</strong> {managedPlan?.name || selectedPlan?.name || result?.planCode || 'Plano atual'}</p>
-                    <p><strong>Valor:</strong> {formatCurrency(result?.amountCents || selectedPlan?.amountCents || 0)}</p>
+                  <CardContent className="grid gap-3 pt-6 text-sm sm:grid-cols-2">
+                    <div className="rounded-lg border p-3">
+                      <p className="text-xs text-muted-foreground">Plano para pagamento</p>
+                      <p className="mt-1 font-medium text-foreground">
+                        {managedPlan?.name || selectedPlan?.name || result?.planCode || 'Plano atual'}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border p-3">
+                      <p className="text-xs text-muted-foreground">Valor</p>
+                      <p className="mt-1 font-medium text-foreground">
+                        {formatCurrency(result?.amount ?? selectedPlan?.amount ?? 0)}
+                        <span className="ml-1 text-sm font-normal text-muted-foreground">
+                          {formatPlanBillingCycle(
+                            (managedPlan ?? selectedPlan)?.validityMonths,
+                            (managedPlan ?? selectedPlan)?.validityDays
+                          )}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="rounded-lg border p-3 sm:col-span-2">
+                      <p className="text-xs text-muted-foreground">Validade do plano</p>
+                      <p className="mt-1 font-medium text-foreground">
+                        {formatPlanValidity(
+                          (managedPlan ?? selectedPlan)?.validityMonths,
+                          (managedPlan ?? selectedPlan)?.validityDays
+                        )}
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -409,13 +497,19 @@ export default function LicensePage() {
                     />
                   </div>
                   {billingType === 'CREDIT_CARD' ? <CreditCardForm form={form} /> : null}
-                  <div className="flex flex-wrap gap-2">
-                    <Button type="submit" disabled={isSubmitting}>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                    <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
                       {isSubmitting ? (
                         <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processando...</>
                       ) : actionMode === 'PAY' ? 'Pagar fatura' : 'Confirmar alteracao'}
                     </Button>
-                    <Button type="button" variant="outline" onClick={() => setActionMode('IDLE')} disabled={isSubmitting}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setActionMode('IDLE')}
+                      disabled={isSubmitting}
+                      className="w-full sm:w-auto"
+                    >
                       Cancelar
                     </Button>
                   </div>
@@ -447,10 +541,21 @@ export default function LicensePage() {
         {result?.billingType === 'CREDIT_CARD' && lastCardDigits ? (
           <Card className="border-border">
             <CardHeader><CardTitle>Ultima confirmacao em cartao</CardTitle></CardHeader>
-            <CardContent className="space-y-2 text-sm text-foreground">
-              <p><strong>Status do plano:</strong> {SUBSCRIPTION_STATUS_LABELS[result.status] ?? result.status}</p>
-              <p><strong>Pagamento:</strong> {PAYMENT_STATUS_LABELS[getCurrentPaymentStatus(result)] ?? getCurrentPaymentStatus(result) ?? 'N/A'}</p>
-              <p><strong>Cartao:</strong> final {lastCardDigits}</p>
+            <CardContent className="grid gap-3 text-sm text-foreground sm:grid-cols-3">
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Status do plano</p>
+                <p className="mt-1 font-medium">{SUBSCRIPTION_STATUS_LABELS[result.status] ?? result.status}</p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Pagamento</p>
+                <p className="mt-1 font-medium">
+                  {PAYMENT_STATUS_LABELS[getCurrentPaymentStatus(result)] ?? getCurrentPaymentStatus(result) ?? 'N/A'}
+                </p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Cartao</p>
+                <p className="mt-1 font-medium">final {lastCardDigits}</p>
+              </div>
             </CardContent>
           </Card>
         ) : null}

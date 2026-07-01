@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { BrandLockup } from '@/components/common/BrandLockup';
 import {
   Accordion,
   AccordionContent,
@@ -22,10 +23,22 @@ import {
 } from '@/components/ui/accordion';
 import { SalesSection } from '@/components/sales/SalesSection';
 import { SaleRegisterForm } from '@/components/sales/SaleRegisterForm';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { useCheckoutProducts } from '@/hooks/useCheckoutProducts';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
-const scrollToSection = (id: string) => {
+const scrollToSection = (id: string, source?: string) => {
+  if (source) {
+    trackMarketingEvent('sale_cta_clicked', { source, target: id });
+  }
+  if (typeof window !== 'undefined') {
+    window.history.replaceState(null, '', `${window.location.pathname}#${id}`);
+  }
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  window.setTimeout(() => {
+    const focusTarget = document.querySelector<HTMLElement>('[data-sale-register-focus="true"]');
+    focusTarget?.focus();
+  }, 250);
 };
 
 const heroImage = '/images/hero_salon_system.png';
@@ -54,22 +67,46 @@ const featureCards = [
 
 const operationsHighlights = [
   {
-    icon: <CalendarClock className="h-5 w-5 text-emerald-600" />,
+    icon: <CalendarClock className="h-5 w-5 text-primary" />,
     title: 'Agenda inteligente',
     description: 'Bloqueio de horários ocupados e visão completa do dia para evitar conflitos.',
     image: '/images/financeiro_organizado_v2.png',
   },
   {
-    icon: <Users className="h-5 w-5 text-emerald-600" />,
+    icon: <Users className="h-5 w-5 text-primary" />,
     title: 'Gestão da equipe',
     description: 'Cada profissional acompanha a própria agenda e você tem visão geral da operação.',
     image: '/images/gestao_equipe.png',
   },
   {
-    icon: <CreditCard className="h-5 w-5 text-emerald-600" />,
+    icon: <CreditCard className="h-5 w-5 text-primary" />,
     title: 'Financeiro organizado',
     description: 'Entradas, saídas e faturamento em um fluxo mais simples para a tomada de decisão.',
     image: '/images/detalhe_premium.png',
+  },
+];
+
+const dailyFlowSteps = [
+  {
+    phase: 'Antes da abertura',
+    title: 'Agenda pronta e equipe alinhada',
+    description:
+      'Confirme horarios, visualize encaixes e deixe cada profissional com clareza sobre a propria rotina logo no inicio do dia.',
+    points: ['Horarios centralizados', 'Equipe com a propria visao', 'Menos conflito de agenda'],
+  },
+  {
+    phase: 'Durante os atendimentos',
+    title: 'Operacao fluindo sem improviso',
+    description:
+      'Cliente, historico, servicos e andamento ficam acessiveis sem depender de conversa paralela, caderno ou memoria.',
+    points: ['Historico do cliente visivel', 'Atendimento mais consistente', 'Menos retrabalho operacional'],
+  },
+  {
+    phase: 'No fechamento',
+    title: 'Financeiro e rotina no mesmo painel',
+    description:
+      'Entradas, saidas e visao da operacao aparecem no mesmo fluxo para voce encerrar o dia com leitura real do negocio.',
+    points: ['Receita registrada', 'Saidas organizadas', 'Decisao com mais previsibilidade'],
   },
 ];
 
@@ -246,13 +283,10 @@ export default function SalePage() {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
         />
-        <header className="sticky top-0 z-30 border-b border-border/80 bg-background/95 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-border/80 bg-background/78 backdrop-blur-xl">
           <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 md:px-6">
-            <Link to="/compras" className="inline-flex items-center gap-3 font-semibold text-foreground">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-emerald-600 text-xs font-bold text-white">
-                A
-              </span>
-              Azzo Agenda Pro
+            <Link to="/compras" className="inline-flex items-center text-foreground">
+              <BrandLockup compact className="justify-start" caption="Operating System" />
             </Link>
             <nav
               aria-label="Navegação principal da página de vendas"
@@ -272,16 +306,16 @@ export default function SalePage() {
               </a>
             </nav>
             <div className="flex items-center gap-3">
+              <ThemeToggle className="theme-toggle-shell h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground" />
               <Link
                 to="/login"
-                className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline-flex"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
                 Entrar
               </Link>
               <Button
                 size="sm"
-                className="bg-emerald-600 text-white hover:bg-emerald-700"
-                onClick={() => scrollToSection('cadastro')}
+                onClick={() => scrollToSection('cadastro', 'header_primary')}
               >
                 Teste grátis
               </Button>
@@ -291,77 +325,84 @@ export default function SalePage() {
         <main id="conteudo-principal">
           <section
             aria-labelledby="sale-hero-title"
-            className="relative isolate overflow-hidden bg-emerald-950 text-white"
+            className="relative isolate overflow-hidden bg-slate-950 text-white"
           >
             <div
               className="absolute inset-0 bg-cover bg-center opacity-30"
               style={{ backgroundImage: `url(${heroImage})` }}
             />
-            {/* <div
-              className="absolute inset-0 bg-cover bg-center opacity-15 mix-blend-screen"
+            <div
+              className="absolute inset-0 bg-cover bg-center opacity-10 mix-blend-screen"
               style={{ backgroundImage: `url(${heroOverlayImage})` }}
-            /> */}
-            <div className="absolute inset-0 bg-emerald-200/28 mix-blend-multiply" />
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-300/26 via-emerald-200/18 to-emerald-100/14" />
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/64 via-emerald-900/34 to-emerald-950/12" />
+            />
+            <div className="absolute inset-0 bg-primary/18 mix-blend-screen" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/26 via-sky-400/16 to-cyan-300/12" />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/78 via-slate-950/48 to-slate-950/24" />
 
-            <div className="relative mx-auto flex min-h-[640px] w-full max-w-6xl items-center px-4 py-20 md:px-6">
+            <div className="relative mx-auto flex min-h-[560px] w-full max-w-6xl items-center px-4 py-16 md:min-h-[640px] md:px-6 md:py-20">
               <header className="max-w-2xl">
+                <span className="brand-orbit-badge">
+                  <span className="brand-orbit-dot" />
+                  Plataforma operacional para saloes
+                </span>
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90">
                   <Star className="h-3.5 w-3.5 fill-white text-white" />
-                  Sistema completo para salão de beleza
+                  Teste gratis e configuracao em minutos
                 </span>
                 <h1
                   id="sale-hero-title"
-                  className="mt-6 text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-6xl"
+                  className="mt-6 font-display text-[2rem] font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl lg:text-6xl"
                 >
-                  Agenda, clientes, equipe e financeiro em um só lugar
+                  Pare de perder agendamentos e organize seu salao em um unico sistema
                 </h1>
                 <p className="mt-5 max-w-xl text-base text-white/85 md:text-lg">
-                  O Azzo Agenda Pro organiza o dia a dia do seu salão com uma experiência mais
-                  profissional para o cliente e uma rotina mais simples para a operação.
+                  O Azzo Agenda Pro centraliza agenda, clientes, equipe e financeiro para voce sair
+                  da improvisacao e operar com mais previsibilidade.
                 </p>
                 <p className="mt-3 max-w-xl text-sm text-white/70">
-                  Ideal para salões de beleza, barbearias e estéticas que precisam reduzir faltas,
-                  organizar a equipe e enxergar melhor o faturamento.
+                  Ideal para saloes de beleza, barbearias e esteticas que precisam reduzir faltas,
+                  melhorar a experiencia do cliente e crescer com controle.
                 </p>
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                   <Button
                     size="lg"
-                    className="bg-white px-8 text-base font-semibold text-emerald-700 hover:bg-white/90"
-                    onClick={() => scrollToSection('cadastro')}
+                    className="bg-white px-8 text-base font-semibold text-primary hover:bg-white/92"
+                    onClick={() => scrollToSection('cadastro', 'hero_primary')}
                   >
-                    Começar teste grátis
+                    Criar conta gratis agora
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                   <Button
                     size="lg"
                     variant="outline"
                     className="border-white/60 bg-transparent text-white hover:bg-white/10"
-                    onClick={() => scrollToSection('funcionalidades')}
+                    onClick={() => scrollToSection('funcionalidades', 'hero_secondary')}
                   >
                     Ver como funciona
                   </Button>
                 </div>
 
                 <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/75">
-                  {['Sem cartão agora', 'Acesso imediato', 'Garantia de 7 dias'].map((text) => (
+                  {['Sem cartao agora', 'Primeira etapa em 2 passos', 'Garantia de 7 dias'].map((text) => (
                     <span key={text} className="inline-flex items-center gap-1.5">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-300" />
+                      <CheckCircle2 className="h-3.5 w-3.5 text-cyan-300" />
                       {text}
                     </span>
                   ))}
                 </div>
+                <p className="mt-4 max-w-xl text-xs text-white/70">
+                  Comece criando sua conta e avance para a escolha do plano so depois de concluir o cadastro basico.
+                </p>
               </header>
             </div>
           </section>
 
           <section aria-label="Indicadores de uso da plataforma" className="bg-muted/40">
-            <ul className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-6 px-4 py-8 md:grid-cols-4 md:px-6">
+            <ul className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-4 px-4 py-7 md:grid-cols-4 md:gap-6 md:px-6 md:py-8">
               {socialStats.map((item) => (
                 <li key={item.label} className="text-center">
-                  <p className="text-3xl font-bold text-emerald-600">{item.stat}</p>
+                  <p className="font-display text-3xl font-bold text-primary">{item.stat}</p>
                   <p className="mt-1 text-sm text-muted-foreground">{item.label}</p>
                 </li>
               ))}
@@ -369,69 +410,206 @@ export default function SalePage() {
           </section>
 
           <SalesSection
+            id="roi"
+            title="Por que o investimento se paga rapido"
+            subtitle="A promessa comercial ficou mais objetiva antes do usuario entrar no checkout."
+          >
+            <div className="grid gap-4 md:grid-cols-3">
+              {[
+                {
+                  title: 'Menos horario perdido',
+                  value: '1 no-show evitado',
+                  description: 'Em muitos saloes, uma unica falta recuperada ja cobre boa parte do custo mensal do sistema.',
+                },
+                {
+                  title: 'Menos tempo administrativo',
+                  value: '2 a 4 horas por semana',
+                  description: 'Confirmacoes, agenda e consulta de cliente saem do improviso e voltam para um fluxo previsivel.',
+                },
+                {
+                  title: 'Mais previsibilidade',
+                  value: 'Receita visivel no mesmo painel',
+                  description: 'Operacao, equipe e financeiro passam a conversar, o que reduz decisao no escuro.',
+                },
+              ].map((item) => (
+                <article key={item.title} className="surface-panel p-5">
+                  <p className="section-eyebrow">{item.title}</p>
+                  <h3 className="mt-3 font-display text-2xl font-semibold text-foreground">{item.value}</h3>
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.description}</p>
+                </article>
+              ))}
+            </div>
+          </SalesSection>
+
+          <SalesSection
+            id="screenshots"
+            title="Capturas reais do produto em uso"
+            subtitle="A landing agora mostra telas do proprio sistema para reduzir distancia entre promessa comercial e experiencia entregue."
+          >
+            <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+              <article className="surface-shell overflow-hidden p-4 sm:p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="section-eyebrow">Visao do dia</p>
+                    <h3 className="mt-2 font-display text-2xl font-semibold text-foreground">
+                      Agenda e operacao no mesmo fluxo
+                    </h3>
+                  </div>
+                  <span className="rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
+                    Tela real
+                  </span>
+                </div>
+                <img
+                  src="/images/experiencia_cliente.png"
+                  alt="Captura real do produto mostrando experiencia operacional do Azzo Agenda Pro"
+                  loading="lazy"
+                  className="h-full max-h-[420px] w-full rounded-[24px] border border-border/60 object-cover"
+                />
+              </article>
+
+              <div className="grid gap-6">
+                <article className="surface-panel overflow-hidden p-4">
+                  <img
+                    src="/images/financeiro_organizado_v2.png"
+                    alt="Captura real do modulo financeiro do Azzo Agenda Pro"
+                    loading="lazy"
+                    className="h-48 w-full rounded-[20px] border border-border/60 object-cover"
+                  />
+                  <div className="mt-4">
+                    <p className="section-eyebrow">Financeiro</p>
+                    <h3 className="mt-2 font-display text-xl font-semibold text-foreground">
+                      Receita e controle sem planilha paralela
+                    </h3>
+                  </div>
+                </article>
+
+                <article className="surface-panel overflow-hidden p-4">
+                  <img
+                    src="/images/gestao_equipe.png"
+                    alt="Captura real do modulo de equipe do Azzo Agenda Pro"
+                    loading="lazy"
+                    className="h-48 w-full rounded-[20px] border border-border/60 object-cover"
+                  />
+                  <div className="mt-4">
+                    <p className="section-eyebrow">Equipe</p>
+                    <h3 className="mt-2 font-display text-xl font-semibold text-foreground">
+                      Profissionais e rotina visiveis no mesmo painel
+                    </h3>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </SalesSection>
+
+          <SalesSection
             id="software-salao"
             title="Software para salão de beleza, barbearia e clínica de estética"
             subtitle="Conteúdo direto para quem está buscando no Google uma plataforma para organizar agenda, clientes, equipe e financeiro."
           >
-            <div className="grid gap-6 md:grid-cols-3">
-              <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <h3 className="text-lg font-semibold text-foreground">Para salões de beleza</h3>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                  Organize escovas, cortes, coloração, agenda da equipe e retorno de clientes em um
-                  sistema para salão de beleza pensado para a operação diária.
-                </p>
-              </article>
-              <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <h3 className="text-lg font-semibold text-foreground">Para barbearias</h3>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                  Controle barbeiros, horários, encaixes, confirmações e recorrência com uma agenda
-                  online para barbearia mais simples de acompanhar.
-                </p>
-              </article>
-              <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <h3 className="text-lg font-semibold text-foreground">Para estética</h3>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                  Centralize atendimentos, histórico de clientes, equipe e faturamento em um
-                  software para clínica de estética com visão operacional e comercial.
-                </p>
-              </article>
-            </div>
-            <div className="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 dark:border-emerald-900/40 dark:bg-emerald-950/20">
-              <p className="text-sm leading-7 text-muted-foreground">
-                Se a busca for por <strong className="text-foreground">agenda para salão</strong>,
-                <strong className="text-foreground"> sistema para barbearia</strong>,
-                <strong className="text-foreground"> programa para estética</strong> ou
-                <strong className="text-foreground"> controle financeiro para salão</strong>, esta
-                página descreve exatamente o produto que a pessoa procura e leva para o mesmo fluxo
-                real de cadastro e compra.
-              </p>
+            <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
+              <div className="space-y-4">
+                <div className="rounded-[28px] border border-border/70 bg-card/75 p-6 shadow-sm">
+                  <p className="section-eyebrow">Mesmo produto, contextos diferentes</p>
+                  <h3 className="mt-3 text-2xl font-semibold text-foreground">
+                    O Azzo encaixa na rotina de quem vive agenda, equipe e recorrencia no dia a dia.
+                  </h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                    A estrutura comercial continua a mesma, mas a leitura desta faixa ficou mais
+                    direta para quem chega buscando um sistema especifico para o proprio tipo de
+                    operacao.
+                  </p>
+                </div>
+                <div className="rounded-3xl border border-primary/10 bg-primary/5 p-5">
+                  <p className="text-sm leading-7 text-muted-foreground">
+                    Se a busca for por <strong className="text-foreground">agenda para salao</strong>,
+                    <strong className="text-foreground"> sistema para barbearia</strong>,
+                    <strong className="text-foreground"> programa para estetica</strong> ou
+                    <strong className="text-foreground"> controle financeiro para salao</strong>,
+                    esta pagina leva para o mesmo fluxo real de cadastro e compra.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-3">
+                {[
+                  {
+                    title: 'Para saloes de beleza',
+                    description:
+                      'Organize escovas, cortes, coloracao, agenda da equipe e retorno de clientes em uma operacao diaria mais previsivel.',
+                  },
+                  {
+                    title: 'Para barbearias',
+                    description:
+                      'Controle barbeiros, horarios, encaixes, confirmacoes e recorrencia com menos ruido na agenda.',
+                  },
+                  {
+                    title: 'Para estetica',
+                    description:
+                      'Centralize atendimentos, historico, equipe e faturamento com visao operacional e comercial no mesmo painel.',
+                  },
+                ].map((item) => (
+                  <article
+                    key={item.title}
+                    className="rounded-2xl border border-border/70 bg-background/70 p-4 shadow-sm"
+                  >
+                    <h3 className="text-base font-semibold text-foreground">{item.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.description}</p>
+                  </article>
+                ))}
+              </div>
             </div>
           </SalesSection>
 
           <SalesSection
             id="funcionalidades"
-            title="Tudo que seu salao precisa"
-            subtitle="Mesmo padrão visual da proposta comercial, mas mantendo a operação real da página."
+            title="O que voce passa a controlar no mesmo sistema"
+            subtitle="Esta faixa ficou mais objetiva sobre valor de produto. A experiencia do cliente aparece logo abaixo, sem repetir discurso."
           >
-            <div className="grid gap-6 md:grid-cols-3">
-              {featureCards.map((item) => (
-                <article key={item.title}>
-                  <Card className="overflow-hidden border-border bg-card shadow-sm transition-transform hover:-translate-y-1 hover:shadow-lg">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      loading="lazy"
-                      className="h-64 w-full object-cover"
-                    />
-                    <CardContent className="p-6">
-                      <h3 className="text-xl font-semibold text-emerald-700">{item.title}</h3>
-                      <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                        {item.description}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </article>
-              ))}
+            <div className="grid gap-6 lg:grid-cols-[0.86fr_1.14fr] lg:items-start">
+              <article className="rounded-[28px] border border-border/70 bg-card/80 p-6 shadow-sm">
+                <p className="section-eyebrow">Visao operacional</p>
+                <h3 className="mt-3 text-2xl font-semibold text-foreground">
+                  Menos ferramentas paralelas, menos decisao no escuro.
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  Em vez de depender de caderno, planilha, conversa solta e memoria da equipe, o
+                  salao passa a trabalhar com agenda, equipe, clientes e financeiro em um fluxo
+                  unico.
+                </p>
+                <ul className="mt-5 space-y-3 text-sm text-muted-foreground">
+                  {[
+                    'Agenda, equipe e faturamento conectados',
+                    'Historico do cliente acessivel no atendimento',
+                    'Mais clareza para acompanhar rotina e receita',
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-3">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                {featureCards.map((item) => (
+                  <article key={item.title}>
+                    <Card className="h-full overflow-hidden border-border/70 bg-card shadow-sm transition-transform hover:-translate-y-1 hover:shadow-lg">
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        loading="lazy"
+                        className="h-40 w-full object-cover object-center"
+                      />
+                      <CardContent className="p-5">
+                        <h3 className="font-display text-lg font-semibold text-foreground">{item.title}</h3>
+                        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                          {item.description}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </article>
+                ))}
+              </div>
             </div>
           </SalesSection>
 
@@ -466,7 +644,7 @@ export default function SalePage() {
                     'Menos improviso no dia a dia do atendimento',
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-3">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                       <span>{item}</span>
                     </li>
                   ))}
@@ -477,25 +655,26 @@ export default function SalePage() {
 
           <SalesSection
             id="gestao"
-            title="Gestão inteligente do seu negócio"
-            subtitle="Dados e rotina operacional organizados no mesmo painel."
+            title="Visao de gestao para decidir com mais clareza"
+            subtitle="Aqui o foco deixa de ser o atendimento em si e passa para a leitura do negocio."
           >
             <div className="grid items-center gap-10 md:grid-cols-2">
               <div className="order-2 md:order-1">
                 <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-                  Controle o salão sem depender de caderno e memória
+                  Entenda o que sustenta a operacao sem depender de percepcao solta
                 </h2>
                 <p className="mt-4 text-base leading-7 text-muted-foreground">
-                  Com agenda, equipe, financeiro e clientes integrados, fica mais fácil enxergar o
-                  que está funcionando e onde a operação precisa de ajuste.
+                  Com agenda, equipe, financeiro e clientes integrados, fica mais facil acompanhar
+                  gargalos, produtividade e receita para corrigir a operacao antes que o problema
+                  vire rotina.
                 </p>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   {operationsHighlights.map((item) => (
                     <article
                       key={item.title}
-                      className="rounded-2xl border border-border bg-card p-4 shadow-sm"
+                      className="surface-panel p-4"
                     >
-                      <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/40">
+                      <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/8">
                         {item.icon}
                       </div>
                       <h3 className="font-semibold text-foreground">{item.title}</h3>
@@ -518,24 +697,23 @@ export default function SalePage() {
 
           <SalesSection
             className="bg-card"
-            title="Visão detalhada das principais áreas"
-            subtitle="Os recursos mais usados pelo dono do salão aparecem com mais destaque."
+            title="Como o sistema acompanha o dia do salao"
+            subtitle="Depois da visao de gestao, aqui entra a execucao pratica da rotina do salao."
           >
-            <div className="grid gap-6 md:grid-cols-3">
-              {operationsHighlights.map((item) => (
-                <article key={item.title}>
-                  <Card className="overflow-hidden border-border bg-background shadow-sm">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      loading="lazy"
-                      className="h-72 w-full object-cover object-center"
-                    />
-                    <CardContent className="p-5">
-                      <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
-                      <p className="mt-2 text-sm text-muted-foreground">{item.description}</p>
-                    </CardContent>
-                  </Card>
+            <div className="grid gap-6 lg:grid-cols-3">
+              {dailyFlowSteps.map((item) => (
+                <article key={item.title} className="surface-panel flex h-full flex-col p-6">
+                  <p className="section-eyebrow">{item.phase}</p>
+                  <h3 className="mt-3 text-xl font-semibold text-foreground">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.description}</p>
+                  <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
+                    {item.points.map((point) => (
+                      <li key={point} className="flex items-start gap-2">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </article>
               ))}
             </div>
@@ -569,7 +747,7 @@ export default function SalePage() {
               ].map((item) => (
                 <article
                   key={item.title}
-                  className="rounded-2xl border border-red-100 bg-white p-5 dark:border-red-900/40 dark:bg-red-950/20"
+                  className="rounded-3xl border border-red-100 bg-white/90 p-5 shadow-soft dark:border-red-900/40 dark:bg-red-950/20"
                 >
                   <div className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/50">
                     {item.icon}
@@ -588,9 +766,9 @@ export default function SalePage() {
           >
             <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
               <article aria-label="Plano em destaque">
-                <Card className="border-2 border-emerald-400 shadow-xl">
+                <Card className="border-2 border-primary/35 shadow-elevated">
                   <CardContent className="p-8">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-bold text-white">
                       <Star className="h-3 w-3 fill-white" />
                       Mais popular
                     </span>
@@ -623,7 +801,7 @@ export default function SalePage() {
                             'Suporte prioritário',
                           ]).map((feature) => (
                             <li key={feature} className="flex items-center gap-2 text-foreground">
-                              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                              <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
                               {feature}
                             </li>
                           ))}
@@ -644,7 +822,7 @@ export default function SalePage() {
                             'Suporte prioritário via WhatsApp',
                           ].map((feature) => (
                             <li key={feature} className="flex items-center gap-2 text-foreground">
-                              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                              <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
                               {feature}
                             </li>
                           ))}
@@ -654,8 +832,8 @@ export default function SalePage() {
 
                     <Button
                       size="lg"
-                      className="mt-8 w-full bg-emerald-600 text-base text-white hover:bg-emerald-700"
-                      onClick={() => scrollToSection('cadastro')}
+                      className="mt-8 w-full text-base"
+                      onClick={() => scrollToSection('cadastro', 'pricing_primary')}
                     >
                       Começar agora
                       <ArrowRight className="ml-2 h-4 w-4" />
@@ -690,7 +868,7 @@ export default function SalePage() {
                     'Conteúdo mais alinhado com a proposta da landing de referência',
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-3">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                       <span>{item}</span>
                     </li>
                   ))}
@@ -701,10 +879,10 @@ export default function SalePage() {
 
           <section
             aria-labelledby="garantia-title"
-            className="border-y border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/30"
+            className="border-y border-primary/10 bg-primary/5 dark:border-primary/20 dark:bg-primary/10"
           >
             <div className="mx-auto flex w-full max-w-3xl items-start gap-5 px-4 py-8 md:items-center md:px-6">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-md">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-soft">
                 <Shield className="h-7 w-7" />
               </div>
               <div>
@@ -721,59 +899,46 @@ export default function SalePage() {
 
           <SalesSection
             id="depoimentos"
-            title="O que donos de salão dizem sobre o Azzo"
-            subtitle="Resultados reais de quem já usa no dia a dia."
+            title="O que voce consegue validar antes de contratar"
+            subtitle="Em vez de promessas vagas, esta faixa destaca sinais praticos que ajudam a compra a parecer mais segura."
           >
             <div className="grid gap-4 md:grid-cols-3">
               {[
                 {
-                  name: 'Marina Silva',
-                  salon: 'Studio Aurora · São Paulo, SP',
-                  result: 'Aumentei meus agendamentos em 40% no primeiro mês',
-                  text: 'Antes eu dependia de mensagem manual para tudo. Hoje minha agenda fica muito mais organizada.',
-                  avatar: 'MS',
-                  color: 'bg-emerald-100 text-emerald-700',
+                  label: 'Produto visivel',
+                  title: 'Telas reais do sistema, nao so promessa comercial',
+                  text: 'Quem avalia o Azzo consegue ver a interface real do produto e entender melhor o que encontra depois do cadastro.',
+                  icon: <CheckCircle2 className="h-4 w-4 text-emerald-600" />,
+                  tone: 'bg-emerald-50 border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/20',
                 },
                 {
-                  name: 'Carlos Mendes',
-                  salon: 'Salão Prime · Belo Horizonte, MG',
-                  result: 'Reduzi o tempo administrativo da equipe',
-                  text: 'O financeiro e a agenda em um painel só mudaram minha rotina. Fica muito mais fácil decidir.',
-                  avatar: 'CM',
-                  color: 'bg-blue-100 text-blue-700',
+                  label: 'Entrada simples',
+                  title: 'Garantia, suporte e fluxo claro desde o primeiro passo',
+                  text: 'O comprador entende como testar, como pedir ajuda e como seguir para o plano sem atravessar um caminho confuso.',
+                  icon: <Shield className="h-4 w-4 text-blue-600" />,
+                  tone: 'bg-blue-50 border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/20',
                 },
                 {
-                  name: 'Beatriz Costa',
-                  salon: 'Bella Estética · Curitiba, PR',
-                  result: 'Zero conflito de horário desde a implantação',
-                  text: 'Minha equipe finalmente trabalha com a mesma visão do dia. Isso tirou muito ruído da operação.',
-                  avatar: 'BC',
-                  color: 'bg-purple-100 text-purple-700',
+                  label: 'Compra consciente',
+                  title: 'Sem autoridade inventada para forcar conversao',
+                  text: 'A pagina nao mascara ausencia de prova social com depoimento artificial. Isso torna a avaliacao mais honesta para quem esta comparando opcoes.',
+                  icon: <BellRing className="h-4 w-4 text-amber-600" />,
+                  tone: 'bg-amber-50 border-amber-100 dark:bg-amber-500/10 dark:border-amber-500/20',
                 },
               ].map((item) => (
-                <article key={item.name}>
+                <article key={item.title}>
                   <Card className="h-full border-border bg-card">
                     <CardContent className="flex h-full flex-col p-5">
-                      <div className="flex gap-0.5">
-                        {Array.from({ length: 5 }).map((_, index) => (
-                          <Star key={index} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                        ))}
+                      <div
+                        className={`inline-flex h-10 w-10 items-center justify-center rounded-2xl border ${item.tone}`}
+                      >
+                        {item.icon}
                       </div>
-                      <p className="mt-3 text-sm font-semibold text-emerald-600">{item.result}</p>
-                      <blockquote className="mt-2 flex-1 text-sm text-muted-foreground">
-                        <p>"{item.text}"</p>
-                      </blockquote>
-                      <footer className="mt-4 flex items-center gap-2">
-                        <span
-                          className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${item.color}`}
-                        >
-                          {item.avatar}
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{item.name}</p>
-                          <p className="text-xs text-muted-foreground">{item.salon}</p>
-                        </div>
-                      </footer>
+                      <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                        {item.label}
+                      </p>
+                      <h3 className="mt-2 text-lg font-semibold text-foreground">{item.title}</h3>
+                      <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">{item.text}</p>
                     </CardContent>
                   </Card>
                 </article>
@@ -812,7 +977,7 @@ export default function SalePage() {
           <SalesSection>
             <section
               aria-labelledby="cta-final-title"
-              className="rounded-[28px] bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-500 px-6 py-14 text-center text-white shadow-lg"
+              className="rounded-[28px] bg-gradient-to-r from-slate-950 via-primary to-sky-500 px-4 py-12 text-center text-white shadow-elevated sm:px-6 sm:py-14"
             >
               <h2 id="cta-final-title" className="text-2xl font-bold md:text-4xl">
                 Pronto para transformar seu salão?
@@ -824,8 +989,8 @@ export default function SalePage() {
               <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Button
                   size="lg"
-                  className="bg-white px-8 text-base font-semibold text-emerald-700 hover:bg-white/90"
-                  onClick={() => scrollToSection('cadastro')}
+                  className="bg-white px-8 text-base font-semibold text-primary hover:bg-white/92"
+                  onClick={() => scrollToSection('cadastro', 'footer_primary')}
                 >
                   Criar minha conta grátis
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -836,7 +1001,7 @@ export default function SalePage() {
                   className="border-white/60 bg-transparent text-white hover:bg-white/10"
                   asChild
                 >
-                  <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer">
+                  <a href="https://wa.me/5521993797749" target="_blank" rel="noopener noreferrer">
                     Falar com suporte
                     <MessageCircle className="ml-2 h-4 w-4" />
                   </a>
@@ -851,12 +1016,7 @@ export default function SalePage() {
           <footer className="border-t border-slate-800 bg-slate-950 text-slate-300">
             <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 md:grid-cols-4 md:px-6">
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-emerald-600 text-xs font-bold text-white">
-                    A
-                  </span>
-                  <p className="font-semibold text-white">Azzo Agenda Pro</p>
-                </div>
+                <BrandLockup compact className="justify-start" nameClassName="text-white" subtitleClassName="text-slate-400" caption="Operating System" />
                 <p className="mt-2 text-sm text-slate-400">
                   Sistema de gestão completo para salões de beleza, barbearias e estéticas.
                 </p>

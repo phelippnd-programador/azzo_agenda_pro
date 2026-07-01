@@ -1,115 +1,284 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&family=Manrope:wght@600;700;800&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* ── Page background: neutral gray (Stripe-like) */
-    --background: 220 14% 96%;
-    --foreground: 224 71% 4%;
-
-    /* ── Cards: pure white floating on the gray background */
+    color-scheme: light;
+    --background: 214 29% 97%;
+    --foreground: 222 33% 14%;
     --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
-
+    --card-foreground: 222 33% 14%;
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71% 4%;
-
-    /* ── Primary: modern blue (#2563eb) */
-    --primary: 221 83% 53%;
+    --popover-foreground: 222 33% 14%;
+    --primary: 221 80% 56%;
     --primary-foreground: 0 0% 100%;
-
-    /* ── Secondary / muted */
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 224 71% 4%;
-
-    --muted: 220 13% 95%;
-    --muted-foreground: 220 9% 46%;
-
-    --accent: 220 14% 94%;
-    --accent-foreground: 224 71% 4%;
-
+    --secondary: 214 43% 95%;
+    --secondary-foreground: 222 33% 18%;
+    --muted: 215 32% 94%;
+    --muted-foreground: 218 16% 43%;
+    --accent: 212 45% 95%;
+    --accent-foreground: 222 33% 16%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 221 83% 53%;
-
-    /* ── Border radius: slightly tighter than before */
-    --radius: 0.5rem;
-
-    /* ── Sidebar: pure white to visually separate from gray page */
+    --border: 215 24% 87%;
+    --input: 215 24% 87%;
+    --ring: 221 80% 56%;
+    --panel: 0 0% 100%;
+    --panel-muted: 214 40% 98%;
+    --shell: 212 42% 98%;
+    --brand-accent: 186 86% 42%;
+    --radius: 0.8rem;
+    --radius-lg: 1.5rem;
+    --shadow-soft: 0 10px 28px -20px rgba(15, 23, 42, 0.3);
+    --shadow-panel: 0 24px 60px -32px rgba(15, 23, 42, 0.28);
+    --shadow-elevated: 0 30px 80px -36px rgba(15, 23, 42, 0.36);
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 9% 40%;
-    --sidebar-primary: 221 83% 53%;
+    --sidebar-foreground: 218 15% 38%;
+    --sidebar-primary: 221 80% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 94%;
-    --sidebar-accent-foreground: 224 71% 4%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-accent: 214 43% 95%;
+    --sidebar-accent-foreground: 222 33% 14%;
+    --sidebar-border: 215 24% 87%;
+    --sidebar-ring: 221 80% 56%;
   }
 
   .dark {
-    /* ── Dark mode: deep navy background */
-    --background: 222 47% 5%;
-    --foreground: 210 40% 98%;
-
-    /* ── Cards slightly lighter than background */
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 8%;
-    --popover-foreground: 210 40% 98%;
-
-    /* ── Primary in dark: blue-400 readable on dark bg */
-    --primary: 217 91% 65%;
-    --primary-foreground: 222 47% 5%;
-
-    --secondary: 217 32% 17%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 32% 17%;
+    color-scheme: dark;
+    --background: 222 39% 8%;
+    --foreground: 210 36% 96%;
+    --card: 222 34% 10%;
+    --card-foreground: 210 36% 96%;
+    --popover: 222 34% 10%;
+    --popover-foreground: 210 36% 96%;
+    --primary: 217 93% 68%;
+    --primary-foreground: 222 47% 8%;
+    --secondary: 217 26% 18%;
+    --secondary-foreground: 210 36% 96%;
+    --muted: 218 24% 16%;
     --muted-foreground: 215 20% 65%;
-
-    --accent: 217 32% 17%;
-    --accent-foreground: 210 40% 98%;
-
+    --accent: 217 26% 18%;
+    --accent-foreground: 210 36% 96%;
     --destructive: 0 62% 50%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217 32% 17%;
-    --input: 217 32% 17%;
-    --ring: 217 91% 65%;
-
-    /* ── Sidebar dark: slightly different from background */
-    --sidebar-background: 222 47% 7%;
+    --destructive-foreground: 210 36% 96%;
+    --border: 218 22% 20%;
+    --input: 218 22% 20%;
+    --ring: 217 93% 68%;
+    --panel: 222 34% 10%;
+    --panel-muted: 220 30% 12%;
+    --shell: 222 38% 9%;
+    --brand-accent: 186 75% 48%;
+    --shadow-soft: 0 16px 40px -26px rgba(2, 6, 23, 0.7);
+    --shadow-panel: 0 26px 70px -32px rgba(2, 6, 23, 0.78);
+    --shadow-elevated: 0 34px 90px -34px rgba(2, 6, 23, 0.84);
+    --sidebar-background: 222 37% 9%;
     --sidebar-foreground: 215 20% 65%;
-    --sidebar-primary: 217 91% 65%;
-    --sidebar-primary-foreground: 222 47% 5%;
-    --sidebar-accent: 217 32% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 32% 17%;
-    --sidebar-ring: 217 91% 65%;
+    --sidebar-primary: 217 93% 68%;
+    --sidebar-primary-foreground: 222 47% 8%;
+    --sidebar-accent: 218 24% 16%;
+    --sidebar-accent-foreground: 210 36% 96%;
+    --sidebar-border: 218 22% 20%;
+    --sidebar-ring: 217 93% 68%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background font-sans text-foreground antialiased;
+    background-image:
+      radial-gradient(circle at top left, hsl(var(--primary) / 0.08), transparent 28%),
+      radial-gradient(circle at top right, hsl(var(--brand-accent) / 0.08), transparent 22%);
+    background-attachment: fixed;
   }
 
-  /* Smooth transitions for interactive elements */
+  h1,
+  h2,
+  h3,
+  h4,
+  [data-display="true"] {
+    @apply font-display tracking-tight;
+  }
+
   button,
   a,
   input,
   textarea,
   select {
     @apply transition-colors duration-150;
+  }
+}
+
+@layer components {
+  .surface-panel {
+    @apply rounded-[var(--radius-lg)] border backdrop-blur-sm;
+    border-color: hsl(var(--border) / 0.7);
+    background-color: hsl(var(--card) / 0.95);
+    box-shadow: var(--shadow-panel);
+  }
+
+  .surface-panel-muted {
+    @apply rounded-[var(--radius-lg)] border backdrop-blur-sm;
+    border-color: hsl(var(--border) / 0.7);
+    background-color: hsl(var(--muted) / 0.35);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .surface-shell {
+    @apply rounded-[calc(var(--radius-lg)+0.25rem)] border border-border/70 bg-gradient-to-br from-background via-card to-muted/40;
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .tone-amber-panel {
+    @apply border-amber-200/80 bg-gradient-to-br from-amber-50/90 to-orange-50/75 dark:border-amber-500/20 dark:from-amber-500/10 dark:to-orange-500/5;
+  }
+
+  .tone-sky-panel {
+    @apply border-sky-200/80 bg-gradient-to-br from-sky-50/90 to-cyan-50/75 dark:border-sky-500/20 dark:from-sky-500/10 dark:to-cyan-500/5;
+  }
+
+  .tone-emerald-panel {
+    @apply border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 to-green-50/75 dark:border-emerald-500/20 dark:from-emerald-500/10 dark:to-green-500/5;
+  }
+
+  .tone-rose-panel {
+    @apply border-rose-200/80 bg-gradient-to-br from-rose-50/90 to-orange-50/75 dark:border-rose-500/20 dark:from-rose-500/10 dark:to-orange-500/5;
+  }
+
+  .tone-surface {
+    @apply border-border/70 bg-card/85 dark:bg-card/80;
+  }
+
+  .tone-subtle {
+    @apply border-border/70 bg-muted/45 dark:bg-muted/35;
+  }
+
+  .theme-toggle-shell {
+    @apply rounded-xl border border-border/70 bg-card/85 text-foreground shadow-soft backdrop-blur;
+  }
+
+  .brand-orbit-badge {
+    @apply inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em];
+    border-color: hsl(var(--primary) / 0.18);
+    background:
+      linear-gradient(135deg, hsl(var(--primary) / 0.12), hsl(var(--brand-accent) / 0.08)),
+      hsl(var(--background) / 0.78);
+    color: hsl(var(--foreground));
+    box-shadow: var(--shadow-soft);
+  }
+
+  .brand-orbit-dot {
+    @apply inline-flex h-2 w-2 rounded-full;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--brand-accent)));
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.12);
+  }
+
+  .brand-shell-panel {
+    @apply rounded-[1.25rem] border border-border/70 backdrop-blur-xl;
+    background-color: hsl(var(--card) / 0.82);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .section-eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground;
+  }
+
+  .auth-shell {
+    @apply relative min-h-screen overflow-hidden bg-background px-3 py-5 sm:px-6 sm:py-8;
+  }
+
+  .auth-shell::before {
+    content: "";
+    @apply pointer-events-none absolute inset-x-0 top-0 h-[420px];
+    background:
+      radial-gradient(circle at top left, hsl(var(--primary) / 0.24), transparent 38%),
+      radial-gradient(circle at top right, hsl(var(--brand-accent) / 0.2), transparent 30%),
+      linear-gradient(135deg, hsl(222 47% 10% / 0.96), hsl(215 50% 16% / 0.82)),
+      linear-gradient(180deg, hsl(var(--background)), transparent);
+  }
+
+  .auth-shell::after {
+    content: "";
+    @apply pointer-events-none absolute inset-0;
+    background-image:
+      linear-gradient(hsl(var(--border) / 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.12) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 65%);
+    opacity: 0.35;
+  }
+
+  .auth-panel {
+    @apply surface-panel border;
+    border-color: hsl(var(--border) / 0.8);
+    background-color: hsl(var(--card) / 0.92);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* CSS de impressao para relatórios (window.print())                   */
+/* ------------------------------------------------------------------ */
+@media print {
+  /* Oculta tudo por padrao */
+  body > * {
+    display: none !important;
+  }
+
+  /* Mostra apenas a regiao marcada para impressao */
+  .print-region,
+  .print-region * {
+    display: revert !important;
+    visibility: visible !important;
+  }
+
+  .print-region {
+    position: absolute !important;
+    inset: 0 !important;
+    padding: 1.5cm 2cm !important;
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Oculta acoes, filtros e componentes de navegacao dentro da regiao */
+  .print-region .print-hide {
+    display: none !important;
+  }
+
+  /* Garante que tabelas nao sejam cortadas */
+  table {
+    page-break-inside: auto !important;
+    width: 100% !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+  }
+
+  /* Remove bordas e sombras de cards para impressao limpa */
+  .print-region [class*="shadow"],
+  .print-region [class*="backdrop"] {
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Cabecalho de impressao (logo + data) */
+  .print-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    border-bottom: 2px solid #000 !important;
+    padding-bottom: 0.5cm !important;
+    margin-bottom: 0.75cm !important;
+    font-size: 10pt !important;
+  }
+
+  .print-header .print-logo {
+    font-size: 16pt !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
   }
 }

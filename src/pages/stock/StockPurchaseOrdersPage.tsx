@@ -155,12 +155,15 @@ export default function StockPurchaseOrdersPage() {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="border-border/80">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle>Pedidos de compra</CardTitle>
             <Button onClick={() => setIsCreateOpen(true)}>Novo pedido</Button>
           </div>
+          <p className="text-sm text-muted-foreground">
+            Controle reposicoes, acompanhe pendencias de recebimento e mantenha cada pedido visivel ate o fechamento.
+          </p>
         </CardHeader>
         <CardContent className="space-y-2">
           {!orders.length ? (
@@ -174,16 +177,26 @@ export default function StockPurchaseOrdersPage() {
               <Link
                 key={order.id}
                 to={`/estoque/pedidos-compra/${order.id}`}
-                className="block rounded-md border p-3 transition-colors hover:bg-muted/40"
+                className="block rounded-xl border border-border/70 bg-card p-4 transition-colors hover:bg-muted/20"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-medium">{order.fornecedorNome}</p>
+                  <p className="font-medium text-foreground">{order.fornecedorNome}</p>
                   <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Total: {formatCurrency(order.valorTotal)} | Itens: {order.quantidadeItens} | Pendente:{" "}
-                  {order.quantidadePendente}
-                </p>
+                <div className="mt-3 grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
+                  <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                    <p className="uppercase tracking-wide text-muted-foreground">Total</p>
+                    <p className="mt-1 font-medium text-foreground">{formatCurrency(order.valorTotal)}</p>
+                  </div>
+                  <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                    <p className="uppercase tracking-wide text-muted-foreground">Itens</p>
+                    <p className="mt-1 font-medium text-foreground">{order.quantidadeItens}</p>
+                  </div>
+                  <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                    <p className="uppercase tracking-wide text-muted-foreground">Pendente</p>
+                    <p className="mt-1 font-medium text-foreground">{order.quantidadePendente}</p>
+                  </div>
+                </div>
               </Link>
             ))
           )}
@@ -198,7 +211,7 @@ export default function StockPurchaseOrdersPage() {
       </Card>
 
       {selectedOrder ? (
-        <Card>
+        <Card className="border-border/80">
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <CardTitle>Pedido {selectedOrder.id}</CardTitle>
@@ -209,6 +222,20 @@ export default function StockPurchaseOrdersPage() {
             <p className="text-sm text-muted-foreground">
               Fornecedor: {selectedOrder.fornecedorNome} | Pendente: {selectedOrder.quantidadePendente}
             </p>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Fornecedor</p>
+                <p className="mt-1 font-semibold text-foreground">{selectedOrder.fornecedorNome}</p>
+              </div>
+              <div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Total</p>
+                <p className="mt-1 font-semibold text-foreground">{formatCurrency(selectedOrder.valorTotal)}</p>
+              </div>
+              <div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Pendente</p>
+                <p className="mt-1 font-semibold text-foreground">{selectedOrder.quantidadePendente}</p>
+              </div>
+            </div>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div className="space-y-1">
                 <Label>Quantidade recebida</Label>

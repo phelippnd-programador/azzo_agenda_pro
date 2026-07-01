@@ -48,7 +48,7 @@ export function CashFlowChart({ dateFilter }: CashFlowChartProps) {
       <CardContent>
         {data.length === 0 && !isLoading ? (
           <div className="h-48 flex items-center justify-center">
-            <p className="text-sm text-muted-foreground">Sem dados para o período selecionado</p>
+            <p className="text-sm text-muted-foreground">Sem dados para o perÃ­odo selecionado</p>
           </div>
         ) : (
           <div className="h-56 sm:h-64">
@@ -72,14 +72,14 @@ export function CashFlowChart({ dateFilter }: CashFlowChartProps) {
                 />
                 <Tooltip
                   formatter={(value: number, name: string) => [
-                    formatCurrency(value / 100),
-                    name === 'income' ? 'Entradas' : name === 'expenses' ? 'Saídas' : 'Saldo',
+                    formatCurrency(value),
+                    name === 'income' ? 'Entradas' : name === 'expenses' ? 'SaÃ­das' : 'Saldo',
                   ]}
                   labelFormatter={(label) => `Data: ${String(label).split('-').reverse().join('/')}`}
                 />
                 <Legend
                   formatter={(value) =>
-                    value === 'income' ? 'Entradas' : value === 'expenses' ? 'Saídas' : 'Saldo'
+                    value === 'income' ? 'Entradas' : value === 'expenses' ? 'SaÃ­das' : 'Saldo'
                   }
                 />
                 <Bar dataKey="income" fill="#22c55e" radius={[3, 3, 0, 0]} />

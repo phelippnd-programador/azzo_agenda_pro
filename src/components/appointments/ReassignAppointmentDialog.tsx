@@ -1,14 +1,20 @@
 import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import type { Appointment } from '@/hooks/useAppointments';
+import type { Professional } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
+  DialogSection,
+  DialogStickyFooter,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -16,16 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import type { Appointment } from '@/hooks/useAppointments';
-import type { Professional } from '@/lib/api';
 
 interface ReassignAppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   appointment: Appointment | null;
-  /** Profissionais disponíveis para receber o agendamento (excluindo o atual) */
   professionals: Professional[];
   onConfirm: (professionalId: string) => Promise<void>;
 }
@@ -60,37 +61,57 @@ export function ReassignAppointmentDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => { if (!isLoading) { if (!isOpen) handleClose(); } }}>
-      <DialogContent className="max-w-md mx-4 sm:mx-auto sm:max-w-xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isLoading && !isOpen) handleClose(); }}>
+      <DialogContent className="mx-4 max-h-[85vh] max-w-md overflow-y-auto sm:mx-auto sm:max-w-xl">
+        <DialogHeader className="border-b border-border/70 pb-4 pr-10">
           <DialogTitle>Realocar Agendamento</DialogTitle>
           <DialogDescription>
             Selecione o novo profissional para este agendamento.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-2 py-2">
-          <Label className="text-sm">Novo profissional</Label>
-          <Select value={selectedProfessionalId} onValueChange={setSelectedProfessionalId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o profissional" />
-            </SelectTrigger>
-            <SelectContent>
-              {professionals.map((prof) => (
-                <SelectItem key={prof.id} value={prof.id}>{prof.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isLoading}>Cancelar</Button>
-          <Button onClick={handleConfirm} disabled={isLoading || !selectedProfessionalId}>
+
+        <DialogBody>
+          <DialogSection>
+            <p className="text-sm font-medium text-foreground">
+              Reatribua o atendimento sem perder o contexto operacional do cliente.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {appointment?.client?.name ? `Cliente atual: ${appointment.client.name}.` : 'Escolha o novo responsavel para concluir a transferencia.'}
+            </p>
+          </DialogSection>
+
+          <DialogSection className="bg-transparent">
+            <div className="space-y-2">
+              <Label>Novo profissional</Label>
+              <Select value={selectedProfessionalId} onValueChange={setSelectedProfessionalId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o profissional" />
+                </SelectTrigger>
+                <SelectContent>
+                  {professionals.map((professional) => (
+                    <SelectItem key={professional.id} value={professional.id}>
+                      {professional.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </DialogSection>
+        </DialogBody>
+
+        <DialogStickyFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
+          <Button className="w-full sm:w-auto" variant="outline" onClick={handleClose} disabled={isLoading}>Cancelar</Button>
+          <Button className="w-full sm:w-auto" onClick={() => void handleConfirm()} disabled={isLoading || !selectedProfessionalId}>
             {isLoading ? (
-              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Realocando...</>
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Realocando...
+              </>
             ) : (
-              'Confirmar realocação'
+              'Confirmar realocacao'
             )}
           </Button>
-        </DialogFooter>
+        </DialogStickyFooter>
       </DialogContent>
     </Dialog>
   );

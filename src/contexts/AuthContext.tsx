@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
-import { authApi, usersApi, User } from '@/lib/api';
+import type { User } from '@/types';
+import { authApi } from '@/lib/api/auth';
+import { usersApi } from '@/lib/api/settings';
 
 interface AuthContextType {
   user: User | null;
@@ -69,7 +71,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       pathname === "/compras" ||
       pathname.startsWith("/compras/") ||
       pathname === "/success" ||
-      pathname === "/error";
+      pathname === "/error" ||
+      pathname === "/login" ||
+      pathname === "/cadastro" ||
+      pathname === "/recuperar-senha" ||
+      pathname === "/redefinir-senha" ||
+      pathname === "/termos-de-uso" ||
+      pathname === "/politica-privacidade";
 
     if (isPublicRoute) {
       setIsLoading(false);

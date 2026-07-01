@@ -69,7 +69,7 @@ export function ClientAppointmentDetailSheet({
         <SheetHeader>
           <SheetTitle>Detalhes do Agendamento</SheetTitle>
           <SheetDescription>
-            Informacoes completas do agendamento
+            Informações completas do agendamento
           </SheetDescription>
         </SheetHeader>
 
@@ -100,7 +100,7 @@ export function ClientAppointmentDetailSheet({
                 <History className="h-4 w-4" />
                 <AlertTitle>{appointmentDetail!.timeline.length} evento(s) registrados</AlertTitle>
                 <AlertDescription>
-                  O historico abaixo mostra as principais alteracoes e o rastro operacional deste atendimento.
+                  O histórico abaixo mostra as principais alterações e o rastro operacional deste atendimento.
                 </AlertDescription>
               </Alert>
             ) : null}
@@ -110,7 +110,7 @@ export function ClientAppointmentDetailSheet({
             <div className="space-y-3">
               <h4 className="font-medium text-sm flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-primary" />
-                Data e Horario
+                Data e Horário
               </h4>
               <div className="bg-muted/40 rounded-lg p-4 space-y-2">
                 <div className="flex justify-between text-sm gap-3">
@@ -118,7 +118,7 @@ export function ClientAppointmentDetailSheet({
                   <span className="font-medium text-right">{formatDateLong(detailAppointment.date)}</span>
                 </div>
                 <div className="flex justify-between text-sm gap-3">
-                  <span className="text-muted-foreground">Horario:</span>
+                  <span className="text-muted-foreground">Horário:</span>
                   <span className="font-medium">
                     {detailAppointment.startTime} - {detailAppointment.endTime}
                   </span>
@@ -167,7 +167,7 @@ export function ClientAppointmentDetailSheet({
             <div className="space-y-3">
               <h4 className="font-medium text-sm flex items-center gap-2">
                 <Scissors className="w-4 h-4 text-primary" />
-                Servicos
+                Serviços
               </h4>
               {detailItems.length ? (
                 <div className="bg-muted/40 rounded-lg p-4 space-y-3">
@@ -177,12 +177,12 @@ export function ClientAppointmentDetailSheet({
                       className="space-y-2 rounded-md border bg-background/80 p-3"
                     >
                       <div className="flex justify-between gap-2">
-                        <span className="font-medium">{service.service?.name || "Servico nao identificado"}</span>
+                        <span className="font-medium">{service.service?.name || "Serviço não identificado"}</span>
                         {service.service?.category ? <Badge variant="outline">{service.service.category}</Badge> : null}
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Duracao:</span>
-                        <span>{service.durationMinutes ? `${service.durationMinutes} minutos` : "Nao informada"}</span>
+                        <span className="text-muted-foreground">Duração:</span>
+                        <span>{service.durationMinutes ? `${service.durationMinutes} minutos` : "Não informada"}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Valor:</span>
@@ -195,7 +195,7 @@ export function ClientAppointmentDetailSheet({
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Nenhum servico vinculado a este agendamento.</p>
+                <p className="text-sm text-muted-foreground">Nenhum serviço vinculado a este agendamento.</p>
               )}
             </div>
 
@@ -214,7 +214,7 @@ export function ClientAppointmentDetailSheet({
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium">{detailAppointment.professional?.name || "Profissional nao identificado"}</p>
+                    <p className="font-medium">{detailAppointment.professional?.name || "Profissional não identificado"}</p>
                   </div>
                 </div>
               </div>
@@ -243,7 +243,7 @@ export function ClientAppointmentDetailSheet({
                 <div className="space-y-3">
                   <h4 className="font-medium text-sm flex items-center gap-2">
                     <FileText className="w-4 h-4 text-primary" />
-                    Observacoes
+                    Observações
                   </h4>
                   <div className="bg-muted/40 rounded-lg p-4">
                     <p className="text-sm text-muted-foreground">{detailAppointment.notes}</p>
@@ -269,13 +269,13 @@ export function ClientAppointmentDetailSheet({
                     <div key={note.noteId} className="rounded-lg border bg-muted/20 p-4 space-y-2">
                       <p className="text-sm font-medium">Registrado em {formatDateTime(note.recordedAt)}</p>
                       {note.serviceExecutionNotes ? (
-                        <p className="text-sm text-muted-foreground">Execucao: {note.serviceExecutionNotes}</p>
+                          <p className="text-sm text-muted-foreground">Execução: {note.serviceExecutionNotes}</p>
                       ) : null}
                       {note.clientFeedbackNotes ? (
                         <p className="text-sm text-muted-foreground">Feedback: {note.clientFeedbackNotes}</p>
                       ) : null}
                       {note.internalFollowupNotes ? (
-                        <p className="text-sm text-muted-foreground">Proximo passo: {note.internalFollowupNotes}</p>
+                          <p className="text-sm text-muted-foreground">Próximo passo: {note.internalFollowupNotes}</p>
                       ) : null}
                     </div>
                   ))}

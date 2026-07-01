@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+﻿import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import Dashboard from "@/pages/Index";
 
@@ -10,6 +10,7 @@ const {
   dashboardState,
   authState,
   professionalsState,
+  appointmentsState,
 } = vi.hoisted(() => ({
   logoutMock: vi.fn(),
   refetchMock: vi.fn(),
@@ -48,6 +49,9 @@ const {
   professionalsState: {
     professionals: [],
   },
+  appointmentsState: {
+    appointments: [],
+  },
 }));
 
 vi.mock("@/components/dashboard/UpcomingAppointments", () => ({
@@ -72,7 +76,7 @@ vi.mock("@/hooks/useDashboard", () => ({
 
 vi.mock("@/hooks/useAppointments", () => ({
   useAppointments: () => ({
-    appointments: [],
+    appointments: appointmentsState.appointments,
     isLoading: false,
     updateAppointmentStatus: vi.fn(),
   }),
@@ -134,6 +138,7 @@ describe("Dashboard", () => {
   beforeEach(() => {
     authState.user = { id: "owner-1", role: "OWNER", name: "Owner QA" };
     professionalsState.professionals = [];
+    appointmentsState.appointments = [];
     dashboardState.error = null;
     dashboardState.refetch = refetchMock;
     refetchMock.mockReset();
@@ -148,38 +153,42 @@ describe("Dashboard", () => {
       startDate: "2026-03-01",
       endDate: "2026-03-31",
       professionalId: "professional-1",
-      revenueTotal: 1800,
-      commissionTotal: 540,
+      revenueTotal: 18,
+      commissionTotal: 5.4,
       completedServices: 22,
       clientsServed: 14,
     });
     window.localStorage.setItem("auth_user", JSON.stringify({ id: "owner-1", role: "OWNER" }));
   });
 
-  it("should render fixed-period guidance and key metric cards", async () => {
+  it("should render compact first fold and key analytical blocks", async () => {
     render(
       <MemoryRouter initialEntries={["/dashboard"]}>
         <Dashboard />
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("Periodo das metricas")).toBeInTheDocument();
+    expect(await screen.findByText("Visao executiva")).toBeInTheDocument();
     expect(screen.getByText("Agendamentos Hoje")).toBeInTheDocument();
     expect(screen.getByText("Faturamento Hoje")).toBeInTheDocument();
-    expect(screen.getByText("Fluxos Gerais Nao Concluidos Hoje")).toBeInTheDocument();
+    expect(screen.getByText("O que exige atencao hoje")).toBeInTheDocument();
+    expect(screen.getByText("Resumo rapido do dia")).toBeInTheDocument();
+    expect(screen.getByText("Onde a operacao perde oportunidade")).toBeInTheDocument();
+    expect(screen.getByText("Fluxos nao concluidos hoje")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Etapas do funil geral de agendamento que nao chegaram a conclusao hoje, independentemente do canal."
+        "Etapas do funil geral que ficaram pelo caminho antes da conclusao."
       )
     ).toBeInTheDocument();
-    expect(screen.getByText("Fluxos Pausados Hoje no WhatsApp")).toBeInTheDocument();
+    expect(screen.getByText("WhatsApp em aberto hoje")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Conversas do canal WhatsApp ainda em aberto hoje, antes da confirmacao formal de abandono."
+        "Conversas ainda nao resolvidas antes de virarem abandono formal."
       )
     ).toBeInTheDocument();
     expect(screen.getByText("WhatsAppReactivationChartMock")).toBeInTheDocument();
     expect(screen.getByText("No-show no periodo")).toBeInTheDocument();
+    expect(screen.getByText("Receita e desempenho do mes")).toBeInTheDocument();
     expect(screen.getByText("Top profissionais no dashboard")).toBeInTheDocument();
     expect(screen.getByText("RevenueChartMock")).toBeInTheDocument();
   });
@@ -207,6 +216,8 @@ describe("Dashboard", () => {
     expect(screen.getByText("Faturamento no periodo")).toBeInTheDocument();
     expect(screen.getByText("Clientes atendidos")).toBeInTheDocument();
     expect(screen.getByText("Comissao no periodo")).toBeInTheDocument();
+    expect(screen.getByText("R$ 18,00")).toBeInTheDocument();
+    expect(screen.getByText("R$ 5,40")).toBeInTheDocument();
     expect(screen.queryByText("WhatsAppReactivationChartMock")).not.toBeInTheDocument();
     expect(screen.queryByText("No-show no periodo")).not.toBeInTheDocument();
     expect(getProfessionalMetricsMock).toHaveBeenCalledWith(
@@ -215,4 +226,29 @@ describe("Dashboard", () => {
       "professional-1"
     );
   });
+
+  it("should prioritize live day appointments for owner operational cards", async () => {
+    const todayIso = new Date().toISOString().split("T")[0];
+    appointmentsState.appointments = [
+      {
+        id: "apt-1",
+        date: todayIso,
+        startTime: "10:00",
+        status: "PENDING",
+      },
+    ];
+
+    render(
+      <MemoryRouter initialEntries={["/dashboard"]}>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText("1 agendamento(s) no dia")).toBeInTheDocument();
+    expect(screen.getByText("Agendamentos Hoje")).toBeInTheDocument();
+    expect(screen.getByText("Pendentes")).toBeInTheDocument();
+  });
 });
+
+
+

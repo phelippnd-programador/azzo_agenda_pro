@@ -375,12 +375,12 @@ export function AdminEmailsTab() {
                   </div>
                 </div>
 
-                <div className="overflow-hidden rounded-xl border bg-white">
+                <div className="overflow-hidden rounded-xl border bg-card">
                   <iframe
                     title="Preview do template de email"
                     srcDoc={previewHtml}
                     sandbox=""
-                    className="h-[720px] w-full bg-white"
+                    className="h-[720px] w-full bg-background"
                   />
                 </div>
               </CardContent>

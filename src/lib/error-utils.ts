@@ -28,6 +28,9 @@ const mapKnownApiCodeToMessage = (code?: string): string | null => {
   if (normalized === "PLAN_EXPIRED") {
     return "Plano vencido. Regularize o pagamento para continuar.";
   }
+  if (normalized === "REGISTRATION_ERROR") {
+    return "Nao foi possivel concluir o cadastro. Verifique os dados informados e tente novamente.";
+  }
   return null;
 };
 
@@ -48,6 +51,8 @@ const FISCAL_TAX_CONFIG_REQUIRED_CODES = new Set([
   "NFSE_PROVIDER_SEFIN_NACIONAL_TAX_CONFIG_MISSING",
   "NFSE_PROVIDER_SEFIN_NACIONAL_PRESTADOR_CNPJ_REQUIRED",
   "NFSE_PROVIDER_SEFIN_NACIONAL_PRESTADOR_NAME_REQUIRED",
+  "NFSE_XML_PRESTADOR_CNPJ_INVALIDO",
+  "NFSE_XML_PRESTADOR_IM_AUSENTE",
 ]);
 
 const STOCK_ENUM_MESSAGES: Array<{
@@ -88,13 +93,23 @@ const extractEnumMessage = (rawMessage?: string | null): string | null => {
 
 const extractViolationMessage = (details: unknown): string | null => {
   if (!isObject(details)) return null;
-  const payload = details as ConstraintViolationPayload;
-  if (!Array.isArray(payload.violations) || !payload.violations.length) return null;
+  const payload = details as ConstraintViolationPayload & { details?: unknown };
 
-  const messages = payload.violations
+  // Backend serializa violacoes no campo 'violations' ({field,message}[]) ou 'details' (string[])
+  const raw: unknown[] | null = Array.isArray(payload.violations)
+    ? payload.violations
+    : Array.isArray(payload.details)
+      ? (payload.details as unknown[])
+      : null;
+  if (!raw?.length) return null;
+
+  const messages = raw
     .map((violation) => {
-      const field = violation.field?.trim();
-      const message = violation.message?.trim();
+      if (typeof violation === "string") return violation;
+      if (!isObject(violation)) return null;
+      const v = violation as ConstraintViolation;
+      const field = v.field?.trim();
+      const message = v.message?.trim();
       if (!message) return null;
       if (!field) return message;
       const normalizedField = field.split(".").pop() || field;

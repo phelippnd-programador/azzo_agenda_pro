@@ -5,6 +5,20 @@ import { viteSourceLocator } from "@metagptx/vite-plugin-source-locator";
 import { atoms } from "@metagptx/web-sdk/plugins";
 import fs from "node:fs";
 
+// Grava public/version.json com o timestamp do build atual
+function viteVersionPlugin() {
+  return {
+    name: "vite-version-plugin",
+    buildStart() {
+      const version = { buildTime: Date.now() };
+      fs.writeFileSync(
+        path.resolve(__dirname, "public/version.json"),
+        JSON.stringify(version),
+      );
+    },
+  };
+}
+
 const DEV_TLS_KEY_PATH =
   "C:/Users/phelipp/Projetos/azzo-agenda/backend/azzo-agenda-pro/key.pem";
 const DEV_TLS_CERT_PATH =
@@ -18,6 +32,7 @@ export default defineConfig(({ command }) => ({
         prefix: "mgx",
       }),
       react(),
+      viteVersionPlugin(),
       ...(Array.isArray(atomPlugins) ? atomPlugins : [atomPlugins]),
     ];
   })(),
@@ -36,6 +51,54 @@ export default defineConfig(({ command }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return undefined;
+
+          if (id.includes("react-router-dom")) return "vendor-router";
+          if (id.includes("@tanstack/react-query") || id.includes("zustand")) {
+            return "vendor-data";
+          }
+          if (id.includes("@radix-ui")) return "vendor-radix";
+          if (id.includes("lucide-react")) return "vendor-icons";
+          if (
+            id.includes("framer-motion") ||
+            id.includes("embla-carousel-react") ||
+            id.includes("vaul")
+          ) {
+            return "vendor-motion";
+          }
+          if (
+            id.includes("react-hook-form") ||
+            id.includes("@hookform/resolvers") ||
+            id.includes("zod")
+          ) {
+            return "vendor-forms";
+          }
+          if (id.includes("react-day-picker") || id.includes("date-fns")) {
+            return "vendor-calendar";
+          }
+          if (id.includes("sonner")) return "vendor-feedback";
+          if (id.includes("axios")) return "vendor-network";
+          if (id.includes("@supabase/supabase-js")) return "vendor-supabase";
+
+          if (id.includes("recharts")) return "vendor-charts";
+          if (id.includes("qrcode")) return "vendor-qrcode";
+          if (
+            id.includes("react-markdown") ||
+            id.includes("remark-gfm") ||
+            id.includes("rehype-sanitize") ||
+            id.includes("prismjs")
+          ) {
+            return "vendor-markdown";
+          }
+          return undefined;
+        },
+      },
     },
   },
   envPrefix: ["VITE_", "NEXT_PUBLIC_"],

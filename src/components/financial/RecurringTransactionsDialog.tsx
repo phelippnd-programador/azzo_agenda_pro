@@ -1,16 +1,23 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useEffect, useState } from 'react';
+import { Loader2, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { recurringTransactionsApi, type RecurringTransaction } from '@/lib/api';
+import { formatCurrency } from '@/lib/format';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
+  DialogSection,
+  DialogStickyFooter,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -18,12 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Plus, RefreshCw, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { recurringTransactionsApi, type RecurringTransaction } from '@/lib/api';
-import { formatCurrency } from '@/lib/format';
 
-const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
 
 interface RecurringTransactionsDialogProps {
   open: boolean;
@@ -35,11 +38,9 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
   const [isLoading, setIsLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-
-  // Form
   const [type, setType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE');
   const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState('');
   const [frequency, setFrequency] = useState<'MONTHLY' | 'WEEKLY'>('MONTHLY');
   const [dayOfMonth, setDayOfMonth] = useState('5');
@@ -49,16 +50,25 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
     if (!open) return;
     let cancelled = false;
     setIsLoading(true);
-    recurringTransactionsApi.getAll()
-      .then((data) => { if (!cancelled) setList(data); })
-      .catch(() => { if (!cancelled) toast.error('Erro ao carregar recorrências'); })
-      .finally(() => { if (!cancelled) setIsLoading(false); });
-    return () => { cancelled = true; };
+    recurringTransactionsApi
+      .getAll()
+      .then((data) => {
+        if (!cancelled) setList(data);
+      })
+      .catch(() => {
+        if (!cancelled) toast.error('Erro ao carregar recorrÃªncias');
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [open]);
 
   const handleCreate = async () => {
     if (!description.trim() || !amount || !paymentMethod) {
-      toast.error('Preencha descrição, valor e forma de pagamento');
+      toast.error('Preencha descriÃ§Ã£o, valor e forma de pagamento');
       return;
     }
     setIsSaving(true);
@@ -66,18 +76,20 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
       await recurringTransactionsApi.create({
         type,
         description: description.trim(),
-        amount: Math.round(parseFloat(amount.replace(',', '.')) * 100),
+        amount: amount,
         paymentMethod,
         frequency,
-        dayOfMonth: frequency === 'MONTHLY' ? parseInt(dayOfMonth) : undefined,
-        dayOfWeek: frequency === 'WEEKLY' ? parseInt(dayOfWeek) : undefined,
+        dayOfMonth: frequency === 'MONTHLY' ? parseInt(dayOfMonth, 10) : undefined,
+        dayOfWeek: frequency === 'WEEKLY' ? parseInt(dayOfWeek, 10) : undefined,
       });
-      toast.success('Recorrência criada!');
-      setDescription(''); setAmount(''); setPaymentMethod('');
+      toast.success('RecorrÃªncia criada!');
+      setDescription('');
+      setAmount(0);
+      setPaymentMethod('');
       const data = await recurringTransactionsApi.getAll();
       setList(data);
     } catch {
-      toast.error('Erro ao criar recorrência');
+      toast.error('Erro ao criar recorrÃªncia');
     } finally {
       setIsSaving(false);
     }
@@ -87,10 +99,10 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
     setDeletingId(id);
     try {
       await recurringTransactionsApi.delete(id);
-      toast.success('Recorrência desativada!');
-      setList((prev) => prev.filter((r) => r.id !== id));
+      toast.success('RecorrÃªncia desativada!');
+      setList((prev) => prev.filter((item) => item.id !== id));
     } catch {
-      toast.error('Erro ao desativar recorrência');
+      toast.error('Erro ao desativar recorrÃªncia');
     } finally {
       setDeletingId(null);
     }
@@ -98,35 +110,45 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg mx-4 sm:mx-auto max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="mx-4 max-h-[85vh] max-w-lg overflow-y-auto sm:mx-auto">
+        <DialogHeader className="border-b border-border/70 pb-4 pr-10">
           <DialogTitle className="flex items-center gap-2">
-            <RefreshCw className="w-4 h-4" /> Lançamentos Recorrentes
+            <RefreshCw className="h-4 w-4" />
+            LanÃ§amentos Recorrentes
           </DialogTitle>
           <DialogDescription>
-            Templates que geram lançamentos automaticamente (aluguel, salários, etc.)
+            Templates que geram lanÃ§amentos automaticamente, como aluguel, salÃ¡rios e rotinas fixas.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5 py-2">
-          {/* Form */}
-          <div className="space-y-3 p-3 border rounded-xl bg-muted/20">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nova recorrência</p>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs">Tipo</Label>
-                <Select value={type} onValueChange={(v) => setType(v as 'INCOME' | 'EXPENSE')}>
-                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+        <DialogBody>
+          <DialogSection>
+            <p className="text-sm font-medium text-foreground">
+              Monte recorrÃªncias com frequÃªncia, valor e forma de pagamento para reduzir trabalho manual no caixa.
+            </p>
+          </DialogSection>
+
+          <DialogSection className="bg-transparent">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Nova recorrÃªncia</p>
+              <p className="text-sm text-muted-foreground">Defina a regra base antes de ativar o ciclo automÃ¡tico.</p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <Select value={type} onValueChange={(value) => setType(value as 'INCOME' | 'EXPENSE')}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="INCOME">Entrada</SelectItem>
-                    <SelectItem value="EXPENSE">Saída</SelectItem>
+                    <SelectItem value="EXPENSE">SaÃ­da</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Frequência</Label>
-                <Select value={frequency} onValueChange={(v) => setFrequency(v as 'MONTHLY' | 'WEEKLY')}>
-                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <div className="space-y-2">
+                <Label>FrequÃªncia</Label>
+                <Select value={frequency} onValueChange={(value) => setFrequency(value as 'MONTHLY' | 'WEEKLY')}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="MONTHLY">Mensal</SelectItem>
                     <SelectItem value="WEEKLY">Semanal</SelectItem>
@@ -136,98 +158,117 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
             </div>
 
             {frequency === 'MONTHLY' ? (
-              <div className="space-y-1">
-                <Label className="text-xs">Dia do mês (1–28)</Label>
-                <Input type="number" min={1} max={28} className="h-8 text-xs" value={dayOfMonth} onChange={(e) => setDayOfMonth(e.target.value)} />
+              <div className="space-y-2">
+                <Label>Dia do mÃªs (1-28)</Label>
+                <Input type="number" min={1} max={28} value={dayOfMonth} onChange={(e) => setDayOfMonth(e.target.value)} />
               </div>
             ) : (
-              <div className="space-y-1">
-                <Label className="text-xs">Dia da semana</Label>
+              <div className="space-y-2">
+                <Label>Dia da semana</Label>
                 <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
-                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {WEEKDAY_LABELS.map((label, i) => (
-                      <SelectItem key={i} value={String(i)}>{label}</SelectItem>
+                    {WEEKDAY_LABELS.map((label, index) => (
+                      <SelectItem key={index} value={String(index)}>{label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
             )}
 
-            <div className="space-y-1">
-              <Label className="text-xs">Descrição</Label>
-              <Input className="h-8 text-xs" placeholder="Ex: Aluguel, Salário..." value={description} onChange={(e) => setDescription(e.target.value)} />
+            <div className="space-y-2">
+              <Label>DescriÃ§Ã£o</Label>
+              <Input placeholder="Ex: Aluguel, SalÃ¡rio..." value={description} onChange={(e) => setDescription(e.target.value)} />
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs">Valor (R$)</Label>
-                <Input className="h-8 text-xs" placeholder="0,00" value={amount} onChange={(e) => setAmount(e.target.value)} />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Valor (R$)</Label>
+                <CurrencyInput
+                  cents
+                  value={amount}
+                  onChange={setAmount}
+                />
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Pagamento</Label>
+              <div className="space-y-2">
+                <Label>Pagamento</Label>
                 <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="CASH">Dinheiro</SelectItem>
                     <SelectItem value="PIX">Pix</SelectItem>
-                    <SelectItem value="CREDIT_CARD">Cartão Crédito</SelectItem>
-                    <SelectItem value="DEBIT_CARD">Cartão Débito</SelectItem>
+                    <SelectItem value="CREDIT_CARD">CartÃ£o crÃ©dito</SelectItem>
+                    <SelectItem value="DEBIT_CARD">CartÃ£o dÃ©bito</SelectItem>
                     <SelectItem value="OTHER">Outro</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
-            <Button type="button" size="sm" className="w-full gap-2" onClick={handleCreate} disabled={isSaving}>
-              {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-              Criar recorrência
+            <Button type="button" className="w-full gap-2" onClick={() => void handleCreate()} disabled={isSaving}>
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              Criar recorrÃªncia
             </Button>
-          </div>
+          </DialogSection>
 
-          {/* List */}
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ativas</p>
+          <DialogSection className="bg-transparent">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Ativas</p>
+              <p className="text-sm text-muted-foreground">Revise os ciclos em vigor e desative o que nÃ£o deve continuar.</p>
+            </div>
+
             {isLoading ? (
-              <div className="py-6 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+              <div className="flex justify-center py-6">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
             ) : list.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Nenhuma recorrência ativa</p>
+              <p className="py-4 text-center text-sm text-muted-foreground">Nenhuma recorrÃªncia ativa</p>
             ) : (
-              list.map((r) => {
-                const scheduleLabel = r.frequency === 'MONTHLY'
-                  ? `Todo dia ${r.dayOfMonth}`
-                  : WEEKDAY_LABELS[r.dayOfWeek ?? 1];
-                return (
-                  <div key={r.id} className="flex items-center gap-3 p-2.5 border rounded-lg bg-muted/20 hover:bg-muted/40">
-                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${r.type === 'INCOME' ? 'bg-green-500' : 'bg-red-500'}`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{r.description}</p>
-                      <p className="text-[11px] text-muted-foreground">{scheduleLabel} · {formatCurrency(r.amount / 100)}</p>
-                    </div>
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex-shrink-0">
-                      {r.frequency === 'MONTHLY' ? 'Mensal' : 'Semanal'}
-                    </Badge>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-red-500 hover:text-red-600 flex-shrink-0"
-                      disabled={deletingId === r.id}
-                      onClick={() => handleDelete(r.id)}
-                      title="Desativar recorrência"
-                    >
-                      {deletingId === r.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                    </Button>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
+              <div className="space-y-2">
+                {list.map((item) => {
+                  const scheduleLabel =
+                    item.frequency === 'MONTHLY'
+                      ? `Todo dia ${item.dayOfMonth}`
+                      : WEEKDAY_LABELS[item.dayOfWeek ?? 1];
 
-        <DialogFooter>
+                  return (
+                    <div key={item.id} className="flex items-center gap-3 rounded-xl border border-border/70 bg-muted/10 p-3">
+                      <div className={`h-2 w-2 flex-shrink-0 rounded-full ${item.type === 'INCOME' ? 'bg-green-500' : 'bg-red-500'}`} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{item.description}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {scheduleLabel} Â· {formatCurrency(item.amount)}
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="flex-shrink-0 text-[10px]">
+                        {item.frequency === 'MONTHLY' ? 'Mensal' : 'Semanal'}
+                      </Badge>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 flex-shrink-0 text-red-500 hover:text-red-600"
+                        disabled={deletingId === item.id}
+                        onClick={() => void handleDelete(item.id)}
+                        title="Desativar recorrÃªncia"
+                      >
+                        {deletingId === item.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </DialogSection>
+        </DialogBody>
+
+        <DialogStickyFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Fechar</Button>
-        </DialogFooter>
+        </DialogStickyFooter>
       </DialogContent>
     </Dialog>
   );

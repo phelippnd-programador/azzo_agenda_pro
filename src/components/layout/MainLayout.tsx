@@ -1,10 +1,15 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { ChatInboxNotifier } from '@/components/chat/ChatInboxNotifier';
 import { PageErrorState } from '@/components/ui/page-states';
 import { useLicenseAccess } from '@/hooks/useLicenseAccess';
+
+const ChatInboxNotifier = lazy(() =>
+  import('@/components/chat/ChatInboxNotifier').then((module) => ({
+    default: module.ChatInboxNotifier,
+  }))
+);
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -12,28 +17,38 @@ interface MainLayoutProps {
   subtitle?: string;
 }
 
+const DESKTOP_SIDEBAR_STORAGE_KEY = 'desktop_sidebar_open';
+
+function getInitialDesktopSidebarOpen() {
+  if (typeof window === 'undefined') {
+    return true;
+  }
+
+  try {
+    const stored = window.localStorage.getItem(DESKTOP_SIDEBAR_STORAGE_KEY);
+    return stored === null ? true : stored === 'true';
+  } catch {
+    return true;
+  }
+}
+
 export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(getInitialDesktopSidebarOpen);
   const { status: licenseStatus, isBlocked: isPlanExpired, refreshStatus } = useLicenseAccess();
 
   const isLicenseRoute = location.pathname === '/financeiro/licenca';
 
   useEffect(() => {
-    try {
-      const cached = localStorage.getItem("desktop_sidebar_open");
-      if (cached === "0") {
-        setDesktopSidebarOpen(false);
-      }
-    } catch {
-      // ignore localStorage issues
+    if (
+      isLicenseRoute ||
+      licenseStatus === 'BLOCKED' ||
+      licenseStatus === 'ACTIVE'
+    ) {
+      return;
     }
-  }, []);
-
-  useEffect(() => {
-    if (isLicenseRoute || licenseStatus === 'BLOCKED' || licenseStatus === 'ACTIVE') return;
 
     const checkSubscription = async () => {
       try {
@@ -44,39 +59,36 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
     };
 
     void checkSubscription();
-  }, [isLicenseRoute, licenseStatus, location.pathname, refreshStatus]);
+  }, [isLicenseRoute, licenseStatus, refreshStatus]);
 
-  const toggleDesktopSidebar = () => {
-    setDesktopSidebarOpen((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem("desktop_sidebar_open", next ? "1" : "0");
-      } catch {
-        // ignore localStorage issues
-      }
-      return next;
-    });
-  };
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(DESKTOP_SIDEBAR_STORAGE_KEY, String(desktopSidebarOpen));
+    } catch {
+      // ignore localStorage issues
+    }
+  }, [desktopSidebarOpen]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <ChatInboxNotifier />
+    <div className="min-h-screen bg-[hsl(var(--shell))]">
+      <Suspense fallback={null}>
+        <ChatInboxNotifier />
+      </Suspense>
       <Sidebar
         isMobileOpen={mobileSidebarOpen}
         onToggleMobile={() => setMobileSidebarOpen(!mobileSidebarOpen)}
         isDesktopOpen={desktopSidebarOpen}
+        onToggleDesktop={() => setDesktopSidebarOpen((current) => !current)}
       />
-
-      <div className={desktopSidebarOpen ? "lg:pl-60" : "lg:pl-0"}>
+      <div className={desktopSidebarOpen ? 'lg:pl-72' : 'lg:pl-20'}>
         <Header
           title={title}
           subtitle={subtitle}
-          onToggleDesktopSidebar={toggleDesktopSidebar}
+          onToggleDesktopSidebar={() => setDesktopSidebarOpen((current) => !current)}
           isDesktopSidebarOpen={desktopSidebarOpen}
         />
-
-        <main className="p-4 sm:p-6 lg:p-8 overflow-x-hidden">
-          <div className="mx-auto max-w-screen-2xl">
+        <main className="overflow-x-hidden px-4 pb-6 pt-4 sm:px-6 sm:pb-8 sm:pt-5 lg:px-8 lg:pb-10 lg:pt-6">
+          <div className="mx-auto max-w-[1680px]">
           {!isLicenseRoute && isPlanExpired ? (
             <PageErrorState
               title="Plano vencido"

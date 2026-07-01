@@ -1,27 +1,41 @@
 import { useMemo, useState } from "react";
 import { Pencil, Plus, Tag, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { CrudListToolbar } from "@/components/crud/CrudListToolbar";
 import { DeleteConfirmationDialog } from "@/components/common/DeleteConfirmationDialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
+  DialogSection,
+  DialogStickyFooter,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageEmptyState, PageErrorState, PageListLoadingState } from "@/components/ui/page-states";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useSpecialties } from "@/hooks/useSpecialties";
+import { ModuleIntro, WorkspaceNotice } from "@/components/layout/module-surfaces";
 
 export default function SpecialtiesOverviewPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [isNewSpecialtyOpen, setIsNewSpecialtyOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [specialtyToDelete, setSpecialtyToDelete] = useState<{
     id: string;
@@ -68,6 +82,11 @@ export default function SpecialtiesOverviewPage() {
     filtered.length > 0 &&
     filtered.every((specialty) => selectedSpecialtyIds.includes(specialty.id));
 
+  const resetCreateForm = () => {
+    setName("");
+    setDescription("");
+  };
+
   const handleCreate = async () => {
     const payload = name.trim();
     if (!payload) {
@@ -81,8 +100,8 @@ export default function SpecialtiesOverviewPage() {
         name: payload,
         description,
       });
-      setName("");
-      setDescription("");
+      resetCreateForm();
+      setIsNewSpecialtyOpen(false);
     } finally {
       setIsCreating(false);
     }
@@ -177,37 +196,110 @@ export default function SpecialtiesOverviewPage() {
   return (
     <>
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Nova especialidade</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Input
-                placeholder="Ex.: Corte, Coloracao, Escova..."
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <Button onClick={handleCreate} disabled={isCreating} className="gap-2">
-                <Plus className="h-4 w-4" />
-                {isCreating ? "Salvando..." : "Criar"}
-              </Button>
-            </div>
-            <Textarea
-              placeholder="Descricao opcional da especialidade (usada para detalhamento e contexto do assistente)."
-              value={description}
-              maxLength={500}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-            <Input
-              placeholder="Buscar especialidade ou descricao..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </CardContent>
-        </Card>
+        <ModuleIntro
+          eyebrow="Organizacao"
+          title="Mantenha as especialidades claras para apoiar cadastro, filtros e leitura operacional."
+          description="A busca ajuda a localizar termos rapidamente, enquanto cards e tabela servem para contextos diferentes de manutencao."
+          badges={[
+            { label: `${specialties.length} especialidade(s)` },
+            { label: viewMode === "grid" ? "Cards" : "Lista" },
+            { label: `${filtered.length} em foco` },
+          ]}
+          points={[
+            {
+              eyebrow: "Catalogo",
+              title: "Nomes claros e poucos ruídos",
+              description: "Especialidades bem nomeadas melhoram leitura, filtros e organizacao do catalogo inteiro.",
+            },
+            {
+              eyebrow: "Navegacao",
+              title: "Busca rapida e manutencao direta",
+              description: "Use cards para leitura e lista para revisao em lote quando a limpeza da base for o foco.",
+            },
+            {
+              eyebrow: "Proximo passo",
+              title: "Revise, selecione e corrija",
+              description: "Aproveite a selecao em lote para reduzir atrito quando houver ajustes repetidos na base.",
+            },
+          ]}
+        />
 
-        <div className="flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <Dialog
+          open={isNewSpecialtyOpen}
+          onOpenChange={(open) => {
+            setIsNewSpecialtyOpen(open);
+            if (!open) resetCreateForm();
+          }}
+        >
+          <CrudListToolbar
+            searchPlaceholder="Buscar especialidade ou descricao..."
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            gridAriaLabel="Visualizar especialidades em cards"
+            tableAriaLabel="Visualizar especialidades em lista"
+            actionLabel="Especialidade"
+            actionLabelMobile="Nova"
+            actionLabelDesktop="Nova especialidade"
+            actionIcon={Plus}
+            searchMaxWidthClassName="lg:max-w-xl"
+            onAction={() => setIsNewSpecialtyOpen(true)}
+          />
+
+          <DialogContent className="mx-4 max-h-[85vh] overflow-y-auto sm:mx-auto sm:max-w-2xl">
+            <DialogHeader className="border-b border-border/70 pb-4 pr-10">
+              <DialogTitle>Nova especialidade</DialogTitle>
+              <DialogDescription>
+                Preencha os dados da nova especialidade.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogBody>
+              <DialogSection>
+                <p className="text-sm font-medium text-foreground">
+                  Use especialidades para organizar catalogo, filtros e contexto operacional.
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Um nome claro e uma descricao curta ja ajudam a manter o sistema consistente.
+                </p>
+              </DialogSection>
+
+              <DialogSection className="bg-transparent">
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Ex.: Corte, Coloracao, Escova..."
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
+                <Textarea
+                  placeholder="Descricao opcional da especialidade (usada para detalhamento e contexto do assistente)."
+                  value={description}
+                  maxLength={500}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={4}
+                />
+              </DialogSection>
+            </DialogBody>
+            <DialogStickyFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsNewSpecialtyOpen(false);
+                  resetCreateForm();
+                }}
+                disabled={isCreating}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleCreate} disabled={isCreating}>
+                {isCreating ? "Salvando..." : "Criar especialidade"}
+              </Button>
+            </DialogStickyFooter>
+          </DialogContent>
+        </Dialog>
+
+        <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
             <Checkbox
               checked={allFilteredSelected}
@@ -215,10 +307,10 @@ export default function SpecialtiesOverviewPage() {
             />
             Selecionar todas da lista
           </label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center">
             <Button
               variant="outline"
-              className="text-destructive hover:text-destructive"
+              className="w-full text-destructive hover:text-destructive sm:w-auto"
               disabled={!selectedSpecialtyIds.length}
               onClick={() => setIsDeleteSelectedOpen(true)}
             >
@@ -226,7 +318,7 @@ export default function SpecialtiesOverviewPage() {
             </Button>
             <Button
               variant="outline"
-              className="text-destructive hover:text-destructive"
+              className="w-full text-destructive hover:text-destructive sm:w-auto"
               disabled={!specialties.length}
               onClick={() => setIsDeleteAllOpen(true)}
             >
@@ -235,31 +327,33 @@ export default function SpecialtiesOverviewPage() {
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-24" />
-            ))}
-          </div>
-        ) : null}
+        <WorkspaceNotice
+          title="Area de trabalho de especialidades"
+          description="Busque termos, alterne a visualizacao e aproveite a selecao em lote para limpar ou revisar a base."
+          badge={
+            selectedSpecialtyIds.length
+              ? `${selectedSpecialtyIds.length} selecionada(s)`
+              : `${filtered.length} em foco`
+          }
+        />
+
+        {isLoading ? <PageListLoadingState itemCount={6} itemHeightClassName="h-24" /> : null}
 
         {error ? (
-          <Card>
-            <CardContent className="space-y-3 py-6">
-              <p className="text-sm text-destructive">{error}</p>
-              <Button variant="outline" onClick={refetch}>
-                Tentar novamente
-              </Button>
-            </CardContent>
-          </Card>
+          <PageErrorState
+            title="Nao foi possivel carregar as especialidades"
+            description={error}
+            action={{ label: "Tentar novamente", onClick: refetch }}
+          />
         ) : null}
 
         {!isLoading && !error ? (
           filtered.length ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            viewMode === "grid" ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filtered.map((specialty) => (
-                <Card key={specialty.id}>
-                  <CardContent className="flex items-start justify-between gap-3 py-4">
+                <Card key={specialty.id} className="border-border/70 shadow-none">
+                  <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex min-w-0 items-start gap-2">
                       <Checkbox
                         checked={selectedSpecialtyIds.includes(specialty.id)}
@@ -277,30 +371,30 @@ export default function SpecialtiesOverviewPage() {
                         ) : null}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() =>
-                          openEditDialog({
-                            id: specialty.id,
-                            name: specialty.name,
-                            description: specialty.description,
-                          })
-                        }
-                        aria-label="Editar especialidade"
-                      >
+                    <div className="flex justify-end gap-1 sm:justify-start">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() =>
+                            openEditDialog({
+                              id: specialty.id,
+                              name: specialty.name,
+                              description: specialty.description,
+                            })
+                          }
+                          aria-label={`Editar especialidade ${specialty.name}`}
+                        >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        onClick={() =>
-                          setSpecialtyToDelete({ id: specialty.id, name: specialty.name })
-                        }
-                        aria-label="Remover especialidade"
-                      >
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() =>
+                            setSpecialtyToDelete({ id: specialty.id, name: specialty.name })
+                          }
+                          aria-label={`Remover especialidade ${specialty.name}`}
+                        >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -308,12 +402,104 @@ export default function SpecialtiesOverviewPage() {
                 </Card>
               ))}
             </div>
+            ) : (
+              <Card className="border-border/70 shadow-none">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={allFilteredSelected}
+                            onCheckedChange={(checked) =>
+                              toggleSelectAllFiltered(checked === true)
+                            }
+                            aria-label="Selecionar todas as especialidades filtradas"
+                          />
+                        </TableHead>
+                        <TableHead>Especialidade</TableHead>
+                        <TableHead className="hidden md:table-cell">Descricao</TableHead>
+                        <TableHead className="w-24 text-right">Acoes</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filtered.map((specialty) => (
+                        <TableRow key={specialty.id}>
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedSpecialtyIds.includes(specialty.id)}
+                              onCheckedChange={() => toggleSpecialtySelection(specialty.id)}
+                              aria-label={`Selecionar especialidade ${specialty.name}`}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex min-w-0 items-center gap-2">
+                              <Tag className="h-4 w-4 flex-shrink-0 text-primary" />
+                              <span className="truncate font-medium">{specialty.name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden max-w-[420px] truncate text-sm text-muted-foreground md:table-cell">
+                            {specialty.description || "Sem descricao"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  openEditDialog({
+                                    id: specialty.id,
+                                    name: specialty.name,
+                                    description: specialty.description,
+                                  })
+                                }
+                                aria-label={`Editar especialidade ${specialty.name}`}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                onClick={() =>
+                                  setSpecialtyToDelete({
+                                    id: specialty.id,
+                                    name: specialty.name,
+                                  })
+                                }
+                                aria-label={`Remover especialidade ${specialty.name}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </Card>
+            )
           ) : (
-            <Card>
-              <CardContent className="py-10 text-center text-muted-foreground">
-                Nenhuma especialidade encontrada.
-              </CardContent>
-            </Card>
+            <PageEmptyState
+              title={searchTerm ? "Nenhuma especialidade encontrada para esta busca" : "Nenhuma especialidade cadastrada"}
+              description={
+                searchTerm
+                  ? "A busca atual nao retornou resultados. Limpe o termo para voltar a ver a lista completa."
+                  : "Cadastre a primeira especialidade para organizar catalogo, filtros e contexto operacional."
+              }
+              action={{
+                label: searchTerm ? "Limpar busca" : "Nova especialidade",
+                onClick: () => {
+                  if (searchTerm) {
+                    setSearchTerm("");
+                    return;
+                  }
+                  setIsNewSpecialtyOpen(true);
+                },
+                variant: searchTerm ? "outline" : "default",
+              }}
+            />
           )
         ) : null}
       </div>
@@ -368,25 +554,33 @@ export default function SpecialtiesOverviewPage() {
           if (!open) setSpecialtyToEdit(null);
         }}
       >
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="mx-4 max-h-[85vh] overflow-y-auto sm:mx-auto sm:max-w-2xl">
+          <DialogHeader className="border-b border-border/70 pb-4 pr-10">
             <DialogTitle>Editar especialidade</DialogTitle>
             <DialogDescription>Atualize nome e descricao da especialidade.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            <Input
-              placeholder="Nome da especialidade"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-            />
-            <Textarea
-              placeholder="Descricao opcional"
-              value={editDescription}
-              maxLength={500}
-              onChange={(e) => setEditDescription(e.target.value)}
-            />
-          </div>
-          <DialogFooter>
+          <DialogBody>
+            <DialogSection>
+              <p className="text-sm font-medium text-foreground">
+                Ajuste nome e descricao sem perder o padrao usado no catalogo.
+              </p>
+            </DialogSection>
+            <DialogSection className="bg-transparent">
+              <Input
+                placeholder="Nome da especialidade"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+              />
+              <Textarea
+                placeholder="Descricao opcional"
+                value={editDescription}
+                maxLength={500}
+                onChange={(e) => setEditDescription(e.target.value)}
+                rows={4}
+              />
+            </DialogSection>
+          </DialogBody>
+          <DialogStickyFooter>
             <Button
               variant="outline"
               onClick={() => setSpecialtyToEdit(null)}
@@ -397,7 +591,7 @@ export default function SpecialtiesOverviewPage() {
             <Button onClick={handleUpdate} isLoading={isUpdating} loadingText="Salvando...">
               Salvar alteracoes
             </Button>
-          </DialogFooter>
+          </DialogStickyFooter>
         </DialogContent>
       </Dialog>
     </>

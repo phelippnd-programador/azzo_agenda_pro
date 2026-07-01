@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { CnpjAutoFillField } from "@/components/shared/CnpjAutoFillField";
 import { NbsCatalogSearch } from "@/components/nfse/NbsCatalogSearch";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +16,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { nfseApi, type NfseInvoice } from "@/lib/api";
+import { formatCurrency } from "@/lib/format";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import type { CnpjConsultaResponse } from "@/lib/api/cnpj";
 import { resolveUiError } from "@/lib/error-utils";
 import { toast } from "sonner";
 
@@ -36,13 +41,13 @@ export default function NfseInvoiceForm() {
   const [searchParams] = useSearchParams();
   const mode: Mode = id ? "edit" : "create";
   const [isSaving, setIsSaving] = useState(false);
-  const [isLookingUpCnpj, setIsLookingUpCnpj] = useState(false);
+  const [isEmitting, setIsEmitting] = useState(false);
   const [tomadorAddressPreview, setTomadorAddressPreview] = useState<string | null>(null);
   const [invoice, setInvoice] = useState<Partial<NfseInvoice>>({
     ambiente: "HOMOLOGACAO",
     municipioCodigoIbge: "3304557",
     provedor: "ABRASF",
-    numeroRps: Date.now(),
+    numeroRps: 0,
     serieRps: "A1",
     dataCompetencia: new Date().toISOString().slice(0, 10),
     naturezaOperacao: "Prestacao de servico",
@@ -60,6 +65,33 @@ export default function NfseInvoiceForm() {
     const uiError = resolveUiError(error, fallbackMessage);
     toast.error(uiError.code ? `[${uiError.code}] ${uiError.message}` : uiError.message);
   };
+
+  useEffect(() => {
+    if (mode !== "create") return;
+    void (async () => {
+      try {
+        const cfg = await nfseApi.getConfig("HOMOLOGACAO");
+        setInvoice((prev) => ({
+          ...prev,
+          municipioCodigoIbge: cfg.municipioCodigoIbge || prev.municipioCodigoIbge,
+          provedor: cfg.provedor || prev.provedor,
+          serieRps: cfg.serieRps || prev.serieRps,
+          aliquotaIss: cfg.aliquotaIssPadrao ?? prev.aliquotaIss,
+          itemListaServico: cfg.itemListaServicoPadrao || prev.itemListaServico,
+          codigoTributacaoMunicipio: cfg.codigoTributacaoMunicipio || prev.codigoTributacaoMunicipio,
+          items: [
+            {
+              ...(prev.items?.[0] || BASE_ITEM),
+              itemListaServico: cfg.itemListaServicoPadrao || prev.items?.[0]?.itemListaServico || "1.01",
+              aliquotaIss: cfg.aliquotaIssPadrao ?? prev.items?.[0]?.aliquotaIss ?? 5,
+            },
+          ],
+        }));
+      } catch {
+        // config nao configurada ainda — manter defaults
+      }
+    })();
+  }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!id) return;
@@ -100,107 +132,124 @@ export default function NfseInvoiceForm() {
     return { total, iss };
   }, [invoice.items]);
 
+  const buildPayload = () => {
+    const item = invoice.items?.[0] || BASE_ITEM;
+    return {
+      appointmentId: invoice.appointmentId,
+      ambiente: (invoice.ambiente || "HOMOLOGACAO") as "HOMOLOGACAO" | "PRODUCAO",
+      municipioCodigoIbge: invoice.municipioCodigoIbge || "",
+      // provedor omitido — backend seleciona automaticamente pelo município
+      numeroRps: Number(invoice.numeroRps || 0),
+      serieRps: invoice.serieRps || "",
+      dataCompetencia: invoice.dataCompetencia || new Date().toISOString().slice(0, 10),
+      naturezaOperacao: invoice.naturezaOperacao || "",
+      itemListaServico: invoice.itemListaServico || "",
+      valorServicos: preview.total,
+      valorDeducoes: Number(invoice.valorDeducoes || 0),
+      valorIss: preview.iss,
+      aliquotaIss: Number(invoice.aliquotaIss || item.aliquotaIss || 0),
+      issRetido: Boolean(invoice.issRetido),
+      notes: invoice.notes,
+      codigoTributacaoMunicipio: invoice.codigoTributacaoMunicipio,
+      customer: {
+        type: (invoice.customer?.type || "CPF") as "CPF" | "CNPJ" | "EXTERIOR",
+        document: invoice.customer?.document,
+        countryCode: invoice.customer?.countryCode,
+        documentType: invoice.customer?.documentType,
+        name: invoice.customer?.name || "",
+        email: invoice.customer?.email,
+        phone: invoice.customer?.phone,
+      },
+      items: [
+        {
+          lineNumber: 1,
+          descricaoServico: item.descricaoServico || "",
+          quantidade: Number(item.quantidade || 0),
+          valorUnitario: Number(item.valorUnitario || 0),
+          valorTotal: preview.total,
+          itemListaServico: item.itemListaServico || invoice.itemListaServico || "",
+          codigoTributacaoMunicipio:
+            item.codigoTributacaoMunicipio || invoice.codigoTributacaoMunicipio,
+          aliquotaIss: Number(item.aliquotaIss || 0),
+          valorIss: preview.iss,
+        },
+      ],
+    };
+  };
+
   const save = async () => {
     try {
       setIsSaving(true);
-      const item = invoice.items?.[0] || BASE_ITEM;
-      const payload = {
-        appointmentId: invoice.appointmentId,
-        ambiente: (invoice.ambiente || "HOMOLOGACAO") as "HOMOLOGACAO" | "PRODUCAO",
-        municipioCodigoIbge: invoice.municipioCodigoIbge || "",
-        provedor: invoice.provedor || "",
-        numeroRps: Number(invoice.numeroRps || 0),
-        serieRps: invoice.serieRps || "",
-        dataCompetencia: invoice.dataCompetencia || new Date().toISOString().slice(0, 10),
-        naturezaOperacao: invoice.naturezaOperacao || "",
-        itemListaServico: invoice.itemListaServico || "",
-        valorServicos: preview.total,
-        valorDeducoes: Number(invoice.valorDeducoes || 0),
-        valorIss: preview.iss,
-        aliquotaIss: Number(invoice.aliquotaIss || item.aliquotaIss || 0),
-        issRetido: Boolean(invoice.issRetido),
-        notes: invoice.notes,
-        codigoTributacaoMunicipio: invoice.codigoTributacaoMunicipio,
-        customer: {
-          type: (invoice.customer?.type || "CPF") as "CPF" | "CNPJ" | "EXTERIOR",
-          document: invoice.customer?.document,
-          countryCode: invoice.customer?.countryCode,
-          documentType: invoice.customer?.documentType,
-          name: invoice.customer?.name || "",
-          email: invoice.customer?.email,
-          phone: invoice.customer?.phone,
-        },
-        items: [
-          {
-            lineNumber: 1,
-            descricaoServico: item.descricaoServico || "",
-            quantidade: Number(item.quantidade || 0),
-            valorUnitario: Number(item.valorUnitario || 0),
-            valorTotal: preview.total,
-            itemListaServico: item.itemListaServico || invoice.itemListaServico || "",
-            codigoTributacaoMunicipio:
-              item.codigoTributacaoMunicipio || invoice.codigoTributacaoMunicipio,
-            aliquotaIss: Number(item.aliquotaIss || 0),
-            valorIss: preview.iss,
-          },
-        ],
-      };
+      const payload = buildPayload();
       const saved =
         mode === "edit" && id
           ? await nfseApi.updateInvoice(id, payload)
           : await nfseApi.createInvoice(payload);
       toast.success(mode === "edit" ? "Rascunho atualizado." : "Rascunho criado.");
       navigate(`/fiscal/nfse/${saved.id}`);
+      return saved;
     } catch (error) {
       showError(error, "Erro ao salvar rascunho NFS-e");
+      return null;
     } finally {
       setIsSaving(false);
     }
   };
 
-  const lookupTomadorByCnpj = async () => {
-    const rawDocument = invoice.customer?.document || "";
-    const cnpj = rawDocument.replace(/\D/g, "");
-    if (cnpj.length !== 14) {
-      toast.error("Informe um CNPJ valido (14 digitos) para consultar.");
-      return;
-    }
+  const handleEmitir = async () => {
+    setIsEmitting(true);
     try {
-      setIsLookingUpCnpj(true);
-      const data = await nfseApi.lookupTomadorByCnpj(cnpj);
-      setInvoice((prev) => ({
-        ...prev,
-        customer: {
-          ...(prev.customer as NfseInvoice["customer"]),
-          type: "CNPJ",
-          document: data.document || cnpj,
-          name: data.name || prev.customer?.name || "",
-          email: data.email || prev.customer?.email,
-          phone: data.phone || prev.customer?.phone,
-        },
-      }));
-      const address = data.address;
-      const addressText = address
-        ? [
-            address.street,
-            address.number,
-            address.complement,
-            address.neighborhood,
-            address.city,
-            address.state,
-            address.zipCode,
-          ]
-            .filter(Boolean)
-            .join(", ")
-        : null;
-      setTomadorAddressPreview(addressText || null);
-      toast.success("Dados do tomador preenchidos. Confira antes de emitir.");
+      setIsSaving(true);
+      const payload = buildPayload();
+      const saved =
+        mode === "edit" && id
+          ? await nfseApi.updateInvoice(id, payload)
+          : await nfseApi.createInvoice(payload);
+      setIsSaving(false);
+
+      if (!saved?.id) return;
+
+      await nfseApi.authorizeInvoice(saved.id, {});
+      toast.success("NFS-e emitida com sucesso!", {
+        description: "A nota foi enviada para autorizacao na prefeitura.",
+      });
+      navigate(`/fiscal/nfse/${saved.id}`);
     } catch (error) {
-      setTomadorAddressPreview(null);
-      showError(error, "Nao foi possivel consultar CNPJ do tomador");
+      showError(error, "Erro ao emitir NFS-e");
     } finally {
-      setIsLookingUpCnpj(false);
+      setIsSaving(false);
+      setIsEmitting(false);
     }
+  };
+
+  const applyTomadorCnpjData = (data: CnpjConsultaResponse) => {
+    setInvoice((prev) => ({
+      ...prev,
+      customer: {
+        ...(prev.customer as NfseInvoice["customer"]),
+        type: "CNPJ",
+        document: data.cnpj || prev.customer?.document || "",
+        name: data.razaoSocial || prev.customer?.name || "",
+        // email e telefone: NÃO preencher automaticamente (LGPD — MEI pode ter dados de PF)
+        email: prev.customer?.email,
+        phone: prev.customer?.phone,
+      },
+    }));
+    const address = data.endereco;
+    const addressText = address
+      ? [
+          address.logradouro,
+          address.numero,
+          address.complemento,
+          address.bairro,
+          address.municipio,
+          address.uf,
+          address.cep,
+        ]
+          .filter(Boolean)
+          .join(", ")
+      : null;
+    setTomadorAddressPreview(addressText || null);
   };
 
   const applyNbsCode = (code: string) => {
@@ -249,25 +298,48 @@ export default function NfseInvoiceForm() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Provedor</Label>
-              <Input
-                value={invoice.provedor || ""}
-                onChange={(e) => setInvoice((prev) => ({ ...prev, provedor: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
               <Label>Numero RPS</Label>
               <Input
                 type="number"
-                value={invoice.numeroRps || 0}
+                placeholder="Auto"
+                value={invoice.numeroRps || ""}
                 onChange={(e) =>
                   setInvoice((prev) => ({ ...prev, numeroRps: Number(e.target.value || 0) }))
                 }
               />
+              <p className="text-xs text-muted-foreground">Deixe 0 para numerar automaticamente.</p>
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-2">
+              <Label>Tipo do tomador</Label>
+              <Select
+                value={invoice.customer?.type || "CPF"}
+                onValueChange={(value: "CPF" | "CNPJ" | "EXTERIOR") => {
+                  if (value !== "CNPJ") {
+                    setTomadorAddressPreview(null);
+                  }
+                  setInvoice((prev) => ({
+                    ...prev,
+                    customer: {
+                      ...(prev.customer as NfseInvoice["customer"]),
+                      type: value,
+                      document: value === "EXTERIOR" ? prev.customer?.document || "" : prev.customer?.document || "",
+                    },
+                  }));
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CPF">CPF</SelectItem>
+                  <SelectItem value="CNPJ">CNPJ</SelectItem>
+                  <SelectItem value="EXTERIOR">Exterior</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2">
               <Label>Tomador - nome</Label>
               <Input
@@ -284,29 +356,41 @@ export default function NfseInvoiceForm() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Tomador - documento</Label>
-              <Input
-                value={invoice.customer?.document || ""}
-                onChange={(e) =>
-                  setInvoice((prev) => ({
-                    ...prev,
-                    customer: {
-                      ...(prev.customer as NfseInvoice["customer"]),
-                      document: e.target.value,
-                    },
-                  }))
-                }
-              />
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => void lookupTomadorByCnpj()}
-                  disabled={isLookingUpCnpj}
-                >
-                  {isLookingUpCnpj ? "Consultando..." : "Buscar CNPJ"}
-                </Button>
-              </div>
+              {invoice.customer?.type === "CNPJ" ? (
+                <CnpjAutoFillField
+                  id="nfse-tomador-documento"
+                  label="Tomador - CNPJ"
+                  value={invoice.customer?.document || ""}
+                  onChange={(value) =>
+                    setInvoice((prev) => ({
+                      ...prev,
+                      customer: {
+                        ...(prev.customer as NfseInvoice["customer"]),
+                        type: "CNPJ",
+                        document: value,
+                      },
+                    }))
+                  }
+                  onDataLoaded={applyTomadorCnpjData}
+                />
+              ) : (
+                <>
+                  <Label>Tomador - documento</Label>
+                  <Input
+                    value={invoice.customer?.document || ""}
+                    onChange={(e) =>
+                      setInvoice((prev) => ({
+                        ...prev,
+                        customer: {
+                          ...(prev.customer as NfseInvoice["customer"]),
+                          document: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder={invoice.customer?.type === "CPF" ? "000.000.000-00" : "Documento do tomador"}
+                  />
+                </>
+              )}
             </div>
           </div>
 
@@ -352,16 +436,15 @@ export default function NfseInvoiceForm() {
             </div>
             <div className="space-y-2">
               <Label>Valor unitario</Label>
-              <Input
-                type="number"
-                value={invoice.items?.[0]?.valorUnitario || 0}
-                onChange={(e) =>
+              <CurrencyInput
+                value={invoice.items?.[0]?.valorUnitario ?? 0}
+                onChange={(val) =>
                   setInvoice((prev) => ({
                     ...prev,
                     items: [
                       {
                         ...(prev.items?.[0] || BASE_ITEM),
-                        valorUnitario: Number(e.target.value || 0),
+                        valorUnitario: val,
                       },
                     ],
                   }))
@@ -382,20 +465,30 @@ export default function NfseInvoiceForm() {
 
           <div className="rounded-md border p-3 text-sm">
             <p>
-              Total servicos: <strong>R$ {preview.total.toFixed(2)}</strong>
+              Total servicos: <strong>{formatCurrency(preview.total)}</strong>
             </p>
             <p>
-              ISS estimado: <strong>R$ {preview.iss.toFixed(2)}</strong>
+              ISS estimado: <strong>{formatCurrency(preview.iss)}</strong>
             </p>
           </div>
 
           <div className="flex gap-2">
-            <Button onClick={() => void save()} disabled={isSaving}>
-              {isSaving
+            <Button onClick={() => void save()} disabled={isSaving || isEmitting}>
+              {isSaving && !isEmitting
                 ? "Salvando..."
                 : mode === "edit"
                 ? "Atualizar rascunho"
                 : "Salvar rascunho"}
+            </Button>
+            <Button onClick={() => void handleEmitir()} disabled={isEmitting || isSaving}>
+              {isEmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Emitindo...
+                </>
+              ) : (
+                "Emitir NFS-e"
+              )}
             </Button>
             <Button variant="outline" asChild>
               <Link to="/fiscal/nfse">Cancelar</Link>

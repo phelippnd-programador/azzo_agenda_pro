@@ -122,10 +122,51 @@ export type CreateStockInventoryRequest = {
   observacao?: string;
 };
 
+export type StockInventoryPageResponse = {
+  items: StockInventory[];
+  page: number;
+  totalPages: number;
+  total: number;
+  hasNext: boolean;
+};
+
+export type StockInventoryFilters = {
+  search?: string;
+  status?: StockInventoryStatus | "";
+  page?: number;
+  limit?: number;
+};
+
 export type StockInventoryCountRequest = {
   itemEstoqueId: string;
   quantidadeContada: number;
   observacao?: string;
+};
+
+export type StockInventoryCount = {
+  id: string;
+  inventarioId: string;
+  itemEstoqueId: string;
+  itemNome?: string | null;
+  itemUnidadeMedida?: string | null;
+  quantidadeEsperada: number;
+  quantidadeContada: number;
+  diferenca: number;
+  observacao?: string | null;
+  usuarioId?: string | null;
+  usuarioAtualizacaoId?: string | null;
+  createdAt: string;
+  updatedAt?: string | null;
+};
+
+export type UpdateStockInventoryCountRequest = {
+  quantidadeContada: number;
+  observacao?: string;
+};
+
+export type CancelStockInventoryRequest = {
+  senha: string;
+  motivo?: string;
 };
 
 export type StockSupplier = {

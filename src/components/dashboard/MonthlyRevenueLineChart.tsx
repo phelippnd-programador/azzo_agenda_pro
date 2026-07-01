@@ -64,54 +64,61 @@ export function MonthlyRevenueLineChart() {
   );
 
   return (
-    <Card>
-      <CardHeader className="pb-2 sm:pb-4">
+    <Card className="border-border/60 bg-background/95 shadow-sm">
+      <CardHeader className="pb-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle className="text-base sm:text-lg">Faturamento do Mes</CardTitle>
+          <div className="space-y-1">
+            <CardTitle className="text-base sm:text-lg">Faturamento do Mes</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Evolucao do mes atual para leitura de ritmo e tendencia.
+            </p>
+          </div>
           {rangeLabel ? <Badge variant="outline">{rangeLabel}</Badge> : null}
         </div>
       </CardHeader>
       <CardContent>
-        {points.length === 0 ? (
-          <div className="h-56 sm:h-64 flex items-center justify-center">
-            <p className="text-sm text-muted-foreground">Sem faturamento registrado neste mes.</p>
+        <div className="rounded-2xl border border-border/70 bg-muted/15 p-4">
+          {points.length === 0 ? (
+            <div className="flex h-56 items-center justify-center sm:h-64">
+              <p className="text-sm text-muted-foreground">Sem faturamento registrado neste mes.</p>
+            </div>
+          ) : null}
+          <div className={points.length === 0 ? "hidden" : "h-56 sm:h-64"}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={points}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="label" />
+                <YAxis
+                  width={80}
+                  tickFormatter={(value) =>
+                    new Intl.NumberFormat("pt-BR", {
+                      notation: "compact",
+                      compactDisplay: "short",
+                    }).format(Number(value))
+                  }
+                />
+                <Tooltip formatter={(value) => formatCurrency(Number(value))} labelFormatter={(label) => `Dia ${label}`} />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={3}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
-        ) : null}
-        <div className={points.length === 0 ? "hidden" : "h-56 sm:h-64"}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={points}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="label" />
-              <YAxis
-                width={80}
-                tickFormatter={(value) =>
-                  new Intl.NumberFormat("pt-BR", {
-                    notation: "compact",
-                    compactDisplay: "short",
-                  }).format(Number(value))
-                }
-              />
-              <Tooltip formatter={(value) => formatCurrency(Number(value))} labelFormatter={(label) => `Dia ${label}`} />
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke="hsl(var(--primary))"
-                strokeWidth={3}
-                dot={{ r: 3 }}
-                activeDot={{ r: 5 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-border gap-2 sm:gap-0">
-          <div>
-            <p className="text-xs sm:text-sm text-muted-foreground">Total do Mes</p>
-            <p className="text-lg sm:text-xl font-bold text-foreground">{formatCurrency(monthlyTotal)}</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-border/70 bg-background/85 p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Total do mes</p>
+            <p className="mt-1 text-lg font-bold text-foreground sm:text-xl">{formatCurrency(monthlyTotal)}</p>
           </div>
-          <div className="sm:text-right">
-            <p className="text-xs sm:text-sm text-muted-foreground">Media Diaria</p>
-            <p className="text-lg sm:text-xl font-bold text-primary">{formatCurrency(monthlyAverage)}</p>
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:text-right">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Media diaria</p>
+            <p className="mt-1 text-lg font-bold text-primary sm:text-xl">{formatCurrency(monthlyAverage)}</p>
           </div>
         </div>
       </CardContent>

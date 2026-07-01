@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PageErrorState } from '@/components/ui/page-states';
+import { PageEmptyState, PageErrorState, PageListLoadingState } from '@/components/ui/page-states';
 import { HighlightMetricCard } from '@/components/ui/highlight-metric-card';
+import { PaginationControls } from '@/components/ui/pagination-controls';
+import { CrudListToolbar } from '@/components/crud/CrudListToolbar';
 import {
   Table,
   TableBody,
@@ -23,13 +25,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  Search,
-  Plus,
   MoreVertical,
   Calendar,
   DollarSign,
-  Grid3X3,
-  List,
   Users,
 } from 'lucide-react';
 import { useClients } from '@/hooks/useClients';
@@ -38,10 +36,12 @@ import { ClientCard } from '@/components/clients/ClientCard';
 import { ClientUpsertDialog } from '@/components/clients/ClientUpsertDialog';
 import { resolveApiMediaUrl } from '@/lib/api';
 import { maskPhoneBr } from '@/lib/input-masks';
+import { maskEmail } from '@/lib/mask';
 import { formatCurrency } from '@/lib/format';
 
 export default function ClientsOverviewPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
@@ -62,6 +62,7 @@ export default function ClientsOverviewPage() {
   );
   const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.limit));
   const editingClient = editingClientId ? clients.find((client) => client.id === editingClientId) ?? null : null;
+  const recurringClientsOnPage = clients.filter((client) => client.totalVisits >= 3).length;
 
   const openEditDialog = (client: typeof clients[number]) => {
     setEditingClientId(client.id);
@@ -90,16 +91,7 @@ export default function ClientsOverviewPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-12 w-full" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-48" />
-          ))}
-        </div>
-      </div>
-    );
+    return <PageListLoadingState />;
   }
 
   if (error) {
@@ -114,56 +106,57 @@ export default function ClientsOverviewPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-        <div className="relative max-w-md flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Buscar clientes..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
-          />
-        </div>
+      <ModuleIntro
+        eyebrow="Relacionamento"
+        title="Acompanhe crescimento da base, recorrencia recente e potencial de receita por cliente."
+        description="Use a busca para localizar nomes rapidamente e troque entre cards e lista conforme a tarefa do momento."
+        badges={[
+          { label: `${pagination.total} cliente(s)` },
+          { label: viewMode === 'grid' ? 'Cards' : 'Lista' },
+          { label: `${filteredClients.length} em foco` },
+        ]}
+        points={[
+          {
+            eyebrow: 'Relacionamento',
+            title: 'Base e recorrencia',
+            description: 'Priorize clientes recentes e recorrentes antes de descer para acoes de edicao.',
+          },
+          {
+            eyebrow: 'Navegacao',
+            title: 'Cards para leitura, lista para manutencao',
+            description: 'Alterne a visualizacao conforme a tarefa: leitura rapida ou edicao em sequencia.',
+          },
+          {
+            eyebrow: 'Proximo passo',
+            title: 'Filtre, revise e abra o historico',
+            description: 'Use a tabela quando precisar comparar visitas, gasto e dados de contato na mesma passada.',
+          },
+        ]}
+      />
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="flex overflow-hidden rounded-lg border">
-            <Button
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={() => setViewMode('grid')}
-              className="h-8 w-8 rounded-none sm:h-9 sm:w-9"
-            >
-              <Grid3X3 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={() => setViewMode('table')}
-              className="h-8 w-8 rounded-none sm:h-9 sm:w-9"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
+      <CrudListToolbar
+        searchPlaceholder="Buscar clientes..."
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        gridAriaLabel="Visualizar clientes em cards"
+        tableAriaLabel="Visualizar clientes em lista"
+        actionLabel="Cliente"
+        actionLabelMobile="Novo"
+        actionLabelDesktop="Novo cliente"
+        onAction={() => {
+          setEditingClientId(null);
+          setIsClientDialogOpen(true);
+        }}
+      />
 
-          <Button
-            className="gap-2"
-            onClick={() => {
-              setEditingClientId(null);
-              setIsClientDialogOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Novo</span> Cliente
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 sm:gap-4">
         <HighlightMetricCard
           title="Total de Clientes"
           value={String(pagination.total)}
           icon={Users}
-          className="border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5"
+          className="border-primary/20 bg-primary/8"
           titleClassName="text-primary"
           valueClassName="text-primary"
           iconContainerClassName="bg-primary/15"
@@ -173,38 +166,53 @@ export default function ClientsOverviewPage() {
           title="Ativos nesta pagina"
           value={String(activeClientsOnPage)}
           icon={Calendar}
-          className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50"
-          titleClassName="text-green-700"
-          valueClassName="text-green-800"
-          iconContainerClassName="bg-green-100"
-          iconClassName="text-green-600"
+          className="border-green-200/70 bg-green-50/70 dark:border-green-500/20 dark:bg-green-500/10"
+          titleClassName="text-green-700 dark:text-green-300"
+          valueClassName="text-green-800 dark:text-green-50"
+          iconContainerClassName="bg-green-100 dark:bg-green-500/15"
+          iconClassName="text-green-600 dark:text-green-300"
         />
         <HighlightMetricCard
-          title="Faturamento na pagina"
-          value={formatCurrency(totalSpentOnPage)}
+          title="Recorrentes na pagina"
+          value={String(recurringClientsOnPage)}
           icon={DollarSign}
-          className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50"
-          titleClassName="text-indigo-700"
-          valueClassName="text-indigo-800"
-          iconContainerClassName="bg-indigo-100"
-          iconClassName="text-indigo-600"
+          className="border-indigo-200/70 bg-indigo-50/70 dark:border-indigo-500/20 dark:bg-indigo-500/10"
+          titleClassName="text-indigo-700 dark:text-indigo-300"
+          valueClassName="text-indigo-800 dark:text-indigo-50"
+          iconContainerClassName="bg-indigo-100 dark:bg-indigo-500/15"
+          iconClassName="text-indigo-600 dark:text-indigo-300"
         />
       </div>
 
+      <WorkspaceNotice
+        title="Area de trabalho de clientes"
+        description="Busque, alterne a visualizacao e abra rapidamente o cadastro ou o historico do cliente."
+        badge={`${formatCurrency(totalSpentOnPage)} em faturamento nesta pagina`}
+      />
+
       {filteredClients.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
-            <p className="text-muted-foreground">Nenhum cliente encontrado</p>
-            {searchTerm ? (
-              <Button variant="link" onClick={() => setSearchTerm('')}>
-                Limpar busca
-              </Button>
-            ) : null}
-          </CardContent>
-        </Card>
+        <PageEmptyState
+          title={searchTerm ? "Nenhum cliente encontrado para esta busca" : "Nenhum cliente cadastrado"}
+          description={
+            searchTerm
+              ? "A busca atual nao retornou resultados. Limpe o termo para voltar a ver a lista completa."
+              : "Cadastre o primeiro cliente para começar a organizar histórico, visitas e faturamento."
+          }
+          action={{
+            label: searchTerm ? "Limpar busca" : "Novo cliente",
+            onClick: () => {
+              if (searchTerm) {
+                setSearchTerm('');
+                return;
+              }
+              setEditingClientId(null);
+              setIsClientDialogOpen(true);
+            },
+            variant: searchTerm ? "outline" : "default",
+          }}
+        />
       ) : viewMode === 'grid' ? (
-        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {filteredClients.map((client) => (
             <ClientCard
               key={client.id}
@@ -212,11 +220,23 @@ export default function ClientsOverviewPage() {
               onOpenProfile={openProfilePage}
               onEdit={openEditDialog}
               onDelete={openDeleteDialog}
+              canDelete={user?.role !== 'PROFESSIONAL'}
             />
           ))}
         </div>
       ) : (
-        <Card>
+        <Card className="border-border/70 bg-muted/15 shadow-none">
+          <div className="flex flex-col gap-3 border-b border-border/70 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Lista de clientes</p>
+              <p className="text-sm text-muted-foreground">
+                Compare contato, recorrencia e faturamento sem sair da mesma passada.
+              </p>
+            </div>
+            <Badge variant="outline" className="w-fit bg-background/80">
+              {filteredClients.length} visivel(is)
+            </Badge>
+          </div>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -241,7 +261,7 @@ export default function ClientsOverviewPage() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
-                          <p className="max-w-[120px] truncate text-sm font-medium sm:max-w-none">
+                          <p className="max-w-[160px] truncate text-sm font-medium sm:max-w-none">
                             {client.name}
                           </p>
                           <p className="text-xs text-muted-foreground sm:hidden">{maskPhoneBr(client.phone, false)}</p>
@@ -249,8 +269,8 @@ export default function ClientsOverviewPage() {
                       </div>
                     </TableCell>
                     <TableCell className="hidden text-sm sm:table-cell">{maskPhoneBr(client.phone, false)}</TableCell>
-                    <TableCell className="hidden max-w-[150px] truncate text-sm md:table-cell">
-                      {client.email || '-'}
+                    <TableCell className="hidden max-w-[220px] truncate text-sm md:table-cell">
+                      {maskEmail(client.email)}
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant="secondary" className="text-xs">
@@ -263,7 +283,12 @@ export default function ClientsOverviewPage() {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            aria-label={`Abrir acoes do cliente ${client.name}`}
+                          >
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -274,12 +299,14 @@ export default function ClientsOverviewPage() {
                           <DropdownMenuItem onClick={() => openProfilePage(client.id)}>
                             Ver Historico
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() => openDeleteDialog(client.id)}
-                          >
-                            Excluir
-                          </DropdownMenuItem>
+                          {user?.role !== 'PROFESSIONAL' && (
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onClick={() => openDeleteDialog(client.id)}
+                            >
+                              Excluir
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -292,29 +319,14 @@ export default function ClientsOverviewPage() {
       )}
 
       {!searchTerm && totalPages > 1 ? (
-        <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/20 p-3">
-          <p className="text-sm text-muted-foreground">
-            Pagina {pagination.page} de {totalPages}
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(pagination.page - 1)}
-              disabled={pagination.page <= 1 || isLoading}
-            >
-              Anterior
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(pagination.page + 1)}
-              disabled={pagination.page >= totalPages || isLoading || !pagination.hasMore}
-            >
-              Proxima
-            </Button>
-          </div>
-        </div>
+        <PaginationControls
+          page={pagination.page}
+          totalPages={totalPages}
+          isLoading={isLoading}
+          hasNextPage={pagination.hasMore}
+          onPrevious={() => goToPage(pagination.page - 1)}
+          onNext={() => goToPage(pagination.page + 1)}
+        />
       ) : null}
 
       <ClientUpsertDialog

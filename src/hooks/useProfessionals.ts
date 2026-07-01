@@ -1,5 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
-import { professionalsApi, isPlanExpiredApiError, type Professional, type ProfessionalLimits } from "@/lib/api";
+import {
+  professionalsApi,
+  isPlanExpiredApiError,
+  type Professional,
+  type ProfessionalLimits,
+  type ProfessionalUpsertPayload,
+} from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import { useResourceList } from "@/hooks/useResourceList";
 import { toast } from "sonner";
@@ -46,12 +52,16 @@ export function useProfessionals(options?: UseProfessionalsOptions) {
 
   // ─── Mutações ─────────────────────────────────────────────────────────────────
 
-  const createProfessional = async (data: Partial<Professional>) => {
+  const createProfessional = async (data: ProfessionalUpsertPayload) => {
     try {
       const result = await professionalsApi.create(data);
       await _fetch({ page: pagination.page, limit: pagination.limit });
       await fetchProfessionalLimits();
-      toast.success("Profissional adicionado com sucesso!");
+      if (result.accessUserCreated && result.email) {
+        toast.success(`Profissional criado. O acesso foi liberado e a senha temporaria foi enviada para ${result.email}.`);
+      } else {
+        toast.success("Profissional adicionado com sucesso!");
+      }
       return result;
     } catch (err) {
       if (!isPlanExpiredApiError(err))
@@ -60,9 +70,12 @@ export function useProfessionals(options?: UseProfessionalsOptions) {
     }
   };
 
-  const updateProfessional = async (id: string, data: Partial<Professional>) => {
+  const updateProfessional = async (id: string, data: ProfessionalUpsertPayload) => {
     try {
-      const result = await professionalsApi.update(id, data);
+      const isToggleOnly = Object.keys(data).length === 1 && "isActive" in data;
+      const result = isToggleOnly
+        ? await professionalsApi.toggleStatus(id, data.isActive as boolean)
+        : await professionalsApi.update(id, data);
       await _fetch({ page: pagination.page, limit: pagination.limit });
       toast.success("Profissional atualizado com sucesso!");
       return result;

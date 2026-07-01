@@ -43,9 +43,9 @@ const rankTiers = [
   {
     label: "Prata",
     Icon: Medal,
-    accentClass: "bg-slate-50 text-slate-700 border-slate-200",
-    iconClass: "text-slate-500",
-    tagClass: "bg-slate-200 text-slate-700",
+    accentClass: "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700",
+    iconClass: "text-slate-500 dark:text-slate-300",
+    tagClass: "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-100",
   },
   {
     label: "Bronze",
@@ -57,9 +57,9 @@ const rankTiers = [
   {
     label: "Lata",
     Icon: Circle,
-    accentClass: "bg-zinc-50 text-zinc-700 border-zinc-200",
-    iconClass: "text-zinc-500",
-    tagClass: "bg-zinc-200 text-zinc-700",
+    accentClass: "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700",
+    iconClass: "text-zinc-500 dark:text-zinc-300",
+    tagClass: "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-100",
   },
 ] as const;
 
@@ -75,7 +75,10 @@ export function RankedBarCard({
   valueFormatter,
 }: RankedBarCardProps) {
   const visibleItems = items.slice(0, maxItems);
-  const chartHeight = Math.max(240, visibleItems.length * 56);
+  const chartHeight = Math.max(160, visibleItems.length * 58);
+  const shouldSplitLayout = visibleItems.length >= 4;
+  const truncateChartLabel = (label: string) =>
+    label.length > 22 ? `${label.slice(0, 22).trimEnd()}...` : label;
 
   return (
     <Card>
@@ -88,20 +91,29 @@ export function RankedBarCard({
       </CardHeader>
       <CardContent className="space-y-3">
         {visibleItems.length ? (
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
+          <div
+            className={`grid gap-4 ${
+              shouldSplitLayout ? 'min-[1650px]:grid-cols-[minmax(0,1.7fr)_minmax(360px,1fr)]' : ''
+            }`}
+          >
             <div className="rounded-xl border bg-muted/20 p-4">
               <div style={{ height: chartHeight }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={visibleItems} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+                  <BarChart
+                    data={visibleItems}
+                    layout="vertical"
+                    margin={{ top: 4, right: 16, left: 8, bottom: 4 }}
+                  >
                     <CartesianGrid horizontal={false} strokeDasharray="3 3" />
                     <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} />
                     <YAxis
                       type="category"
                       dataKey="name"
-                      width={110}
+                      width={160}
                       tickLine={false}
                       axisLine={false}
                       tick={{ fontSize: 12 }}
+                      tickFormatter={truncateChartLabel}
                     />
                     <Tooltip
                       cursor={{ fill: "rgba(15, 23, 42, 0.04)" }}
@@ -126,28 +138,37 @@ export function RankedBarCard({
                   return (
                     <div
                       key={item.id}
-                      className="grid grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-3 rounded-lg bg-background/90 px-3 py-2"
+                      className="grid grid-cols-[36px_minmax(0,1fr)] gap-3 rounded-xl border border-border/60 bg-background/90 px-3 py-3"
                     >
                       <div className={`flex h-9 w-9 flex-col items-center justify-center rounded-full border ${rank.accentClass}`}>
                         <RankIcon className={`h-3.5 w-3.5 ${rank.iconClass}`} />
                         <span className="text-[10px] font-semibold leading-none">{index + 1}</span>
                       </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="truncate text-sm font-medium">{item.name}</p>
-                          <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${rank.tagClass}`}>
+                      <div className="min-w-0 space-y-2">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="line-clamp-2 break-words text-sm font-medium text-foreground">{item.name}</p>
+                            {item.metaText ? (
+                              <p className="mt-1 line-clamp-2 break-words text-xs text-muted-foreground">{item.metaText}</p>
+                            ) : null}
+                          </div>
+                          <span
+                            className={`inline-flex flex-shrink-0 rounded-full px-2 py-1 text-[10px] font-medium ${rank.tagClass}`}
+                          >
                             {rank.label}
                           </span>
                         </div>
-                        {item.metaText ? (
-                          <p className="truncate text-xs text-muted-foreground">{item.metaText}</p>
+                        {item.badgeText ? (
+                          <div className="flex justify-end">
+                            <Badge
+                              variant="secondary"
+                              className="max-w-full px-2.5 py-1 text-[11px] font-medium whitespace-normal break-words text-right"
+                            >
+                              {item.badgeText}
+                            </Badge>
+                          </div>
                         ) : null}
                       </div>
-                      {item.badgeText ? (
-                        <Badge variant="secondary" className="h-6 px-2 text-[11px]">
-                          {item.badgeText}
-                        </Badge>
-                      ) : null}
                     </div>
                   );
                 })}

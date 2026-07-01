@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { commissionApi, servicesApi, stockApi } from "@/lib/api";
 import { useProfessionals } from "@/hooks/useProfessionals";
 import { resolveUiError } from "@/lib/error-utils";
-import { formatCurrencyCents as formatCurrency } from "@/lib/format";
+import { formatCurrency, toDateKey } from "@/lib/format";
 import type { Service } from "@/types";
 import type { StockItem } from "@/types/stock";
 import type {
@@ -33,8 +33,7 @@ const getMonthRange = () => {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  const toDate = (value: Date) => value.toISOString().slice(0, 10);
-  return { from: toDate(start), to: toDate(end) };
+  return { from: toDateKey(start), to: toDateKey(end) };
 };
 
 export default function FinancialCommissions() {
@@ -50,7 +49,7 @@ export default function FinancialCommissions() {
   const [services, setServices] = useState<Service[]>([]);
   const [products, setProducts] = useState<StockItem[]>([]);
   const [adjustmentProfessionalId, setAdjustmentProfessionalId] = useState("");
-  const [adjustmentAmount, setAdjustmentAmount] = useState("0.00");
+  const [adjustmentAmount, setAdjustmentAmount] = useState(0);
   const [adjustmentReason, setAdjustmentReason] = useState("");
   const [cyclePayNotes, setCyclePayNotes] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -88,7 +87,7 @@ export default function FinancialCommissions() {
       setProducts(productItems);
       setError(null);
     } catch (err) {
-      setError(resolveUiError(err, "Nao foi possivel carregar as comissoes.").message);
+      setError(resolveUiError(err, "Não foi possível carregar as comissões.").message);
     } finally {
       setIsLoading(false);
     }
@@ -109,11 +108,11 @@ export default function FinancialCommissions() {
       } else {
         await commissionApi.createRuleSet(payload);
       }
-      toast.success("Configuracao global de comissao salva.");
+      toast.success("Configuração global de comissão salva.");
       await loadData();
     } catch (err) {
       toast.error(
-        resolveUiError(err, "Nao foi possivel salvar a configuracao global.").message,
+        resolveUiError(err, "Não foi possível salvar a configuração global.").message,
       );
     } finally {
       setIsSavingRules(false);
@@ -125,15 +124,15 @@ export default function FinancialCommissions() {
       setIsSubmittingAdjustment(true);
       await commissionApi.createAdjustment({
         professionalId: adjustmentProfessionalId,
-        amountCents: Math.round(Number(adjustmentAmount || 0) * 100),
+        amount: adjustmentAmount,
         reason: adjustmentReason.trim(),
       });
       toast.success("Ajuste manual registrado.");
-      setAdjustmentAmount("0.00");
+      setAdjustmentAmount(0);
       setAdjustmentReason("");
       await loadData();
     } catch (err) {
-      toast.error(resolveUiError(err, "Nao foi possivel registrar o ajuste.").message);
+      toast.error(resolveUiError(err, "Não foi possível registrar o ajuste.").message);
     } finally {
       setIsSubmittingAdjustment(false);
     }
@@ -146,7 +145,7 @@ export default function FinancialCommissions() {
       toast.success("Ciclo fechado com sucesso.");
       await loadData();
     } catch (err) {
-      toast.error(resolveUiError(err, "Nao foi possivel fechar o ciclo.").message);
+      toast.error(resolveUiError(err, "Não foi possível fechar o ciclo.").message);
     } finally {
       setIsClosingCycle(false);
     }
@@ -159,7 +158,7 @@ export default function FinancialCommissions() {
       toast.success("Ciclo marcado como pago.");
       await loadData();
     } catch (err) {
-      toast.error(resolveUiError(err, "Nao foi possivel marcar o ciclo como pago.").message);
+      toast.error(resolveUiError(err, "Não foi possível marcar o ciclo como pago.").message);
     } finally {
       setPayingCycleId(null);
     }
@@ -172,7 +171,7 @@ export default function FinancialCommissions() {
 
   if (isLoading || isLoadingProfessionals) {
     return (
-      <MainLayout title="Comissoes" subtitle="Consolidacao, fechamento e configuracao">
+      <MainLayout title="Comissões" subtitle="Consolidação, fechamento e configuração">
         <div className="space-y-4">
           <Skeleton className="h-20 w-full" />
           <Skeleton className="h-32 w-full" />
@@ -184,9 +183,9 @@ export default function FinancialCommissions() {
 
   if (error) {
     return (
-      <MainLayout title="Comissoes" subtitle="Consolidacao, fechamento e configuracao">
+      <MainLayout title="Comissões" subtitle="Consolidação, fechamento e configuração">
         <PageErrorState
-          title="Nao foi possivel carregar as comissoes"
+          title="Não foi possível carregar as comissões"
           description={error}
           action={{ label: "Tentar novamente", onClick: () => void loadData() }}
         />
@@ -195,7 +194,7 @@ export default function FinancialCommissions() {
   }
 
   return (
-    <MainLayout title="Comissoes" subtitle="Consolidacao, fechamento e configuracao">
+    <MainLayout title="Comissões" subtitle="Consolidação, fechamento e configuração">
       <div className="space-y-6">
         {/* Filters */}
         <Card>
@@ -236,7 +235,7 @@ export default function FinancialCommissions() {
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Total apurado</p>
               <p className="text-xl font-bold text-foreground">
-                {formatCurrency(report?.totalAmountCents || 0)}
+                {formatCurrency(report?.totalAmount || 0)}
               </p>
             </CardContent>
           </Card>
@@ -244,7 +243,7 @@ export default function FinancialCommissions() {
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Total em aberto</p>
               <p className="text-xl font-bold text-amber-700">
-                {formatCurrency(report?.totalOpenAmountCents || 0)}
+                {formatCurrency(report?.totalOpenAmount || 0)}
               </p>
             </CardContent>
           </Card>
@@ -252,13 +251,13 @@ export default function FinancialCommissions() {
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Total pago</p>
               <p className="text-xl font-bold text-emerald-700">
-                {formatCurrency(report?.totalPaidAmountCents || 0)}
+                {formatCurrency(report?.totalPaidAmount || 0)}
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">Lancamentos</p>
+              <p className="text-sm text-muted-foreground">Lançamentos</p>
               <p className="text-xl font-bold text-primary">{report?.totalEntries || 0}</p>
             </CardContent>
           </Card>
@@ -281,14 +280,14 @@ export default function FinancialCommissions() {
               <CardContent>
                 {!report?.items.length ? (
                   <p className="text-sm text-muted-foreground">
-                    Nenhum lancamento encontrado para o periodo.
+                    Nenhum lançamento encontrado para o período.
                   </p>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Profissional</TableHead>
-                        <TableHead className="text-right">Servico</TableHead>
+                        <TableHead className="text-right">Serviço</TableHead>
                         <TableHead className="text-right">Produto</TableHead>
                         <TableHead className="text-right">Ajustes</TableHead>
                         <TableHead className="text-right">Em aberto</TableHead>
@@ -302,22 +301,22 @@ export default function FinancialCommissions() {
                         <TableRow key={item.professionalId}>
                           <TableCell className="font-medium">{item.professionalName}</TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(item.serviceAmountCents)}
+                            {formatCurrency(item.serviceAmount)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(item.productAmountCents)}
+                            {formatCurrency(item.productAmount)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(item.manualAdjustmentAmountCents)}
+                            {formatCurrency(item.manualAdjustmentAmount)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(item.openAmountCents)}
+                            {formatCurrency(item.openAmount)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(item.paidAmountCents)}
+                            {formatCurrency(item.paidAmount)}
                           </TableCell>
                           <TableCell className="text-right font-semibold">
-                            {formatCurrency(item.totalAmountCents)}
+                            {formatCurrency(item.totalAmount)}
                           </TableCell>
                           <TableCell className="text-right">
                             <Button
@@ -342,7 +341,7 @@ export default function FinancialCommissions() {
 
           <TabsContent value="configuracao">
             <CommissionRuleSetEditor
-              title="Regra global do salao"
+              title="Regra global do salão"
               scopeType="GLOBAL"
               existingRuleSet={globalRuleSet}
               services={services}
@@ -388,9 +387,9 @@ export default function FinancialCommissions() {
         <Card>
           <CardContent className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
             <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">Acesso rapido por profissional</p>
+              <p className="text-sm font-medium text-foreground">Acesso rápido por profissional</p>
               <p className="text-sm text-muted-foreground">
-                Configure regras especificas e acompanhe o detalhamento individual.
+                Configure regras específicas e acompanhe o detalhamento individual.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">

@@ -35,6 +35,7 @@ export interface Professional {
   commissionRate: number;
   workingHours: WorkingHours[];
   isActive: boolean;
+  accessUserCreated?: boolean;
   createdAt: Date;
 }
 
@@ -73,6 +74,8 @@ export interface AppointmentItem {
   orderIndex?: number;
   durationMinutes: number;
   unitPrice: number;
+  grossAmount?: number;
+  discountAmount?: number;
   totalPrice: number;
 }
 
@@ -80,6 +83,8 @@ export interface AppointmentCreateItemInput {
   serviceId: string;
   durationMinutes?: number;
   unitPrice?: number;
+  grossAmount?: number;
+  discountAmount?: number;
   totalPrice?: number;
 }
 
@@ -93,7 +98,10 @@ export interface Client {
   avatarUrl?: string | null;
   birthDate?: Date | string;
   notes?: string;
+  cpfCnpj?: string;
+  clientType?: 'PF' | 'PJ';
   address?: ClientAddress;
+  whatsAppOptIn?: boolean;
   topServices?: ClientTopService[];
   totalVisits: number;
   totalSpent: number;
@@ -255,6 +263,9 @@ export interface AppointmentManagementReportResponse {
   noShowRate: number;
   limit: number;
   totalItems: number;
+  page?: number;
+  pageSize?: number;
+  hasMore?: boolean;
   alerts: AppointmentManagementReportSignal[];
   opportunities: AppointmentManagementReportSignal[];
   items: AppointmentManagementReportItem[];

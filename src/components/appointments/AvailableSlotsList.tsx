@@ -4,6 +4,7 @@ import type { ManualTimeSlotResponse } from "@/types/available-slots";
 
 type AvailableSlotsListProps = {
   slots: ManualTimeSlotResponse[];
+  date: string;
   isLoading: boolean;
   error: string | null;
   canFetch: boolean;
@@ -13,12 +14,18 @@ type AvailableSlotsListProps = {
 
 export function AvailableSlotsList({
   slots,
+  date,
   isLoading,
   error,
   canFetch,
   selectedStartTime,
   onSelect,
 }: AvailableSlotsListProps) {
+  const today = new Date().toISOString().slice(0, 10);
+  const nowTime = new Date().toTimeString().slice(0, 5);
+  const visibleSlots = date === today
+    ? slots.filter((slot) => String(slot.startTime).slice(0, 5) > nowTime)
+    : slots;
   if (!canFetch) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -35,12 +42,12 @@ export function AvailableSlotsList({
     return <p className="text-sm text-red-600">{error}</p>;
   }
 
-  if (!slots.length) {
+  if (!visibleSlots.length) {
     return <p className="text-sm text-muted-foreground">Nenhum horario disponivel para esta selecao.</p>;
   }
 
-  const availableSlots = slots.filter((slot) => !slot.conflicting);
-  const conflictSlots = slots.filter((slot) => slot.conflicting);
+  const availableSlots = visibleSlots.filter((slot) => !slot.conflicting);
+  const conflictSlots = visibleSlots.filter((slot) => slot.conflicting);
 
   const renderSlotButton = (slot: ManualTimeSlotResponse, index: number, highlighted = false) => (
     <Button
@@ -48,15 +55,15 @@ export function AvailableSlotsList({
       type="button"
       variant={selectedStartTime === slot.startTime ? "default" : "outline"}
       onClick={() => onSelect(slot)}
-      className={`justify-center gap-1 overflow-hidden px-2 ${
+      className={`h-10 justify-center gap-1 overflow-hidden px-2 ${
         selectedStartTime === slot.startTime
           ? slot.conflicting
             ? "bg-red-600 text-white hover:bg-red-700"
             : "bg-primary hover:bg-primary/90"
           : slot.conflicting
-            ? "border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
+            ? "border-red-300 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-100"
             : highlighted
-              ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+              ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-100"
               : ""
       }`}
     >
@@ -81,17 +88,17 @@ export function AvailableSlotsList({
       ) : null}
 
       {conflictSlots.length ? (
-        <div className="space-y-2 rounded-lg border border-red-200 bg-red-50/70 p-3">
-          <div className="flex items-center justify-between gap-2">
+        <div className="space-y-2 rounded-lg border border-red-200 bg-red-50/70 p-3 dark:border-red-900/60 dark:bg-red-950/30">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-red-700">
                 Horarios com conflito
               </p>
-              <p className="text-xs text-red-600">
+              <p className="text-xs text-red-600 dark:text-red-200/90">
                 Esses horarios ja possuem outro atendimento e exigem confirmacao explicita.
               </p>
             </div>
-            <Badge className="bg-red-100 text-red-700 hover:bg-red-100">{conflictSlots.length}</Badge>
+            <Badge className="w-fit bg-red-100 text-red-700 hover:bg-red-100 dark:bg-red-900/40 dark:text-red-100">{conflictSlots.length}</Badge>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {conflictSlots.map((slot, index) => renderSlotButton(slot, index))}

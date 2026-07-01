@@ -8,6 +8,14 @@ export type ChatAppointmentMarker =
 
 export type ChatMessageDirection = "OUTBOUND" | "INBOUND";
 export type ChatMessageStatus = "QUEUED" | "SENT" | "DELIVERED" | "READ" | "FAILED";
+export type ChatRealtimeEventType =
+  | "CHAT_UPDATED"
+  | "INBOUND_RECEIVED"
+  | "OUTBOUND_SENT"
+  | "OUTBOUND_FAILED"
+  | "OUTBOUND_ASSISTANT"
+  | "MARKER_UPDATED"
+  | "CONVERSATION_READ";
 
 export interface ChatConversation {
   id: string;
@@ -55,6 +63,8 @@ export interface ChatMessageListResponse {
   total: number;
   page: number;
   pageSize: number;
+  nextCursor: string | null;
+  hasNext: boolean;
 }
 
 export interface SendChatMessageRequest {
@@ -66,4 +76,12 @@ export interface SendChatMessageResponse {
   messageId: string;
   conversationId: string;
   status: ChatMessageStatus;
+}
+
+export interface ChatRealtimeEventPayload {
+  type?: ChatRealtimeEventType;
+  tenantId?: string | null;
+  conversationId?: string | null;
+  clientId?: string | null;
+  timestamp?: string | null;
 }

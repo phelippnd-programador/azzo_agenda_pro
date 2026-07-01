@@ -2,19 +2,22 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { BrandLockup } from '@/components/common/BrandLockup';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Scissors, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { getCurrentBillingSubscription } from '@/services/billingService';
-import { ApiError, authApi } from '@/lib/api';
+import { ApiError } from '@/lib/api/core';
+import { authApi } from '@/lib/api/auth';
 import { resolveUiError } from '@/lib/error-utils';
 import { setLicenseAccessStatus } from '@/lib/license-access';
 import { loginSchema, type LoginForm } from '@/schemas/auth';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 const REMEMBER_LOGIN_STORAGE_KEY = "azzo_remembered_login";
 
@@ -27,30 +30,39 @@ export default function Login() {
   const [rememberPassword, setRememberPassword] = useState(false);
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
+    mode: "onTouched",
     defaultValues: {
       email: '',
       password: '',
       mfaCode: '',
     },
   });
+  const errors = form.formState.errors;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const raw = localStorage.getItem(REMEMBER_LOGIN_STORAGE_KEY);
+    const raw = sessionStorage.getItem(REMEMBER_LOGIN_STORAGE_KEY);
     if (!raw) return;
     try {
-      const parsed = JSON.parse(raw) as { email?: string; password?: string };
-      if (parsed.email) form.setValue("email", parsed.email);
-      if (parsed.password) form.setValue("password", parsed.password);
-      setRememberPassword(Boolean(parsed.email || parsed.password));
+      const parsed = JSON.parse(raw) as { email?: string };
+      if (parsed.email) {
+        form.setValue("email", parsed.email);
+        setRememberPassword(true);
+        sessionStorage.setItem(
+          REMEMBER_LOGIN_STORAGE_KEY,
+          JSON.stringify({ email: parsed.email })
+        );
+        return;
+      }
+      sessionStorage.removeItem(REMEMBER_LOGIN_STORAGE_KEY);
     } catch {
-      localStorage.removeItem(REMEMBER_LOGIN_STORAGE_KEY);
+      sessionStorage.removeItem(REMEMBER_LOGIN_STORAGE_KEY);
     }
   }, [form]);
 
   useEffect(() => {
     const showSessionExpiredToast = (message?: string) => {
-      toast.error(message || "Sessao expirada. Faca login novamente.");
+      toast.error(message || "Sessão expirada. Faça login novamente.");
     };
 
     const consumeReason = () => {
@@ -126,21 +138,20 @@ export default function Login() {
     try {
       const mfaCode = values.mfaCode?.trim();
       if (mfaRequired && (!mfaCode || mfaCode.length !== 6)) {
-        toast.error('Digite o codigo de 6 digitos do seu aplicativo autenticador.');
+      toast.error('Digite o código de 6 dígitos do seu aplicativo autenticador.');
         return;
       }
 
       if (typeof window !== "undefined") {
         if (rememberPassword) {
-          localStorage.setItem(
+          sessionStorage.setItem(
             REMEMBER_LOGIN_STORAGE_KEY,
             JSON.stringify({
               email: values.email.trim(),
-              password: values.password,
             })
           );
         } else {
-          localStorage.removeItem(REMEMBER_LOGIN_STORAGE_KEY);
+          sessionStorage.removeItem(REMEMBER_LOGIN_STORAGE_KEY);
         }
       }
 
@@ -153,10 +164,27 @@ export default function Login() {
     } catch (error) {
       if (error instanceof ApiError && error.status === 428) {
         setMfaRequired(true);
-        toast.error('Digite o codigo de 6 digitos do seu aplicativo autenticador.');
+        toast.error('Digite o código de 6 dígitos do seu aplicativo autenticador.');
         return;
       }
-      const uiError = resolveUiError(error, 'Credenciais invalidas.');
+      if (error instanceof ApiError && error.status === 403) {
+        toast.error('Sua conta esta bloqueada ou desativada. Entre em contato com o administrador do salao para reativar o acesso.');
+        return;
+      }
+      if (error instanceof ApiError && (error.code === 'ACCOUNT_PENDING' || error.status === 409)) {
+        toast.error(
+          'Seu cadastro esta incompleto. Conclua o cadastro para acessar o sistema.',
+          {
+            action: {
+              label: 'Continuar cadastro',
+              onClick: () => navigate('/cadastro'),
+            },
+            duration: 8000,
+          }
+        );
+        return;
+      }
+      const uiError = resolveUiError(error, 'Credenciais inválidas.');
       toast.error(uiError.message);
     } finally {
       setIsLoading(false);
@@ -169,43 +197,64 @@ export default function Login() {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-card p-4">
-      <div className="w-full max-w-md">
-        <div className="flex items-center justify-center gap-2 mb-6 sm:mb-8">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-xl flex items-center justify-center">
-            <Scissors className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Azzo</h1>
-            <p className="text-xs sm:text-sm text-primary font-medium -mt-1">Agenda Pro</p>
+    <div className="auth-shell flex items-center justify-center">
+      <div className="absolute right-3 top-3 z-20">
+        <ThemeToggle className="theme-toggle-shell h-8 w-8" />
+      </div>
+      <div className="relative z-10 w-full max-w-md">
+        <div className="mb-3 space-y-1.5 text-center">
+          <BrandLockup className="justify-center" caption="Operating System" />
+          <div className="flex flex-wrap items-center justify-center gap-1.5">
+            <span className="rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-medium tracking-wide text-primary">
+              Acesso único
+            </span>
+            <span className="rounded-full border border-border/70 bg-background/80 px-2.5 py-0.5 text-[10px] font-medium tracking-wide text-muted-foreground">
+              Sessão protegida
+            </span>
+            <span className="rounded-full border border-border/70 bg-background/80 px-2.5 py-0.5 text-[10px] font-medium tracking-wide text-muted-foreground">
+              Retomada rápida
+            </span>
           </div>
         </div>
 
-        <Card className="shadow-xl border-0">
-          <CardHeader className="text-center pb-2 sm:pb-4">
-            <CardTitle className="text-xl sm:text-2xl">Bem-vindo de volta!</CardTitle>
-            <CardDescription className="text-sm">Entre na sua conta para continuar</CardDescription>
+        <Card className="auth-panel border-border/80">
+          <CardHeader className="text-center pb-1 pt-4">
+            <CardTitle className="text-xl font-semibold tracking-tight">
+              Bem-vindo de volta!
+            </CardTitle>
+            <CardDescription className="text-xs leading-5">
+              Acesse sua operação sem perder contexto e retome de onde parou.
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={onSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm">E-mail</Label>
+          <CardContent className="pt-2">
+            <form onSubmit={onSubmit} className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-xs">E-mail</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="seu@email.com"
+                  autoComplete="username"
+                  autoFocus
                   {...form.register('email')}
                   disabled={isLoading}
-                  className="h-10 sm:h-11"
+                  className="h-9"
+                  aria-invalid={Boolean(errors.email)}
+                  aria-describedby={errors.email ? 'login-email-error' : undefined}
                 />
+                {errors.email ? (
+                  <p id="login-email-error" className="text-xs text-destructive" aria-live="polite">
+                    {errors.email.message}
+                  </p>
+                ) : null}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-sm">Senha</Label>
+                  <Label htmlFor="password" className="text-xs">Senha</Label>
                   <Link
                     to="/recuperar-senha"
-                    className="text-xs sm:text-sm text-primary hover:opacity-90"
+                    className="text-xs text-primary hover:opacity-90"
                   >
                     Esqueceu a senha?
                   </Link>
@@ -215,9 +264,12 @@ export default function Login() {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="........"
+                    autoComplete="current-password"
                     {...form.register('password')}
                     disabled={isLoading}
-                    className="h-10 sm:h-11 pr-10"
+                    className="h-9 pr-10"
+                    aria-invalid={Boolean(errors.password)}
+                    aria-describedby={errors.password ? 'login-password-error' : undefined}
                   />
                   <Button
                     type="button"
@@ -225,6 +277,7 @@ export default function Login() {
                     size="icon"
                     className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                   >
                     {showPassword ? (
                       <EyeOff className="w-4 h-4 text-muted-foreground" />
@@ -233,17 +286,36 @@ export default function Login() {
                     )}
                   </Button>
                 </div>
+                {errors.password ? (
+                  <p id="login-password-error" className="text-xs text-destructive" aria-live="polite">
+                    {errors.password.message}
+                  </p>
+                ) : null}
               </div>
 
               {mfaRequired ? (
                 <div className="space-y-2">
-                  <Label htmlFor="mfaCode" className="text-sm">Codigo MFA (6 digitos)</Label>
+                  <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3">
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-xl bg-primary/10 p-2 text-primary">
+                        <Sparkles className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Verificação adicional necessária</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Digite o código do aplicativo autenticador para concluir o acesso com segurança.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <Label htmlFor="mfaCode" className="text-sm">Código MFA (6 dígitos)</Label>
                   <Input
                     id="mfaCode"
                     type="text"
                     inputMode="numeric"
                     maxLength={6}
                     placeholder="000000"
+                    autoComplete="one-time-code"
                     {...form.register('mfaCode', {
                       onChange: (event) => {
                         const target = event.target as HTMLInputElement;
@@ -251,8 +323,15 @@ export default function Login() {
                       },
                     })}
                     disabled={isLoading}
-                    className="h-10 sm:h-11"
+                    className="h-9"
+                    aria-invalid={Boolean(errors.mfaCode)}
+                    aria-describedby={errors.mfaCode ? 'login-mfa-error' : undefined}
                   />
+                  {errors.mfaCode ? (
+                    <p id="login-mfa-error" className="text-xs text-destructive" aria-live="polite">
+                      {errors.mfaCode.message}
+                    </p>
+                  ) : null}
                 </div>
               ) : null}
 
@@ -263,14 +342,14 @@ export default function Login() {
                   onCheckedChange={(checked) => setRememberPassword(Boolean(checked))}
                   disabled={isLoading}
                 />
-                <Label htmlFor="rememberPassword" className="text-sm text-muted-foreground">
-                  Salvar senha neste dispositivo
+                <Label htmlFor="rememberPassword" className="text-xs text-muted-foreground">
+                  Salvar e-mail neste dispositivo
                 </Label>
               </div>
 
               <Button
                 type="submit"
-                className="w-full h-10 sm:h-11"
+                className="h-9 w-full"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -284,8 +363,8 @@ export default function Login() {
               </Button>
             </form>
 
-            <p className="text-center text-xs sm:text-sm text-muted-foreground mt-4 sm:mt-6">
-              Nao tem uma conta?{' '}
+            <p className="text-center text-xs text-muted-foreground mt-3">
+              Não tem uma conta?{' '}
               <Link to="/cadastro" className="text-primary hover:opacity-90 font-medium">
                 Cadastre-se gratis
               </Link>
@@ -293,11 +372,11 @@ export default function Login() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground mt-4 sm:mt-6">
-          Ao entrar, voce concorda com nossos{' '}
+        <p className="mt-2 text-center text-xs text-muted-foreground">
+          Ao entrar, você concorda com nossos{' '}
           <Link to="/termos-de-uso" className="text-primary hover:underline">Termos de Uso</Link>
           {' '}e{' '}
-          <Link to="/politica-privacidade" className="text-primary hover:underline">Politica de Privacidade</Link>
+          <Link to="/politica-privacidade" className="text-primary hover:underline">Política de Privacidade</Link>
         </p>
       </div>
     </div>

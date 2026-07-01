@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Loader2, MessageCircle } from 'lucide-react';
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogHeader, DialogSection, DialogStickyFooter, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +17,9 @@ type ClientUpsertPayload = {
   phone: string;
   birthDate?: string;
   notes?: string;
+  cpfCnpj?: string;
+  clientType?: 'PF' | 'PJ';
+  whatsAppOptIn?: boolean;
   address: {
     zipCode?: string;
     street?: string;
@@ -58,7 +61,10 @@ export function ClientUpsertDialog({
   const [formEmail, setFormEmail] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formBirthDate, setFormBirthDate] = useState('');
+  const [formWhatsAppOptIn, setFormWhatsAppOptIn] = useState(false);
   const [formNotes, setFormNotes] = useState('');
+  const [formCpfCnpj, setFormCpfCnpj] = useState('');
+  const [formClientType, setFormClientType] = useState<'PF' | 'PJ'>('PF');
   const [formZipCode, setFormZipCode] = useState('');
   const [formStreet, setFormStreet] = useState('');
   const [formNumber, setFormNumber] = useState('');
@@ -72,7 +78,10 @@ export function ClientUpsertDialog({
     setFormEmail('');
     setFormPhone('');
     setFormBirthDate('');
+    setFormWhatsAppOptIn(false);
     setFormNotes('');
+    setFormCpfCnpj('');
+    setFormClientType('PF');
     setFormZipCode('');
     setFormStreet('');
     setFormNumber('');
@@ -93,7 +102,10 @@ export function ClientUpsertDialog({
     setFormEmail(initialClient?.email || '');
     setFormPhone(initialClient?.phone || '');
     setFormBirthDate((initialClient?.birthDate as string) || '');
+    setFormWhatsAppOptIn(initialClient?.whatsAppOptIn ?? false);
     setFormNotes(initialClient?.notes || '');
+    setFormCpfCnpj(initialClient?.cpfCnpj || '');
+    setFormClientType(initialClient?.clientType || 'PF');
     setFormZipCode(initialClient?.address?.zipCode || '');
     setFormStreet(initialClient?.address?.street || '');
     setFormNumber(initialClient?.address?.number || '');
@@ -148,7 +160,10 @@ export function ClientUpsertDialog({
           email: formEmail || undefined,
           phone: formPhone,
           birthDate: formBirthDate || undefined,
+          whatsAppOptIn: formWhatsAppOptIn,
           notes: formNotes || undefined,
+          cpfCnpj: formCpfCnpj || undefined,
+          clientType: formClientType,
           address: {
             zipCode: formZipCode || undefined,
             street: formStreet || undefined,
@@ -170,132 +185,202 @@ export function ClientUpsertDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md mx-4 sm:mx-auto sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="mx-4 max-h-[85vh] max-w-md overflow-y-auto sm:mx-auto sm:max-w-2xl">
+        <DialogHeader className="border-b border-border/70 pb-4 pr-10">
           <DialogTitle>{initialClient ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
           <DialogDescription>
             {initialClient ? 'Atualize os dados do cliente' : 'Cadastre um novo cliente'}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>Nome Completo *</Label>
-            <Input
-              placeholder="Nome do cliente"
-              value={formName}
-              onChange={(e) => setFormName(e.target.value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Telefone *</Label>
-              <Input
-                placeholder="(11) 99999-0000"
-                value={formPhone}
-                onChange={(e) => setFormPhone(maskPhoneBr(e.target.value))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>E-mail</Label>
-              <Input
-                type="email"
-                placeholder="email@exemplo.com"
-                value={formEmail}
-                onChange={(e) => setFormEmail(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Data de Nascimento</Label>
-            <Input
-              type="date"
-              value={formBirthDate}
-              onChange={(e) => setFormBirthDate(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Observacoes</Label>
-            <Textarea
-              placeholder="Preferencias, alergias, etc."
-              value={formNotes}
-              onChange={(e) => setFormNotes(e.target.value)}
-              rows={2}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>CEP</Label>
-            <Input
-              placeholder="00000-000"
-              value={formZipCode}
-              onChange={(e) => setFormZipCode(formatCep(e.target.value))}
-            />
-            <p className="text-xs text-muted-foreground">
-              {isAddressLoading ? 'Buscando endereco pelo CEP...' : 'Ao informar um CEP valido, o endereco sera sugerido automaticamente.'}
+        <DialogBody>
+          <DialogSection>
+            <p className="text-sm font-medium text-foreground">
+              {initialClient ? 'Revise os dados principais e mantenha o cadastro atualizado.' : 'Comece com os dados essenciais e complemente o endereco se fizer sentido para a operacao.'}
             </p>
-          </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Nome e telefone sao os campos minimos para criar o cadastro e seguir com o historico do cliente.
+            </p>
+          </DialogSection>
 
-          <div className="space-y-2">
-            <Label>Logradouro</Label>
-            <Input
-              placeholder="Rua, avenida..."
-              value={formStreet}
-              onChange={(e) => setFormStreet(e.target.value)}
-            />
-          </div>
+          <DialogSection className="bg-transparent">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Dados principais</p>
+              <p className="text-sm text-muted-foreground">Informacoes basicas para identificar o cliente e manter o relacionamento organizado.</p>
+            </div>
 
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Numero</Label>
+              <Label>Nome Completo *</Label>
               <Input
-                placeholder="123"
-                value={formNumber}
-                onChange={(e) => setFormNumber(e.target.value)}
+                placeholder="Nome do cliente"
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Complemento</Label>
-              <Input
-                placeholder="Apto, sala..."
-                value={formComplement}
-                onChange={(e) => setFormComplement(e.target.value)}
-              />
-            </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label>Bairro</Label>
-            <Input
-              placeholder="Bairro"
-              value={formNeighborhood}
-              onChange={(e) => setFormNeighborhood(e.target.value)}
-            />
-          </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Telefone *</Label>
+                <Input
+                  placeholder="(11) 99999-0000"
+                  value={formPhone}
+                  onChange={(e) => setFormPhone(maskPhoneBr(e.target.value))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>E-mail</Label>
+                <Input
+                  type="email"
+                  placeholder="email@exemplo.com"
+                  value={formEmail}
+                  onChange={(e) => setFormEmail(e.target.value)}
+                />
+              </div>
+            </div>
 
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Cidade</Label>
+              <Label>Data de Nascimento</Label>
               <Input
-                placeholder="Cidade"
-                value={formCity}
-                onChange={(e) => setFormCity(e.target.value)}
+                type="date"
+                value={formBirthDate}
+                onChange={(e) => setFormBirthDate(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Necessario para verificacoes de privacidade.</p>
+            </div>
+
+            <div className="rounded-xl border border-border/70 bg-muted/20 p-4 space-y-2">
+              <div className="flex items-start gap-3">
+                <input
+                  id="whatsapp-opt-in"
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 cursor-pointer rounded border-input accent-primary"
+                  checked={formWhatsAppOptIn}
+                  onChange={(e) => setFormWhatsAppOptIn(e.target.checked)}
+                />
+                <div className="space-y-1">
+                  <label
+                    htmlFor="whatsapp-opt-in"
+                    className="flex cursor-pointer items-center gap-2 text-sm font-medium text-foreground"
+                  >
+                    <MessageCircle className="h-4 w-4 text-emerald-600" />
+                    Aceito receber mensagens automaticas de lembrete de agendamento via WhatsApp
+                  </label>
+                  <p className="text-xs text-muted-foreground">
+                    Voce pode cancelar a qualquer momento respondendo PARE no WhatsApp.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>CPF / CNPJ</Label>
+                <Input
+                  placeholder="000.000.000-00"
+                  value={formCpfCnpj}
+                  onChange={(e) => setFormCpfCnpj(e.target.value.replace(/\D/g, '').slice(0, 14))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Tipo de pessoa</Label>
+                <select
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  value={formClientType}
+                  onChange={(e) => setFormClientType(e.target.value as 'PF' | 'PJ')}
+                >
+                  <option value="PF">Pessoa Fisica (PF)</option>
+                  <option value="PJ">Pessoa Juridica (PJ)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Observacoes</Label>
+              <Textarea
+                placeholder="Preferencias, alergias, etc."
+                value={formNotes}
+                onChange={(e) => setFormNotes(e.target.value)}
+                rows={3}
               />
             </div>
+          </DialogSection>
+
+          <DialogSection className="bg-transparent">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Endereco</p>
+              <p className="text-sm text-muted-foreground">Opcional, mas util para operacao, segmentacao e contexto de atendimento.</p>
+            </div>
+
             <div className="space-y-2">
-              <Label>UF</Label>
+              <Label>CEP</Label>
               <Input
-                placeholder="SP"
-                value={formState}
-                onChange={(e) => setFormState(e.target.value.toUpperCase())}
-                maxLength={2}
+                placeholder="00000-000"
+                value={formZipCode}
+                onChange={(e) => setFormZipCode(formatCep(e.target.value))}
+              />
+              <p className="text-xs text-muted-foreground">
+                {isAddressLoading ? 'Buscando endereco pelo CEP...' : 'Ao informar um CEP valido, o endereco sera sugerido automaticamente.'}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Logradouro</Label>
+              <Input
+                placeholder="Rua, avenida..."
+                value={formStreet}
+                onChange={(e) => setFormStreet(e.target.value)}
               />
             </div>
-          </div>
-        </div>
-        <DialogFooter>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Numero</Label>
+                <Input
+                  placeholder="123"
+                  value={formNumber}
+                  onChange={(e) => setFormNumber(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Complemento</Label>
+                <Input
+                  placeholder="Apto, sala..."
+                  value={formComplement}
+                  onChange={(e) => setFormComplement(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Bairro</Label>
+              <Input
+                placeholder="Bairro"
+                value={formNeighborhood}
+                onChange={(e) => setFormNeighborhood(e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Cidade</Label>
+                <Input
+                  placeholder="Cidade"
+                  value={formCity}
+                  onChange={(e) => setFormCity(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>UF</Label>
+                <Input
+                  placeholder="SP"
+                  value={formState}
+                  onChange={(e) => setFormState(e.target.value.toUpperCase())}
+                  maxLength={2}
+                />
+              </div>
+            </div>
+          </DialogSection>
+        </DialogBody>
+        <DialogStickyFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
@@ -306,10 +391,10 @@ export function ClientUpsertDialog({
                 {initialClient ? 'Salvando...' : 'Cadastrando...'}
               </>
             ) : (
-              initialClient ? 'Salvar' : 'Cadastrar'
+              initialClient ? 'Salvar cliente' : 'Criar cliente'
             )}
           </Button>
-        </DialogFooter>
+        </DialogStickyFooter>
       </DialogContent>
     </Dialog>
   );

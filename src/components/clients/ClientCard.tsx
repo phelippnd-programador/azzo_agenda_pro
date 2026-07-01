@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { resolveApiMediaUrl } from "@/lib/api";
 import { maskPhoneBr } from "@/lib/input-masks";
+import { maskEmail } from "@/lib/mask";
 import { formatCurrency } from "@/lib/format";
 import { Calendar, DollarSign, Mail, MoreVertical, Phone } from "lucide-react";
 import type { Client } from "@/lib/api";
@@ -18,16 +19,18 @@ type ClientCardProps = {
   onOpenProfile: (clientId: string) => void;
   onEdit: (client: Client) => void;
   onDelete: (clientId: string) => void;
+  canDelete?: boolean;
 };
 
-export function ClientCard({ client, onOpenProfile, onEdit, onDelete }: ClientCardProps) {
+export function ClientCard({ client, onOpenProfile, onEdit, onDelete, canDelete = true }: ClientCardProps) {
   const avatarSrc = resolveApiMediaUrl(client.avatarUrl);
+  const hasContact = Boolean(client.email || client.phone);
 
   return (
     <Card
       role="button"
       tabIndex={0}
-      className="hover:shadow-md transition-shadow cursor-pointer"
+      className="cursor-pointer border-border/70 bg-card/95 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_14px_30px_-24px_rgba(15,23,42,0.18)]"
       onClick={() => onOpenProfile(client.id)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -59,6 +62,7 @@ export function ClientCard({ client, onOpenProfile, onEdit, onDelete }: ClientCa
                 size="icon"
                 className="h-8 w-8 flex-shrink-0"
                 onClick={(event) => event.stopPropagation()}
+                aria-label={`Abrir acoes de ${client.name}`}
               >
                 <MoreVertical className="w-4 h-4" />
               </Button>
@@ -66,24 +70,31 @@ export function ClientCard({ client, onOpenProfile, onEdit, onDelete }: ClientCa
             <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
               <DropdownMenuItem onClick={() => onEdit(client)}>Editar</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onOpenProfile(client.id)}>Ver perfil</DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600" onClick={() => onDelete(client.id)}>
-                Excluir
-              </DropdownMenuItem>
+              {canDelete && (
+                <DropdownMenuItem className="text-red-600" onClick={() => onDelete(client.id)}>
+                  Excluir
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
 
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Phone className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-            <span className="text-xs sm:text-sm">{maskPhoneBr(client.phone, false)}</span>
-          </div>
-          {client.email && (
+        <div className="mb-4 rounded-xl border border-border/60 bg-muted/25 p-3">
+          <div className="space-y-2">
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Mail className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="text-xs sm:text-sm truncate">{client.email}</span>
+              <Phone className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="text-xs sm:text-sm">{maskPhoneBr(client.phone, false)}</span>
             </div>
-          )}
+            {client.email && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Mail className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="text-xs sm:text-sm truncate">{maskEmail(client.email)}</span>
+              </div>
+            )}
+            {!hasContact ? (
+              <p className="text-xs text-muted-foreground">Contato ainda nao informado.</p>
+            ) : null}
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border">

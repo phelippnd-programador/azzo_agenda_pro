@@ -69,7 +69,7 @@ describe("StockSettingsPage", () => {
 
     expect(await screen.findByText("Configuracoes de estoque")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("checkbox", { name: "Ativar alerta de estoque minimo" }));
+    await user.click(screen.getByRole("checkbox", { name: /Ativar alerta de estoque minimo/i }));
     const input = screen.getByRole("spinbutton");
     await user.clear(input);
     await user.type(input, "20");

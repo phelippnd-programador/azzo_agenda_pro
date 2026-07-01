@@ -71,10 +71,30 @@ export const ACTION_META: Record<string, AuditUiMeta> = {
   APPOINTMENT_DELETE: { label: "Agendamento removido", description: "Um agendamento foi removido." },
   LGPD_REQUEST_CREATE: { label: "Solicitacao LGPD criada", description: "Nova solicitacao de titular registrada." },
   LGPD_REQUEST_STATUS_UPDATE: { label: "Status LGPD atualizado", description: "Atualizacao de status de solicitacao LGPD." },
+  WHATSAPP_CONFIG_UPDATE: { label: "Config WhatsApp salva", description: "Configuracao do WhatsApp foi atualizada." },
+  WHATSAPP_CONNECTION_TEST: { label: "Teste de conexao WhatsApp", description: "Conexao com a API do WhatsApp foi testada." },
+  WHATSAPP_TEST_MESSAGE: { label: "Mensagem de teste WhatsApp", description: "Mensagem de teste enviada via WhatsApp." },
+  WHATSAPP_EMBEDDED_SIGNUP_COMPLETE: { label: "Embedded Signup concluido", description: "Onboarding via Meta Embedded Signup foi concluido." },
+  INVENTORY_MOVEMENT_CREATE: { label: "Movimentacao de estoque", description: "Nova entrada ou saida de estoque registrada." },
+  INVENTORY_ADJUSTMENT: { label: "Ajuste de estoque", description: "Ajuste manual no estoque realizado." },
+  CHAT_MESSAGE_SEND: { label: "Mensagem de chat enviada", description: "Mensagem enviada no chat." },
+  APPOINTMENT_STATUS_UPDATE: { label: "Status do agendamento alterado", description: "Status de um agendamento foi atualizado." },
 };
 
 export const MODULE_META: Record<string, string> = {
   RBAC: "Permissoes de acesso",
+  FISCAL: "Fiscal",
+  FINANCE: "Financeiro",
+  AUTH: "Autenticacao",
+  APPOINTMENT: "Agendamentos",
+  CUSTOMER: "Clientes",
+  PROFESSIONAL: "Profissionais",
+  INVENTORY: "Estoque",
+  LGPD: "LGPD",
+  CHAT: "Chat",
+  WHATSAPP: "WhatsApp",
+  TENANT: "Configuracoes",
+  SYSTEM: "Sistema",
 };
 
 export const ENTITY_META: Record<string, AuditUiMeta> = {

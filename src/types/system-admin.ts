@@ -75,7 +75,7 @@ export interface SystemPlanItem {
   name: string;
   description?: string | null;
   currency: string;
-  priceCents: number;
+  price: number;
   validityMonths: number;
   validityDays?: number | null;
   highlight?: string | null;
@@ -96,7 +96,7 @@ export interface SystemPlanUpsertRequest {
   name: string;
   description?: string | null;
   currency: string;
-  priceCents: number;
+  price: number;
   validityMonths: number;
   validityDays?: number | null;
   highlight?: string | null;
@@ -124,8 +124,8 @@ export interface CommercialOverview {
   expiredTenants: number;
   suspendedTenants: number;
   conversionRatePercent: number;
-  revenueReceived30dCents: number;
-  pendingAmountCents: number;
+  revenueReceived30d: number;
+  pendingAmount: number;
   tenantsByPlanStatus: Array<{
     planStatus: string;
     count: number;

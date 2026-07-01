@@ -13,9 +13,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileDropzone } from "@/components/ui/file-dropzone";
 import { ClientAppointmentDetailSheet } from "@/components/clients/ClientAppointmentDetailSheet";
 import { formatStatusLabel } from "@/components/clients/AppointmentTimelineCard";
-import { appointmentsApi, clientsApi, resolveApiMediaUrl, servicesApi, type Client, type Service } from "@/lib/api";
+import {
+  appointmentsApi,
+  clientsApi,
+  resolveApiMediaUrl,
+  servicesApi,
+  type Client,
+  type Service,
+} from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import { formatCurrency, formatDateOnly, formatDateTime } from "@/lib/format";
+import { maskEmail, maskPhone, maskCpfCnpj } from "@/lib/mask";
 import { prepareImageUpload } from "@/lib/image-upload";
 import { toast } from "sonner";
 import type {
@@ -47,23 +55,27 @@ export default function ClientProfile() {
 
   useEffect(() => {
     let mounted = true;
+
     const load = async () => {
       if (!id) {
         setError("Cliente nao informado.");
         setIsLoading(false);
         return;
       }
+
       try {
         setIsLoading(true);
         const [data, servicesResponse] = await Promise.all([
           clientsApi.getById(id),
           servicesApi.getAll({ limit: 200 }),
         ]);
+
         if (!mounted) return;
         if (!data) {
           setError("Cliente nao encontrado.");
           return;
         }
+
         setClient(data);
         setServices(Array.isArray(servicesResponse) ? servicesResponse : servicesResponse.items || []);
         setError(null);
@@ -104,6 +116,7 @@ export default function ClientProfile() {
           to: historyTo || undefined,
           serviceId: historyServiceId !== "all" ? historyServiceId : undefined,
         });
+
         if (!mounted) return;
         setHistory(historyData);
         setHistoryError(null);
@@ -138,37 +151,6 @@ export default function ClientProfile() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <MainLayout title="Perfil do Cliente" subtitle="Carregando dados...">
-        <div className="space-y-4">
-          <Skeleton className="h-10 w-40" />
-          <Skeleton className="h-52 w-full" />
-        </div>
-      </MainLayout>
-    );
-  }
-
-  if (error || !client) {
-    return (
-      <MainLayout title="Perfil do Cliente" subtitle="Detalhes do cliente">
-        <PageErrorState
-          title="Nao foi possivel carregar o cliente"
-          description={error || "Cliente nao encontrado."}
-          action={{ label: "Voltar para clientes", onClick: () => navigate("/clientes") }}
-        />
-      </MainLayout>
-    );
-  }
-
-  const hasActiveHistoryFilters = Boolean(historyFrom || historyTo || historyServiceId !== "all");
-  const topServicesRankingItems = (client.topServices || []).map((service) => ({
-    id: service.serviceId,
-    name: service.serviceName,
-    value: service.completedServices,
-    badgeText: `${service.completedServices}x`,
-    metaText: `${formatCurrency(service.revenueTotal)} - ultima: ${service.lastAppointmentDate ? formatDateOnly(service.lastAppointmentDate) : "-"}`,
-  }));
   const handleAvatarUpload = async (file: File) => {
     if (!client) return;
     setIsAvatarUploading(true);
@@ -198,18 +180,52 @@ export default function ClientProfile() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <MainLayout title="Perfil do Cliente" subtitle="Carregando dados...">
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-40" />
+          <Skeleton className="h-52 w-full" />
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error || !client) {
+    return (
+      <MainLayout title="Perfil do Cliente" subtitle="Detalhes do cliente">
+        <PageErrorState
+          title="Nao foi possivel carregar o cliente"
+          description={error || "Cliente nao encontrado."}
+          action={{ label: "Voltar para clientes", onClick: () => navigate("/clientes") }}
+        />
+      </MainLayout>
+    );
+  }
+
+  const hasActiveHistoryFilters = Boolean(historyFrom || historyTo || historyServiceId !== "all");
+  const topServicesRankingItems = (client.topServices || []).map((service) => ({
+    id: service.serviceId,
+    name: service.serviceName,
+    value: service.completedServices,
+    badgeText: `${service.completedServices}x`,
+    metaText: `${formatCurrency(service.revenueTotal)} - ultima: ${
+      service.lastAppointmentDate ? formatDateOnly(service.lastAppointmentDate) : "-"
+    }`,
+  }));
+
   return (
     <MainLayout title="Perfil do Cliente" subtitle={client.name}>
       <div className="space-y-4 sm:space-y-6">
         <Button variant="outline" onClick={() => navigate("/clientes")} className="gap-2">
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="h-4 w-4" />
           Voltar
         </Button>
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <User className="w-5 h-5 text-primary" />
+              <User className="h-5 w-5 text-primary" />
               {client.name}
             </CardTitle>
           </CardHeader>
@@ -233,25 +249,26 @@ export default function ClientProfile() {
                 variant="avatar"
                 className="shrink-0"
               />
+
               <div className="grid flex-1 gap-3 sm:grid-cols-2">
-                <p className="text-sm">
+                <p className="min-w-0 text-sm">
                   <span className="font-medium">Telefone:</span>{" "}
-                  <span className="inline-flex items-center gap-1">
-                    <Phone className="w-3.5 h-3.5 text-muted-foreground" />
-                    {client.phone || "-"}
+                  <span className="inline-flex min-w-0 items-center gap-1 break-all">
+                    <Phone className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    {maskPhone(client.phone)}
                   </span>
                 </p>
-                <p className="text-sm">
+                <p className="min-w-0 text-sm">
                   <span className="font-medium">E-mail:</span>{" "}
-                  <span className="inline-flex items-center gap-1">
-                    <Mail className="w-3.5 h-3.5 text-muted-foreground" />
-                    {client.email || "-"}
+                  <span className="inline-flex min-w-0 items-center gap-1 break-all">
+                    <Mail className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    {maskEmail(client.email)}
                   </span>
                 </p>
                 <p className="text-sm">
                   <span className="font-medium">Ultima visita:</span>{" "}
                   <span className="inline-flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                    <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                     {client.lastVisit ? formatDateOnly(client.lastVisit) : "Nunca"}
                   </span>
                 </p>
@@ -261,9 +278,15 @@ export default function ClientProfile() {
                 <p className="text-sm">
                   <span className="font-medium">Total gasto:</span> {formatCurrency(client.totalSpent)}
                 </p>
-                <p className="text-sm">
+                <p className="min-w-0 text-sm">
                   <span className="font-medium">Observacoes:</span> {client.notes || "-"}
                 </p>
+                {client.cpfCnpj && (
+                  <p className="min-w-0 text-sm">
+                    <span className="font-medium">{client.clientType === "PJ" ? "CNPJ:" : "CPF:"}</span>{" "}
+                    {maskCpfCnpj(client.cpfCnpj, client.clientType)}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -272,7 +295,7 @@ export default function ClientProfile() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-primary" />
+              <MapPin className="h-5 w-5 text-primary" />
               Endereco
             </CardTitle>
           </CardHeader>
@@ -344,6 +367,7 @@ export default function ClientProfile() {
               </div>
             </div>
           </CardHeader>
+
           <CardContent className="space-y-4">
             {isHistoryLoading ? (
               <div className="space-y-3">
@@ -352,51 +376,61 @@ export default function ClientProfile() {
               </div>
             ) : historyError ? (
               <p className="text-sm text-destructive">{historyError}</p>
-            ) : history?.items?.length ? history.items.map((item) => (
-              <div key={item.appointmentId} className="rounded-lg border p-4 space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="font-medium">
-                      {formatDateOnly(item.date)} - {item.professionalName || "Profissional nao identificado"}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {item.services.map((service) => service.service?.name).filter(Boolean).join(", ") || "Sem servicos vinculados"}
-                    </p>
+            ) : history?.items?.length ? (
+              history.items.map((item) => (
+                <div key={item.appointmentId} className="space-y-3 rounded-lg border p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="font-medium">
+                        {formatDateOnly(item.date)} - {item.professionalName || "Profissional nao identificado"}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {item.services.map((service) => service.service?.name).filter(Boolean).join(", ") || "Sem servicos vinculados"}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="outline">{formatStatusLabel(item.status)}</Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void handleOpenAppointmentDetail(item.appointmentId)}
+                        disabled={isDetailLoading && selectedAppointmentId === item.appointmentId}
+                        aria-label={`Detalhe do atendimento em ${formatDateOnly(item.date)}`}
+                      >
+                        Detalhe
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{formatStatusLabel(item.status)}</Badge>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => void handleOpenAppointmentDetail(item.appointmentId)}
-                      disabled={isDetailLoading && selectedAppointmentId === item.appointmentId}
-                      aria-label={`Detalhe do atendimento em ${formatDateOnly(item.date)}`}
-                    >
-                      Detalhe
-                    </Button>
-                  </div>
+
+                  {item.notes ? (
+                    <p className="text-sm text-muted-foreground">{item.notes}</p>
+                  ) : null}
+
+                  {item.careNotes?.length ? (
+                    <div className="space-y-2">
+                      {item.careNotes.map((note) => (
+                        <div key={note.noteId} className="rounded-md bg-muted/40 p-3 text-sm">
+                          <p className="font-medium">
+                            Registro de atendimento em {formatDateTime(note.recordedAt)}
+                          </p>
+                          {note.serviceExecutionNotes ? (
+                            <p className="text-muted-foreground">Execucao: {note.serviceExecutionNotes}</p>
+                          ) : null}
+                          {note.clientFeedbackNotes ? (
+                            <p className="text-muted-foreground">Feedback: {note.clientFeedbackNotes}</p>
+                          ) : null}
+                          {note.internalFollowupNotes ? (
+                            <p className="text-muted-foreground">Proximo passo: {note.internalFollowupNotes}</p>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Sem notas operacionais registradas.</p>
+                  )}
                 </div>
-                {item.notes ? (
-                  <p className="text-sm text-muted-foreground">{item.notes}</p>
-                ) : null}
-                {item.careNotes?.length ? (
-                  <div className="space-y-2">
-                    {item.careNotes.map((note) => (
-                      <div key={note.noteId} className="rounded-md bg-muted/40 p-3 text-sm">
-                        <p className="font-medium">
-                          Registro de atendimento em {formatDateTime(note.recordedAt)}
-                        </p>
-                        {note.serviceExecutionNotes ? <p className="text-muted-foreground">Execucao: {note.serviceExecutionNotes}</p> : null}
-                        {note.clientFeedbackNotes ? <p className="text-muted-foreground">Feedback: {note.clientFeedbackNotes}</p> : null}
-                        {note.internalFollowupNotes ? <p className="text-muted-foreground">Proximo passo: {note.internalFollowupNotes}</p> : null}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Sem notas operacionais registradas.</p>
-                )}
-              </div>
-            )) : (
+              ))
+            ) : (
               <p className="text-sm text-muted-foreground">Nenhum atendimento encontrado para este cliente.</p>
             )}
           </CardContent>

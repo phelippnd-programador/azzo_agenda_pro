@@ -77,10 +77,10 @@ const presetOptions: Array<{ value: PeriodPreset; label: string }> = [
 ];
 
 const severityClassMap: Record<string, string> = {
-  critical: "border-red-200 bg-red-50 text-red-800",
-  warning: "border-amber-200 bg-amber-50 text-amber-800",
-  info: "border-sky-200 bg-sky-50 text-sky-800",
-  opportunity: "border-emerald-200 bg-emerald-50 text-emerald-800",
+  critical: "border-red-200 bg-red-50 text-red-800 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-300",
+  warning: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-300",
+  info: "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-500/25 dark:bg-sky-500/10 dark:text-sky-300",
+  opportunity: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300",
 };
 
 const originLabelMap: Record<string, string> = {
@@ -116,6 +116,8 @@ export default function AppointmentManagementReport() {
   const [isExporting, setIsExporting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
+  const PAGE_SIZE = 50;
 
   useEffect(() => {
     let cancelled = false;
@@ -156,7 +158,8 @@ export default function AppointmentManagementReport() {
           professionalId: activeFilters.professionalId,
           serviceId: activeFilters.serviceId,
           status: activeFilters.status,
-          limit: 100,
+          page: currentPage,
+          pageSize: PAGE_SIZE,
         });
         if (!cancelled) setReport(response);
       } catch (error) {
@@ -176,7 +179,7 @@ export default function AppointmentManagementReport() {
     return () => {
       cancelled = true;
     };
-  }, [activeFilters, reloadToken]);
+  }, [activeFilters, reloadToken, currentPage]);
 
   const selectedProfessionalLabel = useMemo(() => {
     if (activeFilters.professionalId === "all") return "Todos os profissionais";
@@ -215,6 +218,7 @@ export default function AppointmentManagementReport() {
   };
 
   const applyFilters = () => {
+    setCurrentPage(0);
     setActiveFilters({
       periodPreset: periodPresetInput,
       from: fromInput,
@@ -233,6 +237,7 @@ export default function AppointmentManagementReport() {
     setProfessionalIdInput("all");
     setServiceIdInput("all");
     setStatusInput("all");
+    setCurrentPage(0);
     setActiveFilters({
       periodPreset: "MONTH",
       from: range.from,
@@ -279,10 +284,24 @@ export default function AppointmentManagementReport() {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Filtros</CardTitle>
-            <CardDescription>
-              Use periodo rapido, profissional, servico e status para consolidar o relatorio.
-            </CardDescription>
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <CardTitle>Filtros e acoes</CardTitle>
+                <CardDescription>
+                  Use periodo rapido, profissional, servico e status para consolidar o relatorio.
+                </CardDescription>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button variant="outline" className="w-full sm:w-auto" onClick={() => setReloadToken((prev) => prev + 1)} disabled={isLoading}>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Atualizar
+                </Button>
+                <Button variant="outline" className="w-full sm:w-auto" onClick={handleExport} disabled={isExporting}>
+                  <Download className="mr-2 h-4 w-4" />
+                  {isExporting ? "Exportando..." : "Baixar CSV"}
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
@@ -372,21 +391,13 @@ export default function AppointmentManagementReport() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <Button onClick={applyFilters}>
                 <Filter className="mr-2 h-4 w-4" />
                 Aplicar filtros
               </Button>
               <Button variant="outline" onClick={clearFilters}>
                 Limpar filtros
-              </Button>
-              <Button variant="outline" onClick={() => setReloadToken((prev) => prev + 1)} disabled={isLoading}>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Atualizar
-              </Button>
-              <Button variant="outline" onClick={handleExport} disabled={isExporting}>
-                <Download className="mr-2 h-4 w-4" />
-                {isExporting ? "Exportando..." : "Baixar CSV"}
               </Button>
             </div>
           </CardContent>
@@ -499,10 +510,10 @@ export default function AppointmentManagementReport() {
               <div>
                 <CardTitle>Tabela de agendamentos</CardTitle>
                 <CardDescription>
-                  {selectedProfessionalLabel} • {selectedServiceLabel} • {selectedStatusLabel}
+                  {selectedProfessionalLabel} | {selectedServiceLabel} | {selectedStatusLabel}
                 </CardDescription>
               </div>
-              <div className="text-right text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground lg:text-right">
                 <div>
                   {report
                     ? `${report.totalItems} agendamento(s) no periodo ${formatDateOnly(report.startDate || monthRange.from)} a ${formatDateOnly(report.endDate || monthRange.to)}`
@@ -520,8 +531,8 @@ export default function AppointmentManagementReport() {
               </Alert>
             ) : null}
 
-            <div className="rounded-xl border">
-              <Table>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[980px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Data</TableHead>
@@ -559,7 +570,7 @@ export default function AppointmentManagementReport() {
                           </Badge>
                         </TableCell>
                         <TableCell className="align-top">
-                          <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-700">
+                          <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
                             {originLabelMap[item.origin || "NAO_IDENTIFICADA"] || item.origin || "Nao identificado"}
                           </Badge>
                         </TableCell>
@@ -587,6 +598,32 @@ export default function AppointmentManagementReport() {
               </Table>
             </div>
           </CardContent>
+          {(report?.hasMore || currentPage > 0) ? (
+            <div className="flex items-center justify-between border-t px-6 py-3">
+              <p className="text-sm text-muted-foreground">
+                Pagina {currentPage + 1}
+                {report?.hasMore ? " — ha mais resultados" : ""}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === 0 || isLoading}
+                  onClick={() => setCurrentPage((previous) => Math.max(0, previous - 1))}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!report?.hasMore || isLoading}
+                  onClick={() => setCurrentPage((previous) => previous + 1)}
+                >
+                  Proxima
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </Card>
       </div>
     </MainLayout>

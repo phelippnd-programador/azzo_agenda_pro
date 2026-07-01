@@ -98,59 +98,59 @@ export default function StockOverview() {
           title="Abaixo do minimo"
           value={String(summary.itensAbaixoMinimo)}
           icon={ArrowDownCircle}
-          className="bg-gradient-to-br from-red-50 to-rose-50 border-red-200"
-          titleClassName="text-red-700"
-          valueClassName="text-red-800"
-          iconContainerClassName="bg-red-100"
-          iconClassName="text-red-600"
+          className="border-red-200 bg-gradient-to-br from-red-50 to-rose-50 dark:border-red-500/20 dark:from-red-500/10 dark:to-rose-500/5"
+          titleClassName="text-red-700 dark:text-red-300"
+          valueClassName="text-red-800 dark:text-red-100"
+          iconContainerClassName="bg-red-100 dark:bg-red-500/15"
+          iconClassName="text-red-600 dark:text-red-300"
         />
         <HighlightMetricCard
           title="Itens zerados"
           value={String(summary.itensZerados)}
           icon={ArrowDownCircle}
-          className="bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200"
-          titleClassName="text-orange-700"
-          valueClassName="text-orange-800"
-          iconContainerClassName="bg-orange-100"
-          iconClassName="text-orange-600"
+          className="border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 dark:border-orange-500/20 dark:from-orange-500/10 dark:to-amber-500/5"
+          titleClassName="text-orange-700 dark:text-orange-300"
+          valueClassName="text-orange-800 dark:text-orange-100"
+          iconContainerClassName="bg-orange-100 dark:bg-orange-500/15"
+          iconClassName="text-orange-600 dark:text-orange-300"
         />
         <HighlightMetricCard
           title="Movimentacoes"
           value={String(summary.totalMovimentacoes)}
           icon={ArrowUpCircle}
-          className="bg-gradient-to-br from-indigo-50 to-blue-50 border-indigo-200"
-          titleClassName="text-indigo-700"
-          valueClassName="text-indigo-800"
-          iconContainerClassName="bg-indigo-100"
-          iconClassName="text-indigo-600"
+          className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50 dark:border-indigo-500/20 dark:from-indigo-500/10 dark:to-blue-500/5"
+          titleClassName="text-indigo-700 dark:text-indigo-300"
+          valueClassName="text-indigo-800 dark:text-indigo-100"
+          iconContainerClassName="bg-indigo-100 dark:bg-indigo-500/15"
+          iconClassName="text-indigo-600 dark:text-indigo-300"
         />
         <HighlightMetricCard
           title="Valor em estoque"
           value={formatCurrency(dashboard?.valorEstoqueCustoMedio ?? summary.valorEstoque)}
           icon={Scale}
-          className="bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200"
-          titleClassName="text-emerald-700"
-          valueClassName="text-emerald-800"
-          iconContainerClassName="bg-emerald-100"
-          iconClassName="text-emerald-600"
+          className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 dark:border-emerald-500/20 dark:from-emerald-500/10 dark:to-green-500/5"
+          titleClassName="text-emerald-700 dark:text-emerald-300"
+          valueClassName="text-emerald-800 dark:text-emerald-100"
+          iconContainerClassName="bg-emerald-100 dark:bg-emerald-500/15"
+          iconClassName="text-emerald-600 dark:text-emerald-300"
         />
         <HighlightMetricCard
           title="Ruptura"
           value={`${Math.round(Number(dashboard?.rupturaTaxa || 0) * 100)}%`}
           icon={ArrowDownCircle}
-          className="bg-gradient-to-br from-slate-50 to-gray-50 border-slate-200"
-          titleClassName="text-slate-700"
-          valueClassName="text-slate-800"
-          iconContainerClassName="bg-slate-100"
-          iconClassName="text-slate-600"
+          className="border-slate-200 bg-gradient-to-br from-slate-50 to-gray-50 dark:border-slate-700 dark:from-slate-900 dark:to-slate-800/70"
+          titleClassName="text-slate-700 dark:text-slate-300"
+          valueClassName="text-slate-800 dark:text-slate-100"
+          iconContainerClassName="bg-slate-100 dark:bg-slate-800"
+          iconClassName="text-slate-600 dark:text-slate-300"
         />
       </div>
 
-      <Card>
+      <Card className="border-border/80">
         <CardHeader>
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>Ultimas movimentacoes</CardTitle>
-            <div className="text-right">
+            <div className="text-left sm:text-right">
               <p className="text-xs text-muted-foreground">{updatedAt ? `Atualizado em ${formatDateTime(updatedAt)}` : "Sem data de atualizacao"}</p>
               <Badge variant={staleBadgeClass}>{staleText}</Badge>
             </div>
@@ -167,16 +167,16 @@ export default function StockOverview() {
               return (
                 <div
                   key={movement.id}
-                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-muted/40 rounded-xl hover:bg-muted/70 transition-colors"
+                  className="flex flex-col gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 transition-colors hover:bg-muted/35 sm:flex-row sm:items-center sm:gap-4 sm:p-4"
                 >
                   <div
                     className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      isEntrada ? "bg-green-100" : isSaida ? "bg-red-100" : "bg-indigo-100"
+                      isEntrada ? "bg-green-100 dark:bg-green-500/15" : isSaida ? "bg-red-100 dark:bg-red-500/15" : "bg-indigo-100 dark:bg-indigo-500/15"
                     }`}
                   >
                     <Icon
                       className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                        isEntrada ? "text-green-600" : isSaida ? "text-red-600" : "text-indigo-600"
+                        isEntrada ? "text-green-600 dark:text-green-300" : isSaida ? "text-red-600 dark:text-red-300" : "text-indigo-600 dark:text-indigo-300"
                       }`}
                     />
                   </div>
@@ -193,10 +193,10 @@ export default function StockOverview() {
                     </div>
                   </div>
 
-                  <div className="text-right flex-shrink-0">
+                  <div className="w-full flex-shrink-0 text-left sm:w-auto sm:text-right">
                     <p
                       className={`font-semibold text-sm sm:text-base ${
-                        isEntrada ? "text-green-600" : isSaida ? "text-red-600" : "text-indigo-600"
+                        isEntrada ? "text-green-600 dark:text-green-300" : isSaida ? "text-red-600 dark:text-red-300" : "text-indigo-600 dark:text-indigo-300"
                       }`}
                     >
                       {isEntrada ? "+" : isSaida ? "-" : ""}{movement.quantidade}
@@ -213,9 +213,12 @@ export default function StockOverview() {
       </Card>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <Card>
+        <Card className="border-border/80">
           <CardHeader>
             <CardTitle>Saldo por item (top 8)</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Itens com maior saldo atual para leitura rapida da distribuicao do estoque.
+            </p>
           </CardHeader>
           <CardContent>
             {estoqueByItem.length ? (
@@ -235,9 +238,12 @@ export default function StockOverview() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-border/80">
           <CardHeader>
             <CardTitle>Movimentacoes por tipo</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Panorama entre entradas, saidas e ajustes registrados recentemente.
+            </p>
           </CardHeader>
           <CardContent>
             {movementByType.some((item) => item.value > 0) ? (

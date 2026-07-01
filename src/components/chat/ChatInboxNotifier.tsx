@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { chatApi } from "@/lib/api";
+import { chatApi } from "@/lib/api/chat";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMenuPermissions } from "@/contexts/MenuPermissionsContext";
 import type { ChatConversation } from "@/types/chat";
@@ -53,7 +53,7 @@ export function ChatInboxNotifier() {
         const pathname = pathnameRef.current;
         if (isOnChatScreen(pathname)) return;
         const response = await chatApi.listConversations({
-          todayOnly: true,
+          todayOnly: false,
           page: 1,
           pageSize: 100,
         });
@@ -80,7 +80,6 @@ export function ChatInboxNotifier() {
           seenConversationUpdateRef.current.set(conversation.id, stamp);
           if (!isNewer) return;
           if (openConversationId === conversation.id) return;
-          if (!conversation.manualModeEnabled) return;
 
           const dedupeKey = `${conversation.id}:${stamp}`;
           if (shownNotificationsRef.current.has(dedupeKey)) return;
@@ -88,8 +87,11 @@ export function ChatInboxNotifier() {
 
           const clientName = conversation.clientName?.trim() || "Cliente";
           const preview = conversation.lastMessagePreview?.trim() || "Nova mensagem recebida.";
-          toast("Nova mensagem no chat (modo manual)", {
-            id: `chat-manual-${conversation.id}`,
+          const title = conversation.manualModeEnabled
+            ? "Nova mensagem no chat (modo manual)"
+            : "Nova mensagem no chat";
+          toast(title, {
+            id: `chat-inbox-${conversation.id}`,
             description: `${clientName}: ${preview}`,
             action: {
               label: "Abrir conversa",

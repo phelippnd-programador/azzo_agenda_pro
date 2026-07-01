@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { nfseApi, type NfseInvoice } from "@/lib/api";
+import { formatCurrency } from "@/lib/format";
 import {
   requiresFiscalTaxConfiguration,
   requiresNfseConfiguration,
@@ -62,7 +63,7 @@ export default function NfseInvoiceDetails() {
             <p><strong>Numero NFS-e:</strong> {invoice?.numeroNfse || "--"}</p>
             <p><strong>RPS:</strong> {invoice?.numeroRps || "--"}</p>
             <p><strong>Tomador:</strong> {invoice?.customer?.name || "--"}</p>
-            <p><strong>Valor:</strong> R$ {(invoice?.valorServicos || 0).toFixed(2)}</p>
+            <p><strong>Valor:</strong> {formatCurrency(invoice?.valorServicos || 0)}</p>
             <div className="flex flex-wrap gap-2 pt-2">
               {invoice?.fiscalStatus === "DRAFT" && (
                 <Button asChild variant="outline" size="sm">

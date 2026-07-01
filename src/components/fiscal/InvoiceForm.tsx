@@ -1,9 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+
+const NfseInvoiceFormEmbed = lazy(() =>
+  import('@/components/fiscal/NfseInvoiceFormEmbed').then((m) => ({
+    default: m.NfseInvoiceFormEmbed,
+  })),
+);
 import { formatCurrency } from '@/lib/format';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { CnpjAutoFillField } from '@/components/shared/CnpjAutoFillField';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -15,22 +22,27 @@ import {
 import { Plus, Trash2, AlertCircle } from 'lucide-react';
 import { InvoiceFormData, InvoiceItem, InvoiceCustomer } from '@/types/invoice';
 import { CFOP_CODES, CSOSN_CODES, CST_CODES, TaxRegime } from '@/types/fiscal';
+import type { CnpjConsultaResponse } from '@/lib/api/cnpj';
 import { fiscalApi } from '@/lib/api';
 import { maskCpf, maskCnpj, maskPhoneBr } from '@/lib/input-masks';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { toast } from 'sonner';
 
 interface InvoiceFormProps {
   onSubmit: (data: InvoiceFormData, isDraft: boolean) => void;
   initialData?: Partial<InvoiceFormData>;
+  nfseEnabled?: boolean;
+  nfceEnabled?: boolean;
 }
 
-export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
+export function InvoiceForm({ onSubmit, initialData, nfseEnabled = false, nfceEnabled = true }: InvoiceFormProps) {
   const [regime, setRegime] = useState<TaxRegime>(TaxRegime.SIMPLES_NACIONAL);
-  const [type, setType] = useState<'NFE' | 'NFCE'>(initialData?.type || 'NFCE');
+  const [type, setType] = useState<'NFE' | 'NFCE' | 'NFSE'>(initialData?.type || 'NFCE');
   const [operationNature, setOperationNature] = useState(
     initialData?.operationNature || 'Prestacao de servicos'
   );
   const [notes, setNotes] = useState(initialData?.notes || '');
+  const [customerAddressPreview, setCustomerAddressPreview] = useState<string | null>(null);
 
   const [customer, setCustomer] = useState<InvoiceCustomer>(
     initialData?.customer || {
@@ -118,15 +130,47 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
     }));
   };
 
-  const parseUnitPriceInput = (rawValue: string) => {
-    const normalized = rawValue.replace(",", ".").replace(/^0+(?=\d)/, "");
-    return parseFloat(normalized) || 0;
-  };
-
   const normalizeCfop = (value?: string) => (value || "").replace(/\D/g, "");
 
   const calculateTotal = () => {
     return items.reduce((sum, item) => sum + item.totalPrice, 0);
+  };
+
+  const applyCustomerCnpjData = (data: CnpjConsultaResponse) => {
+    setCustomer((prev) => ({
+      ...prev,
+      type: 'CNPJ',
+      document: data.cnpj || prev.document,
+      name: data.razaoSocial || prev.name,
+      email: data.emailSugestao || prev.email,
+      phone: data.telefoneSugestao || prev.phone,
+      address: data.endereco
+        ? {
+            street: data.endereco.logradouro || '',
+            number: data.endereco.numero || '',
+            complement: data.endereco.complemento || undefined,
+            neighborhood: data.endereco.bairro || '',
+            city: data.endereco.municipio || '',
+            state: data.endereco.uf || '',
+            zipCode: data.endereco.cep || '',
+          }
+        : prev.address,
+    }));
+    setCustomerAddressPreview(
+      data.endereco
+        ? [
+            data.endereco.logradouro,
+            data.endereco.numero,
+            data.endereco.complemento,
+            data.endereco.bairro,
+            data.endereco.municipio,
+            data.endereco.uf,
+            data.endereco.cep,
+          ]
+            .filter(Boolean)
+            .join(', ')
+        : null,
+    );
   };
 
 
@@ -197,16 +241,20 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
           <CardTitle>Tipo de Nota Fiscal</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
+          <div className={`grid gap-4 ${nfseEnabled ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <Button
               variant={type === 'NFCE' ? 'default' : 'outline'}
-              onClick={() => setType('NFCE')}
-              className="h-20"
+              onClick={() => nfceEnabled && setType('NFCE')}
+              disabled={!nfceEnabled}
+              className={`h-20 ${!nfceEnabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+              title={!nfceEnabled ? 'Configure o NFC-e nas configuracoes fiscais para habilitar' : undefined}
             >
               <div className="text-center">
                 <div className="font-bold">NFC-e</div>
                 <div className="text-xs">Modelo 65</div>
-                <div className="text-xs opacity-70">Consumidor Final</div>
+                <div className="text-xs opacity-70">
+                  {nfceEnabled ? 'Consumidor Final' : 'Nao configurado'}
+                </div>
               </div>
             </Button>
             <Button
@@ -220,10 +268,36 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
                 <div className="text-xs opacity-70">Pessoa Juridica</div>
               </div>
             </Button>
+            {nfseEnabled ? (
+              <Button
+                variant={type === 'NFSE' ? 'default' : 'outline'}
+                onClick={() => setType('NFSE')}
+                className="h-20"
+              >
+                <div className="text-center">
+                  <div className="font-bold">NFS-e</div>
+                  <div className="text-xs">Servico</div>
+                  <div className="text-xs opacity-70">Nota Fiscal de Servico</div>
+                </div>
+              </Button>
+            ) : null}
           </div>
         </CardContent>
       </Card>
 
+      {type === 'NFSE' ? (
+        <Suspense
+          fallback={
+            <div className="p-8 text-center text-muted-foreground">Carregando...</div>
+          }
+        >
+          <NfseInvoiceFormEmbed />
+        </Suspense>
+      ) : null}
+
+      {/* Bloco principal NF-e / NFC-e */}
+      {type !== 'NFSE' ? (
+        <>
       {/* Customer Data */}
       <Card>
         <CardHeader>
@@ -235,13 +309,16 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
               <Label>Tipo de Documento</Label>
               <Select
                 value={customer.type}
-                onValueChange={(value: 'CPF' | 'CNPJ') =>
+                onValueChange={(value: 'CPF' | 'CNPJ') => {
+                  if (value !== 'CNPJ') {
+                    setCustomerAddressPreview(null);
+                  }
                   setCustomer((prev) => ({
                     ...prev,
                     type: value,
                     document: value === 'CPF' ? maskCpf(prev.document) : maskCnpj(prev.document),
-                  }))
-                }
+                  }));
+                }}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -253,17 +330,35 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>{customer.type}</Label>
-              <Input
-                placeholder={customer.type === 'CPF' ? '000.000.000-00' : '00.000.000/0000-00'}
-                value={customer.document}
-                onChange={(e) =>
-                  setCustomer({
-                    ...customer,
-                    document: customer.type === 'CPF' ? maskCpf(e.target.value) : maskCnpj(e.target.value),
-                  })
-                }
-              />
+              {customer.type === 'CNPJ' ? (
+                <CnpjAutoFillField
+                  id="invoice-customer-cnpj"
+                  label="CNPJ"
+                  value={customer.document}
+                  onChange={(value) =>
+                    setCustomer((prev) => ({
+                      ...prev,
+                      type: 'CNPJ',
+                      document: value,
+                    }))
+                  }
+                  onDataLoaded={applyCustomerCnpjData}
+                />
+              ) : (
+                <>
+                  <Label>{customer.type}</Label>
+                  <Input
+                    placeholder="000.000.000-00"
+                    value={customer.document}
+                    onChange={(e) =>
+                      setCustomer({
+                        ...customer,
+                        document: maskCpf(e.target.value),
+                      })
+                    }
+                  />
+                </>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Nome/Razao Social</Label>
@@ -274,6 +369,12 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
               />
             </div>
           </div>
+          {customerAddressPreview ? (
+            <div className="rounded-md border bg-muted/30 p-3 text-sm">
+              <p className="font-medium">Endereco sugerido do tomador</p>
+              <p className="text-muted-foreground">{customerAddressPreview}</p>
+            </div>
+          ) : null}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Email (opcional)</Label>
@@ -344,14 +445,9 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
                 </div>
                 <div className="space-y-2">
                   <Label>Valor Unitario *</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={item.unitPrice === 0 ? '' : item.unitPrice}
-                    placeholder="0,00"
-                    onChange={(e) => updateItem(item.id, 'unitPrice', parseUnitPriceInput(e.target.value))}
-                    onFocus={(e) => e.target.select()}
+                  <CurrencyInput
+                    value={item.unitPrice}
+                    onChange={(val) => updateItem(item.id, 'unitPrice', val)}
                   />
                 </div>
               </div>
@@ -474,6 +570,8 @@ export function InvoiceForm({ onSubmit, initialData }: InvoiceFormProps) {
           Emitir Nota Fiscal
         </Button>
       </div>
+        </>
+      ) : null}
     </div>
   );
 }

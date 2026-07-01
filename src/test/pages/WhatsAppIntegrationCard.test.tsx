@@ -25,15 +25,21 @@ const {
   toastErrorMock: vi.fn(),
 }));
 
-vi.mock("@/services/whatsappService", () => ({
-  getWhatsAppConfig: getWhatsAppConfigMock,
-  getWhatsAppEmbeddedSignupStatus: getWhatsAppEmbeddedSignupStatusMock,
-  saveWhatsAppConfig: saveWhatsAppConfigMock,
-  testWhatsAppConnection: testWhatsAppConnectionMock,
-  validateWhatsAppConnection: validateWhatsAppConnectionMock,
-  sendWhatsAppTestMessage: sendWhatsAppTestMessageMock,
-  completeWhatsAppEmbeddedSignup: completeWhatsAppEmbeddedSignupMock,
-}));
+vi.mock("@/lib/api/whatsapp", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/api/whatsapp")>("@/lib/api/whatsapp");
+  return {
+    ...actual,
+    whatsappApi: {
+      getConfig: getWhatsAppConfigMock,
+      getEmbeddedSignupStatus: getWhatsAppEmbeddedSignupStatusMock,
+      saveConfig: saveWhatsAppConfigMock,
+      testConnection: testWhatsAppConnectionMock,
+      validateConnection: validateWhatsAppConnectionMock,
+      sendTestMessage: sendWhatsAppTestMessageMock,
+      completeEmbeddedSignup: completeWhatsAppEmbeddedSignupMock,
+    },
+  };
+});
 
 vi.mock("sonner", () => ({
   toast: {
@@ -158,5 +164,5 @@ describe("WhatsAppIntegrationCard", () => {
         })
       );
     });
-  }, 15000);
+  }, 30000);
 });

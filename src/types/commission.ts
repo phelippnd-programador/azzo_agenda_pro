@@ -15,7 +15,7 @@ export type CommissionRuleRequest = {
   targetId?: string | null;
   targetCode?: string | null;
   percentValue: number;
-  fixedAmountCents: number;
+  fixedAmount: number;
   percentBaseType: CommissionPercentBaseType;
   refundPolicy: CommissionRefundPolicy;
   active?: boolean;
@@ -38,7 +38,7 @@ export type CommissionRuleItemResponse = {
   targetCode?: string | null;
   targetLabel?: string | null;
   percentValue: number;
-  fixedAmountCents: number;
+  fixedAmount: number;
   percentBaseType: CommissionPercentBaseType;
   refundPolicy: CommissionRefundPolicy;
   active: boolean;
@@ -70,11 +70,11 @@ export type CommissionEntryResponse = {
   originId?: string | null;
   originReference?: string | null;
   periodKey: string;
-  baseAmountCents: number;
+  baseAmount: number;
   percentValue: number;
-  percentAmountCents: number;
-  fixedAmountCents: number;
-  totalAmountCents: number;
+  percentAmount: number;
+  fixedAmount: number;
+  totalAmount: number;
   entryStatus: CommissionEntryStatus;
   notes?: string | null;
   createdAt?: string | null;
@@ -85,12 +85,12 @@ export type CommissionEntryResponse = {
 export type CommissionReportItemResponse = {
   professionalId: string;
   professionalName: string;
-  serviceAmountCents: number;
-  productAmountCents: number;
-  manualAdjustmentAmountCents: number;
-  totalAmountCents: number;
-  openAmountCents: number;
-  paidAmountCents: number;
+  serviceAmount: number;
+  productAmount: number;
+  manualAdjustmentAmount: number;
+  totalAmount: number;
+  openAmount: number;
+  paidAmount: number;
   totalEntries: number;
 };
 
@@ -99,9 +99,9 @@ export type CommissionReportResponse = {
   to: string;
   professionalId?: string | null;
   status?: CommissionEntryStatus | null;
-  totalAmountCents: number;
-  totalOpenAmountCents: number;
-  totalPaidAmountCents: number;
+  totalAmount: number;
+  totalOpenAmount: number;
+  totalPaidAmount: number;
   totalEntries: number;
   items: CommissionReportItemResponse[];
 };
@@ -111,9 +111,9 @@ export type CommissionProfessionalReportResponse = {
   professionalName: string;
   from: string;
   to: string;
-  totalAmountCents: number;
-  totalOpenAmountCents: number;
-  totalPaidAmountCents: number;
+  totalAmount: number;
+  totalOpenAmount: number;
+  totalPaidAmount: number;
   entries: CommissionEntryResponse[];
 };
 
@@ -126,7 +126,7 @@ export type CommissionCycleResponse = {
   closedByUserId?: string | null;
   paidAt?: string | null;
   paidByUserId?: string | null;
-  totalAmountCents: number;
+  totalAmount: number;
   entryCount: number;
   createdAt?: string | null;
 };
@@ -137,7 +137,7 @@ export type CommissionCycleListResponse = {
 
 export type CommissionAdjustmentRequest = {
   professionalId: string;
-  amountCents: number;
+  amount: number;
   effectiveAt?: string | null;
   reason: string;
 };

@@ -168,7 +168,7 @@ export default function StockItemsPage() {
         <Label>Nome</Label>
         <Input value={form.nome} onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))} />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1">
           <Label>SKU</Label>
           <Input value={form.sku || ""} onChange={(e) => setForm((prev) => ({ ...prev, sku: e.target.value }))} />
@@ -190,9 +190,9 @@ export default function StockItemsPage() {
   }
 
   return (
-    <Card>
+    <Card className="border-border/80">
       <CardHeader className="gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle>Itens de estoque</CardTitle>
           <Dialog
             open={isCreateOpen}
@@ -203,7 +203,7 @@ export default function StockItemsPage() {
               }
             }}
           >
-            <Button className="gap-2" asChild>
+            <Button className="gap-2 sm:self-auto" asChild>
               <Link to="/estoque/itens/novo"><Plus className="h-4 w-4" />Novo item</Link>
             </Button>
             <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
@@ -227,6 +227,9 @@ export default function StockItemsPage() {
             </DialogContent>
           </Dialog>
         </div>
+        <p className="text-sm text-muted-foreground">
+          Cadastre itens, acompanhe saldo minimo e controle rapidamente o status operacional.
+        </p>
         <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
           <Input
             placeholder="Buscar por nome ou SKU"
@@ -256,15 +259,28 @@ export default function StockItemsPage() {
           />
         ) : (
           pagedItems.map((item) => (
-            <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3">
-              <div>
-                <p className="font-medium">{item.nome}</p>
-                <p className="text-xs text-muted-foreground">SKU: {item.sku || "-"} | Unidade: {item.unidadeMedida}</p>
+            <div
+              key={item.id}
+              className="flex flex-col gap-4 rounded-xl border border-border/70 bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-foreground">{item.nome}</p>
+                <p className="text-xs text-muted-foreground">
+                  SKU: {item.sku || "-"} | Unidade: {item.unidadeMedida}
+                </p>
               </div>
-              <div className="text-right">
-                <p className="text-sm">Saldo: <span className="font-semibold">{item.saldoAtual}</span></p>
-                <p className="text-xs text-muted-foreground">Minimo: {item.estoqueMinimo}</p>
-                <div className="mt-1 flex items-center justify-end gap-2">
+              <div className="flex w-full flex-col gap-3 sm:w-auto sm:min-w-[260px] sm:items-end">
+                <div className="grid grid-cols-2 gap-2 text-xs sm:min-w-[220px]">
+                  <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                    <p className="uppercase tracking-wide text-muted-foreground">Saldo</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">{item.saldoAtual}</p>
+                  </div>
+                  <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                    <p className="uppercase tracking-wide text-muted-foreground">Minimo</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">{item.estoqueMinimo}</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                   <Badge variant={item.saldoAtual <= item.estoqueMinimo ? "destructive" : "outline"}>
                     {item.saldoAtual <= item.estoqueMinimo ? "Abaixo do minimo" : "Normal"}
                   </Badge>

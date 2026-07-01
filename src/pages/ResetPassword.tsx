@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, KeyRound, Loader2, Lock, Scissors } from "lucide-react";
+import { ArrowLeft, Check, KeyRound, Loader2, Lock, X } from "lucide-react";
 import { toast } from "sonner";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { BrandLockup } from "@/components/common/BrandLockup";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { authApi } from "@/lib/api";
+import { authApi } from "@/lib/api/auth";
 import { resolveUiError } from "@/lib/error-utils";
-import { resetPasswordSchema, type ResetPasswordForm } from "@/schemas/auth";
+import { PASSWORD_RULES, resetPasswordSchema, type ResetPasswordForm } from "@/schemas/auth";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 export default function ResetPassword() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,6 +26,9 @@ export default function ResetPassword() {
       confirmPassword: "",
     },
   });
+
+  const passwordValue = useWatch({ control: form.control, name: "password" });
+  const allRulesMet = PASSWORD_RULES.every((r) => r.test(passwordValue ?? ""));
 
   const onSubmit = form.handleSubmit(async (values) => {
     if (!token) {
@@ -49,22 +54,31 @@ export default function ResetPassword() {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-card p-4">
-      <div className="w-full max-w-md">
-        <div className="flex items-center justify-center gap-2 mb-6 sm:mb-8">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-xl flex items-center justify-center">
-            <Scissors className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+    <div className="auth-shell flex items-start justify-center sm:items-center">
+      <div className="absolute right-3 top-3 z-20 sm:right-6 sm:top-6">
+        <ThemeToggle className="theme-toggle-shell h-10 w-10" />
+      </div>
+      <div className="relative z-10 w-full max-w-md pt-2 sm:pt-0">
+        <div className="mb-6 space-y-3 text-center sm:mb-8">
+          <div className="flex justify-center">
+            <span className="brand-orbit-badge">
+              <span className="brand-orbit-dot" />
+              Redefinicao protegida
+            </span>
           </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Azzo</h1>
-            <p className="text-xs sm:text-sm text-primary font-medium -mt-1">Agenda Pro</p>
-          </div>
+          <p className="section-eyebrow">Acesso protegido</p>
+          <BrandLockup className="justify-center" caption="Operating System" />
+          <p className="mx-auto max-w-sm text-sm leading-6 text-muted-foreground">
+            Defina uma nova senha e retorne ao mesmo fluxo operacional do restante da plataforma.
+          </p>
         </div>
 
-        <Card className="shadow-xl border-0">
-          <CardHeader className="text-center pb-2 sm:pb-4">
-            <CardTitle className="text-xl sm:text-2xl">Definir nova senha</CardTitle>
-            <CardDescription className="text-sm">
+        <Card className="auth-panel border-border/80">
+          <CardHeader className="pb-2 text-center sm:pb-4">
+            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-[2rem]">
+              Definir nova senha
+            </CardTitle>
+            <CardDescription className="text-sm leading-6 sm:text-[15px]">
               Informe sua nova senha para concluir a recuperacao de acesso.
             </CardDescription>
           </CardHeader>
@@ -85,16 +99,38 @@ export default function ResetPassword() {
                     Nova senha
                   </Label>
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="password"
                       type="password"
                       placeholder="Digite sua nova senha"
                       {...form.register("password")}
-                      className="h-10 sm:h-11 pl-9"
+                      className="h-10 pl-9 sm:h-11"
                       disabled={isSubmitting}
                     />
                   </div>
+
+                  {/* Requisitos da senha */}
+                  {(passwordValue?.length ?? 0) > 0 && (
+                    <div className="rounded-lg border border-border/60 bg-muted/40 p-3 space-y-1.5">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Requisitos da senha:</p>
+                      {PASSWORD_RULES.map((rule) => {
+                        const ok = rule.test(passwordValue ?? "");
+                        return (
+                          <div key={rule.id} className="flex items-center gap-2">
+                            {ok ? (
+                              <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                            ) : (
+                              <X className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+                            )}
+                            <span className={`text-xs ${ok ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
+                              {rule.label}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -102,22 +138,29 @@ export default function ResetPassword() {
                     Confirmar senha
                   </Label>
                   <div className="relative">
-                    <KeyRound className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                    <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="confirmPassword"
                       type="password"
                       placeholder="Confirme a nova senha"
                       {...form.register("confirmPassword")}
-                      className="h-10 sm:h-11 pl-9"
+                      className="h-10 pl-9 sm:h-11"
                       disabled={isSubmitting}
                     />
                   </div>
+                  {form.formState.errors.confirmPassword && (
+                    <p className="text-xs text-destructive">{form.formState.errors.confirmPassword.message}</p>
+                  )}
                 </div>
 
-                <Button type="submit" className="w-full h-10 sm:h-11" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  className="h-10 w-full sm:h-11"
+                  disabled={isSubmitting || !allRulesMet}
+                >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Salvando...
                     </>
                   ) : (
@@ -127,9 +170,9 @@ export default function ResetPassword() {
               </form>
             )}
 
-            <Button asChild variant="ghost" className="w-full mt-3">
+            <Button asChild variant="ghost" className="mt-3 w-full">
               <Link to="/login">
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <ArrowLeft className="mr-2 h-4 w-4" />
                 Voltar para login
               </Link>
             </Button>

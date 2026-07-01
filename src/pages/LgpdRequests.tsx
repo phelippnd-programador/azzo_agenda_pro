@@ -30,7 +30,7 @@ const STATUS_BADGE: Record<string, string> = {
   ABERTO: "bg-muted text-foreground border-border",
   EM_VALIDACAO: "bg-primary/10 text-primary border-primary/40",
   RESPONDIDO: "bg-emerald-500/10 text-emerald-700 border-emerald-600/30",
-  ENCERRADO: "bg-slate-500/10 text-slate-700 border-slate-600/30",
+  ENCERRADO: "bg-slate-500/10 text-slate-700 border-slate-600/30 dark:bg-slate-700/40 dark:text-slate-200 dark:border-slate-500/40",
 };
 
 const EMPTY_CREATE_FORM: CreateLgpdRequestPayload = {

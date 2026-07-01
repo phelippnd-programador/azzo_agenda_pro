@@ -30,7 +30,7 @@ vi.mock("@/contexts/AuthContext", () => ({
 
 vi.mock("@/hooks/useCheckoutProducts", () => ({
   useCheckoutProducts: () => ({
-    products: [{ id: "plan-pro", name: "Plano Pro", description: "Plano principal", price: 99, features: ["Agenda", "Financeiro"] }],
+    products: [{ id: "plan-pro", name: "Plano Pro", description: "Plano principal", price: 99, validityMonths: 2, features: ["Agenda", "Financeiro"] }],
     isLoading: false,
     error: null,
     refetch: vi.fn(),
@@ -43,12 +43,12 @@ vi.mock("@/hooks/useLicenseAccess", () => ({
 
 vi.mock("@/services/billingService", () => ({
   createBillingSubscription: vi.fn(),
-  getBillingPayments: vi.fn().mockResolvedValue({ items: [{ id: "pay-1", amountCents: 9900, billingType: "PIX", status: "PENDING", referenceMonth: "2026-03", dueDate: "2026-03-20", createdAt: "2026-03-14T00:00:00Z", pixPayload: "pix-code" }] }),
+  getBillingPayments: vi.fn().mockResolvedValue({ items: [{ id: "pay-1", amount: 99, billingType: "PIX", status: "PENDING", referenceMonth: "2026-03", dueDate: "2026-03-20", createdAt: "2026-03-14T00:00:00Z", pixPayload: "pix-code" }] }),
   getBillingErrorMessage: vi.fn().mockImplementation(() => "Erro billing"),
   getCurrentBillingSubscription: vi.fn().mockResolvedValue({
     productId: "plan-pro",
     planCode: "plan-pro",
-    amountCents: 9900,
+    amount: 99,
     status: "ACTIVE",
     paymentStatus: "CONFIRMED",
     currentPaymentStatus: "CONFIRMED",
@@ -90,7 +90,7 @@ describe("LicensePage", () => {
     expect(await screen.findByText("Assinatura atual")).toBeInTheDocument();
     expect(screen.getAllByText(/Plano Pro/).length).toBeGreaterThan(0);
     expect(screen.getByText("Historico de pagamentos")).toBeInTheDocument();
-    expect(screen.getByText(/Metodo atual:/)).toBeInTheDocument();
+    expect(screen.getAllByText("R$ 99,00").length).toBeGreaterThan(0);
   });
 
   it("should open payment details dialog", async () => {
@@ -106,5 +106,17 @@ describe("LicensePage", () => {
 
     expect(await screen.findByText("Detalhes do pagamento")).toBeInTheDocument();
     expect(screen.getAllByText("PixPaymentViewMock").length).toBeGreaterThan(1);
+  });
+
+  it("should show plan billing cycle and validity when regularizing payment", async () => {
+    render(
+      <MemoryRouter initialEntries={["/financeiro/licenca?mode=PAY"]}>
+        <LicensePage />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText("Regularizar pagamento")).toBeInTheDocument();
+    expect(screen.getByText(/por 2 meses/i)).toBeInTheDocument();
+    expect(screen.getByText(/Validade de 2 meses apos a contratacao/i)).toBeInTheDocument();
   });
 });

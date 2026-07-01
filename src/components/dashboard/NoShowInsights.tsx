@@ -40,18 +40,23 @@ export function NoShowInsights() {
   const items = data?.recentItems ?? [];
 
   return (
-    <Card className="border-rose-200 bg-gradient-to-br from-rose-50/80 to-orange-50/60">
+    <Card className="tone-rose-panel">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-          <UserRoundX className="h-5 w-5 text-rose-700" />
-          No-show no periodo
+        <CardTitle className="flex flex-col gap-3 text-base sm:flex-row sm:items-start sm:justify-between sm:text-lg">
+          <div className="flex items-center gap-2">
+            <UserRoundX className="h-5 w-5 text-rose-700" />
+            No-show no periodo
+          </div>
+          <Button asChild size="sm" variant="outline" className="w-full border-rose-200 sm:w-auto">
+            <Link to="/relatorio/no-show">Abrir pagina</Link>
+          </Button>
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           Visao analitica e operacional dos clientes que nao compareceram no mes atual.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <MetricCard
             title="No-show no mes"
             value={isLoading ? "..." : data?.totalNoShows ?? 0}
@@ -62,32 +67,40 @@ export function NoShowInsights() {
               unavailableLabel: "Sem comparativo anterior",
             }}
             iconClassName="bg-rose-600"
-            className="border-rose-200 bg-white/80"
+            className="tone-surface border-rose-200/80 dark:border-rose-500/20 dark:bg-rose-500/10"
+            compact
+            wrapValue
           />
           <MetricCard
             title="Taxa de no-show"
             value={isLoading ? "..." : `${(data?.noShowRate ?? 0).toFixed(1)}%`}
             icon={CalendarClock}
             iconClassName="bg-orange-500"
-            className="border-orange-200 bg-white/80"
+            className="tone-surface border-orange-200/80 dark:border-orange-500/20 dark:bg-orange-500/10"
+            compact
+            wrapValue
           />
           <MetricCard
             title="Ultimos 7 dias"
             value={isLoading ? "..." : data?.lastSevenDaysNoShows ?? 0}
             icon={CalendarClock}
             iconClassName="bg-amber-500"
-            className="border-amber-200 bg-white/80"
+            className="tone-surface border-amber-200/80 dark:border-amber-500/20 dark:bg-amber-500/10"
+            compact
+            wrapValue
           />
           <MetricCard
             title="Receita em risco"
             value={isLoading ? "..." : formatCurrency(data?.revenueAtRisk ?? 0)}
             icon={ReceiptText}
-            iconClassName="bg-slate-700"
-            className="border-slate-200 bg-white/80"
+            iconClassName="bg-slate-700 dark:bg-slate-200"
+            className="tone-surface border-slate-200 dark:border-slate-700"
+            compact
+            wrapValue
           />
         </div>
 
-        <div className="rounded-2xl border border-rose-200 bg-white/80 p-4">
+        {/* <div className="rounded-2xl border border-rose-200 bg-white/80 p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-slate-900">Lista operacional de no-show</p>
@@ -99,9 +112,7 @@ export function NoShowInsights() {
               <Badge variant="outline" className="border-rose-200 bg-rose-50 text-rose-800">
                 {isLoading ? "..." : `${data?.totalNoShows ?? 0} no mes`}
               </Badge>
-              <Button asChild size="sm" variant="outline" className="border-rose-200">
-                <Link to="/relatorio/no-show">Abrir pagina</Link>
-              </Button>
+
             </div>
           </div>
 
@@ -120,7 +131,7 @@ export function NoShowInsights() {
                     <div>
                       <p className="font-medium text-slate-900">{appointment.clientName || "Cliente nao identificado"}</p>
                       <p className="text-sm text-muted-foreground">
-                        {(appointment.serviceNames || []).join(", ") || "Servico nao identificado"} • {appointment.professionalName || "Profissional nao identificado"}
+                        {(appointment.serviceNames || []).join(", ") || "Servico nao identificado"} â€¢ {appointment.professionalName || "Profissional nao identificado"}
                       </p>
                     </div>
                     <Badge variant="outline" className="border-rose-200 bg-rose-50 text-rose-800">
@@ -136,7 +147,7 @@ export function NoShowInsights() {
               ))}
             </div>
           )}
-        </div>
+        </div> */}
       </CardContent>
     </Card>
   );

@@ -4,7 +4,9 @@ export interface BillingPlanOption {
   code: string;
   name: string;
   description: string;
-  amountCents: number;
+  amount: number;
+  validityDays?: number | null;
+  validityMonths?: number | null;
   features: string[];
   highlight?: string;
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { refreshLicenseAccessStatus } from "@/lib/api";
+import { refreshLicenseAccessStatus } from "@/lib/api/core";
 import {
   getLicenseAccessStatus,
   setLicenseAccessStatus,

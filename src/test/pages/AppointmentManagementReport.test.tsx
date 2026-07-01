@@ -134,7 +134,6 @@ describe("AppointmentManagementReport", () => {
       expect.objectContaining({
         from: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
         to: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
-        limit: 100,
       })
     );
   });

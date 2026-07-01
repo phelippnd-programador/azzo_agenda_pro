@@ -17,18 +17,27 @@ import {
   actionMeta,
   buildDiffEntries,
   entityMeta,
+  maskIpAddress,
   moduleLabel,
   statusBadgeClass,
   statusLabel,
   toDateTimeLocal,
 } from "@/lib/audit-helpers";
 import { AuditEventDetailDialog } from "@/components/auditoria/AuditEventDetailDialog";
+import { AUDIT_MODULES, AUDIT_STATUSES } from "@/types/auditoria";
 import type {
   AuditFiltersOptionsDto,
+  AuditModule,
   AuditRetentionEventDto,
   AuditSearchQueryDto,
   AuditStatus,
 } from "@/types/auditoria";
+
+const isAuditModule = (value: string): value is AuditModule =>
+  (AUDIT_MODULES as readonly string[]).includes(value);
+
+const isAuditStatus = (value: string): value is AuditStatus =>
+  (AUDIT_STATUSES as readonly string[]).includes(value);
 
 export default function Auditoria() {
   const {
@@ -55,11 +64,12 @@ export default function Auditoria() {
 
   const [fromInput, setFromInput] = useState(toDateTimeLocal(filters.from));
   const [toInput, setToInput] = useState(toDateTimeLocal(filters.to));
-  const [moduleInput, setModuleInput] = useState("");
-  const [statusInput, setStatusInput] = useState("");
+  const [moduleInput, setModuleInput] = useState<AuditModule | "">("");
+  const [statusInput, setStatusInput] = useState<AuditStatus | "">("");
   const [actionInput, setActionInput] = useState("");
   const [entityTypeInput, setEntityTypeInput] = useState("");
   const [requestIdInput, setRequestIdInput] = useState("");
+  const [ipInput, setIpInput] = useState("");
   const [searchInput, setSearchInput] = useState("");
 
   useEffect(() => {
@@ -133,10 +143,11 @@ export default function Auditoria() {
       from: fromDate.toISOString(),
       to: toDate.toISOString(),
       modules: moduleInput ? [moduleInput] : undefined,
-      statuses: statusInput ? [statusInput as AuditStatus] : undefined,
+      statuses: statusInput ? [statusInput] : undefined,
       actions: actionInput ? [actionInput] : undefined,
       entityTypes: entityTypeInput ? [entityTypeInput] : undefined,
       requestId: requestIdInput || undefined,
+      ip: ipInput || undefined,
       text: searchInput || undefined,
       cursor: undefined,
     };
@@ -184,7 +195,10 @@ export default function Auditoria() {
                 <select
                   className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
                   value={moduleInput}
-                  onChange={(e) => setModuleInput(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setModuleInput(value === "" || isAuditModule(value) ? value : "");
+                  }}
                 >
                   <option value="">Todos</option>
                   {filterOptions?.modules.map((module) => (
@@ -199,7 +213,10 @@ export default function Auditoria() {
                 <select
                   className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
                   value={statusInput}
-                  onChange={(e) => setStatusInput(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setStatusInput(value === "" || isAuditStatus(value) ? value : "");
+                  }}
                 >
                   <option value="">Todos</option>
                   {filterOptions?.statuses.map((status) => (
@@ -240,11 +257,16 @@ export default function Auditoria() {
                 </select>
               </div>
             </div>
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-3">
               <Input
                 placeholder="Filtrar por request_id"
                 value={requestIdInput}
                 onChange={(e) => setRequestIdInput(e.target.value)}
+              />
+              <Input
+                placeholder="Filtrar por IP (ex: 192.168)"
+                value={ipInput}
+                onChange={(e) => setIpInput(e.target.value)}
               />
               <Input
                 placeholder="Busca textual (acao, erro, metadata)"
@@ -273,10 +295,21 @@ export default function Auditoria() {
             {lastExport ? (
               <Alert>
                 <AlertTitle>Exportacao pronta</AlertTitle>
-                <AlertDescription className="text-xs">
-                  <p>Download: {lastExport.downloadUrl}</p>
+                <AlertDescription className="space-y-1 text-xs">
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`${(import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, "") || "http://localhost:8080/api/v1"}${auditoriaApi.downloadExport(lastExport.exportId)}`}
+                      download
+                      className="inline-flex items-center gap-1 rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                    >
+                      <Download className="h-3 w-3" />
+                      Baixar arquivo ({lastExport.format})
+                    </a>
+                  </div>
                   <p>Expira em: {formatDateTime(lastExport.expiresAt)}</p>
-                  <p>Checksum: {lastExport.checksumSha256}</p>
+                  <p className="break-all">
+                    Checksum: <span className="font-mono">{lastExport.checksumSha256}</span>
+                  </p>
                 </AlertDescription>
               </Alert>
             ) : null}
@@ -328,7 +361,7 @@ export default function Auditoria() {
             ) : (
               <TooltipProvider delayDuration={150}>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <table className="min-w-[1100px] w-full text-sm">
                     <thead>
                       <tr className="border-b text-left text-muted-foreground">
                         <th className="py-2">Data</th>
@@ -337,6 +370,7 @@ export default function Auditoria() {
                         <th className="py-2">Registro afetado</th>
                         <th className="py-2">Status</th>
                         <th className="py-2">Ator</th>
+                        <th className="py-2">IP</th>
                         <th className="py-2">Request ID</th>
                         <th className="py-2 text-right">Detalhe</th>
                       </tr>
@@ -372,6 +406,9 @@ export default function Auditoria() {
                             </Badge>
                           </td>
                           <td className="py-2">{item.actorName || item.actorUserId || "-"}</td>
+                          <td className="py-2 font-mono text-xs text-muted-foreground">
+                            {maskIpAddress(item.ipAddress)}
+                          </td>
                           <td className="py-2 font-mono text-xs">{item.requestId}</td>
                           <td className="py-2 text-right">
                             <Button
@@ -389,18 +426,21 @@ export default function Auditoria() {
                     </tbody>
                   </table>
                 </div>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-xs text-muted-foreground">
-                    Paginacao por cursor: {hasNext ? "ha proxima pagina" : "fim da listagem"}
-                  </p>
-                  <p className="text-xs text-muted-foreground font-mono">
-                    cursor: {nextCursor || "-"}
-                  </p>
+                <div className="flex flex-col gap-3 border-t pt-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0 space-y-1">
+                    <p className="text-xs text-muted-foreground">
+                      Paginacao por cursor: {hasNext ? "ha proxima pagina" : "fim da listagem"}
+                    </p>
+                    <p className="break-all font-mono text-xs text-muted-foreground">
+                      cursor: {nextCursor || "-"}
+                    </p>
+                  </div>
                   {hasNext ? (
                     <Button
                       variant="outline"
                       onClick={() => void fetchNextPage()}
                       disabled={isLoadingMore}
+                      className="w-full sm:w-auto"
                     >
                       {isLoadingMore ? "Carregando..." : "Carregar mais"}
                     </Button>

@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ModuleTabs } from "@/components/navigation/module-tabs";
+import { RouteContentLoader } from "@/components/ui/route-content-loader";
 
 export default function Specialties() {
   const location = useLocation();
@@ -20,11 +22,13 @@ export default function Specialties() {
   return (
     <MainLayout
       title="Especialidades"
-      subtitle="Gerencie as especialidades usadas no cadastro de profissionais e suas importacoes"
+      subtitle="Mantenha especialidades bem organizadas para cadastro de profissionais, filtros e importacoes."
     >
       <div className="space-y-4 sm:space-y-6">
         <ModuleTabs items={tabs} pathname={location.pathname} />
-        <Outlet />
+        <Suspense fallback={<RouteContentLoader />}>
+          <Outlet />
+        </Suspense>
       </div>
     </MainLayout>
   );

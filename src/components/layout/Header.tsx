@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 interface HeaderProps {
   title: string;
@@ -31,7 +32,8 @@ export function Header({
   const { user, logout } = useAuth();
   const { summaryItems, unreadCount, refreshSummary } = useNotifications();
   const isOwner = user?.role === "OWNER";
-  const displayName = user?.salonName || user?.name || "Azzo";
+  const isProfessional = user?.role === "PROFESSIONAL";
+  const displayName = user?.name || user?.salonName || "Azzo";
   const initials =
     displayName
       .split(" ")
@@ -44,13 +46,16 @@ export function Header({
     (user?.avatar?.startsWith("http://") || user?.avatar?.startsWith("https://") ? user.avatar : undefined);
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/login");
+    try {
+      await logout();
+    } finally {
+      navigate("/login", { replace: true });
+    }
   };
 
   return (
-    <header className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur-sm">
-      <div className="flex h-14 items-center justify-between px-3 sm:px-4 lg:px-6">
+    <header className="sticky top-0 z-20 border-b border-border/70 bg-background/78 backdrop-blur-xl">
+      <div className="flex min-h-[4.75rem] items-center justify-between gap-4 px-3 py-3 sm:px-4 lg:px-6">
         <div className="ml-10 flex min-w-0 flex-1 items-center gap-2 sm:ml-12 lg:ml-0">
           {onToggleDesktopSidebar ? (
             <Button
@@ -63,13 +68,23 @@ export function Header({
               <PanelLeft className="h-4 w-4" />
             </Button>
           ) : null}
-          <div className="min-w-0">
-            <h1 className="truncate text-sm font-medium text-foreground">{title}</h1>
-            {subtitle ? <p className="hidden truncate text-xs text-muted-foreground sm:block">{subtitle}</p> : null}
+          <div className="min-w-0 space-y-1">
+            <div className="flex min-w-0 items-center gap-3">
+              <h1 className="truncate font-display text-base font-semibold tracking-tight text-foreground sm:text-[1.1rem]">
+                {title}
+              </h1>
+            </div>
+            {subtitle ? (
+              <p className="hidden truncate text-xs leading-5 text-muted-foreground md:block md:text-sm">
+                {subtitle}
+              </p>
+            ) : null}
           </div>
         </div>
 
-        <div className="flex flex-shrink-0 items-center gap-1 sm:gap-2">
+        <div className="flex flex-shrink-0 items-center gap-2">
+          <ThemeToggle className="theme-toggle-shell h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground" />
+
           <DropdownMenu
             onOpenChange={(open) => {
               if (open) {
@@ -78,7 +93,12 @@ export function Header({
             }}
           >
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative h-8 w-8 text-muted-foreground hover:text-foreground">
+              <Button
+                variant="ghost"
+                size="icon"
+              className="relative h-9 w-9 rounded-xl border border-transparent text-muted-foreground hover:border-border/70 hover:bg-card/80 hover:text-foreground"
+              aria-label="Abrir notificacoes"
+            >
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 ? (
                   <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
@@ -120,7 +140,11 @@ export function Header({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 gap-2 px-1.5 text-muted-foreground hover:text-foreground">
+              <Button
+                variant="ghost"
+                className="h-10 gap-2 rounded-2xl border border-transparent px-2 text-muted-foreground hover:border-border/70 hover:bg-card/80 hover:text-foreground"
+                aria-label="Abrir menu da conta"
+              >
                 <Avatar className="h-6 w-6">
                   <AvatarImage src={avatarSrc} />
                   <AvatarFallback className="bg-primary/10 text-xs text-primary">{initials}</AvatarFallback>
@@ -146,14 +170,18 @@ export function Header({
                 <User className="mr-2 h-4 w-4 opacity-60" />
                 Perfil
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/configuracoes")}>
-                <Settings className="mr-2 h-4 w-4 opacity-60" />
-                Configuracoes
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/financeiro/licenca")}>
-                <CreditCard className="mr-2 h-4 w-4 opacity-60" />
-                Plano e Faturamento
-              </DropdownMenuItem>
+              {!isProfessional ? (
+                <DropdownMenuItem onClick={() => navigate("/configuracoes")}>
+                  <Settings className="mr-2 h-4 w-4 opacity-60" />
+                  Configuracoes
+                </DropdownMenuItem>
+              ) : null}
+              {!isProfessional ? (
+                <DropdownMenuItem onClick={() => navigate("/financeiro/licenca")}>
+                  <CreditCard className="mr-2 h-4 w-4 opacity-60" />
+                  Plano e Faturamento
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />

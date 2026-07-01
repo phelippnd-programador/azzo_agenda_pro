@@ -2,16 +2,14 @@
 import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
-  ArrowLeft,
-  ArrowRight,
-  Check,
+  AlertTriangle,
   CheckCircle2,
-  Copy,
-  ExternalLink,
   Loader2,
+  Phone,
   PlugZap,
-  Send,
+  RefreshCw,
   ShieldCheck,
+  Unplug,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -24,217 +22,35 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  completeWhatsAppEmbeddedSignup,
-  getWhatsAppConfig,
-  getWhatsAppEmbeddedSignupStatus,
-  saveWhatsAppConfig,
-  sendWhatsAppTestMessage,
-  testWhatsAppConnection,
-  validateWhatsAppConnection,
-} from "@/services/whatsappService";
+import { whatsappApi } from "@/lib/api/whatsapp";
+import { toggleApi } from "@/lib/api/toggle";
+import type { TenantToggleKey } from "@/lib/api/toggle";
 import type {
   WhatsAppConfigResponse,
   WhatsAppEmbeddedSignupStatusResponse,
   WhatsAppTestMessageResponse,
   WhatsAppValidateConnectionResponse,
-} from "@/types/whatsapp";
+} from "@/lib/api/whatsapp";
 import { resolveUiError } from "@/lib/error-utils";
-
-const EMPTY_RESULT = "";
-const META_SDK_SRC = "https://connect.facebook.net/pt_BR/sdk.js";
-const META_GRAPH_VERSION = "v23.0";
-const META_BUSINESS_HOME_URL = "https://business.facebook.com/latest/home";
-const META_BUSINESS_SETTINGS_URL = "https://business.facebook.com/latest/settings";
-const META_WHATSAPP_MANAGER_URL = "https://business.facebook.com/latest/whatsapp_manager";
-const META_SYSTEM_USERS_URL = "https://business.facebook.com/latest/settings/system-users";
-const META_GRAPH_EXPLORER_URL = "https://developers.facebook.com/tools/explorer/";
-const WIZARD_STEPS = [
-  "Verificacao inicial",
-  "Business Manager",
-  "Criacao do WABA",
-  "Vinculacao do numero",
-  "Insercao do token",
-  "Configuracao do webhook",
-  "Validacao da conexao",
-] as const;
-
-type EmbeddedSetupInfo = {
-  businessId?: string;
-  phoneNumber?: string;
-  phoneNumberId?: string;
-  wabaId?: string;
-};
-
-type FacebookLoginResponse = {
-  authResponse?: {
-    code?: string;
-  } | null;
-  status?: string;
-};
-
-type FacebookSdk = {
-  init: (config: Record<string, unknown>) => void;
-  login: (
-    callback: (response: FacebookLoginResponse) => void,
-    options?: Record<string, unknown>
-  ) => void;
-  getLoginStatus: (callback: (response: FacebookLoginResponse) => void) => void;
-};
-
-type WindowWithMetaSdk = Window & {
-  FB?: FacebookSdk;
-  fbAsyncInit?: () => void;
-};
-
-type SetupMode = "wizard" | "meta";
-
-function normalizeMessageEventData(raw: unknown): Record<string, unknown> | null {
-  if (!raw) return null;
-  if (typeof raw === "string") {
-    try {
-      const parsed = JSON.parse(raw) as unknown;
-      return typeof parsed === "object" && parsed !== null
-        ? (parsed as Record<string, unknown>)
-        : null;
-    } catch {
-      return null;
-    }
-  }
-  return typeof raw === "object" ? (raw as Record<string, unknown>) : null;
-}
-
-function extractSetupInfo(payload: Record<string, unknown>): EmbeddedSetupInfo | null {
-  const data =
-    typeof payload.data === "object" && payload.data !== null
-      ? (payload.data as Record<string, unknown>)
-      : payload;
-  const setupInfo =
-    typeof data.setupInfo === "object" && data.setupInfo !== null
-      ? (data.setupInfo as Record<string, unknown>)
-      : data;
-
-  const businessId = String(
-    setupInfo.businessId ||
-      setupInfo.business_id ||
-      data.businessId ||
-      data.business_id ||
-      ""
-  ).trim();
-  const phoneNumber = String(
-    setupInfo.phoneNumber ||
-      setupInfo.phone_number ||
-      data.phoneNumber ||
-      data.phone_number ||
-      ""
-  ).trim();
-  const phoneNumberId = String(
-    setupInfo.phoneNumberId ||
-      setupInfo.phone_number_id ||
-      data.phoneNumberId ||
-      data.phone_number_id ||
-      ""
-  ).trim();
-  const wabaId = String(
-    setupInfo.wabaId ||
-      setupInfo.waba_id ||
-      data.wabaId ||
-      data.waba_id ||
-      ""
-  ).trim();
-
-  if (!phoneNumberId && !wabaId && !businessId && !phoneNumber) {
-    return null;
-  }
-
-  return {
-    businessId: businessId || undefined,
-    phoneNumber: phoneNumber || undefined,
-    phoneNumberId: phoneNumberId || undefined,
-    wabaId: wabaId || undefined,
-  };
-}
-
-async function loadMetaSdk(appId: string): Promise<FacebookSdk> {
-  const browserWindow = window as WindowWithMetaSdk;
-  if (browserWindow.FB) {
-    return browserWindow.FB;
-  }
-
-  const existingScript = document.querySelector<HTMLScriptElement>(
-    `script[src="${META_SDK_SRC}"]`
-  );
-
-  return new Promise<FacebookSdk>((resolve, reject) => {
-    const finish = () => {
-      const sdk = (window as WindowWithMetaSdk).FB;
-      if (!sdk) {
-        reject(new Error("SDK da Meta nao carregado."));
-        return;
-      }
-      sdk.init({
-        appId,
-        autoLogAppEvents: true,
-        cookie: true,
-        xfbml: false,
-        version: META_GRAPH_VERSION,
-      });
-      resolve(sdk);
-    };
-
-    browserWindow.fbAsyncInit = finish;
-
-    if (existingScript) {
-      existingScript.addEventListener("load", finish, { once: true });
-      existingScript.addEventListener(
-        "error",
-        () => reject(new Error("Falha ao carregar SDK da Meta.")),
-        { once: true }
-      );
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.async = true;
-    script.defer = true;
-    script.src = META_SDK_SRC;
-    script.onload = finish;
-    script.onerror = () => reject(new Error("Falha ao carregar SDK da Meta."));
-    document.body.appendChild(script);
-  });
-}
-
-function resolveStepStatus(currentStep: number, targetStep: number) {
-  if (currentStep > targetStep) return "done";
-  if (currentStep === targetStep) return "current";
-  return "upcoming";
-}
-
-function MetaLinkButton({
-  href,
-  children,
-}: {
-  href: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Button asChild type="button" variant="outline" size="sm">
-      <a href={href} target="_blank" rel="noreferrer">
-        <ExternalLink className="mr-2 h-4 w-4" />
-        {children}
-      </a>
-    </Button>
-  );
-}
+import { WhatsAppSetupWizard } from "@/components/settings/whatsapp-integration/WhatsAppSetupWizard";
+import {
+  EMPTY_RESULT,
+  extractSetupInfo,
+  loadMetaSdk,
+  normalizeMessageEventData,
+  type EmbeddedSetupInfo,
+  type SetupMode,
+} from "@/components/settings/whatsapp-integration/shared";
+import { TemplateEditor } from "@/components/settings/whatsapp-integration/TemplateEditor";
 
 export function WhatsAppIntegrationCard() {
   const queryClient = useQueryClient();
   const [setupMode, setSetupMode] = useState<SetupMode>("wizard");
   const [currentStep, setCurrentStep] = useState(1);
   const [activateIntegration, setActivateIntegration] = useState(false);
+  const [usageProfile, setUsageProfile] = useState<import("@/lib/api/whatsapp").WhatsAppUsageProfile>("COMPLETE");
   const [canSchedule, setCanSchedule] = useState(true);
   const [canCancel, setCanCancel] = useState(true);
   const [canReschedule, setCanReschedule] = useState(true);
@@ -244,6 +60,12 @@ export function WhatsAppIntegrationCard() {
   const [webhookVerifyToken, setWebhookVerifyToken] = useState("");
   const [businessId, setBusinessId] = useState("");
   const [displayPhoneNumber, setDisplayPhoneNumber] = useState("");
+  const [confirmationTemplate, setConfirmationTemplate] = useState("");
+  const [cancellationTemplate, setCancellationTemplate] = useState("");
+  const [reminderTemplate, setReminderTemplate] = useState("");
+  const [showMessageLog, setShowMessageLog] = useState(false);
+  const [messageLog, setMessageLog] = useState<import("@/lib/api/whatsapp").WhatsAppMessageLogItem[]>([]);
+  const [isLoadingLog, setIsLoadingLog] = useState(false);
   const [testDestinationPhone, setTestDestinationPhone] = useState("");
   const [testMessageBody, setTestMessageBody] = useState("Mensagem de teste do AZZO Agenda Pro.");
   const [embeddedStatus, setEmbeddedStatus] =
@@ -308,8 +130,8 @@ export function WhatsAppIntegrationCard() {
     const loadConfig = async () => {
       try {
         const [config, embedded] = await Promise.all([
-          getWhatsAppConfig(),
-          getWhatsAppEmbeddedSignupStatus(),
+          whatsappApi.getConfig(),
+          whatsappApi.getEmbeddedSignupStatus(),
         ]);
         if (!mounted) return;
 
@@ -319,10 +141,14 @@ export function WhatsAppIntegrationCard() {
         setConfigStatus(config);
         setEmbeddedStatus(embedded);
         setSetupMode(embeddedEnabled && tokenSource === "EMBEDDED_CODE_EXCHANGE" ? "meta" : "wizard");
-        setActivateIntegration(Boolean(config.whatsappEnabled || config.enabled));
+        setActivateIntegration(Boolean(config.whatsappEnabled));
+        setUsageProfile((config.usageProfile as import("@/lib/api/whatsapp").WhatsAppUsageProfile) ?? "COMPLETE");
         setCanSchedule(config.canSchedule ?? true);
         setCanCancel(config.canCancel ?? true);
         setCanReschedule(config.canReschedule ?? true);
+        setConfirmationTemplate(config.confirmationMessageTemplate ?? "");
+        setCancellationTemplate(config.cancellationMessageTemplate ?? "");
+        setReminderTemplate(config.reminderMessageTemplate ?? "");
         setPhoneNumberId(embedded.phoneNumberId || config.phoneNumberId || "");
         setBusinessAccountId(
           embedded.businessAccountId || config.businessAccountId || ""
@@ -334,6 +160,11 @@ export function WhatsAppIntegrationCard() {
         setWebhookVerifyToken(
           embedded.webhookVerifyToken || config.webhookVerifyToken || ""
         );
+        // Pula para o último passo se já estiver conectado
+        const status = embedded.onboardingStatus || config.onboardingStatus || "NOT_STARTED";
+        if (status === "CONNECTED") {
+          setCurrentStep(7);
+        }
       } catch {
         if (!mounted) return;
         setConfigStatus(null);
@@ -377,8 +208,8 @@ export function WhatsAppIntegrationCard() {
 
   const refreshStatuses = async () => {
     const [config, embedded] = await Promise.all([
-      getWhatsAppConfig(),
-      getWhatsAppEmbeddedSignupStatus(),
+      whatsappApi.getConfig(),
+      whatsappApi.getEmbeddedSignupStatus(),
     ]);
 
     const embeddedEnabled =
@@ -387,19 +218,21 @@ export function WhatsAppIntegrationCard() {
     setConfigStatus(config);
     setEmbeddedStatus(embedded);
     setSetupMode(embeddedEnabled && tokenSource === "EMBEDDED_CODE_EXCHANGE" ? "meta" : "wizard");
-    setActivateIntegration(Boolean(config.whatsappEnabled || config.enabled));
+    setActivateIntegration(Boolean(config.whatsappEnabled));
+    setUsageProfile((config.usageProfile as import("@/lib/api/whatsapp").WhatsAppUsageProfile) ?? "COMPLETE");
     setCanSchedule(config.canSchedule ?? true);
     setCanCancel(config.canCancel ?? true);
     setCanReschedule(config.canReschedule ?? true);
+    setConfirmationTemplate(config.confirmationMessageTemplate ?? "");
+    setCancellationTemplate(config.cancellationMessageTemplate ?? "");
+    setReminderTemplate(config.reminderMessageTemplate ?? "");
     setPhoneNumberId(embedded.phoneNumberId || config.phoneNumberId || "");
     setBusinessAccountId(embedded.businessAccountId || config.businessAccountId || "");
     setBusinessId(embedded.businessId || config.businessId || "");
-    setDisplayPhoneNumber(
-      embedded.displayPhoneNumber || config.displayPhoneNumber || ""
-    );
-    setWebhookVerifyToken(
-      embedded.webhookVerifyToken || config.webhookVerifyToken || ""
-    );
+    setDisplayPhoneNumber(embedded.displayPhoneNumber || config.displayPhoneNumber || "");
+    setWebhookVerifyToken(embedded.webhookVerifyToken || config.webhookVerifyToken || "");
+    const status = embedded.onboardingStatus || config.onboardingStatus || "NOT_STARTED";
+    if (status === "CONNECTED") setCurrentStep(7);
   };
 
   const handleCopy = async (value: string, successMessage: string) => {
@@ -426,7 +259,7 @@ export function WhatsAppIntegrationCard() {
 
     try {
       setIsFinalizingEmbeddedSignup(true);
-      const response = await completeWhatsAppEmbeddedSignup({
+      const response = await whatsappApi.completeEmbeddedSignup({
         code,
         setupInfo: {
           wabaId: setupInfo.wabaId,
@@ -525,7 +358,7 @@ export function WhatsAppIntegrationCard() {
 
     try {
       setIsValidatingConnection(true);
-      const result = await validateWhatsAppConnection({
+      const result = await whatsappApi.validateConnection({
         accessToken: token,
         phoneNumberId: phoneNumberId.trim(),
       });
@@ -562,25 +395,32 @@ export function WhatsAppIntegrationCard() {
       setTestMessageResult(null);
 
       const trimmedAccessToken = manualAccessToken.trim();
-      const response = await saveWhatsAppConfig({
+      const response = await whatsappApi.saveConfig({
         whatsappEnabled: activateIntegration,
-        enabled: activateIntegration,
         accessToken: trimmedAccessToken || undefined,
         phoneNumberId: phoneNumberId.trim(),
         businessAccountId: businessAccountId.trim() || undefined,
         businessId: businessId.trim() || undefined,
         displayPhoneNumber: displayPhoneNumber.trim() || undefined,
         webhookVerifyToken: webhookVerifyToken.trim() || undefined,
+        usageProfile,
         canSchedule,
         canCancel,
         canReschedule,
+        confirmationMessageTemplate: confirmationTemplate.trim() || undefined,
+        cancellationMessageTemplate: cancellationTemplate.trim() || undefined,
+        reminderMessageTemplate: reminderTemplate.trim() || undefined,
       });
 
       setConfigStatus(response);
-      setActivateIntegration(Boolean(response.whatsappEnabled || response.enabled));
+      setActivateIntegration(Boolean(response.whatsappEnabled));
+      setUsageProfile((response.usageProfile as import("@/lib/api/whatsapp").WhatsAppUsageProfile) ?? usageProfile);
       setCanSchedule(response.canSchedule ?? canSchedule);
       setCanCancel(response.canCancel ?? canCancel);
       setCanReschedule(response.canReschedule ?? canReschedule);
+      setConfirmationTemplate(response.confirmationMessageTemplate ?? confirmationTemplate);
+      setCancellationTemplate(response.cancellationMessageTemplate ?? cancellationTemplate);
+      setReminderTemplate(response.reminderMessageTemplate ?? reminderTemplate);
       setBusinessId(response.businessId || businessId);
       setDisplayPhoneNumber(response.displayPhoneNumber || displayPhoneNumber);
       setWebhookVerifyToken(response.webhookVerifyToken || webhookVerifyToken);
@@ -604,6 +444,20 @@ export function WhatsAppIntegrationCard() {
     }
   };
 
+  // Persiste um toggle isolado via endpoint genérico — não toca em token nem phoneNumberId
+  const saveToggle = async (key: TenantToggleKey, value: boolean | string) => {
+    try {
+      setIsSaving(true);
+      await toggleApi.apply(key, value);
+      toast.success("Configuracao salva");
+      await queryClient.invalidateQueries({ queryKey: ["whatsapp-config"] });
+    } catch (error) {
+      toast.error(resolveUiError(error, "Erro ao salvar configuracao").message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleTest = async () => {
     if (!activateIntegration) {
       toast.error("Ative a integracao para testar a conexao");
@@ -612,7 +466,7 @@ export function WhatsAppIntegrationCard() {
 
     try {
       setIsTesting(true);
-      const result = await testWhatsAppConnection();
+      const result = await whatsappApi.testConnection();
       setTestResult(result.message);
       if (result.success) {
         toast.success("Conexao validada");
@@ -630,15 +484,20 @@ export function WhatsAppIntegrationCard() {
   };
 
   const handleSendTestMessage = async () => {
-    if (!testDestinationPhone.trim()) {
+    const phone = testDestinationPhone.trim();
+    if (!phone) {
       toast.error("Informe o telefone de destino para enviar a mensagem de teste.");
+      return;
+    }
+    if (!/^\+\d{10,15}$/.test(phone)) {
+      toast.error("Informe o telefone no formato internacional: +55 11 99999-9999 (somente digitos apos o +).");
       return;
     }
 
     try {
       setIsSendingTestMessage(true);
-      const result = await sendWhatsAppTestMessage({
-        destinationPhone: testDestinationPhone.trim(),
+      const result = await whatsappApi.sendTestMessage({
+        destinationPhone: phone,
         message: testMessageBody.trim() || undefined,
       });
       setTestMessageResult(result);
@@ -659,536 +518,190 @@ export function WhatsAppIntegrationCard() {
     }
   };
 
-  const renderWizard = () => (
+  const renderStatusPanel = () => (
     <div className="space-y-4">
-      <div className="flex items-center justify-center gap-2 sm:gap-4">
-        {WIZARD_STEPS.map((step, index) => {
-          const stepNumber = index + 1;
-          const stepStatus = resolveStepStatus(currentStep, stepNumber);
-          return (
-            <div key={step} className="flex items-center">
-              <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors ${
-                  stepStatus === "done"
-                    ? "bg-primary text-primary-foreground"
-                    : stepStatus === "current"
-                      ? "bg-primary/15 text-primary"
-                      : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {stepStatus === "done" ? <Check className="h-4 w-4" /> : stepNumber}
-              </div>
-              {stepNumber < WIZARD_STEPS.length && (
-                <div
-                  className={`mx-2 h-1 w-6 rounded sm:w-10 ${
-                    currentStep > stepNumber ? "bg-primary" : "bg-muted"
-                  }`}
-                />
-              )}
-            </div>
-          );
-        })}
+      <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4">
+        <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-green-800">WhatsApp conectado</p>
+          {displayPhoneNumber && (
+            <p className="mt-0.5 flex items-center gap-1 text-xs text-green-700">
+              <Phone className="h-3 w-3" />
+              {displayPhoneNumber}
+            </p>
+          )}
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="shrink-0"
+          onClick={() => void handleTest()}
+          disabled={isTesting}
+        >
+          {isTesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          <span className="ml-1.5">Testar</span>
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="shrink-0 text-destructive hover:bg-destructive/10"
+          onClick={() => setCurrentStep(1)}
+        >
+          <Unplug className="h-4 w-4" />
+          <span className="ml-1.5">Reconfigurar</span>
+        </Button>
       </div>
 
-      <Card className="border-dashed bg-muted/20">
-        <CardHeader>
-          <CardTitle className="text-base">
-            Etapa {currentStep} de {WIZARD_STEPS.length}: {WIZARD_STEPS[currentStep - 1]}
-          </CardTitle>
-          <CardDescription>
-            Fluxo guiado para conectar o WhatsApp Cloud API do tenant sem Embedded Signup.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {currentStep === 1 ? (
-            <>
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Antes de iniciar</AlertTitle>
-                <AlertDescription>
-                  Antes de configurar no AZZO, confirme que o cliente tem acesso de administrador ao portifolio da empresa na Meta, ao WhatsApp Business Account e ao numero que sera conectado.
-                </AlertDescription>
-              </Alert>
-              <div className="rounded-lg border p-3 text-sm text-muted-foreground">
-                Checklist minimo:
-                <ol className="mt-2 list-decimal space-y-1 pl-4">
-                  <li>Entrar com o Facebook que administra a empresa do cliente.</li>
-                  <li>Selecionar o business portfolio correto no topo da Meta Business Suite.</li>
-                  <li>Ter acesso a `Accounts &gt; WhatsApp Accounts`.</li>
-                  <li>Ter acesso a `Users &gt; System Users` para gerar o token.</li>
-                  <li>Ter o numero disponivel para verificacao por SMS ou voz, se ainda nao estiver vinculado.</li>
-                </ol>
-              </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="rounded-lg border p-3">
-                  <p className="text-sm font-medium">Webhook Verify Token</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {webhookVerifyToken || "Sera gerado automaticamente ao salvar."}
-                  </p>
-                </div>
-                <div className="rounded-lg border p-3">
-                  <p className="text-sm font-medium">Status atual</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{onboardingStatus}</p>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <MetaLinkButton href={META_BUSINESS_HOME_URL}>
-                  Abrir Business Manager
-                </MetaLinkButton>
-                <MetaLinkButton href={META_BUSINESS_SETTINGS_URL}>
-                  Abrir configuracoes da empresa
-                </MetaLinkButton>
-              </div>
-            </>
-          ) : null}
+      {testResult && (
+        <Alert variant={testResult.toLowerCase().includes("sucesso") ? "default" : "destructive"}>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Resultado do teste</AlertTitle>
+          <AlertDescription>{testResult}</AlertDescription>
+        </Alert>
+      )}
 
-          {currentStep === 2 ? (
-            <>
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Acesso ao Business Manager</AlertTitle>
-                <AlertDescription>
-                  Use esta etapa para localizar o portfolio correto da empresa e abrir a area onde o WhatsApp Business Account sera criado ou administrado.
-                </AlertDescription>
-              </Alert>
-              <div className="rounded-lg border p-3 text-sm text-muted-foreground">
-                Caminho esperado: Business Manager → Accounts → WhatsApp Accounts.
-                <ol className="mt-2 list-decimal space-y-1 pl-4">
-                  <li>Clique em `Abrir Business Manager`.</li>
-                  <li>Escolha a empresa correta no seletor de portfolio.</li>
-                  <li>Abra `Accounts` e depois `WhatsApp Accounts`.</li>
-                  <li>Se ja existir uma conta do WhatsApp para o cliente, selecione essa conta.</li>
-                  <li>Se nao existir, avance para criar uma nova conta na etapa seguinte.</li>
-                </ol>
-              </div>
-              <div className="rounded-lg border p-3 text-sm text-muted-foreground">
-                Dado que o cliente precisa confirmar aqui: ele esta no business portfolio certo. Se entrar na empresa errada, todos os IDs copiados nas proximas etapas ficarao incorretos.
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <MetaLinkButton href={META_BUSINESS_HOME_URL}>
-                  Entrar no Business Manager
-                </MetaLinkButton>
-                <MetaLinkButton href={META_BUSINESS_SETTINGS_URL}>
-                  Abrir Business Settings
-                </MetaLinkButton>
-              </div>
-            </>
-          ) : null}
-
-          {currentStep === 3 ? (
-            <>
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Criacao do WABA</AlertTitle>
-                <AlertDescription>
-                  Crie ou abra o WhatsApp Business Account do cliente. E nessa tela que voce vai chegar aos dados tecnicos usados pelo AZZO.
-                </AlertDescription>
-              </Alert>
-              <div className="rounded-lg border p-3 text-sm text-muted-foreground">
-                O que fazer no Facebook:
-                <ol className="mt-2 list-decimal space-y-1 pl-4">
-                  <li>Clique em `Abrir WhatsApp Manager`.</li>
-                  <li>Selecione ou crie a conta do WhatsApp Business da empresa.</li>
-                  <li>Confirme que o numero esta vinculado a essa conta.</li>
-                  <li>Anote o `WABA ID` da conta.</li>
-                  <li>Anote tambem o `Business ID` da empresa, se estiver visivel na tela de configuracoes.</li>
-                </ol>
-              </div>
-              <div className="rounded-lg border p-3 text-sm text-muted-foreground">
-                O `WABA ID` e o identificador da conta do WhatsApp Business. No AZZO ele entra no campo `WABA / Business Account ID`.
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <MetaLinkButton href={META_WHATSAPP_MANAGER_URL}>
-                  Abrir WhatsApp Manager
-                </MetaLinkButton>
-                <MetaLinkButton href={META_BUSINESS_SETTINGS_URL}>
-                  Abrir Business Settings
-                </MetaLinkButton>
-              </div>
-            </>
-          ) : null}
-
-          {currentStep === 4 ? (
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                <MetaLinkButton href={META_WHATSAPP_MANAGER_URL}>
-                  Abrir numeros no WhatsApp Manager
-                </MetaLinkButton>
-                <MetaLinkButton href={META_BUSINESS_SETTINGS_URL}>
-                  Abrir configuracoes da empresa
-                </MetaLinkButton>
-              </div>
-              <div className="rounded-lg border p-3 text-sm text-muted-foreground">
-                O que copiar no Facebook e colar no AZZO:
-                <ol className="mt-2 list-decimal space-y-1 pl-4">
-                  <li>`WABA / Business Account ID`: ID da conta do WhatsApp Business.</li>
-                  <li>`Business ID`: ID do portfolio/empresa na Meta.</li>
-                  <li>`Phone Number ID`: ID tecnico do numero conectado na Cloud API.</li>
-                  <li>`Numero exibido`: numero mostrado ao usuario final, se a Meta exibir esse campo.</li>
-                </ol>
-              </div>
-              <div className="rounded-lg border p-3 text-sm text-muted-foreground">
-                No WhatsApp Manager, entre no numero e procure pela area de detalhes/API do numero. O valor mais importante aqui e o `Phone Number ID`, porque e ele que o backend usa para validar e enviar mensagens.
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium" htmlFor="whatsapp-manual-business-account-id">
-                    WABA / Business Account ID
-                  </label>
-                  <Input
-                    id="whatsapp-manual-business-account-id"
-                    value={businessAccountId}
-                    placeholder="Ex.: 1943140936275518"
-                    onChange={(event) => setBusinessAccountId(event.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium" htmlFor="whatsapp-manual-business-id">
-                    Business ID
-                  </label>
-                  <Input
-                    id="whatsapp-manual-business-id"
-                    value={businessId}
-                    placeholder="Opcional, mas recomendado"
-                    onChange={(event) => setBusinessId(event.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium" htmlFor="whatsapp-manual-phone-number-id">
-                    Phone Number ID
-                  </label>
-                  <Input
-                    id="whatsapp-manual-phone-number-id"
-                    value={phoneNumberId}
-                    placeholder="Ex.: 1043083748882407"
-                    onChange={(event) => setPhoneNumberId(event.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium" htmlFor="whatsapp-manual-display-phone-number">
-                    Numero exibido
-                  </label>
-                  <Input
-                    id="whatsapp-manual-display-phone-number"
-                    value={displayPhoneNumber}
-                    placeholder="Opcional. Ex.: +55 11 99999-9999"
-                    onChange={(event) => setDisplayPhoneNumber(event.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          {currentStep === 5 ? (
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                <MetaLinkButton href={META_SYSTEM_USERS_URL}>
-                  Abrir usuarios de sistema
-                </MetaLinkButton>
-                <MetaLinkButton href={META_GRAPH_EXPLORER_URL}>
-                  Abrir Graph API Explorer
-                </MetaLinkButton>
-              </div>
-              <div className="rounded-lg border p-3 text-sm text-muted-foreground">
-                Como gerar o token:
-                <ol className="mt-2 list-decimal space-y-1 pl-4">
-                  <li>Abra `Usuarios de sistema`.</li>
-                  <li>Crie ou selecione um system user com permissao administrativa.</li>
-                  <li>Conceda acesso ao app e aos ativos do WhatsApp da empresa.</li>
-                  <li>Gere um `Access Token` com as permissoes `business_management`, `whatsapp_business_management` e `whatsapp_business_messaging`.</li>
-                  <li>Cole esse token no campo `Access Token` do AZZO.</li>
-                </ol>
-              </div>
-              <div className="rounded-lg border p-3 text-sm text-muted-foreground">
-                O `Webhook Verify Token` pode ficar em branco. Se voce nao preencher, o AZZO gera automaticamente ao salvar e mostra o valor para configuracao do webhook depois.
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-medium" htmlFor="whatsapp-manual-access-token">
-                    Access Token
-                  </label>
-                  <Input
-                    id="whatsapp-manual-access-token"
-                    type="password"
-                    autoComplete="off"
-                    value={manualAccessToken}
-                    placeholder={
-                      isTokenConfigured
-                        ? "Ja configurado no backend. Preencha apenas para substituir."
-                        : "Cole o access token do WhatsApp Cloud API"
-                    }
-                    onChange={(event) => setManualAccessToken(event.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Token configurado no backend: {isTokenConfigured ? "Sim" : "Nao"}.
-                  </p>
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <div className="flex items-center justify-between gap-3">
-                    <label className="text-sm font-medium" htmlFor="whatsapp-manual-webhook-token">
-                      Webhook Verify Token
-                    </label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        handleCopy(
-                          webhookVerifyToken,
-                          "Webhook verify token copiado."
-                        )
-                      }
-                    >
-                      <Copy className="mr-2 h-4 w-4" />
-                      Copiar
-                    </Button>
-                  </div>
-                  <Input
-                    id="whatsapp-manual-webhook-token"
-                    value={webhookVerifyToken}
-                    placeholder="Gerado automaticamente se ficar em branco"
-                    onChange={(event) => setWebhookVerifyToken(event.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          {currentStep === 6 ? (
-            <div className="space-y-4">
-              <div className="rounded-lg border p-3 text-sm text-muted-foreground">
-                Agora o cliente precisa cadastrar o webhook da AZZO na Meta para que mensagens e status de entrega cheguem ao sistema.
-                <ol className="mt-2 list-decimal space-y-1 pl-4">
-                  <li>Abra o app da Meta e va para a configuracao de webhook do WhatsApp.</li>
-                  <li>No campo `Callback URL`, cole a URL abaixo.</li>
-                  <li>No campo `Verify Token`, cole o token abaixo.</li>
-                  <li>Clique em verificar/salvar na Meta.</li>
-                  <li>Depois, assine ao menos o objeto `messages` ou o conjunto de campos de mensagens/status usado no app.</li>
-                </ol>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <MetaLinkButton href={META_BUSINESS_SETTINGS_URL}>
-                  Abrir configuracoes da empresa
-                </MetaLinkButton>
-                <MetaLinkButton href={META_WHATSAPP_MANAGER_URL}>
-                  Abrir WhatsApp Manager
-                </MetaLinkButton>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-3">
-                    <label className="text-sm font-medium">Callback URL</label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCopy(webhookUrl, "URL do webhook copiada.")}
-                    >
-                      <Copy className="mr-2 h-4 w-4" />
-                      Copiar
-                    </Button>
-                  </div>
-                  <Input value={webhookUrl} readOnly />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-3">
-                    <label className="text-sm font-medium">Verify Token</label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        handleCopy(
-                          webhookVerifyToken,
-                          "Verify token do webhook copiado."
-                        )
-                      }
-                      disabled={!webhookVerifyToken}
-                    >
-                      <Copy className="mr-2 h-4 w-4" />
-                      Copiar
-                    </Button>
-                  </div>
-                  <Input
-                    value={webhookVerifyToken}
-                    readOnly
-                    placeholder="Preencha ou gere o verify token na etapa anterior."
-                  />
-                </div>
-              </div>
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Importante sobre o verify token</AlertTitle>
-                <AlertDescription>
-                  Se esse campo estiver vazio, volte para a etapa anterior e preencha manualmente o `Webhook Verify Token`, ou salve a configuracao para o AZZO gerar um token automaticamente e depois retorne a esta etapa.
-                </AlertDescription>
-              </Alert>
-              <div className="rounded-lg border p-3 text-sm text-muted-foreground">
-                Depois que a Meta validar a URL, assine os campos do webhook:
-                <ol className="mt-2 list-decimal space-y-1 pl-4">
-                  <li>`messages`: obrigatorio para receber mensagens inbound e status de entrega/leitura.</li>
-                  <li>`message_template_status_update`: opcional, recomendado se o tenant usar templates.</li>
-                </ol>
-              </div>
-              <div className="rounded-lg border p-3 text-sm text-muted-foreground">
-                Checklist final dentro da Meta:
-                <ol className="mt-2 list-decimal space-y-1 pl-4">
-                  <li>Salvar o callback.</li>
-                  <li>Confirmar que a verificacao retornou sucesso.</li>
-                  <li>Marcar o campo `messages` na assinatura do webhook.</li>
-                  <li>Salvar a inscricao do webhook no app.</li>
-                </ol>
-              </div>
-              {webhookNeedsPublicUrl ? (
-                <Alert className="border-amber-200 bg-amber-50 text-amber-900">
-                  <AlertCircle className="h-4 w-4 !text-amber-700" />
-                  <AlertTitle>URL local nao funciona na Meta</AlertTitle>
-                  <AlertDescription>
-                    A URL atual do webhook parece local (`localhost` ou `127.0.0.1`). Para a Meta validar e entregar eventos, use uma URL publica HTTPS do backend.
-                  </AlertDescription>
-                </Alert>
-              ) : null}
-            </div>
-          ) : null}
-
-          {currentStep === 7 ? (
-            <div className="space-y-4">
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleValidateConnection}
-                  disabled={isValidatingConnection || isSaving}
-                >
-                  {isValidatingConnection ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <ShieldCheck className="mr-2 h-4 w-4" />
-                  )}
-                  Validar com a Meta
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={isSaving || isTesting || isValidatingConnection}
-                >
-                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Salvar Configuracao
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleTest}
-                  disabled={isTesting || isSaving}
-                >
-                  {isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Testar Conexao Salva
-                </Button>
-              </div>
-
-              {validationResult ? (
-                <Alert className="border-green-200 bg-green-50 text-green-900">
-                  <CheckCircle2 className="h-4 w-4 !text-green-700" />
-                  <AlertTitle>Validacao concluida</AlertTitle>
-                  <AlertDescription>
-                    {validationResult.message}
-                    {validationResult.displayPhoneNumber
-                      ? ` Numero exibido: ${validationResult.displayPhoneNumber}.`
-                      : ""}
-                    {validationResult.verifiedName
-                      ? ` Nome verificado: ${validationResult.verifiedName}.`
-                      : ""}
-                  </AlertDescription>
-                </Alert>
-              ) : null}
-
-              {testResult ? (
-                <Alert className="border-blue-200 bg-blue-50 text-blue-900">
-                  <CheckCircle2 className="h-4 w-4 !text-blue-700" />
-                  <AlertTitle>Resultado do teste de conexao</AlertTitle>
-                  <AlertDescription>{testResult}</AlertDescription>
-                </Alert>
-              ) : null}
-
-              <div className="space-y-3 rounded-lg border p-3">
-                <p className="text-sm font-medium">Enviar mensagem de teste</p>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium" htmlFor="whatsapp-test-destination-phone">
-                      Telefone de destino
-                    </label>
-                    <Input
-                      id="whatsapp-test-destination-phone"
-                      value={testDestinationPhone}
-                      placeholder="Ex.: 5511988887777"
-                      onChange={(event) => setTestDestinationPhone(event.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium" htmlFor="whatsapp-test-message">
-                      Mensagem
-                    </label>
-                    <Input
-                      id="whatsapp-test-message"
-                      value={testMessageBody}
-                      placeholder="Mensagem de teste do AZZO Agenda Pro."
-                      onChange={(event) => setTestMessageBody(event.target.value)}
-                    />
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleSendTestMessage}
-                  disabled={isSendingTestMessage || isSaving}
-                >
-                  {isSendingTestMessage ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="mr-2 h-4 w-4" />
-                  )}
-                  Enviar mensagem de teste
-                </Button>
-                {testMessageResult ? (
-                  <Alert className={testMessageResult.success
-                    ? "border-green-200 bg-green-50 text-green-900"
-                    : "border-red-200 bg-red-50 text-red-900"}>
-                    <CheckCircle2 className={`h-4 w-4 ${testMessageResult.success ? "!text-green-700" : "!text-red-700"}`} />
-                    <AlertTitle>Resultado do envio</AlertTitle>
-                    <AlertDescription>
-                      {testMessageResult.message}
-                      {testMessageResult.providerMessageId
-                        ? ` Provider message id: ${testMessageResult.providerMessageId}`
-                        : ""}
-                    </AlertDescription>
-                  </Alert>
-                ) : null}
-              </div>
-            </div>
-          ) : null}
-
-          <div className="flex flex-col gap-2 border-t pt-4 sm:flex-row sm:justify-between">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setCurrentStep((prev) => Math.max(1, prev - 1))}
-              disabled={currentStep === 1}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar
-            </Button>
-            <Button
-              type="button"
-              onClick={() => setCurrentStep((prev) => Math.min(WIZARD_STEPS.length, prev + 1))}
-              disabled={currentStep === WIZARD_STEPS.length || !canAdvanceStep}
-            >
-              Proxima etapa
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+      <div className="grid gap-3 md:grid-cols-2">
+        {phoneNumberId && (
+          <div className="rounded-lg border p-3">
+            <p className="text-xs font-medium text-muted-foreground">Phone Number ID</p>
+            <p className="mt-1 break-all text-sm">{phoneNumberId}</p>
           </div>
-        </CardContent>
-      </Card>
+        )}
+        {businessAccountId && (
+          <div className="rounded-lg border p-3">
+            <p className="text-xs font-medium text-muted-foreground">Business Account ID</p>
+            <p className="mt-1 break-all text-sm">{businessAccountId}</p>
+          </div>
+        )}
+        <div className="rounded-lg border p-3">
+          <p className="text-xs font-medium text-muted-foreground">Origem do token</p>
+          <p className="mt-1 text-sm">{tokenSource === "EMBEDDED_CODE_EXCHANGE" ? "Meta (Embedded Signup)" : "Manual"}</p>
+        </div>
+        <div className="rounded-lg border p-3">
+          <p className="text-xs font-medium text-muted-foreground">Status de onboarding</p>
+          <p className="mt-1 text-sm">{onboardingStatus}</p>
+        </div>
+      </div>
+
+      {/* Templates de mensagem */}
+      <div className="rounded-lg border p-4 space-y-4">
+        <div>
+          <p className="text-sm font-semibold">Templates de mensagem automatica</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Clique nos chips para inserir variaveis na posicao do cursor. Deixe em branco para usar o texto padrao.
+          </p>
+        </div>
+        <TemplateEditor
+          label="Confirmacao de agendamento"
+          placeholder="Ola, {cliente}! Seu agendamento de {servico} foi confirmado para {data} as {hora} com {profissional}. Aguardamos voce no {salao}!"
+          value={confirmationTemplate}
+          onChange={setConfirmationTemplate}
+        />
+        <TemplateEditor
+          label="Cancelamento de agendamento"
+          placeholder="Ola, {cliente}! Seu agendamento de {servico} do dia {data} as {hora} foi cancelado. Para reagendar, e so nos chamar!"
+          value={cancellationTemplate}
+          onChange={setCancellationTemplate}
+        />
+        <TemplateEditor
+          label="Lembrete (24h antes)"
+          placeholder="Ola, {cliente}! Lembrando que voce tem {servico} amanha ({data}) as {hora} com {profissional} no {salao}."
+          value={reminderTemplate}
+          onChange={setReminderTemplate}
+        />
+        <Button size="sm" onClick={() => void handleSave()} disabled={isSaving}>
+          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Salvar templates
+        </Button>
+      </div>
+
+      {/* Log de mensagens */}
+      <div className="rounded-lg border p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold">Histórico de mensagens</p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setShowMessageLog((v) => !v);
+              if (!showMessageLog) {
+                setIsLoadingLog(true);
+                whatsappApi.getMessageLog(50)
+                  .then((r) => setMessageLog(r.items))
+                  .catch(() => setMessageLog([]))
+                  .finally(() => setIsLoadingLog(false));
+              }
+            }}
+          >
+            {showMessageLog ? "Ocultar" : "Ver histórico"}
+          </Button>
+        </div>
+        {showMessageLog && (
+          isLoadingLog ? (
+            <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+          ) : messageLog.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma mensagem enviada ainda.</p>
+          ) : (
+            <div className="divide-y text-sm max-h-72 overflow-y-auto">
+              {messageLog.map((item) => (
+                <div key={item.id} className="py-2 flex gap-3 items-start">
+                  <span className={`shrink-0 mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium ${item.status === "SENT" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                    {item.status}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-xs text-muted-foreground">{item.eventType} → {item.destinationPhone}</p>
+                    <p className="truncate text-xs mt-0.5">{item.messageText}</p>
+                    {item.errorMessage && <p className="text-xs text-destructive mt-0.5">{item.errorMessage}</p>}
+                  </div>
+                  <span className="text-[10px] text-muted-foreground shrink-0">{new Date(item.sentAt).toLocaleString("pt-BR")}</span>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+      </div>
     </div>
+  );
+
+  const renderWizard = () => (
+    <WhatsAppSetupWizard
+      currentStep={currentStep}
+      onboardingStatus={onboardingStatus}
+      webhookVerifyToken={webhookVerifyToken}
+      businessAccountId={businessAccountId}
+      businessId={businessId}
+      phoneNumberId={phoneNumberId}
+      displayPhoneNumber={displayPhoneNumber}
+      manualAccessToken={manualAccessToken}
+      isTokenConfigured={isTokenConfigured}
+      webhookUrl={webhookUrl}
+      webhookNeedsPublicUrl={webhookNeedsPublicUrl}
+      canAdvanceStep={canAdvanceStep}
+      isSaving={isSaving}
+      isTesting={isTesting}
+      isValidatingConnection={isValidatingConnection}
+      isSendingTestMessage={isSendingTestMessage}
+      validationResult={validationResult}
+      testResult={testResult}
+      testDestinationPhone={testDestinationPhone}
+      testMessageBody={testMessageBody}
+      testMessageResult={testMessageResult}
+      onBusinessAccountIdChange={setBusinessAccountId}
+      onBusinessIdChange={setBusinessId}
+      onPhoneNumberIdChange={setPhoneNumberId}
+      onDisplayPhoneNumberChange={setDisplayPhoneNumber}
+      onManualAccessTokenChange={setManualAccessToken}
+      onWebhookVerifyTokenChange={setWebhookVerifyToken}
+      onTestDestinationPhoneChange={setTestDestinationPhone}
+      onTestMessageBodyChange={setTestMessageBody}
+      onCopy={handleCopy}
+      onPrevious={() => setCurrentStep((prev) => Math.max(1, prev - 1))}
+      onNext={() => setCurrentStep((prev) => Math.min(7, prev + 1))}
+      onValidateConnection={handleValidateConnection}
+      onSave={handleSave}
+      onTest={handleTest}
+      onSendTestMessage={handleSendTestMessage}
+    />
   );
 
   return (
@@ -1233,18 +746,9 @@ export function WhatsAppIntegrationCard() {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="rounded-lg border p-3">
-            <p className="text-sm font-medium">Status do onboarding</p>
-            <p className="text-xs text-muted-foreground">{onboardingStatus}</p>
-          </div>
-          <div className="rounded-lg border p-3">
-            <p className="text-sm font-medium">Origem do token</p>
-            <p className="text-xs text-muted-foreground">{tokenSource}</p>
-          </div>
-        </div>
-
-        {embeddedSignupEnabled ? (
+        {isConnected && onboardingStatus === "CONNECTED" && currentStep === 7 ? (
+          renderStatusPanel()
+        ) : embeddedSignupEnabled ? (
           <Tabs value={setupMode} onValueChange={(value) => setSetupMode(value as SetupMode)} className="space-y-4">
             <TabsList className="grid h-auto w-full grid-cols-2 gap-2">
               <TabsTrigger value="wizard">Cloud API guiado</TabsTrigger>
@@ -1315,8 +819,8 @@ export function WhatsAppIntegrationCard() {
           renderWizard()
         )}
 
-        <div className="flex items-center justify-between rounded-lg border p-3">
-          <div>
+        <div className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <p className="text-sm font-medium">Ativar integracao</p>
             <p className="text-xs text-muted-foreground">
               Habilita envio, webhook e fluxos de atendimento via WhatsApp para o tenant.
@@ -1324,8 +828,80 @@ export function WhatsAppIntegrationCard() {
           </div>
           <Switch
             checked={activateIntegration}
-            onCheckedChange={setActivateIntegration}
+            disabled={isSaving}
+            onCheckedChange={(val) => {
+              setActivateIntegration(val);
+              void saveToggle("WHATSAPP_ENABLED", val);
+            }}
           />
+        </div>
+
+        <div className="rounded-lg border p-3">
+          <p className="text-sm font-medium">Como voce quer usar o WhatsApp?</p>
+          <p className="text-xs text-muted-foreground">
+            Escolha o perfil de uso. Ele determina quais mensagens automaticas serao enviadas e impacta o custo por conversa na Meta.
+          </p>
+          <div className="mt-3 space-y-2">
+            {(
+              [
+                {
+                  value: "REACTIVE_ONLY" as const,
+                  label: "Somente chat",
+                  description: "Apenas responde mensagens recebidas dos clientes. Custo ~R$ 0,06/conversa (cliente iniciou).",
+                },
+                {
+                  value: "NOTIFICATIONS" as const,
+                  label: "Notificacoes",
+                  description: "Envia lembretes, confirmacoes e avisos de cancelamento. Custo ~R$ 0,25/conversa (voce iniciou).",
+                },
+                {
+                  value: "COMPLETE" as const,
+                  label: "Completo",
+                  description: "Tudo acima mais reativacao de clientes que abandonaram o fluxo de agendamento.",
+                },
+              ] as const
+            ).map((option) => (
+              <label
+                key={option.value}
+                className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors ${
+                  usageProfile === option.value
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:bg-muted/50"
+                } ${!activateIntegration || isSaving ? "cursor-not-allowed opacity-50" : ""}`}
+              >
+                <input
+                  type="radio"
+                  name="usageProfile"
+                  value={option.value}
+                  checked={usageProfile === option.value}
+                  onChange={() => {
+                    const newProfile = option.value;
+                    setUsageProfile(newProfile);
+                    void saveToggle("WHATSAPP_USAGE_PROFILE", newProfile);
+                  }}
+                  disabled={!activateIntegration || isSaving}
+                  className="mt-0.5 accent-primary"
+                />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{option.label}</p>
+                  <p className="text-xs text-muted-foreground">{option.description}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+
+          {(usageProfile === "REACTIVE_ONLY" || usageProfile === "COMPLETE") && (
+            <Alert className="mt-3 border-amber-200 bg-amber-50 text-amber-900">
+              <AlertTriangle className="h-4 w-4 !text-amber-700" />
+              <AlertTitle className="text-amber-800">Aviso de Privacidade</AlertTitle>
+              <AlertDescription className="text-amber-700">
+                Ao ativar o assistente IA, as mensagens recebidas via WhatsApp serao
+                processadas por um servico de inteligencia artificial externo (Groq, EUA)
+                para gerar respostas automaticas. As mensagens nao sao armazenadas
+                permanentemente pelo servico externo.
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
 
         <div className="rounded-lg border p-3">
@@ -1334,8 +910,8 @@ export function WhatsAppIntegrationCard() {
             Defina quais operacoes o cliente pode executar pelo WhatsApp.
           </p>
           <div className="mt-3 space-y-3">
-            <div className="flex items-center justify-between gap-4">
-              <div>
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
                 <p className="text-sm font-medium">Permitir agendamento</p>
                 <p className="text-xs text-muted-foreground">
                   Autoriza criar novos agendamentos.
@@ -1343,12 +919,15 @@ export function WhatsAppIntegrationCard() {
               </div>
               <Switch
                 checked={canSchedule}
-                onCheckedChange={setCanSchedule}
                 disabled={!activateIntegration || isSaving}
+                onCheckedChange={(val) => {
+                  setCanSchedule(val);
+                  void saveToggle("WHATSAPP_CAN_SCHEDULE", val);
+                }}
               />
             </div>
-            <div className="flex items-center justify-between gap-4">
-              <div>
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
                 <p className="text-sm font-medium">Permitir cancelamento</p>
                 <p className="text-xs text-muted-foreground">
                   Autoriza cancelar agendamentos existentes.
@@ -1356,12 +935,15 @@ export function WhatsAppIntegrationCard() {
               </div>
               <Switch
                 checked={canCancel}
-                onCheckedChange={setCanCancel}
                 disabled={!activateIntegration || isSaving}
+                onCheckedChange={(val) => {
+                  setCanCancel(val);
+                  void saveToggle("WHATSAPP_CAN_CANCEL", val);
+                }}
               />
             </div>
-            <div className="flex items-center justify-between gap-4">
-              <div>
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
                 <p className="text-sm font-medium">Permitir remarcacao</p>
                 <p className="text-xs text-muted-foreground">
                   Autoriza remarcar agendamentos existentes.
@@ -1369,8 +951,11 @@ export function WhatsAppIntegrationCard() {
               </div>
               <Switch
                 checked={canReschedule}
-                onCheckedChange={setCanReschedule}
                 disabled={!activateIntegration || isSaving}
+                onCheckedChange={(val) => {
+                  setCanReschedule(val);
+                  void saveToggle("WHATSAPP_CAN_RESCHEDULE", val);
+                }}
               />
             </div>
           </div>
@@ -1379,4 +964,3 @@ export function WhatsAppIntegrationCard() {
     </Card>
   );
 }
-

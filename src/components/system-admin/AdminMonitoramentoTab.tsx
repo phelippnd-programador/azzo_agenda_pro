@@ -267,7 +267,7 @@ export function AdminMonitoramentoTab({ activeTenants }: AdminMonitoramentoTabPr
 
             <div className="rounded-md border">
               <div className="max-h-[360px] overflow-auto">
-                <table className="w-full text-sm">
+                <table className="min-w-[920px] w-full text-sm">
                   <thead className="bg-muted/50">
                     <tr>
                       <th className="px-3 py-2 text-left">Data</th>
@@ -366,7 +366,7 @@ export function AdminMonitoramentoTab({ activeTenants }: AdminMonitoramentoTabPr
 
             <div className="rounded-md border">
               <div className="max-h-[320px] overflow-auto">
-                <table className="w-full text-sm">
+                <table className="min-w-[1100px] w-full text-sm">
                   <thead className="bg-muted/50">
                     <tr>
                       <th className="px-3 py-2 text-left">Data</th>

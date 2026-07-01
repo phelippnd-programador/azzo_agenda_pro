@@ -1,0 +1,47 @@
+import type { Professional } from "@/types";
+import type { ListQueryParams, ListResponse, ProfessionalLimits } from "./contracts";
+import { buildListQuery, request } from "./core";
+
+export type ProfessionalUpsertPayload = Partial<Professional> & {
+  userId?: string;
+  createUser?: boolean;
+  accessPassword?: string;
+};
+
+export const professionalsApi = {
+  getAll: (params?: ListQueryParams) => {
+    const query = buildListQuery(params);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<ListResponse<Professional>>(`/professionals${suffix}`);
+  },
+  getById: (id: string) => request<Professional>(`/professionals/${id}`),
+  getLimits: () => request<ProfessionalLimits>("/professionals/limits"),
+  create: (data: ProfessionalUpsertPayload) =>
+    request<Professional>("/professionals", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: ProfessionalUpsertPayload) =>
+    request<Professional>(`/professionals/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  toggleStatus: (id: string, isActive: boolean) =>
+    request<Professional>(`/professionals/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ isActive }),
+    }),
+  delete: (id: string) =>
+    request<void>(`/professionals/${id}`, {
+      method: "DELETE",
+    }),
+  resetPassword: (id: string) =>
+    request<{
+      professionalId: string;
+      userId: string;
+      email: string;
+      message: string;
+    }>(`/professionals/${id}/reset-password`, {
+      method: "POST",
+    }),
+};

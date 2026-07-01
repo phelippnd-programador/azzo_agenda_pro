@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { formatCurrencyCents as formatCurrency } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import type { CommissionCycleResponse } from "@/types/commission";
 
 interface CommissionCyclesTabProps {
@@ -49,7 +49,7 @@ export function CommissionCyclesTab({
               </Badge>
               {currentCycle ? (
                 <span className="text-xs text-muted-foreground">
-                  {formatCurrency(currentCycle.totalAmountCents)} - {currentCycle.entryCount}{" "}
+                  {formatCurrency(currentCycle.totalAmount)} - {currentCycle.entryCount}{" "}
                   lancamentos
                 </span>
               ) : null}
@@ -84,7 +84,7 @@ export function CommissionCyclesTab({
                       {cycle.periodStart} ate {cycle.periodEnd}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {formatCurrency(cycle.totalAmountCents)} - {cycle.entryCount} lancamentos
+                      {formatCurrency(cycle.totalAmount)} - {cycle.entryCount} lancamentos
                     </p>
                   </div>
                   <div className="flex items-center gap-2">

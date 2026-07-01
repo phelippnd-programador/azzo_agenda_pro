@@ -54,12 +54,17 @@ export function ProfessionalCard({
               <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">
                 {professional.name}
               </h3>
-              <Badge
-                variant={professional.isActive ? "default" : "secondary"}
-                className={`text-[10px] sm:text-xs ${professional.isActive ? "bg-green-100 text-green-700" : ""}`}
-              >
-                {professional.isActive ? "Ativo" : "Inativo"}
-              </Badge>
+              <div className="mt-1 flex flex-wrap gap-1">
+                <Badge
+                  variant={professional.isActive ? "default" : "secondary"}
+                  className={`text-[10px] sm:text-xs ${professional.isActive ? "bg-green-100 text-green-700" : ""}`}
+                >
+                  {professional.isActive ? "Ativo" : "Inativo"}
+                </Badge>
+                <Badge variant="outline" className="text-[10px] sm:text-xs">
+                  {professional.accessUserCreated ? "Acesso ativo" : "Sem acesso"}
+                </Badge>
+              </div>
             </div>
           </div>
           <DropdownMenu>
@@ -69,6 +74,7 @@ export function ProfessionalCard({
                 size="icon"
                 className="h-8 w-8 flex-shrink-0"
                 onClick={(event) => event.stopPropagation()}
+                aria-label={`Abrir acoes de ${professional.name}`}
               >
                 <MoreVertical className="w-4 h-4" />
               </Button>
@@ -112,6 +118,12 @@ export function ProfessionalCard({
             </Badge>
           )}
         </div>
+
+        <p className="text-xs text-muted-foreground">
+          {professional.accessUserCreated
+            ? "Use Resetar senha para reenviar um acesso temporario quando necessario."
+            : "Este profissional ainda nao possui usuario de acesso vinculado."}
+        </p>
       </CardContent>
     </Card>
   );

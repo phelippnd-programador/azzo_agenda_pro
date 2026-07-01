@@ -1,6 +1,8 @@
+import { Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ModuleTabs } from '@/components/navigation/module-tabs';
+import { RouteContentLoader } from '@/components/ui/route-content-loader';
 
 export default function Clients() {
   const location = useLocation();
@@ -17,7 +19,9 @@ export default function Clients() {
     <MainLayout title="Clientes" subtitle="Gerencie sua base de clientes e importacoes">
       <div className="space-y-4 sm:space-y-6">
         <ModuleTabs items={tabs} pathname={location.pathname} />
-        <Outlet />
+        <Suspense fallback={<RouteContentLoader />}>
+          <Outlet />
+        </Suspense>
       </div>
     </MainLayout>
   );

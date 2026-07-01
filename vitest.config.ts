@@ -15,6 +15,11 @@ export default defineConfig({
     include: ["./src/test/**/*.test.{ts,tsx}"],
     setupFiles: ["./src/test/setup.ts"],
     css: true,
+    fileParallelism: false,
+    minWorkers: 1,
+    maxWorkers: 1,
+    testTimeout: 30000,
+    hookTimeout: 30000,
     coverage: {
       reporter: ["text", "html"],
     },

@@ -3,12 +3,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { billingApi, systemAdminApi } from '@/lib/api';
+import { formatCurrency } from '@/lib/format';
 import { toast } from 'sonner';
 import type { SystemPlanItem, SystemPlanUpsertRequest } from '@/types/system-admin';
 import type { BillingPaymentItem } from '@/types/billing';
@@ -18,7 +20,7 @@ type PlanFormState = {
   name: string;
   description: string;
   currency: string;
-  priceCents: string;
+  price: number;
   validityMonths: string;
   validityDays: string;
   highlight: string;
@@ -33,7 +35,7 @@ const createEmptyPlanForm = (): PlanFormState => ({
   name: '',
   description: '',
   currency: 'BRL',
-  priceCents: '0',
+  price: 0,
   validityMonths: '1',
   validityDays: '',
   highlight: '',
@@ -111,7 +113,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
       name: plan.name || '',
       description: plan.description || '',
       currency: plan.currency || 'BRL',
-      priceCents: String(plan.priceCents ?? 0),
+      price: Number(plan.price ?? 0),
       validityMonths: String(plan.validityMonths ?? 1),
       validityDays: plan.validityDays != null ? String(plan.validityDays) : '',
       highlight: plan.highlight || '',
@@ -124,27 +126,37 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
     setIsDialogOpen(true);
   };
 
-  const buildPayload = (): SystemPlanUpsertRequest => ({
-    name: planForm.name.trim(),
-    description: planForm.description.trim() || undefined,
-    currency: planForm.currency.trim().toUpperCase() || 'BRL',
-    priceCents: Number(planForm.priceCents || 0),
-    validityMonths: Number(planForm.validityMonths || 1),
-    validityDays: planForm.validityDays.trim() ? Number(planForm.validityDays) : undefined,
-    highlight: planForm.highlight.trim() || undefined,
-    featuresJson: planForm.featuresJson.trim() || '[]',
-    active: planForm.active,
-    trial: planForm.trial,
-    priority: Number(planForm.priority || 0),
-    maxProfessionals: planForm.maxProfessionals.trim() ? Number(planForm.maxProfessionals) : undefined,
-  });
+  const buildPayload = (): SystemPlanUpsertRequest => {
+    if (!Number.isFinite(planForm.price)) {
+      throw new Error('Informe um preco valido em reais.');
+    }
+
+    return {
+      name: planForm.name.trim(),
+      description: planForm.description.trim() || undefined,
+      currency: planForm.currency.trim().toUpperCase() || 'BRL',
+      price: planForm.price,
+      validityMonths: Number(planForm.validityMonths || 1),
+      validityDays: planForm.validityDays.trim() ? Number(planForm.validityDays) : undefined,
+      highlight: planForm.highlight.trim() || undefined,
+      featuresJson: planForm.featuresJson.trim() || '[]',
+      active: planForm.active,
+      trial: planForm.trial,
+      priority: Number(planForm.priority || 0),
+      maxProfessionals: planForm.maxProfessionals.trim() ? Number(planForm.maxProfessionals) : undefined,
+    };
+  };
 
   const savePlan = async () => {
-    if (!planForm.name.trim()) {
-      toast.error('Nome do plano obrigatorio.');
-      return;
-    }
-    setIsSavingPlan(true);
+      if (!planForm.name.trim()) {
+        toast.error('Nome do plano obrigatorio.');
+        return;
+      }
+      if (!Number.isFinite(planForm.price)) {
+        toast.error('Informe um preco valido em reais.');
+        return;
+      }
+      setIsSavingPlan(true);
     try {
       const payload = buildPayload();
       if (planForm.id) {
@@ -232,7 +244,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
 
             <div className="rounded-md border">
               <div className="max-h-[320px] overflow-auto">
-                <table className="w-full text-sm">
+                <table className="min-w-[980px] w-full text-sm">
                   <thead className="bg-muted/50">
                     <tr>
                       <th className="px-3 py-2 text-left">Plano</th>
@@ -261,7 +273,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
                             {plan.trial ? 'TRIAL' : 'PAGO'}
                           </Badge>
                         </td>
-                        <td className="px-3 py-2">R$ {(Number(plan.priceCents || 0) / 100).toFixed(2)}</td>
+                        <td className="px-3 py-2">{formatCurrency(Number(plan.price || 0))}</td>
                         <td className="px-3 py-2">{plan.validityDays || plan.validityMonths * 30} dias</td>
                         <td className="px-3 py-2">{plan.maxProfessionals ?? '-'}</td>
                         <td className="px-3 py-2">{plan.priority}</td>
@@ -335,7 +347,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
                           {payment.asaasPaymentId} - {payment.billingType}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Valor: R$ {(Number(payment.amountCents || 0) / 100).toFixed(2)} | Vencimento:{' '}
+                          Valor: {formatCurrency(Number(payment.amount || 0))} | Vencimento:{' '}
                           {payment.dueDate || '-'}
                         </p>
                       </div>
@@ -356,42 +368,44 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{planForm.id ? 'Editar plano' : 'Novo plano'}</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2 md:col-span-2">
+          <div className="overflow-y-auto flex-1 pr-1">
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-1.5 md:col-span-2">
               <Label>Nome</Label>
               <Input
                 value={planForm.name}
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, name: e.target.value }))}
               />
             </div>
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-1.5 md:col-span-2">
               <Label>Descricao</Label>
               <Textarea
                 value={planForm.description}
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, description: e.target.value }))}
-                rows={3}
+                rows={2}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Moeda</Label>
               <Input
                 value={planForm.currency}
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, currency: e.target.value }))}
               />
-            </div>
-            <div className="space-y-2">
-              <Label>Preco em centavos</Label>
-              <Input
-                type="number"
-                value={planForm.priceCents}
-                onChange={(e) => setPlanForm((prev) => ({ ...prev, priceCents: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="system-plan-price">Preco em reais</Label>
+                <CurrencyInput
+                  id="system-plan-price"
+                  value={planForm.price}
+                  onChange={(value) => setPlanForm((prev) => ({ ...prev, price: value }))}
+                  placeholder="0,00"
+                />
+              </div>
+            <div className="space-y-1.5">
               <Label>Validade em meses</Label>
               <Input
                 type="number"
@@ -399,7 +413,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, validityMonths: e.target.value }))}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Validade em dias</Label>
               <Input
                 type="number"
@@ -407,7 +421,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, validityDays: e.target.value }))}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Prioridade</Label>
               <Input
                 type="number"
@@ -415,7 +429,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, priority: e.target.value }))}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Maximo de profissionais</Label>
               <Input
                 type="number"
@@ -423,19 +437,19 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, maxProfessionals: e.target.value }))}
               />
             </div>
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-1.5 md:col-span-2">
               <Label>Destaque</Label>
               <Input
                 value={planForm.highlight}
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, highlight: e.target.value }))}
               />
             </div>
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-1.5 md:col-span-2">
               <Label>Features JSON</Label>
               <Textarea
                 value={planForm.featuresJson}
                 onChange={(e) => setPlanForm((prev) => ({ ...prev, featuresJson: e.target.value }))}
-                rows={4}
+                rows={3}
               />
             </div>
             <label className="flex items-center gap-2 text-sm">
@@ -453,7 +467,8 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
               Trial
             </label>
           </div>
-          <div className="flex justify-end gap-2">
+          </div>
+          <div className="flex justify-end gap-2 pt-2 border-t">
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancelar
             </Button>

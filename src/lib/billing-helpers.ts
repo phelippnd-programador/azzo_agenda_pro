@@ -34,8 +34,8 @@ export function toDigits(value: string) {
   return onlyDigits(value);
 }
 
-export function formatCurrency(amountCents: number) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amountCents / 100);
+export function formatCurrency(amount: number) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount);
 }
 
 export function formatDate(value?: string | null) {
@@ -51,6 +51,30 @@ export function formatReferenceMonth(value?: string | null) {
   const date = new Date(normalized);
   if (Number.isNaN(date.getTime())) return value;
   return new Intl.DateTimeFormat('pt-BR', { month: '2-digit', year: 'numeric' }).format(date);
+}
+
+export function formatPlanBillingCycle(validityMonths?: number | null, validityDays?: number | null) {
+  if (validityMonths != null && validityMonths > 0) {
+    return validityMonths === 1 ? 'por 1 mes' : `por ${validityMonths} meses`;
+  }
+  if (validityDays != null && validityDays > 0) {
+    return validityDays === 1 ? 'por 1 dia' : `por ${validityDays} dias`;
+  }
+  return 'por 1 mes';
+}
+
+export function formatPlanValidity(validityMonths?: number | null, validityDays?: number | null) {
+  if (validityMonths != null && validityMonths > 0) {
+    return validityMonths === 1
+      ? 'Validade de 1 mes apos a contratacao.'
+      : `Validade de ${validityMonths} meses apos a contratacao.`;
+  }
+  if (validityDays != null && validityDays > 0) {
+    return validityDays === 1
+      ? 'Validade de 1 dia apos a contratacao.'
+      : `Validade de ${validityDays} dias apos a contratacao.`;
+  }
+  return 'Validade mensal apos a contratacao.';
 }
 
 // ─── Status helpers ───────────────────────────────────────────────────────────

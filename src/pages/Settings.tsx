@@ -1,52 +1,63 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { PlugZap, Building2, ShieldCheck, Receipt, Boxes } from 'lucide-react';
+import {
+  ArrowRight,
+  Boxes,
+  Building2,
+  CalendarRange,
+  PlugZap,
+  Receipt,
+  ShieldCheck,
+} from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMenuPermissions } from '@/contexts/MenuPermissionsContext';
 import { SettingsNotificationsTab } from '@/components/settings/SettingsNotificationsTab';
 import { SettingsAccountTab } from '@/components/settings/SettingsAccountTab';
 import { AppointmentConflictSettingsCard } from '@/components/settings/AppointmentConflictSettingsCard';
+import { CancellationPolicyCard } from '@/components/settings/CancellationPolicyCard';
+import { SettingsBusinessHoursTab } from '@/components/settings/SettingsBusinessHoursTab';
+import { SettingsClosuresTab } from '@/components/settings/SettingsClosuresTab';
 
 export default function Settings() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'notifications');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'account');
   const { user } = useAuth();
   const { allowedRoutes, canAccess } = useMenuPermissions();
+  const tabsRef = useRef<HTMLDivElement | null>(null);
 
   const hasExactRoute = (route: string) => (allowedRoutes ?? []).includes(route);
-  const canAccessWhatsAppIntegration = hasExactRoute('/configuracoes/integracoes/whatsapp');
-  const canAccessStockSettings = hasExactRoute('/configuracoes/estoque');
-  const canAccessTaxSettings = hasExactRoute('/configuracoes/fiscal/impostos');
-  const canAccessCertificates = hasExactRoute('/configuracoes/fiscal/certificados');
-  const canAccessNfseSettings = hasExactRoute('/configuracoes/fiscal/nfse');
-  const canAccessNfseModule = hasExactRoute('/fiscal/nfse');
-  const canAccessSalonProfile = canAccess('/perfil-salao');
+  const canAccessWhatsApp    = hasExactRoute('/configuracoes/integracoes/whatsapp');
+  const canAccessStock       = hasExactRoute('/configuracoes/estoque');
+  const canAccessTax         = hasExactRoute('/configuracoes/fiscal/impostos');
+  const canAccessCerts       = hasExactRoute('/configuracoes/fiscal/certificados');
+  const canAccessNfseConfig  = hasExactRoute('/configuracoes/fiscal/nfse');
+  const canAccessNfseModule  = hasExactRoute('/fiscal/nfse');
+  const canAccessSalon       = canAccess('/perfil-salao');
+
+  const isOwner = user?.role === 'OWNER';
 
   const visibleTabs = useMemo(() => {
-    const tabs = ['notifications', 'account'];
-    if (canAccessWhatsAppIntegration || canAccessStockSettings) tabs.push('integrations');
-    if (canAccessTaxSettings || canAccessCertificates || canAccessNfseSettings || canAccessNfseModule)
-      tabs.push('fiscal');
-    if (canAccessSalonProfile) tabs.push('salon');
+    const tabs: string[] = ['account', 'notifications'];
+    if (canAccessSalon || isOwner) tabs.push('salon');
+    if (isOwner) tabs.push('agenda');
+    if (canAccessWhatsApp || canAccessStock) tabs.push('integrations');
+    if (canAccessTax || canAccessCerts || canAccessNfseConfig || canAccessNfseModule) tabs.push('fiscal');
     return tabs;
-  }, [
-    canAccessWhatsAppIntegration, canAccessStockSettings,
-    canAccessTaxSettings, canAccessCertificates, canAccessNfseSettings, canAccessNfseModule,
-    canAccessSalonProfile,
-  ]);
+  }, [canAccessSalon, isOwner, canAccessWhatsApp, canAccessStock, canAccessTax, canAccessCerts, canAccessNfseConfig, canAccessNfseModule]);
 
   useEffect(() => {
-    const tab = searchParams.get('tab') || 'notifications';
+    const tab = searchParams.get('tab') || 'account';
     setActiveTab(tab);
   }, [searchParams]);
 
   useEffect(() => {
     if (visibleTabs.includes(activeTab)) return;
-    const fallback = visibleTabs[0] || 'notifications';
+    const fallback = visibleTabs[0] ?? 'account';
     setActiveTab(fallback);
     const next = new URLSearchParams(searchParams);
     next.set('tab', fallback);
@@ -60,176 +71,245 @@ export default function Settings() {
     setSearchParams(next, { replace: true });
   };
 
+  const TAB_LABELS: Record<string, string> = {
+    account:      'Minha Conta',
+    notifications:'Notificações',
+    salon:        'Salão',
+    agenda:       'Agenda',
+    integrations: 'Integrações',
+    fiscal:       'Fiscal',
+  };
+
   return (
     <MainLayout
-      title="Configuracoes"
-      subtitle="Gerencie conta, notificacoes e integracoes. Dados do salao ficam em Perfil do Salao."
+      title="Configurações"
+      subtitle="Gerencie sua conta, o salão e as preferências do sistema."
     >
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-2 h-auto">
-          {visibleTabs.includes('notifications') ? (
-            <TabsTrigger value="notifications">Notificacoes</TabsTrigger>
-          ) : null}
-          {visibleTabs.includes('account') ? (
-            <TabsTrigger value="account">Conta</TabsTrigger>
-          ) : null}
-          {visibleTabs.includes('integrations') ? (
-            <TabsTrigger value="integrations">Integracoes</TabsTrigger>
-          ) : null}
-          {visibleTabs.includes('fiscal') ? (
-            <TabsTrigger value="fiscal">Fiscal</TabsTrigger>
-          ) : null}
-          {visibleTabs.includes('salon') ? (
-            <TabsTrigger value="salon">Perfil do Salao</TabsTrigger>
-          ) : null}
-        </TabsList>
+      <div ref={tabsRef} className="space-y-4">
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
+          <div className="overflow-x-auto">
+            <TabsList className="flex h-auto w-max gap-1 rounded-xl border bg-muted/30 p-1">
+              {visibleTabs.map((tab) => (
+                <TabsTrigger
+                  key={tab}
+                  value={tab}
+                  className="shrink-0 whitespace-nowrap px-4 py-2 text-sm"
+                >
+                  {TAB_LABELS[tab]}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
-        <TabsContent value="notifications">
-          <SettingsNotificationsTab />
-        </TabsContent>
+          {/* ── Minha Conta ── */}
+          <TabsContent value="account">
+            <SettingsAccountTab
+              userName={user?.name ?? ''}
+              userEmail={user?.email ?? ''}
+              userRole={user?.role}
+            />
+          </TabsContent>
 
-        <TabsContent value="account">
-          <SettingsAccountTab
-            userName={user?.name || ''}
-            userEmail={user?.email || ''}
-            userRole={user?.role}
-          />
-        </TabsContent>
+          {/* ── Notificações ── */}
+          <TabsContent value="notifications">
+            <SettingsNotificationsTab />
+          </TabsContent>
 
-        <TabsContent value="integrations">
-          <Card>
-            <CardHeader>
-              <CardTitle>Integracoes</CardTitle>
-              <CardDescription>Configure integracoes externas da sua operacao.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {canAccessWhatsAppIntegration ? (
-                <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div>
-                    <p className="font-medium flex items-center gap-2">
-                      <PlugZap className="h-4 w-4 text-primary" />
-                      WhatsApp Cloud API
-                    </p>
-                    <p className="text-sm text-muted-foreground">Defina credenciais por tenant e valide conexao.</p>
-                  </div>
-                  <Button asChild>
-                    <Link to="/configuracoes/integracoes/whatsapp">Abrir configuracao</Link>
+          {/* ── Salão ── perfil + horários + fechamentos */}
+          <TabsContent value="salon" className="space-y-6">
+            {canAccessSalon && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4" />
+                    Perfil do Salão
+                  </CardTitle>
+                  <CardDescription>
+                    Nome, endereço, slug, foto e dados públicos do estabelecimento.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button asChild className="gap-2">
+                    <Link to="/perfil-salao">
+                      Abrir perfil do salão
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
                   </Button>
-                </div>
-              ) : null}
-              {canAccessStockSettings ? (
-                <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div>
-                    <p className="font-medium flex items-center gap-2">
+                </CardContent>
+              </Card>
+            )}
+
+            {isOwner && (
+              <>
+                <SettingsBusinessHoursTab />
+                <SettingsClosuresTab />
+              </>
+            )}
+          </TabsContent>
+
+          {/* ── Agenda ── conflito + cancelamento */}
+          {isOwner && (
+            <TabsContent value="agenda" className="space-y-4">
+              <div>
+                <h2 className="text-base font-semibold text-foreground">Regras da Agenda</h2>
+                <p className="text-sm text-muted-foreground">
+                  Controle como conflitos e cancelamentos são tratados no seu salão.
+                </p>
+              </div>
+              <Separator />
+              <div className="grid gap-4 lg:grid-cols-2">
+                <AppointmentConflictSettingsCard />
+                <CancellationPolicyCard />
+              </div>
+            </TabsContent>
+          )}
+
+          {/* ── Integrações ── WhatsApp + Estoque */}
+          <TabsContent value="integrations" className="space-y-4">
+            <div>
+              <h2 className="text-base font-semibold text-foreground">Integrações</h2>
+              <p className="text-sm text-muted-foreground">
+                Canais e módulos externos conectados ao seu salão.
+              </p>
+            </div>
+            <Separator />
+            <div className="grid gap-4 lg:grid-cols-2">
+              {canAccessWhatsApp && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <PlugZap className="h-4 w-4 text-primary" />
+                      WhatsApp Business
+                    </CardTitle>
+                    <CardDescription>
+                      Credenciais, webhook e teste do canal de mensagens.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild className="w-full justify-between">
+                      <Link to="/configuracoes/integracoes/whatsapp">
+                        Configurar WhatsApp
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+              {canAccessStock && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-sm">
                       <Boxes className="h-4 w-4 text-primary" />
                       Estoque
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Parametros de alerta e politicas operacionais de estoque.
-                    </p>
-                  </div>
-                  <Button asChild variant="outline">
-                    <Link to="/configuracoes/estoque">Abrir configuracao</Link>
-                  </Button>
-                </div>
-              ) : null}
-              {user?.role === 'OWNER' ? <AppointmentConflictSettingsCard /> : null}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                    </CardTitle>
+                    <CardDescription>
+                      Alertas de estoque mínimo e parâmetros operacionais.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild variant="outline" className="w-full justify-between">
+                      <Link to="/configuracoes/estoque">
+                        Configurar estoque
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
 
-        <TabsContent value="fiscal">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configuracoes Fiscais</CardTitle>
-              <CardDescription>Toda configuracao fiscal deve ser acessada a partir desta aba.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {canAccessTaxSettings ? (
-                <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div>
-                    <p className="font-medium flex items-center gap-2">
+          {/* ── Fiscal ── impostos + certificados + NFS-e */}
+          <TabsContent value="fiscal" className="space-y-4">
+            <div>
+              <h2 className="text-base font-semibold text-foreground">Configurações Fiscais</h2>
+              <p className="text-sm text-muted-foreground">
+                Regime tributário, certificado digital e emissão de notas de serviço.
+              </p>
+            </div>
+            <Separator />
+            <div className="grid gap-4 lg:grid-cols-2">
+              {canAccessTax && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-sm">
                       <Receipt className="h-4 w-4 text-primary" />
-                      Configuracao de Impostos
-                    </p>
-                    <p className="text-sm text-muted-foreground">Defina regime, aliquotas e parametros fiscais.</p>
-                  </div>
-                  <Button asChild><Link to="/configuracoes/fiscal/impostos">Abrir configuracao</Link></Button>
-                </div>
-              ) : null}
-              {canAccessCertificates ? (
-                <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div>
-                    <p className="font-medium flex items-center gap-2">
+                      Impostos
+                    </CardTitle>
+                    <CardDescription>Regime, alíquotas e regras fiscais do salão.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild className="w-full justify-between">
+                      <Link to="/configuracoes/fiscal/impostos">
+                        Abrir impostos
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+              {canAccessCerts && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-sm">
                       <ShieldCheck className="h-4 w-4 text-primary" />
-                      Certificados Fiscais
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Gerencie upload, ativacao e remocao de certificado A1 do tenant.
-                    </p>
-                  </div>
-                  <Button asChild variant="outline">
-                    <Link to="/configuracoes/fiscal/certificados">Abrir certificados</Link>
-                  </Button>
-                </div>
-              ) : null}
-              {canAccessNfseSettings ? (
-                <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div>
-                    <p className="font-medium flex items-center gap-2">
+                      Certificado Digital
+                    </CardTitle>
+                    <CardDescription>Upload e ativação do certificado A1.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild variant="outline" className="w-full justify-between">
+                      <Link to="/configuracoes/fiscal/certificados">
+                        Abrir certificados
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+              {canAccessNfseConfig && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-sm">
                       <Receipt className="h-4 w-4 text-primary" />
-                      Configuracao NFS-e
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Configure emissao de servicos (municipio, provedor, RPS e capacidades).
-                    </p>
-                  </div>
-                  <Button asChild variant="outline">
-                    <Link to="/configuracoes/fiscal/nfse">Abrir NFS-e</Link>
-                  </Button>
-                </div>
-              ) : null}
-              {canAccessNfseModule ? (
-                <div className="rounded-lg border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div>
-                    <p className="font-medium flex items-center gap-2">
-                      <Receipt className="h-4 w-4 text-primary" />
-                      Modulo NFS-e
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Gerencie rascunhos, autorizacoes, cancelamentos e PDF da NFS-e.
-                    </p>
-                  </div>
-                  <Button asChild variant="outline">
-                    <Link to="/fiscal/nfse">Abrir modulo</Link>
-                  </Button>
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                      Configuração NFS-e
+                    </CardTitle>
+                    <CardDescription>Município, provedor, RPS e parâmetros de emissão.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild variant="outline" className="w-full justify-between">
+                      <Link to="/configuracoes/fiscal/nfse">
+                        Configurar NFS-e
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+              {canAccessNfseModule && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <CalendarRange className="h-4 w-4 text-primary" />
+                      Módulo NFS-e
+                    </CardTitle>
+                    <CardDescription>Emitir, cancelar e consultar notas fiscais.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild variant="outline" className="w-full justify-between">
+                      <Link to="/fiscal/nfse">
+                        Abrir módulo
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
 
-        <TabsContent value="salon">
-          <Card>
-            <CardHeader>
-              <CardTitle>Perfil do Salao</CardTitle>
-              <CardDescription>
-                Dados do salao, endereco, slug e horarios ficam centralizados em uma unica pagina.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {canAccessSalonProfile ? (
-                <Button asChild className="gap-2">
-                  <Link to="/perfil-salao">
-                    <Building2 className="h-4 w-4" />
-                    Abrir Perfil do Salao
-                  </Link>
-                </Button>
-              ) : null}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        </Tabs>
+      </div>
     </MainLayout>
   );
 }
