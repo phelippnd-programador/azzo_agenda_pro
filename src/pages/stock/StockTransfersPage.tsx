@@ -191,15 +191,17 @@ export default function StockTransfersPage() {
           <div className="space-y-3">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div className="space-y-1">
-                <Label>Origem</Label>
+                <Label htmlFor="transfer-origem">Origem</Label>
                 <Input
+                  id="transfer-origem"
                   value={form.origem}
                   onChange={(e) => setForm((prev) => ({ ...prev, origem: e.target.value }))}
                 />
               </div>
               <div className="space-y-1">
-                <Label>Destino</Label>
+                <Label htmlFor="transfer-destino">Destino</Label>
                 <Input
+                  id="transfer-destino"
                   value={form.destino}
                   onChange={(e) => setForm((prev) => ({ ...prev, destino: e.target.value }))}
                 />
@@ -207,8 +209,9 @@ export default function StockTransfersPage() {
             </div>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div className="space-y-1">
-                <Label>Item</Label>
+                <Label htmlFor="transfer-item">Item</Label>
                 <select
+                  id="transfer-item"
                   className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                   value={form.itemEstoqueId}
                   onChange={(e) => setForm((prev) => ({ ...prev, itemEstoqueId: e.target.value }))}
@@ -222,8 +225,9 @@ export default function StockTransfersPage() {
                 </select>
               </div>
               <div className="space-y-1">
-                <Label>Quantidade</Label>
+                <Label htmlFor="transfer-quantidade">Quantidade</Label>
                 <Input
+                  id="transfer-quantidade"
                   type="number"
                   min="0"
                   value={form.quantidade}
@@ -232,8 +236,9 @@ export default function StockTransfersPage() {
               </div>
             </div>
             <div className="space-y-1">
-              <Label>Observacao (opcional)</Label>
+              <Label htmlFor="transfer-observacao">Observacao (opcional)</Label>
               <Input
+                id="transfer-observacao"
                 value={form.observacao || ""}
                 onChange={(e) => setForm((prev) => ({ ...prev, observacao: e.target.value }))}
               />

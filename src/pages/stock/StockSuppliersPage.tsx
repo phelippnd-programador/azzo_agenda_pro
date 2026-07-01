@@ -188,16 +188,18 @@ export default function StockSuppliersPage() {
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">
-              <Label>Nome</Label>
+              <Label htmlFor="supplier-nome">Nome</Label>
               <Input
+                id="supplier-nome"
                 value={form.nome}
                 onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))}
               />
             </div>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div className="space-y-1">
-                <Label>Documento</Label>
+                <Label htmlFor="supplier-documento">Documento</Label>
                 <Input
+                  id="supplier-documento"
                   value={form.documento || ""}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, documento: maskCpfCnpj(e.target.value) }))
@@ -205,8 +207,9 @@ export default function StockSuppliersPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label>Contato</Label>
+                <Label htmlFor="supplier-contato">Contato</Label>
                 <Input
+                  id="supplier-contato"
                   value={form.contato || ""}
                   onChange={(e) => setForm((prev) => ({ ...prev, contato: e.target.value }))}
                 />
@@ -214,15 +217,17 @@ export default function StockSuppliersPage() {
             </div>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div className="space-y-1">
-                <Label>Email</Label>
+                <Label htmlFor="supplier-email">Email</Label>
                 <Input
+                  id="supplier-email"
                   value={form.email || ""}
                   onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
                 />
               </div>
               <div className="space-y-1">
-                <Label>Telefone</Label>
+                <Label htmlFor="supplier-telefone">Telefone</Label>
                 <Input
+                  id="supplier-telefone"
                   value={form.telefone || ""}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, telefone: maskPhoneBr(e.target.value) }))

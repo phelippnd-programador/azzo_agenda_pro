@@ -682,8 +682,9 @@ export default function StockInventoriesPage() {
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">
-              <Label>Nome</Label>
+              <Label htmlFor="inventory-nome">Nome</Label>
               <Input
+                id="inventory-nome"
                 value={inventoryForm.nome}
                 onChange={(e) => setInventoryForm((prev) => ({ ...prev, nome: e.target.value }))}
                 onKeyDown={(e) => { if (e.key === "Enter") void handleCreate(); }}
@@ -691,8 +692,9 @@ export default function StockInventoriesPage() {
               />
             </div>
             <div className="space-y-1">
-              <Label>Observacao (opcional)</Label>
+              <Label htmlFor="inventory-observacao">Observacao (opcional)</Label>
               <Input
+                id="inventory-observacao"
                 value={inventoryForm.observacao || ""}
                 onChange={(e) => setInventoryForm((prev) => ({ ...prev, observacao: e.target.value }))}
               />
