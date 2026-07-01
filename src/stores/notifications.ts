@@ -20,6 +20,7 @@ type NotificationsStoreState = {
   hasMore: boolean;
   nextCursorCreatedAt: string | null;
   nextCursorId: string | null;
+  userRole: string | null;
   refreshSummary: () => Promise<void>;
   fetchAll: (filters?: NotificationsFilters) => Promise<void>;
   fetchNextPage: () => Promise<void>;
@@ -27,7 +28,7 @@ type NotificationsStoreState = {
   clearAllNotifications: () => Promise<boolean>;
   markNotificationAsRead: (id: string) => Promise<boolean>;
   markAllAsRead: () => Promise<boolean>;
-  startPolling: () => void;
+  startPolling: (role?: string) => void;
   stopPolling: () => void;
 };
 
@@ -80,6 +81,7 @@ export const useNotificationsStore = create<NotificationsStoreState>((set, get) 
   hasMore: true,
   nextCursorCreatedAt: null,
   nextCursorId: null,
+  userRole: null,
   currentFilters: {
     failedOnly: false,
     unreadOnly: false,
@@ -88,7 +90,10 @@ export const useNotificationsStore = create<NotificationsStoreState>((set, get) 
 
   refreshSummary: async () => {
     try {
-      const response = await notificationsApi.getAll({ limit: SUMMARY_LIMIT });
+      const isProfessional = get().userRole === "PROFESSIONAL";
+      const response = isProfessional
+        ? await notificationsApi.getMyAppointments({ limit: SUMMARY_LIMIT })
+        : await notificationsApi.getAll({ limit: SUMMARY_LIMIT });
       const sorted = sortByNewest(response.items || []);
       set({
         summaryItems: sorted.slice(0, 5),
@@ -137,7 +142,10 @@ export const useNotificationsStore = create<NotificationsStoreState>((set, get) 
         nextCursorCreatedAt: null,
         nextCursorId: null,
       });
-      const response = await notificationsApi.getAll(mergedFilters);
+      const isProfessional = get().userRole === "PROFESSIONAL";
+      const response = isProfessional
+        ? await notificationsApi.getMyAppointments({ unreadOnly: mergedFilters.unreadOnly, limit: mergedFilters.limit })
+        : await notificationsApi.getAll(mergedFilters);
       const sorted = sortByNewest(response.items || []);
       set({
         items: sorted,
@@ -182,10 +190,14 @@ export const useNotificationsStore = create<NotificationsStoreState>((set, get) 
 
     try {
       set({ loading: true, error: null });
-      const response = await notificationsApi.getAll(state.currentFilters, {
-        cursorCreatedAt: state.nextCursorCreatedAt,
-        cursorId: state.nextCursorId,
-      });
+      const isProfessional = state.userRole === "PROFESSIONAL";
+      const cursor = { cursorCreatedAt: state.nextCursorCreatedAt!, cursorId: state.nextCursorId! };
+      const response = isProfessional
+        ? await notificationsApi.getMyAppointments(
+            { unreadOnly: state.currentFilters.unreadOnly, limit: state.currentFilters.limit },
+            cursor
+          )
+        : await notificationsApi.getAll(state.currentFilters, cursor);
 
       const combined = [...state.items, ...(response.items || [])];
       const dedupedById = Array.from(
@@ -299,16 +311,21 @@ export const useNotificationsStore = create<NotificationsStoreState>((set, get) 
     }
   },
 
-  startPolling: () => {
-    if (typeof window === "undefined" || pollingStarted) return;
+  startPolling: (role?: string) => {
+    if (typeof window === "undefined") return;
+    const currentRole = get().userRole;
+    if (role !== undefined && role !== currentRole) {
+      set({ userRole: role ?? null });
+      pollingStarted = false;
+      clearPolling();
+    }
+    if (pollingStarted) return;
     pollingStarted = true;
-    clearPolling();
 
     pollingInterval = window.setInterval(() => {
       void get().refreshSummary();
     }, POLLING_MS);
 
-    // Ao logar/iniciar provider, faz refresh imediato.
     void get().refreshSummary();
   },
 

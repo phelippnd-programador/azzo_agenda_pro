@@ -48,6 +48,31 @@ export const notificationsApi = {
 
     return response;
   },
+  getMyAppointments: async (
+    filters: Pick<NotificationsFilters, "unreadOnly" | "limit"> = {},
+    cursor?: NotificationsCursor
+  ): Promise<NotificationsListResponse> => {
+    const query = new URLSearchParams();
+    if (typeof filters.unreadOnly === "boolean") {
+      query.set("unreadOnly", String(filters.unreadOnly));
+    }
+    const normalizedLimit = Math.min(Math.max(filters.limit ?? 100, 1), 500);
+    query.set("limit", String(normalizedLimit));
+
+    if (cursor?.cursorCreatedAt && cursor.cursorId) {
+      query.set("cursorCreatedAt", cursor.cursorCreatedAt);
+      query.set("cursorId", cursor.cursorId);
+    }
+
+    const response = await request<NotificationsListResponse | AppNotification[]>(
+      `/notifications/my-appointments?${query.toString()}`
+    );
+
+    if (Array.isArray(response)) {
+      return { items: response, hasMore: false, nextCursorCreatedAt: null, nextCursorId: null };
+    }
+    return response;
+  },
   deleteById: (id: string) =>
     request<void>(`/notifications/${id}`, {
       method: "DELETE",

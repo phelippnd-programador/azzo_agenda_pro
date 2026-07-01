@@ -9,7 +9,7 @@ export function NotificationsProvider({
 }: {
   children: ReactNode;
 }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { pathname } = useLocation();
   const startPolling = useNotificationsStore((state) => state.startPolling);
   const stopPolling = useNotificationsStore((state) => state.stopPolling);
@@ -22,11 +22,11 @@ export function NotificationsProvider({
       return;
     }
 
-    startPolling();
+    startPolling(user?.role ?? undefined);
     return () => {
       stopPolling();
     };
-  }, [isAuthenticated, isPublicBookingRoute, startPolling, stopPolling]);
+  }, [isAuthenticated, isPublicBookingRoute, user?.role, startPolling, stopPolling]);
 
   return <>{children}</>;
 }
