@@ -76,6 +76,13 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to={appRouteManifest.shell.unauthorized} replace />;
   }
 
+  if (
+    location.pathname === appRouteManifest.finance.license &&
+    user?.role === "PROFESSIONAL"
+  ) {
+    return <Navigate to={appRouteManifest.shell.unauthorized} replace />;
+  }
+
   if (!canAccess(location.pathname)) {
     return <Navigate to={appRouteManifest.shell.unauthorized} replace />;
   }
