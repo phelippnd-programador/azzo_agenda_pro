@@ -454,7 +454,7 @@ export default function ServicesOverviewPage() {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Se nenhum profissional for selecionado, o servico fica disponivel para todos.
+                    Servicos sem profissional vinculado nao aparecem no agendamento.
                   </p>
                   {formProfessionalIds.length > 0 ? (
                     <div className="flex flex-wrap gap-1">

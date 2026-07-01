@@ -95,12 +95,10 @@ export function NewAppointmentDialog({
   const activeServices = useMemo(
     () =>
       activeServicesCatalog.filter((service) => {
+        if (!serviceHasAssignedProfessionals(service.professionalIds)) return false;
         if (!effectiveProfessionalId) return true;
 
-        return (
-          serviceHasAssignedProfessionals(service.professionalIds) &&
-          service.professionalIds.includes(effectiveProfessionalId)
-        );
+        return service.professionalIds.includes(effectiveProfessionalId);
       }),
     [activeServicesCatalog, effectiveProfessionalId],
   );
