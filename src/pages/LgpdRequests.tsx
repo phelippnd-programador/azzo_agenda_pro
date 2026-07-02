@@ -18,6 +18,7 @@ import type {
   LgpdRequestStatus,
   UpdateLgpdRequestStatusPayload,
 } from "@/types/lgpd";
+import { formatLgpdStatus } from "@/lib/lgpd-formatters";
 
 const STATUS_OPTIONS: LgpdRequestStatus[] = [
   "ABERTO",
@@ -192,6 +193,7 @@ export default function LgpdRequests() {
           <CardContent className="space-y-3">
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <Input
+                aria-label="Tipo"
                 placeholder="Tipo (ex.: ACESSO, ELIMINACAO)"
                 value={createForm.requestType}
                 onChange={(e) =>
@@ -199,6 +201,7 @@ export default function LgpdRequests() {
                 }
               />
               <Input
+                aria-label="Nome do titular"
                 placeholder="Nome do titular"
                 value={createForm.requesterName}
                 onChange={(e) =>
@@ -206,6 +209,7 @@ export default function LgpdRequests() {
                 }
               />
               <Input
+                aria-label="Email do titular"
                 placeholder="Email do titular"
                 value={createForm.requesterEmail}
                 onChange={(e) =>
@@ -213,6 +217,7 @@ export default function LgpdRequests() {
                 }
               />
               <Input
+                aria-label="Documento"
                 placeholder="Documento (opcional)"
                 value={createForm.requesterDocument || ""}
                 onChange={(e) =>
@@ -221,6 +226,7 @@ export default function LgpdRequests() {
               />
             </div>
             <Textarea
+              aria-label="Descricao da solicitacao"
               placeholder="Descricao da solicitacao"
               value={createForm.description || ""}
               onChange={(e) =>
@@ -241,6 +247,7 @@ export default function LgpdRequests() {
           <CardContent className="space-y-3">
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <select
+                aria-label="Status"
                 className="h-10 rounded-md border border-input bg-background px-3 text-sm"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -248,16 +255,18 @@ export default function LgpdRequests() {
                 <option value="">Todos os status</option>
                 {STATUS_OPTIONS.map((status) => (
                   <option key={status} value={status}>
-                    {status}
+                    {formatLgpdStatus(status)}
                   </option>
                 ))}
               </select>
               <Input
+                aria-label="Tipo"
                 placeholder="Tipo (ACESSO, ELIMINACAO...)"
                 value={requestTypeFilter}
                 onChange={(e) => setRequestTypeFilter(e.target.value)}
               />
               <Input
+                aria-label="Limite"
                 placeholder="Limite"
                 value={limitFilter}
                 onChange={(e) => setLimitFilter(e.target.value)}
@@ -268,6 +277,7 @@ export default function LgpdRequests() {
             </div>
             <div className="grid gap-3 md:grid-cols-[1fr_auto]">
               <Input
+                aria-label="Buscar por protocolo"
                 placeholder="Buscar por protocolo (LGPD-YYYYMMDD-XXXXXXXX)"
                 value={protocolLookup}
                 onChange={(e) => setProtocolLookup(e.target.value)}
@@ -304,7 +314,7 @@ export default function LgpdRequests() {
                       <div className="flex items-center justify-between gap-2">
                         <p className="font-medium">{item.protocolCode}</p>
                         <Badge className={STATUS_BADGE[item.status] || STATUS_BADGE.ABERTO}>
-                          {item.status}
+                          {formatLgpdStatus(item.status)}
                         </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground">{item.requestType}</p>
