@@ -26,7 +26,7 @@ export function ApuracaoCard({ apuracao, showDetails = true }: ApuracaoCardProps
     };
   const statusLabel = STATUS_LABELS[apuracao.status] ?? apuracao.status ?? 'Desconhecido';
   const mesNome = MESES_PT[apuracao.mes] ?? `Mes ${apuracao.mes}`;
-  const regimeLabel = apuracao.regimeTributario
+  const regimeLabel = apuracao.regimeTributario && apuracao.regimeTributario !== 'null'
     ? apuracao.regimeTributario.replaceAll('_', ' ')
     : 'Nao informado';
 

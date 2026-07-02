@@ -289,8 +289,9 @@ export default function NfseInvoiceForm() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Municipio IBGE</Label>
+              <Label htmlFor="nfse-municipio-ibge">Municipio IBGE</Label>
               <Input
+                id="nfse-municipio-ibge"
                 value={invoice.municipioCodigoIbge || ""}
                 onChange={(e) =>
                   setInvoice((prev) => ({ ...prev, municipioCodigoIbge: e.target.value }))
@@ -298,8 +299,9 @@ export default function NfseInvoiceForm() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Numero RPS</Label>
+              <Label htmlFor="nfse-numero-rps">Numero RPS</Label>
               <Input
+                id="nfse-numero-rps"
                 type="number"
                 placeholder="Auto"
                 value={invoice.numeroRps || ""}
@@ -341,8 +343,9 @@ export default function NfseInvoiceForm() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Tomador - nome</Label>
+              <Label htmlFor="nfse-tomador-nome">Tomador - nome</Label>
               <Input
+                id="nfse-tomador-nome"
                 value={invoice.customer?.name || ""}
                 onChange={(e) =>
                   setInvoice((prev) => ({
@@ -375,8 +378,9 @@ export default function NfseInvoiceForm() {
                 />
               ) : (
                 <>
-                  <Label>Tomador - documento</Label>
+                  <Label htmlFor="nfse-tomador-documento">Tomador - documento</Label>
                   <Input
+                    id="nfse-tomador-documento"
                     value={invoice.customer?.document || ""}
                     onChange={(e) =>
                       setInvoice((prev) => ({
@@ -403,8 +407,9 @@ export default function NfseInvoiceForm() {
 
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <Label>Descricao servico</Label>
+              <Label htmlFor="nfse-descricao-servico">Descricao servico</Label>
               <Input
+                id="nfse-descricao-servico"
                 value={invoice.items?.[0]?.descricaoServico || ""}
                 onChange={(e) =>
                   setInvoice((prev) => ({
@@ -417,8 +422,9 @@ export default function NfseInvoiceForm() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Quantidade</Label>
+              <Label htmlFor="nfse-quantidade">Quantidade</Label>
               <Input
+                id="nfse-quantidade"
                 type="number"
                 value={invoice.items?.[0]?.quantidade || 0}
                 onChange={(e) =>
@@ -435,8 +441,9 @@ export default function NfseInvoiceForm() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Valor unitario</Label>
+              <Label htmlFor="nfse-valor-unitario">Valor unitario</Label>
               <CurrencyInput
+                id="nfse-valor-unitario"
                 value={invoice.items?.[0]?.valorUnitario ?? 0}
                 onChange={(val) =>
                   setInvoice((prev) => ({
@@ -452,8 +459,9 @@ export default function NfseInvoiceForm() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Codigo tributacao (NBS)</Label>
+              <Label htmlFor="nfse-codigo-tributacao">Codigo tributacao (NBS)</Label>
               <Input
+                id="nfse-codigo-tributacao"
                 value={invoice.codigoTributacaoMunicipio || ""}
                 onChange={(e) => applyNbsCode(e.target.value)}
                 placeholder="Ex.: 060101"
