@@ -144,9 +144,7 @@ export function buildDynamicSidebarMenu(
 }
 
 export function buildFallbackSidebarMenu(allowedSet: Set<string>): SidebarMenuNode[] {
-  const financialItems = FINANCIAL_GROUP_PATHS.filter((route) => allowedSet.has(route)).map(
-    (route) => MENU_REGISTRY[route]
-  );
+  const hasAnyFinanceAccess = FINANCIAL_GROUP_PATHS.some((route) => allowedSet.has(route));
   const fiscalItems = FISCAL_GROUP_PATHS
     .filter((route) => allowedSet.has(route))
     .map((route) => MENU_REGISTRY[route as keyof typeof MENU_REGISTRY])
@@ -184,26 +182,22 @@ export function buildFallbackSidebarMenu(allowedSet: Set<string>): SidebarMenuNo
     });
   });
 
-  if (financialItems.length > 0) {
+  // Financeiro vira um unico link para a pagina central /financeiro;
+  // fechamento, comissoes e equipe sao acessados pelos cards da pagina.
+  if (hasAnyFinanceAccess) {
     const financeInsertIndex = entries.findIndex((entry) => entry.path === "/auditoria");
-    const financialGroup: SidebarMenuNode = {
+    const financeLink: SidebarMenuNode = {
       id: "financeiro",
       path: "/financeiro",
       label: "Financeiro",
       icon: DollarSign,
-      children: financialItems.map((item) => ({
-        id: item.path,
-        path: item.path,
-        label: item.label,
-        icon: item.icon,
-        children: [],
-      })),
+      children: [],
     };
 
     if (financeInsertIndex >= 0) {
-      entries.splice(financeInsertIndex, 0, financialGroup);
+      entries.splice(financeInsertIndex, 0, financeLink);
     } else {
-      entries.push(financialGroup);
+      entries.push(financeLink);
     }
   }
 
