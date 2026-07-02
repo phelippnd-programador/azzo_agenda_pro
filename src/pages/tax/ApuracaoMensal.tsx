@@ -152,8 +152,8 @@ export function ApuracaoMensalContent() {
                   className="text-left p-3 border rounded-lg hover:bg-muted/70"
                 >
                   <p className="font-medium">{MESES_PT[item.mes]}</p>
-                  <p className="text-sm text-muted-foreground">Servicos: {formatCurrency(item.valorTotalServicos)}</p>
-                  <p className="text-sm text-muted-foreground">Impostos: {formatCurrency(item.valorTotalImpostos)}</p>
+                  <p className="text-sm text-muted-foreground">Servicos: {formatCurrency(toSafeNumber(item.valorTotalServicos))}</p>
+                  <p className="text-sm text-muted-foreground">Impostos: {formatCurrency(toSafeNumber(item.valorTotalImpostos))}</p>
                   <p className="text-sm text-muted-foreground">Notas: {item.quantidadeDocumentos}</p>
                 </button>
               ))}

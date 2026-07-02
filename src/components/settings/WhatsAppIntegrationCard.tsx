@@ -38,6 +38,7 @@ import { WhatsAppSetupWizard } from "@/components/settings/whatsapp-integration/
 import {
   EMPTY_RESULT,
   extractSetupInfo,
+  formatOnboardingStatus,
   loadMetaSdk,
   normalizeMessageEventData,
   type EmbeddedSetupInfo,
@@ -579,7 +580,7 @@ export function WhatsAppIntegrationCard() {
         </div>
         <div className="rounded-lg border p-3">
           <p className="text-xs font-medium text-muted-foreground">Status de onboarding</p>
-          <p className="mt-1 text-sm">{onboardingStatus}</p>
+          <p className="mt-1 text-sm">{formatOnboardingStatus(onboardingStatus)}</p>
         </div>
       </div>
 

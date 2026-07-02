@@ -206,16 +206,18 @@ export function NfseConfigCard({
           <h4 className="text-sm font-semibold text-foreground">Configuracoes de emissao</h4>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Serie RPS</Label>
+              <Label htmlFor="nfse-config-serie-rps">Serie RPS</Label>
               <Input
+                id="nfse-config-serie-rps"
                 value={config.serieRps}
                 onChange={(e) => onConfigChange({ serieRps: e.target.value })}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Aliquota ISS padrao (%)</Label>
+              <Label htmlFor="nfse-config-aliquota-iss">Aliquota ISS padrao (%)</Label>
               <Input
+                id="nfse-config-aliquota-iss"
                 type="number"
                 value={config.aliquotaIssPadrao}
                 onChange={(e) =>
@@ -225,16 +227,18 @@ export function NfseConfigCard({
             </div>
 
             <div className="space-y-2">
-              <Label>Item lista de servico padrao</Label>
+              <Label htmlFor="nfse-config-item-lista">Item lista de servico padrao</Label>
               <Input
+                id="nfse-config-item-lista"
                 value={config.itemListaServicoPadrao}
                 onChange={(e) => onConfigChange({ itemListaServicoPadrao: e.target.value })}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Codigo tributacao municipal</Label>
+              <Label htmlFor="nfse-config-codigo-tributacao">Codigo tributacao municipal</Label>
               <Input
+                id="nfse-config-codigo-tributacao"
                 value={config.codigoTributacaoMunicipio || ""}
                 onChange={(e) => onConfigChange({ codigoTributacaoMunicipio: e.target.value || undefined })}
               />

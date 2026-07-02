@@ -36,6 +36,7 @@ export function SalonBusinessHoursCard({ businessHours, onUpdate }: SalonBusines
             >
               <div className="flex items-center gap-3 min-w-[140px]">
                 <Switch
+                  aria-label={`${hours.day} aberto`}
                   checked={hours.enabled}
                   onCheckedChange={(checked) => onUpdate(index, 'enabled', checked)}
                 />
@@ -45,6 +46,7 @@ export function SalonBusinessHoursCard({ businessHours, onUpdate }: SalonBusines
                 <div className="flex items-center gap-2 ml-auto">
                   <Input
                     type="time"
+                    aria-label={`${hours.day} abertura`}
                     value={hours.open}
                     onChange={(e) => onUpdate(index, 'open', e.target.value)}
                     className="w-28"
@@ -52,6 +54,7 @@ export function SalonBusinessHoursCard({ businessHours, onUpdate }: SalonBusines
                   <span className="text-muted-foreground">ate</span>
                   <Input
                     type="time"
+                    aria-label={`${hours.day} fechamento`}
                     value={hours.close}
                     onChange={(e) => onUpdate(index, 'close', e.target.value)}
                     className="w-28"

@@ -346,8 +346,9 @@ export function InvoiceForm({ onSubmit, initialData, nfseEnabled = false, nfceEn
                 />
               ) : (
                 <>
-                  <Label>{customer.type}</Label>
+                  <Label htmlFor="invoice-cpf">{customer.type}</Label>
                   <Input
+                    id="invoice-cpf"
                     placeholder="000.000.000-00"
                     value={customer.document}
                     onChange={(e) =>
@@ -361,8 +362,9 @@ export function InvoiceForm({ onSubmit, initialData, nfseEnabled = false, nfceEn
               )}
             </div>
             <div className="space-y-2">
-              <Label>Nome/Razao Social</Label>
+              <Label htmlFor="invoice-nome">Nome/Razao Social</Label>
               <Input
+                id="invoice-nome"
                 placeholder="Nome completo"
                 value={customer.name}
                 onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
@@ -426,16 +428,18 @@ export function InvoiceForm({ onSubmit, initialData, nfseEnabled = false, nfceEn
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="space-y-2 md:col-span-2">
-                  <Label>Descricao *</Label>
+                  <Label htmlFor={`invoice-descricao-${index}`}>Descricao *</Label>
                   <Input
+                    id={`invoice-descricao-${index}`}
                     placeholder="Ex: Corte de cabelo"
                     value={item.description}
                     onChange={(e) => updateItem(item.id, 'description', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Quantidade</Label>
+                  <Label htmlFor={`invoice-quantidade-${index}`}>Quantidade</Label>
                   <Input
+                    id={`invoice-quantidade-${index}`}
                     type="number"
                     min="1"
                     value={item.quantity}
@@ -444,8 +448,9 @@ export function InvoiceForm({ onSubmit, initialData, nfseEnabled = false, nfceEn
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Valor Unitario *</Label>
+                  <Label htmlFor={`invoice-valor-unitario-${index}`}>Valor Unitario *</Label>
                   <CurrencyInput
+                    id={`invoice-valor-unitario-${index}`}
                     value={item.unitPrice}
                     onChange={(val) => updateItem(item.id, 'unitPrice', val)}
                   />
@@ -531,8 +536,9 @@ export function InvoiceForm({ onSubmit, initialData, nfseEnabled = false, nfceEn
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Natureza da Operacao</Label>
+            <Label htmlFor="invoice-natureza">Natureza da Operacao</Label>
             <Input
+              id="invoice-natureza"
               value={operationNature}
               onChange={(e) => setOperationNature(e.target.value)}
             />

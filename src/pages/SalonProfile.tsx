@@ -386,20 +386,22 @@ export default function SalonProfile() {
           <CardContent className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Nome do Salao *</Label>
+                <Label htmlFor="salon-name">Nome do Salao *</Label>
                 <Input
+                  id="salon-name"
                   placeholder="Ex: Bella Studio"
                   value={salonName}
                   onChange={(e) => setSalonName(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label>URL do Agendamento</Label>
+                <Label htmlFor="salon-slug">URL do Agendamento</Label>
                 <div className="flex">
                   <span className="inline-flex items-center px-3 text-sm text-muted-foreground bg-muted border border-r-0 border-border rounded-l-md">
                     /agendar/
                   </span>
                   <Input
+                    id="salon-slug"
                     placeholder="meu-salao"
                     value={salonSlug}
                     onChange={(e) =>
@@ -411,8 +413,9 @@ export default function SalonProfile() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Descricao</Label>
+              <Label htmlFor="salon-description">Descricao</Label>
               <Textarea
+                id="salon-description"
                 placeholder="Descreva seu salao, especialidades, diferenciais..."
                 value={salonDescription}
                 onChange={(e) => setSalonDescription(e.target.value)}
@@ -434,16 +437,18 @@ export default function SalonProfile() {
           <CardContent className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Telefone</Label>
+                <Label htmlFor="salon-phone">Telefone</Label>
                 <Input
+                  id="salon-phone"
                   placeholder="(11) 3333-4444"
                   value={salonPhone}
                   onChange={(e) => setSalonPhone(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label>WhatsApp</Label>
+                <Label htmlFor="salon-whatsapp">WhatsApp</Label>
                 <Input
+                  id="salon-whatsapp"
                   placeholder="(11) 99999-0000"
                   value={salonWhatsapp}
                   onChange={(e) => setSalonWhatsapp(e.target.value)}
@@ -452,8 +457,9 @@ export default function SalonProfile() {
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>E-mail</Label>
+                <Label htmlFor="salon-email">E-mail</Label>
                 <Input
+                  id="salon-email"
                   type="email"
                   placeholder="contato@meusalao.com"
                   value={salonEmail}
@@ -461,8 +467,9 @@ export default function SalonProfile() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Website</Label>
+                <Label htmlFor="salon-website">Website</Label>
                 <Input
+                  id="salon-website"
                   placeholder="https://meusalao.com"
                   value={salonWebsite}
                   onChange={(e) => setSalonWebsite(e.target.value)}
@@ -502,22 +509,24 @@ export default function SalonProfile() {
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="flex items-center gap-2">
+                <Label htmlFor="salon-instagram" className="flex items-center gap-2">
                   <Instagram className="w-4 h-4" />
                   Instagram
                 </Label>
                 <Input
+                  id="salon-instagram"
                   placeholder="@meusalao"
                   value={salonInstagram}
                   onChange={(e) => setSalonInstagram(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label className="flex items-center gap-2">
+                <Label htmlFor="salon-facebook" className="flex items-center gap-2">
                   <Facebook className="w-4 h-4" />
                   Facebook
                 </Label>
                 <Input
+                  id="salon-facebook"
                   placeholder="facebook.com/meusalao"
                   value={salonFacebook}
                   onChange={(e) => setSalonFacebook(e.target.value)}

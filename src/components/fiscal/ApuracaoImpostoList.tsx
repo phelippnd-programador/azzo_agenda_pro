@@ -31,6 +31,7 @@ export function ApuracaoImpostoList({
   impostos,
   showZeroValues = false,
 }: ApuracaoImpostoListProps) {
+  const safeNum = (v: unknown) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
   const listaImpostos = Array.isArray(impostos) ? impostos : [];
   // Filtrar impostos com valor zero se nao for para mostrar
   const impostosFiltrados = showZeroValues
@@ -38,7 +39,7 @@ export function ApuracaoImpostoList({
     : listaImpostos.filter((imp) => imp.valorApurado > 0 || imp.baseCalculo > 0);
 
   // Calcular total
-  const totalImpostos = impostosFiltrados.reduce((sum, imp) => sum + imp.valorApurado, 0);
+  const totalImpostos = impostosFiltrados.reduce((sum, imp) => sum + safeNum(imp.valorApurado), 0);
 
   return (
     <Card>
@@ -81,13 +82,13 @@ export function ApuracaoImpostoList({
                     {imposto.descricao}
                   </TableCell>
                   <TableCell className="text-right">
-                    {formatCurrency(imposto.baseCalculo)}
+                    {formatCurrency(safeNum(imposto.baseCalculo))}
                   </TableCell>
                   <TableCell className="text-right">
-                    {(imposto.aliquota * 100).toFixed(2)}%
+                    {(safeNum(imposto.aliquota) * 100).toFixed(2)}%
                   </TableCell>
                   <TableCell className="text-right font-medium">
-                    {formatCurrency(imposto.valorApurado)}
+                    {formatCurrency(safeNum(imposto.valorApurado))}
                   </TableCell>
                 </TableRow>
               ))}
@@ -97,7 +98,7 @@ export function ApuracaoImpostoList({
                   Total a Pagar:
                 </TableCell>
                 <TableCell className="text-right text-red-600">
-                  {formatCurrency(totalImpostos)}
+                  {formatCurrency(safeNum(totalImpostos))}
                 </TableCell>
               </TableRow>
             </TableBody>

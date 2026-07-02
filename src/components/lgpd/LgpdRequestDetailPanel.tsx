@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { LgpdRequestDetail, LgpdRequestStatus } from "@/types/lgpd";
+import { formatLgpdStatus, formatLgpdEventType } from "@/lib/lgpd-formatters";
 
 const STATUS_OPTIONS: LgpdRequestStatus[] = [
   "ABERTO",
@@ -64,7 +65,7 @@ export function LgpdRequestDetailPanel({
                 <span className="font-medium">Protocolo:</span> {detail.request.protocolCode}
               </p>
               <p>
-                <span className="font-medium">Status atual:</span> {detail.request.status}
+                <span className="font-medium">Status atual:</span> {formatLgpdStatus(detail.request.status)}
               </p>
               <p>
                 <span className="font-medium">Titular:</span> {detail.request.requesterName}
@@ -80,23 +81,26 @@ export function LgpdRequestDetailPanel({
 
             <div className="grid gap-3 md:grid-cols-2">
               <select
+                aria-label="Status"
                 className="h-10 rounded-md border border-input bg-background px-3 text-sm"
                 value={updateStatus}
                 onChange={(e) => onChangeStatus(e.target.value as LgpdRequestStatus)}
               >
                 {STATUS_OPTIONS.map((status) => (
                   <option key={status} value={status}>
-                    {status}
+                    {formatLgpdStatus(status)}
                   </option>
                 ))}
               </select>
               <Input
+                aria-label="Resumo de resposta"
                 placeholder="Resumo de resposta (opcional)"
                 value={updateSummary}
                 onChange={(e) => onChangeSummary(e.target.value)}
               />
             </div>
             <Textarea
+              aria-label="Nota da alteracao de status"
               placeholder="Nota da alteracao de status"
               value={updateNote}
               onChange={(e) => onChangeNote(e.target.value)}
@@ -114,8 +118,8 @@ export function LgpdRequestDetailPanel({
                   {detail.events.map((event) => (
                     <div key={event.id} className="rounded-md border p-2 text-xs">
                       <p>
-                        <span className="font-medium">{event.eventType}</span>{" "}
-                        ({event.previousStatus || "-"} → {event.newStatus || "-"})
+                        <span className="font-medium">{formatLgpdEventType(event.eventType)}</span>{" "}
+                        ({event.previousStatus ? formatLgpdStatus(event.previousStatus) : "-"} → {event.newStatus ? formatLgpdStatus(event.newStatus) : "-"})
                       </p>
                       <p>{event.note || "-"}</p>
                       <p className="text-muted-foreground">

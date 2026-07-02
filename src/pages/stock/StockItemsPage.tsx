@@ -165,22 +165,22 @@ export default function StockItemsPage() {
   const FormFields = (
     <div className="space-y-3">
       <div className="space-y-1">
-        <Label>Nome</Label>
-        <Input value={form.nome} onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))} />
+        <Label htmlFor="item-nome">Nome</Label>
+        <Input id="item-nome" value={form.nome} onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))} />
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <Label>SKU</Label>
-          <Input value={form.sku || ""} onChange={(e) => setForm((prev) => ({ ...prev, sku: e.target.value }))} />
+          <Label htmlFor="item-sku">SKU</Label>
+          <Input id="item-sku" value={form.sku || ""} onChange={(e) => setForm((prev) => ({ ...prev, sku: e.target.value }))} />
         </div>
         <div className="space-y-1">
-          <Label>Unidade</Label>
-          <Input value={form.unidadeMedida} onChange={(e) => setForm((prev) => ({ ...prev, unidadeMedida: e.target.value }))} />
+          <Label htmlFor="item-unidade">Unidade</Label>
+          <Input id="item-unidade" value={form.unidadeMedida} onChange={(e) => setForm((prev) => ({ ...prev, unidadeMedida: e.target.value }))} />
         </div>
       </div>
       <div className="space-y-1">
-        <Label>Estoque minimo</Label>
-        <Input type="number" min="0" value={form.estoqueMinimo} onChange={(e) => setForm((prev) => ({ ...prev, estoqueMinimo: Number(e.target.value || 0) }))} />
+        <Label htmlFor="item-estoque-minimo">Estoque minimo</Label>
+        <Input id="item-estoque-minimo" type="number" min="0" value={form.estoqueMinimo} onChange={(e) => setForm((prev) => ({ ...prev, estoqueMinimo: Number(e.target.value || 0) }))} />
       </div>
     </div>
   );

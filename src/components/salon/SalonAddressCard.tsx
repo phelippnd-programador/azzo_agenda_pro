@@ -54,8 +54,9 @@ export function SalonAddressCard({
       <CardContent className="space-y-4">
         <div className="grid sm:grid-cols-3 gap-4">
           <div className="sm:col-span-2 space-y-2">
-            <Label>Rua</Label>
+            <Label htmlFor="salon-address-street">Rua</Label>
             <Input
+              id="salon-address-street"
               placeholder="Av. Paulista"
               value={values.street}
               onChange={(e) => onChange('street', e.target.value)}
@@ -63,8 +64,9 @@ export function SalonAddressCard({
             />
           </div>
           <div className="space-y-2">
-            <Label>Numero</Label>
+            <Label htmlFor="salon-address-number">Numero</Label>
             <Input
+              id="salon-address-number"
               placeholder="1000"
               value={values.number}
               onChange={(e) => onChange('number', e.target.value)}
@@ -74,8 +76,9 @@ export function SalonAddressCard({
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Complemento</Label>
+            <Label htmlFor="salon-address-complement">Complemento</Label>
             <Input
+              id="salon-address-complement"
               placeholder="Sala 101"
               value={values.complement}
               onChange={(e) => onChange('complement', e.target.value)}
@@ -83,8 +86,9 @@ export function SalonAddressCard({
             />
           </div>
           <div className="space-y-2">
-            <Label>Bairro</Label>
+            <Label htmlFor="salon-address-neighborhood">Bairro</Label>
             <Input
+              id="salon-address-neighborhood"
               placeholder="Bela Vista"
               value={values.neighborhood}
               onChange={(e) => onChange('neighborhood', e.target.value)}
@@ -95,8 +99,9 @@ export function SalonAddressCard({
 
         <div className="grid sm:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label>Cidade</Label>
+            <Label htmlFor="salon-address-city">Cidade</Label>
             <Input
+              id="salon-address-city"
               placeholder="Sao Paulo"
               value={values.city}
               onChange={(e) => onChange('city', e.target.value)}
@@ -104,8 +109,9 @@ export function SalonAddressCard({
             />
           </div>
           <div className="space-y-2">
-            <Label>Estado</Label>
+            <Label htmlFor="salon-address-state">Estado</Label>
             <Input
+              id="salon-address-state"
               placeholder="SP"
               value={values.state}
               onChange={(e) => onChange('state', e.target.value)}
@@ -114,8 +120,9 @@ export function SalonAddressCard({
             />
           </div>
           <div className="space-y-2">
-            <Label>CEP</Label>
+            <Label htmlFor="salon-address-zip-code">CEP</Label>
             <Input
+              id="salon-address-zip-code"
               placeholder="01310-100"
               value={values.zipCode}
               onChange={(e) => onChange('zipCode', formatCep(e.target.value))}
