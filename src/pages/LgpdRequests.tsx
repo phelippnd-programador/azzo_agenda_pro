@@ -1,13 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Plus } from "lucide-react";
 import { formatDateTime } from "@/lib/format";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PageEmptyState } from "@/components/ui/page-states";
 import {
   Select,
   SelectContent,
@@ -62,7 +72,9 @@ export default function LgpdRequests() {
   const [requestTypeFilter, setRequestTypeFilter] = useState(ALL_FILTER);
   const [limitFilter, setLimitFilter] = useState("50");
 
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState<CreateLgpdRequestPayload>(EMPTY_CREATE_FORM);
+  const [createError, setCreateError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -76,13 +88,20 @@ export default function LgpdRequests() {
   const [updateSummary, setUpdateSummary] = useState("");
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
-  const fetchList = async () => {
+  const fetchList = async (filters?: {
+    status?: string;
+    requestType?: string;
+    limit?: string;
+  }) => {
+    const status = filters?.status ?? statusFilter;
+    const requestType = filters?.requestType ?? requestTypeFilter;
+    const limit = filters?.limit ?? limitFilter;
     try {
       setIsLoading(true);
       const data = await lgpdApi.list({
-        status: statusFilter !== ALL_FILTER ? statusFilter : undefined,
-        requestType: requestTypeFilter !== ALL_FILTER ? requestTypeFilter : undefined,
-        limit: Number(limitFilter) > 0 ? Number(limitFilter) : undefined,
+        status: status !== ALL_FILTER ? status : undefined,
+        requestType: requestType !== ALL_FILTER ? requestType : undefined,
+        limit: Number(limit) > 0 ? Number(limit) : undefined,
       });
       setItems(data);
       setError(null);
@@ -97,6 +116,22 @@ export default function LgpdRequests() {
     void fetchList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Filtros de select aplicam imediatamente, sem botao extra
+  const onChangeStatusFilter = (value: string) => {
+    setStatusFilter(value);
+    void fetchList({ status: value });
+  };
+
+  const onChangeTypeFilter = (value: string) => {
+    setRequestTypeFilter(value);
+    void fetchList({ requestType: value });
+  };
+
+  const onChangeLimitFilter = (value: string) => {
+    setLimitFilter(value);
+    void fetchList({ limit: value });
+  };
 
   const fetchDetailById = async (id: string) => {
     try {
@@ -117,9 +152,15 @@ export default function LgpdRequests() {
     }
   };
 
+  const openCreateDialog = () => {
+    setCreateForm(EMPTY_CREATE_FORM);
+    setCreateError(null);
+    setIsCreateOpen(true);
+  };
+
   const onCreate = async () => {
     if (!createForm.requesterName.trim() || !createForm.requesterEmail.trim()) {
-      setError("Preencha nome e email do titular.");
+      setCreateError("Preencha nome e email do titular.");
       return;
     }
     try {
@@ -129,10 +170,12 @@ export default function LgpdRequests() {
         requestType: createForm.requestType.trim().toUpperCase(),
       });
       setCreateForm(EMPTY_CREATE_FORM);
+      setCreateError(null);
+      setIsCreateOpen(false);
       await fetchList();
       await fetchDetailById(created.id);
     } catch (err) {
-      setError(resolveUiError(err, "Erro ao criar solicitação LGPD.").message);
+      setCreateError(resolveUiError(err, "Erro ao criar solicitação LGPD.").message);
     } finally {
       setIsCreating(false);
     }
@@ -177,15 +220,21 @@ export default function LgpdRequests() {
     }
   };
 
+  const hasActiveFilters = statusFilter !== ALL_FILTER || requestTypeFilter !== ALL_FILTER;
+
   return (
     <MainLayout
       title="LGPD - Direitos do Titular"
       subtitle="Controle de solicitações com protocolo, status e histórico auditável."
     >
       <div className="space-y-4">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <Button asChild variant="outline">
             <Link to="/auditoria">Voltar para Auditoria</Link>
+          </Button>
+          <Button onClick={openCreateDialog}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nova solicitação
           </Button>
         </div>
 
@@ -196,95 +245,16 @@ export default function LgpdRequests() {
           </Alert>
         ) : null}
 
-        {/* Create form */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Criar solicitação LGPD</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="lgpd-create-type">Tipo</Label>
-                <Select
-                  value={createForm.requestType}
-                  onValueChange={(value) =>
-                    setCreateForm((prev) => ({ ...prev, requestType: value }))
-                  }
-                >
-                  <SelectTrigger id="lgpd-create-type">
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LGPD_REQUEST_TYPES.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>
-                        {t.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="lgpd-create-name">Nome do titular</Label>
-                <Input
-                  id="lgpd-create-name"
-                  placeholder="ex.: Maria da Silva"
-                  value={createForm.requesterName}
-                  onChange={(e) =>
-                    setCreateForm((prev) => ({ ...prev, requesterName: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="lgpd-create-email">Email do titular</Label>
-                <Input
-                  id="lgpd-create-email"
-                  type="email"
-                  placeholder="ex.: maria@email.com"
-                  value={createForm.requesterEmail}
-                  onChange={(e) =>
-                    setCreateForm((prev) => ({ ...prev, requesterEmail: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="lgpd-create-document">Documento (opcional)</Label>
-                <Input
-                  id="lgpd-create-document"
-                  placeholder="ex.: CPF"
-                  value={createForm.requesterDocument || ""}
-                  onChange={(e) =>
-                    setCreateForm((prev) => ({ ...prev, requesterDocument: e.target.value }))
-                  }
-                />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="lgpd-create-description">Descrição da solicitação</Label>
-              <Textarea
-                id="lgpd-create-description"
-                placeholder="Descreva o pedido do titular"
-                value={createForm.description || ""}
-                onChange={(e) =>
-                  setCreateForm((prev) => ({ ...prev, description: e.target.value }))
-                }
-              />
-            </div>
-            <Button onClick={() => void onCreate()} disabled={isCreating}>
-              {isCreating ? "Criando..." : "Criar solicitação"}
-            </Button>
-          </CardContent>
-        </Card>
-
         {/* Filters */}
         <Card>
           <CardHeader>
             <CardTitle>Filtros e busca por protocolo</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1.5">
                 <Label htmlFor="lgpd-filter-status">Status</Label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter} onValueChange={onChangeStatusFilter}>
                   <SelectTrigger id="lgpd-filter-status">
                     <SelectValue />
                   </SelectTrigger>
@@ -300,7 +270,7 @@ export default function LgpdRequests() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="lgpd-filter-type">Tipo</Label>
-                <Select value={requestTypeFilter} onValueChange={setRequestTypeFilter}>
+                <Select value={requestTypeFilter} onValueChange={onChangeTypeFilter}>
                   <SelectTrigger id="lgpd-filter-type">
                     <SelectValue />
                   </SelectTrigger>
@@ -316,7 +286,7 @@ export default function LgpdRequests() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="lgpd-filter-page-size">Itens por página</Label>
-                <Select value={limitFilter} onValueChange={setLimitFilter}>
+                <Select value={limitFilter} onValueChange={onChangeLimitFilter}>
                   <SelectTrigger id="lgpd-filter-page-size">
                     <SelectValue />
                   </SelectTrigger>
@@ -329,11 +299,6 @@ export default function LgpdRequests() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-end">
-                <Button variant="outline" className="w-full" onClick={() => void fetchList()}>
-                  Aplicar filtros
-                </Button>
-              </div>
             </div>
             <div className="grid gap-3 md:grid-cols-[1fr_auto]">
               <div className="space-y-1.5">
@@ -343,6 +308,9 @@ export default function LgpdRequests() {
                   placeholder="ex.: LGPD-20260702-A1B2C3D4"
                   value={protocolLookup}
                   onChange={(e) => setProtocolLookup(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") void onLookupProtocol();
+                  }}
                 />
               </div>
               <div className="flex items-end">
@@ -364,7 +332,30 @@ export default function LgpdRequests() {
               {isLoading ? (
                 <p className="text-sm text-muted-foreground">Carregando...</p>
               ) : !items.length ? (
-                <p className="text-sm text-muted-foreground">Nenhuma solicitação encontrada.</p>
+                hasActiveFilters ? (
+                  <PageEmptyState
+                    title="Nenhuma solicitação encontrada"
+                    description="Nenhum resultado com os filtros atuais. Ajuste os filtros ou limpe a seleção."
+                    action={{
+                      label: "Limpar filtros",
+                      variant: "outline",
+                      onClick: () => {
+                        setStatusFilter(ALL_FILTER);
+                        setRequestTypeFilter(ALL_FILTER);
+                        void fetchList({ status: ALL_FILTER, requestType: ALL_FILTER });
+                      },
+                    }}
+                  />
+                ) : (
+                  <PageEmptyState
+                    title="Nenhuma solicitação registrada"
+                    description="Quando um titular exercer um direito LGPD (acesso, correção, eliminação...), registre aqui para gerar protocolo e manter o histórico auditável."
+                    action={{
+                      label: "Nova solicitação",
+                      onClick: openCreateDialog,
+                    }}
+                  />
+                )
               ) : (
                 <div className="space-y-2">
                   {items.map((item) => (
@@ -411,6 +402,101 @@ export default function LgpdRequests() {
           />
         </div>
       </div>
+
+      {/* Create dialog */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Criar solicitação LGPD</DialogTitle>
+            <DialogDescription>
+              Registre o pedido do titular para gerar um protocolo de atendimento.
+            </DialogDescription>
+          </DialogHeader>
+          {createError ? (
+            <Alert variant="destructive">
+              <AlertTitle>Erro</AlertTitle>
+              <AlertDescription>{createError}</AlertDescription>
+            </Alert>
+          ) : null}
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="lgpd-create-type">Tipo</Label>
+              <Select
+                value={createForm.requestType}
+                onValueChange={(value) =>
+                  setCreateForm((prev) => ({ ...prev, requestType: value }))
+                }
+              >
+                <SelectTrigger id="lgpd-create-type">
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LGPD_REQUEST_TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="lgpd-create-name">Nome do titular</Label>
+                <Input
+                  id="lgpd-create-name"
+                  placeholder="ex.: Maria da Silva"
+                  value={createForm.requesterName}
+                  onChange={(e) =>
+                    setCreateForm((prev) => ({ ...prev, requesterName: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="lgpd-create-email">Email do titular</Label>
+                <Input
+                  id="lgpd-create-email"
+                  type="email"
+                  placeholder="ex.: maria@email.com"
+                  value={createForm.requesterEmail}
+                  onChange={(e) =>
+                    setCreateForm((prev) => ({ ...prev, requesterEmail: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="lgpd-create-document">Documento (opcional)</Label>
+              <Input
+                id="lgpd-create-document"
+                placeholder="ex.: CPF"
+                value={createForm.requesterDocument || ""}
+                onChange={(e) =>
+                  setCreateForm((prev) => ({ ...prev, requesterDocument: e.target.value }))
+                }
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="lgpd-create-description">Descrição da solicitação</Label>
+              <Textarea
+                id="lgpd-create-description"
+                placeholder="Descreva o pedido do titular"
+                value={createForm.description || ""}
+                onChange={(e) =>
+                  setCreateForm((prev) => ({ ...prev, description: e.target.value }))
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateOpen(false)} disabled={isCreating}>
+              Cancelar
+            </Button>
+            <Button onClick={() => void onCreate()} disabled={isCreating}>
+              {isCreating ? "Criando..." : "Criar solicitação"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }

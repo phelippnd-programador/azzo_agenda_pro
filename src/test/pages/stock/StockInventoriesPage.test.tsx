@@ -44,18 +44,23 @@ describe("StockInventoriesPage", () => {
   });
 
   it("should create inventory and register count", async () => {
-    listInventoriesMock.mockResolvedValue([
-      {
-        id: "inv-1",
-        nome: "Inventario 1",
-        status: "ABERTO",
-        observacao: null,
-        dataAbertura: new Date().toISOString(),
-        dataFechamento: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ]);
+    listInventoriesMock.mockResolvedValue({
+      items: [
+        {
+          id: "inv-1",
+          nome: "Inventario 1",
+          status: "ABERTO",
+          observacao: null,
+          dataAbertura: new Date().toISOString(),
+          dataFechamento: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ],
+      total: 1,
+      totalPages: 1,
+      hasNext: false,
+    });
     getItemsMock.mockResolvedValue([
       {
         id: "item-1",
@@ -110,9 +115,15 @@ describe("StockInventoriesPage", () => {
 
     expect(await screen.findByText("Inventarios de estoque")).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByRole("combobox"), "item-1");
-    await user.clear(screen.getByRole("spinbutton"));
-    await user.type(screen.getByRole("spinbutton"), "12");
+    // O formulario de contagem fica no modal aberto pelo botao Gerenciar
+    await user.click(await screen.findByRole("button", { name: "Gerenciar" }));
+
+    // Aguarda o select de itens sair do skeleton e as opcoes carregarem
+    const itemSelect = await screen.findByLabelText("Item para contagem");
+    await screen.findByRole("option", { name: /Shampoo/ });
+    await user.selectOptions(itemSelect, "item-1");
+    await user.clear(screen.getByLabelText("Quantidade contada"));
+    await user.type(screen.getByLabelText("Quantidade contada"), "12");
     await user.click(screen.getByRole("button", { name: "Registrar contagem" }));
 
     await waitFor(() => {

@@ -320,8 +320,9 @@ export default function StockInventoriesPage() {
               />
             </div>
             <div className="min-w-[160px] space-y-1">
-              <Label className="text-xs">Status</Label>
+              <Label className="text-xs" htmlFor="inventory-status-filter">Status</Label>
               <select
+                id="inventory-status-filter"
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as StockInventoryStatus | "")}
@@ -446,11 +447,12 @@ export default function StockInventoriesPage() {
                   <p className="text-sm font-medium">Registrar contagem</p>
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                     <div className="space-y-1 md:col-span-2">
-                      <Label>Item para contagem</Label>
+                      <Label htmlFor="inventory-count-item">Item para contagem</Label>
                       {isLoadingItems ? (
                         <Skeleton className="h-10 w-full" />
                       ) : (
                         <select
+                          id="inventory-count-item"
                           className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                           value={countForm.itemEstoqueId}
                           onChange={(e) => setCountForm((prev) => ({ ...prev, itemEstoqueId: e.target.value }))}
@@ -471,8 +473,9 @@ export default function StockInventoriesPage() {
                       )}
                     </div>
                     <div className="space-y-1">
-                      <Label>Quantidade contada</Label>
+                      <Label htmlFor="inventory-count-quantity">Quantidade contada</Label>
                       <Input
+                        id="inventory-count-quantity"
                         type="number"
                         min="0"
                         step="0.0001"
@@ -487,8 +490,9 @@ export default function StockInventoriesPage() {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label>Observacao (opcional)</Label>
+                    <Label htmlFor="inventory-count-note">Observacao (opcional)</Label>
                     <Input
+                      id="inventory-count-note"
                       value={countForm.observacao || ""}
                       onChange={(e) => setCountForm((prev) => ({ ...prev, observacao: e.target.value }))}
                     />

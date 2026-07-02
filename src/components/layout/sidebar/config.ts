@@ -294,7 +294,8 @@ export const DYNAMIC_BOTTOM_ROUTES = new Set([
 ]);
 
 export const STANDALONE_LAST_ROUTES = new Set([appRouteManifest.finance.license]);
-export const GROUP_ONLY_ROUTES = new Set([appRouteManifest.reports.root]);
+// "/relatorio" agora tem pagina hub propria, entao o grupo tambem e clicavel
+export const GROUP_ONLY_ROUTES = new Set<string>([]);
 
 export const HIDDEN_MENU_ROUTES = new Set([
   appRouteManifest.shell.unauthorized,

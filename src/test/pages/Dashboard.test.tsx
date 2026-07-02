@@ -1,4 +1,5 @@
 ﻿import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import Dashboard from "@/pages/Index";
 
@@ -168,27 +169,33 @@ describe("Dashboard", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("Visao executiva")).toBeInTheDocument();
+    expect(await screen.findByText("Visão executiva")).toBeInTheDocument();
     expect(screen.getByText("Agendamentos Hoje")).toBeInTheDocument();
     expect(screen.getByText("Faturamento Hoje")).toBeInTheDocument();
-    expect(screen.getByText("O que exige atencao hoje")).toBeInTheDocument();
-    expect(screen.getByText("Resumo rapido do dia")).toBeInTheDocument();
-    expect(screen.getByText("Onde a operacao perde oportunidade")).toBeInTheDocument();
-    expect(screen.getByText("Fluxos nao concluidos hoje")).toBeInTheDocument();
+    expect(screen.getByText("O que exige atenção hoje")).toBeInTheDocument();
+    expect(screen.getByText("Resumo rápido do dia")).toBeInTheDocument();
+
+    // Aba "Risco e conversão" e o conteudo padrao
+    expect(screen.getByText("Onde a operação perde oportunidade")).toBeInTheDocument();
+    expect(screen.getByText("Fluxos não concluídos hoje")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Etapas do funil geral que ficaram pelo caminho antes da conclusao."
+        "Etapas do funil geral que ficaram pelo caminho antes da conclusão."
       )
     ).toBeInTheDocument();
     expect(screen.getByText("WhatsApp em aberto hoje")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Conversas ainda nao resolvidas antes de virarem abandono formal."
+        "Conversas ainda não resolvidas antes de virarem abandono formal."
       )
     ).toBeInTheDocument();
     expect(screen.getByText("WhatsAppReactivationChartMock")).toBeInTheDocument();
     expect(screen.getByText("No-show no periodo")).toBeInTheDocument();
-    expect(screen.getByText("Receita e desempenho do mes")).toBeInTheDocument();
+
+    // Conteudo analitico fica na aba "Desempenho do mês"
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("tab", { name: "Desempenho do mês" }));
+    expect(await screen.findByText("Receita e desempenho do mês")).toBeInTheDocument();
     expect(screen.getByText("Top profissionais no dashboard")).toBeInTheDocument();
     expect(screen.getByText("RevenueChartMock")).toBeInTheDocument();
   });
@@ -212,10 +219,10 @@ describe("Dashboard", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("Servicos concluidos")).toBeInTheDocument();
-    expect(screen.getByText("Faturamento no periodo")).toBeInTheDocument();
+    expect(await screen.findByText("Serviços concluídos")).toBeInTheDocument();
+    expect(screen.getByText("Faturamento no período")).toBeInTheDocument();
     expect(screen.getByText("Clientes atendidos")).toBeInTheDocument();
-    expect(screen.getByText("Comissao no periodo")).toBeInTheDocument();
+    expect(screen.getByText("Comissão no período")).toBeInTheDocument();
     expect(screen.getByText("R$ 18,00")).toBeInTheDocument();
     expect(screen.getByText("R$ 5,40")).toBeInTheDocument();
     expect(screen.queryByText("WhatsAppReactivationChartMock")).not.toBeInTheDocument();
