@@ -63,6 +63,21 @@ describe("buildDynamicSidebarMenu", () => {
 });
 
 describe("buildFallbackSidebarMenu", () => {
+  it("should render finance as a single link without children", () => {
+    const allowedSet = new Set([
+      "/dashboard",
+      "/financeiro/fechamento-caixa",
+      "/financeiro/comissoes",
+    ]);
+
+    const nodes = buildFallbackSidebarMenu(allowedSet);
+    const financeNode = nodes.find((node) => node.path === "/financeiro");
+
+    expect(financeNode).toBeDefined();
+    expect(financeNode?.children).toHaveLength(0);
+    expect(nodes.map((node) => node.path)).not.toContain("/financeiro/fechamento-caixa");
+  });
+
   it("should render reports as a single hub link without children", () => {
     const allowedSet = new Set([
       "/dashboard",

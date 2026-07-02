@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
 import { Button } from '@/components/ui/button';
@@ -16,17 +17,21 @@ import {
 } from '@/components/ui/select';
 import {
   ArrowDownCircle,
+  ArrowRight,
   ArrowUpCircle,
   BarChart2,
+  BarChart3,
   Download,
   Filter,
   Loader2,
+  Receipt,
   RefreshCw,
   Tag,
   TrendingDown,
   TrendingUp,
   Wallet,
   X,
+  type LucideIcon,
 } from 'lucide-react';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { TransactionDialog } from '@/components/financial/TransactionDialog';
@@ -37,12 +42,44 @@ import { RecurringTransactionsDialog } from '@/components/financial/RecurringTra
 import { FinancialFiltersPanel, type FinancialFilters } from '@/components/financial/FinancialFiltersPanel';
 import { useTransactions, useTransactionCategories, getDateRangeFromFilter } from '@/hooks/useTransactions';
 import { useProfessionals } from '@/hooks/useProfessionals';
+import { useMenuPermissions } from '@/contexts/MenuPermissionsContext';
 import { transactionsApi } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
 import { toast } from 'sonner';
 import type { Transaction } from '@/types';
 
+type FinanceArea = {
+  path: string;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+};
+
+const FINANCE_AREAS: FinanceArea[] = [
+  {
+    path: '/financeiro/fechamento-caixa',
+    title: 'Fechamento de Caixa',
+    description: 'Abra, confira e feche o caixa do dia.',
+    icon: Wallet,
+  },
+  {
+    path: '/financeiro/comissoes',
+    title: 'Comissões',
+    description: 'Apuração e pagamento das comissões da equipe.',
+    icon: Receipt,
+  },
+  {
+    path: '/financeiro/profissionais',
+    title: 'Equipe',
+    description: 'Desempenho financeiro por profissional.',
+    icon: BarChart3,
+  },
+];
+
 export default function Financial() {
+  const { allowedRoutes } = useMenuPermissions();
+  const allowedSet = new Set(allowedRoutes ?? []);
+  const visibleAreas = FINANCE_AREAS.filter((area) => allowedSet.has(area.path));
   const [dateFilter, setDateFilter] = useState('today');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FinancialFilters>({
@@ -213,6 +250,28 @@ export default function Financial() {
             },
           ]}
         />
+
+        {visibleAreas.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-3">
+            {visibleAreas.map((area) => (
+              <Card key={area.path} className="border-border/70 shadow-none">
+                <div className="flex h-full flex-col gap-2 p-4">
+                  <div className="flex items-center gap-2">
+                    <area.icon className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-medium text-foreground">{area.title}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{area.description}</p>
+                  <Button asChild variant="outline" size="sm" className="mt-auto w-full justify-between">
+                    <Link to={area.path}>
+                      Abrir
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : null}
 
         <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
           <HighlightMetricCard
