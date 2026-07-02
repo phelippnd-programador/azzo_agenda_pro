@@ -165,6 +165,17 @@ export async function loadMetaSdk(appId: string): Promise<FacebookSdk> {
   });
 }
 
+export function formatOnboardingStatus(status: string): string {
+  const map: Record<string, string> = {
+    NOT_STARTED: "Configuracao ainda nao iniciada",
+    IN_PROGRESS: "Configuracao em andamento",
+    CONNECTED: "Conectado",
+    FAILED: "Falha na conexao",
+    DISCONNECTED: "Desconectado",
+  };
+  return map[status] ?? status;
+}
+
 export function resolveStepStatus(currentStep: number, targetStep: number) {
   if (currentStep > targetStep) return "done";
   if (currentStep === targetStep) return "current";

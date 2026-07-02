@@ -32,6 +32,7 @@ import {
   MetaLinkButton,
   resolveStepStatus,
   WIZARD_STEPS,
+  formatOnboardingStatus,
 } from "@/components/settings/whatsapp-integration/shared";
 
 type WhatsAppSetupWizardProps = {
@@ -180,7 +181,7 @@ export function WhatsAppSetupWizard({
                 </div>
                 <div className="rounded-lg border p-3">
                   <p className="text-sm font-medium">Status atual</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{onboardingStatus}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{formatOnboardingStatus(onboardingStatus)}</p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -424,7 +425,7 @@ export function WhatsAppSetupWizard({
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-3">
-                    <label className="text-sm font-medium">Callback URL</label>
+                    <label className="text-sm font-medium" htmlFor="whatsapp-callback-url">Callback URL</label>
                     <Button
                       type="button"
                       variant="outline"
@@ -435,11 +436,11 @@ export function WhatsAppSetupWizard({
                       Copiar
                     </Button>
                   </div>
-                  <Input value={webhookUrl} readOnly />
+                  <Input id="whatsapp-callback-url" value={webhookUrl} readOnly />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-3">
-                    <label className="text-sm font-medium">Verify Token</label>
+                    <label className="text-sm font-medium" htmlFor="whatsapp-webhook-verify-token-display">Verify Token</label>
                     <Button
                       type="button"
                       variant="outline"
@@ -452,19 +453,30 @@ export function WhatsAppSetupWizard({
                     </Button>
                   </div>
                   <Input
+                    id="whatsapp-webhook-verify-token-display"
                     value={webhookVerifyToken}
                     readOnly
                     placeholder="Preencha ou gere o verify token na etapa anterior."
                   />
                 </div>
               </div>
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Importante sobre o verify token</AlertTitle>
-                <AlertDescription>
-                  Se esse campo estiver vazio, volte para a etapa anterior e preencha manualmente o `Webhook Verify Token`, ou salve a configuracao para o AZZO gerar um token automaticamente e depois retorne a esta etapa.
-                </AlertDescription>
-              </Alert>
+              {webhookVerifyToken ? (
+                <Alert className="border-green-200 bg-green-50 text-green-900">
+                  <AlertCircle className="h-4 w-4 !text-green-700" />
+                  <AlertTitle>Token pronto para usar</AlertTitle>
+                  <AlertDescription>
+                    Copie o Verify Token acima e cole no campo equivalente na configuracao de webhook da Meta.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <Alert className="border-amber-200 bg-amber-50 text-amber-900">
+                  <AlertCircle className="h-4 w-4 !text-amber-700" />
+                  <AlertTitle>Verify Token nao definido</AlertTitle>
+                  <AlertDescription>
+                    Volte para a etapa anterior e preencha o campo `Webhook Verify Token`, ou salve a configuracao para o AZZO gerar um token automaticamente. Sem esse token a Meta nao consegue verificar o webhook.
+                  </AlertDescription>
+                </Alert>
+              )}
               <div className="rounded-lg border p-3 text-sm text-muted-foreground">
                 Depois que a Meta validar a URL, assine os campos do webhook:
                 <ol className="mt-2 list-decimal space-y-1 pl-4">

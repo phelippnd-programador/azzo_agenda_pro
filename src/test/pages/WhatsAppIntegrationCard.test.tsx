@@ -116,6 +116,47 @@ describe("WhatsAppIntegrationCard", () => {
     });
   });
 
+  it("deve exibir status amigavel no lugar de NOT_STARTED", async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <WhatsAppIntegrationCard />
+      </QueryClientProvider>
+    );
+    expect(await screen.findByText("Configuracao ainda nao iniciada")).toBeInTheDocument();
+    expect(screen.queryByText("NOT_STARTED")).not.toBeInTheDocument();
+  });
+
+  it("deve ter labels acessiveis para Callback URL e Verify Token na etapa 6", async () => {
+    const user = userEvent.setup();
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <WhatsAppIntegrationCard />
+      </QueryClientProvider>
+    );
+
+    await screen.findByText("Etapa 1 de 7: Verificacao inicial");
+    // Avanca ate etapa 4 sem precisar preencher
+    await user.click(screen.getByRole("button", { name: /Proxima etapa/i }));
+    await user.click(screen.getByRole("button", { name: /Proxima etapa/i }));
+    await user.click(screen.getByRole("button", { name: /Proxima etapa/i }));
+
+    // Preenche etapa 4 (obrigatorio)
+    await user.type(screen.getByLabelText("WABA / Business Account ID"), "waba-456");
+    await user.type(screen.getByLabelText("Phone Number ID"), "phone-123");
+    await user.click(screen.getByRole("button", { name: /Proxima etapa/i }));
+
+    // Preenche etapa 5 (obrigatorio)
+    await user.type(await screen.findByLabelText("Access Token"), "token-manual-abc");
+    await user.click(screen.getByRole("button", { name: /Proxima etapa/i }));
+
+    // Etapa 6 — verifica labels acessiveis
+    await screen.findByText("Etapa 6 de 7: Configuracao do webhook");
+    expect(screen.getByLabelText("Callback URL")).toBeInTheDocument();
+    expect(screen.getByLabelText("Verify Token")).toBeInTheDocument();
+  }, 30000);
+
   it("deve permitir configurar o WhatsApp pelo wizard", async () => {
     const user = userEvent.setup();
     const queryClient = new QueryClient({
