@@ -28,19 +28,19 @@ import type { ServiceDraft } from "@/stores/onboarding";
 const DURATIONS = [15, 20, 30, 45, 60, 90, 120];
 
 const serviceSchema = z.object({
-  name: z.string().min(2, "Nome Ã© obrigatÃ³rio"),
-  durationMinutes: z.coerce.number().min(1, "DuraÃ§Ã£o Ã© obrigatÃ³ria"),
-  price: z.coerce.number().min(0, "PreÃ§o Ã© obrigatÃ³rio"),
+  name: z.string().min(2, "Nome é obrigatório"),
+  durationMinutes: z.coerce.number().min(1, "Duração é obrigatória"),
+  price: z.coerce.number().min(0, "Preço é obrigatório"),
   description: z.string().optional(),
 });
 
 type ServiceFormValues = z.infer<typeof serviceSchema>;
 
 const SUGGESTIONS: Record<string, string[]> = {
-  SALAO_FEMININO: ["Corte feminino", "ColoraÃ§Ã£o", "Escova", "Mechas", "HidrataÃ§Ã£o", "Progressiva"],
+  SALAO_FEMININO: ["Corte feminino", "Coloração", "Escova", "Mechas", "Hidratação", "Progressiva"],
   BARBEARIA: ["Corte masculino", "Barba", "Combo corte e barba", "Sobrancelha", "Relaxamento"],
-  CLINICA_ESTETICA: ["Limpeza de pele", "Peeling", "MicropigmentaÃ§Ã£o", "Design de sobrancelha", "DepilaÃ§Ã£o"],
-  MISTO: ["Corte", "ColoraÃ§Ã£o", "Barba", "Manicure", "Pedicure", "Escova"],
+  CLINICA_ESTETICA: ["Limpeza de pele", "Peeling", "Micropigmentação", "Design de sobrancelha", "Depilação"],
+  MISTO: ["Corte", "Coloração", "Barba", "Manicure", "Pedicure", "Escova"],
 };
 
 type StepServicesProps = {
@@ -91,16 +91,16 @@ export function StepServices({ services, businessType, onAdd, onRemove }: StepSe
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-xl font-semibold">Quais serviÃ§os vocÃªs oferecem?</h2>
+        <h2 className="text-xl font-semibold">Quais serviços vocês oferecem?</h2>
         <p className="text-sm text-muted-foreground">
-          Adicione os serviÃ§os do seu estabelecimento.
+          Adicione os serviços do seu estabelecimento.
         </p>
       </div>
 
       {suggestions.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            SugestÃµes para o seu negÃ³cio
+            Sugestões para o seu negócio
           </p>
           <div className="flex flex-wrap gap-2">
             {suggestions.map((s) => (
@@ -126,8 +126,8 @@ export function StepServices({ services, businessType, onAdd, onRemove }: StepSe
         <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed py-12 text-center">
           <Scissors className="h-10 w-10 text-muted-foreground/50" />
           <div>
-            <p className="text-sm font-medium">Nenhum serviÃ§o adicionado</p>
-            <p className="text-xs text-muted-foreground">Use as sugestÃµes acima ou clique no botÃ£o abaixo</p>
+            <p className="text-sm font-medium">Nenhum serviço adicionado</p>
+            <p className="text-xs text-muted-foreground">Use as sugestões acima ou clique no botão abaixo</p>
           </div>
         </div>
       ) : (
@@ -165,18 +165,18 @@ export function StepServices({ services, businessType, onAdd, onRemove }: StepSe
 
       <Button variant="outline" className="w-full" onClick={() => setSheetOpen(true)}>
         <Plus className="mr-2 h-4 w-4" />
-        Adicionar serviÃ§o
+        Adicionar serviço
       </Button>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>Novo serviÃ§o</SheetTitle>
+            <SheetTitle>Novo serviço</SheetTitle>
           </SheetHeader>
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="svc-name">Nome do serviÃ§o *</Label>
+              <Label htmlFor="svc-name">Nome do serviço *</Label>
               <Input id="svc-name" placeholder="Ex: Corte feminino" {...register("name")} />
               {errors.name && (
                 <p className="text-xs text-destructive">{errors.name.message}</p>
@@ -184,7 +184,7 @@ export function StepServices({ services, businessType, onAdd, onRemove }: StepSe
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="svc-duration">DuraÃ§Ã£o *</Label>
+              <Label htmlFor="svc-duration">Duração *</Label>
               <Controller
                 name="durationMinutes"
                 control={control}
@@ -212,7 +212,7 @@ export function StepServices({ services, businessType, onAdd, onRemove }: StepSe
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="svc-price">PreÃ§o *</Label>
+              <Label htmlFor="svc-price">Preço *</Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
                   R$
@@ -238,10 +238,10 @@ export function StepServices({ services, businessType, onAdd, onRemove }: StepSe
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="svc-desc">DescriÃ§Ã£o</Label>
+              <Label htmlFor="svc-desc">Descrição</Label>
               <Textarea
                 id="svc-desc"
-                placeholder="DescriÃ§Ã£o opcional do serviÃ§o"
+                placeholder="Descrição opcional do serviço"
                 rows={3}
                 {...register("description")}
               />
@@ -251,7 +251,7 @@ export function StepServices({ services, businessType, onAdd, onRemove }: StepSe
               <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit">Salvar serviÃ§o</Button>
+              <Button type="submit">Salvar serviço</Button>
             </SheetFooter>
           </form>
         </SheetContent>
