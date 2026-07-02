@@ -181,8 +181,8 @@ describe("Auditoria", () => {
       </MemoryRouter>
     );
 
-    // moduleLabel("RBAC") = "Permissoes de acesso" aparece na tabela e nos cards
-    const rbacTexts = await screen.findAllByText("Permissoes de acesso");
+    // moduleLabel("RBAC") = "Permissões de acesso" aparece na tabela e nos cards
+    const rbacTexts = await screen.findAllByText("Permissões de acesso");
     expect(rbacTexts.length).toBeGreaterThan(0);
     // moduleLabel("WHATSAPP") = "WhatsApp" aparece na tabela
     const waTexts = await screen.findAllByText("WhatsApp");
