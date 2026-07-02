@@ -6,6 +6,7 @@ export interface CurrentMenuPermissionItem {
   displayOrder: number;
   iconKey?: string | null;
   active: boolean;
+  sidebarVisible?: boolean;
 }
 
 export interface CurrentMenuPermissionsResponse {

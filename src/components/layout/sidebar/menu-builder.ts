@@ -55,6 +55,9 @@ export function buildDynamicSidebarMenu(
 
   const byId = new Map(visibleItems.map((item) => [item.id, item]));
   const includedIds = new Set<string>();
+  // Itens com sidebarVisible=false permanecem acessiveis (RBAC/rota), mas nao
+  // viram nos do menu; ainda assim garantem a visibilidade do item pai.
+  const isSidebarHidden = (item: CurrentMenuPermissionItem) => item.sidebarVisible === false;
 
   visibleItems.forEach((item) => {
     if (!allowedSet.has(item.route)) {
@@ -84,7 +87,7 @@ export function buildDynamicSidebarMenu(
   const nodeMap = new Map<string, SidebarMenuNode>();
   includedIds.forEach((id) => {
     const item = byId.get(id);
-    if (!item) {
+    if (!item || isSidebarHidden(item)) {
       return;
     }
 
@@ -223,30 +226,26 @@ export function buildFallbackSidebarMenu(allowedSet: Set<string>): SidebarMenuNo
     }
   }
 
-  const reportsItems = REPORTS_GROUP_PATHS.filter((route) => allowedSet.has(route)).map(
-    (route) => MENU_REGISTRY[route as keyof typeof MENU_REGISTRY],
-  ).filter(Boolean);
+  // Relatorios viram um unico link para a pagina hub /relatorio;
+  // os relatorios individuais sao acessados pelos cards do hub.
+  const hasAnyReportAccess =
+    allowedSet.has("/relatorio") ||
+    REPORTS_GROUP_PATHS.some((route) => allowedSet.has(route));
 
-  if (reportsItems.length > 0) {
+  if (hasAnyReportAccess) {
     const reportsInsertIndex = entries.findIndex((entry) => entry.path === "/relatorio");
-    const reportsGroup: SidebarMenuNode = {
-      id: "relatorios-group",
+    const reportsLink: SidebarMenuNode = {
+      id: "relatorios-hub",
       path: "/relatorio",
       label: "Relatórios",
       icon: MENU_REGISTRY["/relatorio"].icon,
-      children: reportsItems.map((item) => ({
-        id: item.path,
-        path: item.path,
-        label: item.label,
-        icon: item.icon,
-        children: [],
-      })),
+      children: [],
     };
 
     if (reportsInsertIndex >= 0) {
-      entries.splice(reportsInsertIndex, 1, reportsGroup);
+      entries.splice(reportsInsertIndex, 1, reportsLink);
     } else {
-      entries.push(reportsGroup);
+      entries.push(reportsLink);
     }
   }
 
