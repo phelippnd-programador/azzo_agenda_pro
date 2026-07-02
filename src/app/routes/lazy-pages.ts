@@ -44,6 +44,7 @@ export const SalonProfile = lazy(() => import("@/pages/SalonProfile"));
 export const UserProfile = lazy(() => import("@/pages/UserProfile"));
 export const AppointmentManagementReport = lazy(() => import("@/pages/report/AppointmentManagementReport"));
 export const AbandonmentReport = lazy(() => import("@/pages/report/AbandonmentReport"));
+export const ReportsHubPage = lazy(() => import("@/pages/report/ReportsHubPage"));
 export const NoShowReport = lazy(() => import("@/pages/report/NoShowReport"));
 export const FinancialReportPage = lazy(() => import("@/pages/report/FinancialReportPage"));
 export const StockReportPage = lazy(() => import("@/pages/report/StockReportPage"));

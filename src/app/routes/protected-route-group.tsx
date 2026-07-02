@@ -3,6 +3,7 @@ import { Navigate, Route } from "react-router-dom";
 import { appRouteManifest } from "@/app/route-manifest";
 import {
   AbandonmentReport,
+  ReportsHubPage,
   ClientsReportPage,
   FinancialReportPage,
   LicenseReportPage,
@@ -83,11 +84,11 @@ export function ProtectedRouteGroup({
       <Route path={appRouteManifest.shell.notifications} element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
       <Route path={appRouteManifest.shell.agenda} element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
 
-      <Route path={appRouteManifest.reports.root} element={<ProtectedRoute><Navigate to={appRouteManifest.reports.appointments} replace /></ProtectedRoute>} />
+      <Route path={appRouteManifest.reports.root} element={<ProtectedRoute><ReportsHubPage /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.appointments} element={<ProtectedRoute><AppointmentManagementReport /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.noShow} element={<ProtectedRoute><NoShowReport /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.abandonment} element={<ProtectedRoute><AbandonmentReport /></ProtectedRoute>} />
-      <Route path={appRouteManifest.reports.legacyRoot} element={<ProtectedRoute><Navigate to={appRouteManifest.reports.appointments} replace /></ProtectedRoute>} />
+      <Route path={appRouteManifest.reports.legacyRoot} element={<ProtectedRoute><Navigate to={appRouteManifest.reports.root} replace /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.legacyAppointments} element={<ProtectedRoute><Navigate to={appRouteManifest.reports.appointments} replace /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.legacyAppointmentsPlural} element={<ProtectedRoute><Navigate to={appRouteManifest.reports.appointments} replace /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.legacyNoShow} element={<ProtectedRoute><Navigate to={appRouteManifest.reports.noShow} replace /></ProtectedRoute>} />

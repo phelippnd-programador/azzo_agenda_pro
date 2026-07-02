@@ -11,6 +11,7 @@ import { MonthlyRevenueLineChart } from '@/components/dashboard/MonthlyRevenueLi
 import { NoShowInsights } from '@/components/dashboard/NoShowInsights';
 import { WhatsAppReactivationChart } from '@/components/dashboard/WhatsAppReactivationChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -403,20 +404,20 @@ export default function Dashboard() {
     <MainLayout title="Dashboard" subtitle={formattedDate}>
       <div className="space-y-5 sm:space-y-6">
         <ModuleIntro
-          eyebrow="Visao executiva"
+          eyebrow="Visão executiva"
           title={
             isProfessionalUser
-              ? 'Priorize agenda, volume entregue e comissao do periodo atual.'
-              : 'Comece pelo que exige acao agora e desca depois para risco operacional e desempenho do mes.'
+              ? 'Priorize agenda, volume entregue e comissão do período atual.'
+              : 'Comece pelo que exige ação agora e desça depois para risco operacional e desempenho do mês.'
           }
           description={
             isProfessionalUser
               ? 'A leitura foi organizada para destacar sinais do dia antes dos blocos de apoio.'
-              : 'O topo resume operacao imediata; os blocos seguintes ajudam a localizar perda de conversao e concentracao de receita.'
+              : 'O topo resume operação imediata; os blocos seguintes ajudam a localizar perda de conversão e concentração de receita.'
           }
           badges={[
             { label: 'Hoje' },
-            { label: 'Mes atual' },
+            { label: 'Mês atual' },
             { label: `${todayAppointments.length} agendamento(s) no dia` },
           ]}
           actions={
@@ -428,39 +429,39 @@ export default function Dashboard() {
           points={[
             {
               eyebrow: isProfessionalUser ? 'Leitura principal' : 'Primeira leitura',
-              title: isProfessionalUser ? 'Pendencias, entrega e agenda' : 'Agenda, equipe e gargalos',
+              title: isProfessionalUser ? 'Pendências, entrega e agenda' : 'Agenda, equipe e gargalos',
               description: isProfessionalUser
-                ? 'Confirme pendencias, acompanhe o volume concluido e ajuste sua agenda antes dos blocos analiticos.'
-                : 'Trate agenda, equipe e gargalos do funil antes de descer para os graficos e rankings.',
+                ? 'Confirme pendências, acompanhe o volume concluído e ajuste sua agenda antes dos blocos analíticos.'
+                : 'Trate agenda, equipe e gargalos do funil antes de descer para os gráficos e rankings.',
             },
             {
-              eyebrow: 'Atalho de operacao',
-              title: 'Bata o olho e decida rapido',
-              description: 'Use os cards do topo para ler volume, receita, clientes e pendencias sem trocar de tela.',
+              eyebrow: 'Atalho de operação',
+              title: 'Bata o olho e decida rápido',
+              description: 'Use os cards do topo para ler volume, receita, clientes e pendências sem trocar de tela.',
             },
             {
-              eyebrow: 'Proximo passo',
+              eyebrow: 'Próximo passo',
               title: 'Entre pela agenda do dia',
-              description: 'Quando houver pendencias ou conflito de horario, a agenda continua sendo o ponto de acao mais rapido.',
+              description: 'Quando houver pendências ou conflito de horário, a agenda continua sendo o ponto de ação mais rápido.',
             },
           ]}
         />
 
         <WorkspaceNotice
-          title="Area de trabalho do dashboard"
+          title="Área de trabalho do dashboard"
           description={
             isProfessionalUser
-              ? 'Use os indicadores do topo para decidir o foco do dia e desca apenas depois para os blocos de apoio.'
-              : 'Leia primeiro o operacional imediato e depois use os blocos abaixo para encontrar risco, conversao e concentracao de receita.'
+              ? 'Use os indicadores do topo para decidir o foco do dia e desça apenas depois para os blocos de apoio.'
+              : 'Leia primeiro o operacional imediato e depois use as abas abaixo para encontrar risco, conversão e concentração de receita.'
           }
-          badge={isProfessionalUser ? `${resolvedMetrics.pendingAppointments} pendencia(s)` : `${resolvedMetrics.notConcludedToday ?? 0} em risco hoje`}
+          badge={isProfessionalUser ? `${resolvedMetrics.pendingAppointments} pendência(s)` : `${resolvedMetrics.notConcludedToday ?? 0} em risco hoje`}
         />
 
         {!isProfessionalUser && <OnboardingChecklist />}
 
         <DashboardSectionHeader
-          eyebrow="Operacao"
-          title="O que exige atencao hoje"
+          eyebrow="Operação"
+          title="O que exige atenção hoje"
           description={
             isProfessionalUser
               ? 'Comece pelo seu volume concluído, pendências do dia e próxima agenda.'
@@ -471,7 +472,7 @@ export default function Dashboard() {
         <div className="grid gap-3 sm:gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 min-[1700px]:grid-cols-4">
             <MetricCard
-              title={isProfessionalUser ? 'Servicos concluidos' : 'Agendamentos Hoje'}
+              title={isProfessionalUser ? 'Serviços concluídos' : 'Agendamentos Hoje'}
               value={resolvedMetrics.todayAppointments}
               icon={isProfessionalUser ? CheckCircle : Calendar}
               trend={
@@ -487,7 +488,7 @@ export default function Dashboard() {
               compact
             />
             <MetricCard
-              title={isProfessionalUser ? 'Faturamento no periodo' : 'Faturamento Hoje'}
+              title={isProfessionalUser ? 'Faturamento no período' : 'Faturamento Hoje'}
                 value={formatCurrency(resolvedMetrics.todayRevenue)}
               icon={DollarSign}
               trend={
@@ -520,7 +521,7 @@ export default function Dashboard() {
               compact
             />
             <MetricCard
-              title={isProfessionalUser ? 'Comissao no periodo' : 'Faturamento Mensal'}
+              title={isProfessionalUser ? 'Comissão no período' : 'Faturamento Mensal'}
                 value={formatCurrency(resolvedMetrics.monthlyRevenue)}
               icon={TrendingUp}
               trend={
@@ -539,7 +540,7 @@ export default function Dashboard() {
           </div>
           <Card className="border-border/70 bg-muted/15 shadow-none">
             <CardHeader className="space-y-1 pb-3">
-              <CardTitle className="text-base sm:text-lg">Resumo rapido do dia</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Resumo rápido do dia</CardTitle>
               <p className="text-xs text-muted-foreground">
                 Números que merecem leitura imediata antes de navegar pelo restante do dashboard.
               </p>
@@ -567,7 +568,7 @@ export default function Dashboard() {
                   />
                 ) : (
                   <QuickSignalCard
-                    label="Clientes no mes"
+                    label="Clientes no mês"
                     value={resolvedMetrics.totalClients}
                     icon={Users}
                     tone="blue"
@@ -670,19 +671,29 @@ export default function Dashboard() {
         </div>
 
         {!isProfessionalUser ? (
-          <>
+          <Tabs defaultValue="risco" className="space-y-4">
+            <TabsList className="flex h-auto w-max gap-1 rounded-xl border bg-muted/30 p-1">
+              <TabsTrigger value="risco" className="shrink-0 whitespace-nowrap px-4 py-2 text-sm">
+                Risco e conversão
+              </TabsTrigger>
+              <TabsTrigger value="performance" className="shrink-0 whitespace-nowrap px-4 py-2 text-sm">
+                Desempenho do mês
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="risco" className="space-y-4">
             <DashboardSectionHeader
-              eyebrow="Risco e conversao"
-              title="Onde a operacao perde oportunidade"
+              eyebrow="Risco e conversão"
+              title="Onde a operação perde oportunidade"
               description="Use estes blocos para entender onde o funil trava hoje e quais sinais merecem intervenção imediata."
             />
 
             <div className="grid gap-4 lg:grid-cols-2">
               <Card className="border-orange-200/70 bg-orange-50/65 shadow-none dark:border-orange-500/20 dark:bg-orange-500/10">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base sm:text-lg">Fluxos nao concluidos hoje</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">Fluxos não concluídos hoje</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Etapas do funil geral que ficaram pelo caminho antes da conclusao.
+                    Etapas do funil geral que ficaram pelo caminho antes da conclusão.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -725,7 +736,7 @@ export default function Dashboard() {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base sm:text-lg">WhatsApp em aberto hoje</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Conversas ainda nao resolvidas antes de virarem abandono formal.
+                    Conversas ainda não resolvidas antes de virarem abandono formal.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -770,17 +781,13 @@ export default function Dashboard() {
             <div className="w-full">
               <WhatsAppReactivationChart />
             </div>
+            </TabsContent>
 
-            <WorkspaceNotice
-              title="Leitura de risco antes da performance"
-              description="Se abandono, WhatsApp em aberto ou no-show subirem, trate isso antes de usar os blocos abaixo para analisar crescimento e ranking."
-              badge={`${(resolvedMetrics.notConcludedToday ?? 0) + (resolvedMetrics.whatsAppOpenFlowsToday ?? 0)} sinais prioritarios`}
-            />
-
+            <TabsContent value="performance" className="space-y-4">
             <DashboardSectionHeader
               eyebrow="Performance"
-              title="Receita e desempenho do mes"
-              description="Depois de tratar a operacao do dia, use estes blocos para leitura de crescimento, receita e ranking."
+              title="Receita e desempenho do mês"
+              description="Depois de tratar a operação do dia, use estes blocos para leitura de crescimento, receita e ranking."
             />
 
             <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
@@ -819,7 +826,8 @@ export default function Dashboard() {
                 valueFormatter={(value) => `${value} atendimento(s)`}
               />
             </div>
-          </>
+            </TabsContent>
+          </Tabs>
         ) : (
           <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
             <RankedBarCard
@@ -842,9 +850,9 @@ export default function Dashboard() {
 
             <Card className="border-border/70 bg-muted/15 shadow-none">
               <CardHeader className="space-y-1 pb-3">
-                <CardTitle className="text-base sm:text-lg">Resumo da sua operacao</CardTitle>
+                <CardTitle className="text-base sm:text-lg">Resumo da sua operação</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Um checkpoint rapido para manter foco em entrega, agenda e conversao do dia.
+                  Um checkpoint rápido para manter foco em entrega, agenda e conversão do dia.
                 </p>
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-muted-foreground">
@@ -853,19 +861,19 @@ export default function Dashboard() {
                     Leitura recomendada
                   </p>
                   <p className="mt-2 font-medium text-foreground">
-                    Volume entregue, receita do periodo e comissao acumulada precisam ser lidos juntos.
+                    Volume entregue, receita do período e comissão acumulada precisam ser lidos juntos.
                   </p>
                   <p className="mt-1">
-                    Use os cards do topo para acompanhar esses tres sinais sem perder o foco na agenda do dia.
+                    Use os cards do topo para acompanhar esses três sinais sem perder o foco na agenda do dia.
                   </p>
                 </div>
                 <div className="rounded-xl border border-border/70 bg-background/85 p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    Proximo passo
+                    Próximo passo
                   </p>
-                  <p className="mt-2 font-medium text-foreground">Confirme pendencias e empurre conclusao.</p>
+                  <p className="mt-2 font-medium text-foreground">Confirme pendências e empurre conclusão.</p>
                   <p className="mt-1">
-                    Priorize confirmacao de pendencias na agenda e mantenha o foco em converter atendimentos agendados em servicos concluidos.
+                    Priorize confirmação de pendências na agenda e mantenha o foco em converter atendimentos agendados em serviços concluídos.
                   </p>
                 </div>
               </CardContent>
