@@ -21,6 +21,7 @@ type MenuCatalogFormState = {
   displayOrder: string;
   iconKey: string;
   active: boolean;
+  sidebarVisible: boolean;
   roleVisibilities: Record<SystemAdminRole, boolean>;
 };
 
@@ -31,6 +32,7 @@ const createEmptyForm = (): MenuCatalogFormState => ({
   displayOrder: '0',
   iconKey: '',
   active: true,
+  sidebarVisible: true,
   roleVisibilities: { ADMIN: true, OWNER: false, PROFESSIONAL: false },
 });
 
@@ -78,6 +80,7 @@ export function AdminMenusTab() {
       displayOrder: String(item.displayOrder ?? 0),
       iconKey: item.iconKey || '',
       active: item.active,
+      sidebarVisible: item.sidebarVisible !== false,
       roleVisibilities,
     });
     setIsDialogOpen(true);
@@ -95,6 +98,7 @@ export function AdminMenusTab() {
     displayOrder: Number(form.displayOrder || 0),
     iconKey: form.iconKey.trim() || undefined,
     active: form.active,
+    sidebarVisible: form.sidebarVisible,
     roleVisibilities: ROLES.map((role) => ({ role, enabled: Boolean(form.roleVisibilities[role]) })),
   });
 
@@ -150,6 +154,7 @@ export function AdminMenusTab() {
                     <th className="px-3 py-2 text-left">Ordem</th>
                     <th className="px-3 py-2 text-left">Icone</th>
                     <th className="px-3 py-2 text-left">Roles</th>
+                    <th className="px-3 py-2 text-left">Menu lateral</th>
                     <th className="px-3 py-2 text-left">Status</th>
                     <th className="px-3 py-2 text-left">Acao</th>
                   </tr>
@@ -184,6 +189,11 @@ export function AdminMenusTab() {
                         </div>
                       </td>
                       <td className="px-3 py-2">
+                        <Badge variant={item.sidebarVisible !== false ? 'secondary' : 'outline'}>
+                          {item.sidebarVisible !== false ? 'Visível' : 'Oculto'}
+                        </Badge>
+                      </td>
+                      <td className="px-3 py-2">
                         <Badge variant={item.active ? 'default' : 'secondary'}>
                           {item.active ? 'ATIVO' : 'INATIVO'}
                         </Badge>
@@ -197,7 +207,7 @@ export function AdminMenusTab() {
                   ))}
                   {!isLoading && items.length === 0 ? (
                     <tr>
-                      <td className="px-3 py-4 text-muted-foreground" colSpan={8}>
+                      <td className="px-3 py-4 text-muted-foreground" colSpan={9}>
                         Nenhum menu cadastrado.
                       </td>
                     </tr>
@@ -285,6 +295,13 @@ export function AdminMenusTab() {
                   </label>
                 ))}
                 <label className="ml-auto flex items-center gap-2 text-sm">
+                  <Checkbox
+                    checked={form.sidebarVisible}
+                    onCheckedChange={(checked) => setForm((prev) => ({ ...prev, sidebarVisible: Boolean(checked) }))}
+                  />
+                  Exibir no menu lateral
+                </label>
+                <label className="flex items-center gap-2 text-sm">
                   <Checkbox
                     checked={form.active}
                     onCheckedChange={(checked) => setForm((prev) => ({ ...prev, active: Boolean(checked) }))}

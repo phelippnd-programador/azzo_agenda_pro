@@ -41,6 +41,7 @@ export interface MenuCatalogItem {
   displayOrder: number;
   iconKey?: string | null;
   active: boolean;
+  sidebarVisible?: boolean;
   childrenCount: number;
   roleVisibilities: MenuCatalogRoleVisibility[];
 }
@@ -57,6 +58,7 @@ export interface MenuCatalogItemRequest {
   displayOrder: number;
   iconKey?: string | null;
   active: boolean;
+  sidebarVisible?: boolean;
   roleVisibilities: MenuCatalogRoleVisibility[];
 }
 
