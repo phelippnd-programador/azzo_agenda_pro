@@ -18,7 +18,7 @@ import type {
   LgpdRequestStatus,
   UpdateLgpdRequestStatusPayload,
 } from "@/types/lgpd";
-import { formatLgpdStatus } from "@/lib/lgpd-formatters";
+import { formatLgpdStatus, formatLgpdRequestType, LGPD_REQUEST_TYPES } from "@/lib/lgpd-formatters";
 
 const STATUS_OPTIONS: LgpdRequestStatus[] = [
   "ABERTO",
@@ -192,14 +192,20 @@ export default function LgpdRequests() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <Input
+              <select
                 aria-label="Tipo"
-                placeholder="Tipo (ex.: ACESSO, ELIMINACAO)"
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
                 value={createForm.requestType}
                 onChange={(e) =>
                   setCreateForm((prev) => ({ ...prev, requestType: e.target.value }))
                 }
-              />
+              >
+                {LGPD_REQUEST_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
               <Input
                 aria-label="Nome do titular"
                 placeholder="Nome do titular"
@@ -259,12 +265,19 @@ export default function LgpdRequests() {
                   </option>
                 ))}
               </select>
-              <Input
+              <select
                 aria-label="Tipo"
-                placeholder="Tipo (ACESSO, ELIMINACAO...)"
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
                 value={requestTypeFilter}
                 onChange={(e) => setRequestTypeFilter(e.target.value)}
-              />
+              >
+                <option value="">Todos os tipos</option>
+                {LGPD_REQUEST_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
               <Input
                 aria-label="Limite"
                 placeholder="Limite"
@@ -317,7 +330,7 @@ export default function LgpdRequests() {
                           {formatLgpdStatus(item.status)}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">{item.requestType}</p>
+                      <p className="text-sm text-muted-foreground">{formatLgpdRequestType(item.requestType)}</p>
                       <p className="text-xs text-muted-foreground">
                         {item.requesterName} · {item.requesterEmail}
                       </p>
