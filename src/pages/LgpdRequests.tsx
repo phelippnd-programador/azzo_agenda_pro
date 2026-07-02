@@ -7,6 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { LgpdRequestDetailPanel } from "@/components/lgpd/LgpdRequestDetailPanel";
 import { lgpdApi } from "@/lib/api";
@@ -34,6 +42,9 @@ const STATUS_BADGE: Record<string, string> = {
   ENCERRADO: "bg-slate-500/10 text-slate-700 border-slate-600/30 dark:bg-slate-700/40 dark:text-slate-200 dark:border-slate-500/40",
 };
 
+const ALL_FILTER = "ALL";
+const PAGE_SIZE_OPTIONS = ["25", "50", "100"] as const;
+
 const EMPTY_CREATE_FORM: CreateLgpdRequestPayload = {
   requestType: "ACESSO",
   requesterName: "",
@@ -47,8 +58,8 @@ export default function LgpdRequests() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [statusFilter, setStatusFilter] = useState("");
-  const [requestTypeFilter, setRequestTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState(ALL_FILTER);
+  const [requestTypeFilter, setRequestTypeFilter] = useState(ALL_FILTER);
   const [limitFilter, setLimitFilter] = useState("50");
 
   const [createForm, setCreateForm] = useState<CreateLgpdRequestPayload>(EMPTY_CREATE_FORM);
@@ -69,14 +80,14 @@ export default function LgpdRequests() {
     try {
       setIsLoading(true);
       const data = await lgpdApi.list({
-        status: statusFilter || undefined,
-        requestType: requestTypeFilter || undefined,
+        status: statusFilter !== ALL_FILTER ? statusFilter : undefined,
+        requestType: requestTypeFilter !== ALL_FILTER ? requestTypeFilter : undefined,
         limit: Number(limitFilter) > 0 ? Number(limitFilter) : undefined,
       });
       setItems(data);
       setError(null);
     } catch (err) {
-      setError(resolveUiError(err, "Erro ao carregar solicitacoes LGPD.").message);
+      setError(resolveUiError(err, "Erro ao carregar solicitações LGPD.").message);
     } finally {
       setIsLoading(false);
     }
@@ -99,7 +110,7 @@ export default function LgpdRequests() {
       setUpdateNote("");
     } catch (err) {
       setDetailError(
-        resolveUiError(err, "Erro ao carregar detalhe da solicitacao.").message,
+        resolveUiError(err, "Erro ao carregar detalhe da solicitação.").message,
       );
     } finally {
       setIsLoadingDetail(false);
@@ -121,7 +132,7 @@ export default function LgpdRequests() {
       await fetchList();
       await fetchDetailById(created.id);
     } catch (err) {
-      setError(resolveUiError(err, "Erro ao criar solicitacao LGPD.").message);
+      setError(resolveUiError(err, "Erro ao criar solicitação LGPD.").message);
     } finally {
       setIsCreating(false);
     }
@@ -141,7 +152,7 @@ export default function LgpdRequests() {
       await fetchDetailById(selectedId);
     } catch (err) {
       setDetailError(
-        resolveUiError(err, "Erro ao atualizar status da solicitacao.").message,
+        resolveUiError(err, "Erro ao atualizar status da solicitação.").message,
       );
     } finally {
       setIsUpdatingStatus(false);
@@ -160,7 +171,7 @@ export default function LgpdRequests() {
       setUpdateSummary(data.request.responseSummary || "");
       setUpdateNote("");
     } catch (err) {
-      setDetailError(resolveUiError(err, "Protocolo LGPD nao encontrado.").message);
+      setDetailError(resolveUiError(err, "Protocolo LGPD não encontrado.").message);
     } finally {
       setIsLoadingDetail(false);
     }
@@ -169,7 +180,7 @@ export default function LgpdRequests() {
   return (
     <MainLayout
       title="LGPD - Direitos do Titular"
-      subtitle="Controle de solicitacoes com protocolo, status e historico auditavel."
+      subtitle="Controle de solicitações com protocolo, status e histórico auditável."
     >
       <div className="space-y-4">
         <div className="flex flex-wrap gap-2">
@@ -188,59 +199,78 @@ export default function LgpdRequests() {
         {/* Create form */}
         <Card>
           <CardHeader>
-            <CardTitle>Criar solicitacao LGPD</CardTitle>
+            <CardTitle>Criar solicitação LGPD</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <select
-                aria-label="Tipo"
-                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                value={createForm.requestType}
+              <div className="space-y-1.5">
+                <Label htmlFor="lgpd-create-type">Tipo</Label>
+                <Select
+                  value={createForm.requestType}
+                  onValueChange={(value) =>
+                    setCreateForm((prev) => ({ ...prev, requestType: value }))
+                  }
+                >
+                  <SelectTrigger id="lgpd-create-type">
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LGPD_REQUEST_TYPES.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="lgpd-create-name">Nome do titular</Label>
+                <Input
+                  id="lgpd-create-name"
+                  placeholder="ex.: Maria da Silva"
+                  value={createForm.requesterName}
+                  onChange={(e) =>
+                    setCreateForm((prev) => ({ ...prev, requesterName: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="lgpd-create-email">Email do titular</Label>
+                <Input
+                  id="lgpd-create-email"
+                  type="email"
+                  placeholder="ex.: maria@email.com"
+                  value={createForm.requesterEmail}
+                  onChange={(e) =>
+                    setCreateForm((prev) => ({ ...prev, requesterEmail: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="lgpd-create-document">Documento (opcional)</Label>
+                <Input
+                  id="lgpd-create-document"
+                  placeholder="ex.: CPF"
+                  value={createForm.requesterDocument || ""}
+                  onChange={(e) =>
+                    setCreateForm((prev) => ({ ...prev, requesterDocument: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="lgpd-create-description">Descrição da solicitação</Label>
+              <Textarea
+                id="lgpd-create-description"
+                placeholder="Descreva o pedido do titular"
+                value={createForm.description || ""}
                 onChange={(e) =>
-                  setCreateForm((prev) => ({ ...prev, requestType: e.target.value }))
-                }
-              >
-                {LGPD_REQUEST_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-              <Input
-                aria-label="Nome do titular"
-                placeholder="Nome do titular"
-                value={createForm.requesterName}
-                onChange={(e) =>
-                  setCreateForm((prev) => ({ ...prev, requesterName: e.target.value }))
-                }
-              />
-              <Input
-                aria-label="Email do titular"
-                placeholder="Email do titular"
-                value={createForm.requesterEmail}
-                onChange={(e) =>
-                  setCreateForm((prev) => ({ ...prev, requesterEmail: e.target.value }))
-                }
-              />
-              <Input
-                aria-label="Documento"
-                placeholder="Documento (opcional)"
-                value={createForm.requesterDocument || ""}
-                onChange={(e) =>
-                  setCreateForm((prev) => ({ ...prev, requesterDocument: e.target.value }))
+                  setCreateForm((prev) => ({ ...prev, description: e.target.value }))
                 }
               />
             </div>
-            <Textarea
-              aria-label="Descricao da solicitacao"
-              placeholder="Descricao da solicitacao"
-              value={createForm.description || ""}
-              onChange={(e) =>
-                setCreateForm((prev) => ({ ...prev, description: e.target.value }))
-              }
-            />
             <Button onClick={() => void onCreate()} disabled={isCreating}>
-              {isCreating ? "Criando..." : "Criar solicitacao"}
+              {isCreating ? "Criando..." : "Criar solicitação"}
             </Button>
           </CardContent>
         </Card>
@@ -252,52 +282,74 @@ export default function LgpdRequests() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <select
-                aria-label="Status"
-                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="">Todos os status</option>
-                {STATUS_OPTIONS.map((status) => (
-                  <option key={status} value={status}>
-                    {formatLgpdStatus(status)}
-                  </option>
-                ))}
-              </select>
-              <select
-                aria-label="Tipo"
-                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                value={requestTypeFilter}
-                onChange={(e) => setRequestTypeFilter(e.target.value)}
-              >
-                <option value="">Todos os tipos</option>
-                {LGPD_REQUEST_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-              <Input
-                aria-label="Limite"
-                placeholder="Limite"
-                value={limitFilter}
-                onChange={(e) => setLimitFilter(e.target.value)}
-              />
-              <Button variant="outline" onClick={() => void fetchList()}>
-                Aplicar filtros
-              </Button>
+              <div className="space-y-1.5">
+                <Label htmlFor="lgpd-filter-status">Status</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger id="lgpd-filter-status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL_FILTER}>Todos os status</SelectItem>
+                    {STATUS_OPTIONS.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {formatLgpdStatus(status)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="lgpd-filter-type">Tipo</Label>
+                <Select value={requestTypeFilter} onValueChange={setRequestTypeFilter}>
+                  <SelectTrigger id="lgpd-filter-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL_FILTER}>Todos os tipos</SelectItem>
+                    {LGPD_REQUEST_TYPES.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="lgpd-filter-page-size">Itens por página</Label>
+                <Select value={limitFilter} onValueChange={setLimitFilter}>
+                  <SelectTrigger id="lgpd-filter-page-size">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAGE_SIZE_OPTIONS.map((size) => (
+                      <SelectItem key={size} value={size}>
+                        {size} por página
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-end">
+                <Button variant="outline" className="w-full" onClick={() => void fetchList()}>
+                  Aplicar filtros
+                </Button>
+              </div>
             </div>
             <div className="grid gap-3 md:grid-cols-[1fr_auto]">
-              <Input
-                aria-label="Buscar por protocolo"
-                placeholder="Buscar por protocolo (LGPD-YYYYMMDD-XXXXXXXX)"
-                value={protocolLookup}
-                onChange={(e) => setProtocolLookup(e.target.value)}
-              />
-              <Button variant="outline" onClick={() => void onLookupProtocol()}>
-                Buscar protocolo
-              </Button>
+              <div className="space-y-1.5">
+                <Label htmlFor="lgpd-protocol-lookup">Buscar por protocolo</Label>
+                <Input
+                  id="lgpd-protocol-lookup"
+                  placeholder="ex.: LGPD-20260702-A1B2C3D4"
+                  value={protocolLookup}
+                  onChange={(e) => setProtocolLookup(e.target.value)}
+                />
+              </div>
+              <div className="flex items-end">
+                <Button variant="outline" onClick={() => void onLookupProtocol()}>
+                  Buscar protocolo
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -306,13 +358,13 @@ export default function LgpdRequests() {
         <div className="grid gap-4 xl:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Solicitacoes</CardTitle>
+              <CardTitle>Solicitações</CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
                 <p className="text-sm text-muted-foreground">Carregando...</p>
               ) : !items.length ? (
-                <p className="text-sm text-muted-foreground">Nenhuma solicitacao encontrada.</p>
+                <p className="text-sm text-muted-foreground">Nenhuma solicitação encontrada.</p>
               ) : (
                 <div className="space-y-2">
                   {items.map((item) => (

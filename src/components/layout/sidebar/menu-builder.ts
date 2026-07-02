@@ -232,7 +232,7 @@ export function buildFallbackSidebarMenu(allowedSet: Set<string>): SidebarMenuNo
     const reportsGroup: SidebarMenuNode = {
       id: "relatorios-group",
       path: "/relatorio",
-      label: "Relatorios",
+      label: "Relatórios",
       icon: MENU_REGISTRY["/relatorio"].icon,
       children: reportsItems.map((item) => ({
         id: item.path,

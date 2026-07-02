@@ -100,7 +100,7 @@ describe("Sidebar", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText("Gestao")).toBeInTheDocument();
+    expect(screen.getByText("Gestão")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Abrir site de agendamento" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Resumo Financeiro" })).toBeInTheDocument();
     expect(screen.getAllByText("Resumo Financeiro")).toHaveLength(1);

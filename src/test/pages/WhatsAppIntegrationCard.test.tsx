@@ -123,7 +123,7 @@ describe("WhatsAppIntegrationCard", () => {
         <WhatsAppIntegrationCard />
       </QueryClientProvider>
     );
-    expect(await screen.findByText("Configuracao ainda nao iniciada")).toBeInTheDocument();
+    expect(await screen.findByText("Configuração ainda não iniciada")).toBeInTheDocument();
     expect(screen.queryByText("NOT_STARTED")).not.toBeInTheDocument();
   });
 
@@ -136,7 +136,7 @@ describe("WhatsAppIntegrationCard", () => {
       </QueryClientProvider>
     );
 
-    await screen.findByText("Etapa 1 de 7: Verificacao inicial");
+    await screen.findByText("Etapa 1 de 7: Verificação inicial");
     // Avanca ate etapa 4 sem precisar preencher
     await user.click(screen.getByRole("button", { name: /Proxima etapa/i }));
     await user.click(screen.getByRole("button", { name: /Proxima etapa/i }));
@@ -152,7 +152,7 @@ describe("WhatsAppIntegrationCard", () => {
     await user.click(screen.getByRole("button", { name: /Proxima etapa/i }));
 
     // Etapa 6 — verifica labels acessiveis
-    await screen.findByText("Etapa 6 de 7: Configuracao do webhook");
+    await screen.findByText("Etapa 6 de 7: Configuração do webhook");
     expect(screen.getByLabelText("Callback URL")).toBeInTheDocument();
     expect(screen.getByLabelText("Verify Token")).toBeInTheDocument();
   }, 30000);
@@ -173,7 +173,7 @@ describe("WhatsAppIntegrationCard", () => {
       </QueryClientProvider>
     );
 
-    expect(await screen.findByText("Etapa 1 de 7: Verificacao inicial")).toBeInTheDocument();
+    expect(await screen.findByText("Etapa 1 de 7: Verificação inicial")).toBeInTheDocument();
     await user.click(screen.getAllByRole("switch")[0]);
 
     await user.click(screen.getByRole("button", { name: /Proxima etapa/i }));
