@@ -117,6 +117,39 @@ describe("SalonProfile", () => {
     expect(screen.getByDisplayValue("Salao QA")).toBeInTheDocument();
   });
 
+  it("should expose salon profile form fields by accessible labels", async () => {
+    render(
+      <MemoryRouter initialEntries={["/perfil-salao"]}>
+        <SalonProfile />
+      </MemoryRouter>
+    );
+
+    await screen.findByText("Link de Agendamento Publico");
+
+    [
+      "Nome do Salao *",
+      "Descricao",
+      "Telefone",
+      "WhatsApp",
+      "E-mail",
+      "Website",
+      "CPF/CNPJ",
+      "Instagram",
+      "Facebook",
+      "Rua",
+      "Numero",
+      "Complemento",
+      "Bairro",
+      "Cidade",
+      "Estado",
+      "CEP",
+      "Segunda-feira abertura",
+      "Segunda-feira fechamento",
+    ].forEach((label) => {
+      expect(screen.getByLabelText(label)).toBeInTheDocument();
+    });
+  });
+
   it("should save salon profile", async () => {
     const user = userEvent.setup();
 
