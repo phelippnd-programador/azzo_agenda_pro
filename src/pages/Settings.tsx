@@ -22,6 +22,7 @@ import { AppointmentConflictSettingsCard } from '@/components/settings/Appointme
 import { CancellationPolicyCard } from '@/components/settings/CancellationPolicyCard';
 import { SettingsBusinessHoursTab } from '@/components/settings/SettingsBusinessHoursTab';
 import { SettingsClosuresTab } from '@/components/settings/SettingsClosuresTab';
+import { SettingsLgpdTab } from '@/components/settings/SettingsLgpdTab';
 
 export default function Settings() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -45,6 +46,7 @@ export default function Settings() {
     const tabs: string[] = ['account', 'notifications'];
     if (canAccessSalon || isOwner) tabs.push('salon');
     if (isOwner) tabs.push('agenda');
+    if (isOwner) tabs.push('lgpd');
     if (canAccessWhatsApp || canAccessStock) tabs.push('integrations');
     if (canAccessTax || canAccessCerts || canAccessNfseConfig || canAccessNfseModule) tabs.push('fiscal');
     return tabs;
@@ -76,6 +78,7 @@ export default function Settings() {
     notifications:'Notificações',
     salon:        'Salão',
     agenda:       'Agenda',
+    lgpd:         'LGPD',
     integrations: 'Integrações',
     fiscal:       'Fiscal',
   };
@@ -161,6 +164,13 @@ export default function Settings() {
                 <AppointmentConflictSettingsCard />
                 <CancellationPolicyCard />
               </div>
+            </TabsContent>
+          )}
+
+          {/* ── LGPD ── contato DPO */}
+          {isOwner && (
+            <TabsContent value="lgpd">
+              <SettingsLgpdTab />
             </TabsContent>
           )}
 
