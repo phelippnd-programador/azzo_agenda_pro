@@ -145,8 +145,9 @@ export function NfseCapabilityCard({
           </div>
 
           <div className="space-y-2">
-            <Label>Janela de cancelamento (horas)</Label>
+            <Label htmlFor="nfse-cap-janela-cancelamento">Janela de cancelamento (horas)</Label>
             <Input
+              id="nfse-cap-janela-cancelamento"
               type="number"
               value={capability.cancelWindowHours || 0}
               onChange={(e) =>
@@ -156,8 +157,9 @@ export function NfseCapabilityCard({
           </div>
 
           <div className="space-y-2">
-            <Label>Codigos de motivo aceitos</Label>
+            <Label htmlFor="nfse-cap-codigos-motivo">Codigos de motivo aceitos</Label>
             <Input
+              id="nfse-cap-codigos-motivo"
               value={capability.acceptedCancelReasonCodes || ""}
               onChange={(e) =>
                 onCapabilityChange({ acceptedCancelReasonCodes: e.target.value })
