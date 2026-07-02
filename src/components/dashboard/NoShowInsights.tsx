@@ -129,9 +129,9 @@ export function NoShowInsights() {
                 >
                   <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                      <p className="font-medium text-slate-900">{appointment.clientName || "Cliente nao identificado"}</p>
+                      <p className="font-medium text-slate-900">{appointment.clientName || "Cliente não identificado"}</p>
                       <p className="text-sm text-muted-foreground">
-                        {(appointment.serviceNames || []).join(", ") || "Servico nao identificado"} â€¢ {appointment.professionalName || "Profissional nao identificado"}
+                        {(appointment.serviceNames || []).join(", ") || "Serviço não identificado"} • {appointment.professionalName || "Profissional não identificado"}
                       </p>
                     </div>
                     <Badge variant="outline" className="border-rose-200 bg-rose-50 text-rose-800">

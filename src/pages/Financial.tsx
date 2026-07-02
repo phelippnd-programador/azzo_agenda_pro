@@ -225,8 +225,8 @@ export default function Financial() {
       <div className="space-y-4 sm:space-y-6">
         <ModuleIntro
           eyebrow="Caixa e receita"
-          title="Leia o saldo primeiro, depois filtre a operaÃ§Ã£o e sÃ³ entÃ£o entre no detalhe dos lanÃ§amentos."
-          description="A tela foi organizada para separar visÃ£o financeira, Ã¡rea de trabalho e lista operacional sem misturar tudo no mesmo bloco."
+          title="Leia o saldo primeiro, depois filtre a operação e só então entre no detalhe dos lançamentos."
+          description="A tela foi organizada para separar visão financeira, área de trabalho e lista operacional sem misturar tudo no mesmo bloco."
           badges={[
             { label: `${totalCount} lancamento(s)` },
             { label: `${activeFilterCount} filtro(s)` },
@@ -235,18 +235,18 @@ export default function Financial() {
           points={[
             {
               eyebrow: 'Leitura principal',
-              title: 'Saldo e direÃ§Ã£o do caixa',
-              description: 'Comece pelo saldo e compare entradas e saÃ­das antes de abrir filtros ou exportaÃ§Ãµes.',
+              title: 'Saldo e direção do caixa',
+              description: 'Comece pelo saldo e compare entradas e saídas antes de abrir filtros ou exportações.',
             },
             {
               eyebrow: 'Operacao',
               title: 'Filtre, registre e concilie',
-              description: 'Use a barra de aÃ§Ãµes para filtrar perÃ­odo, abrir o fluxo de caixa e registrar novos lanÃ§amentos.',
+              description: 'Use a barra de ações para filtrar período, abrir o fluxo de caixa e registrar novos lançamentos.',
             },
             {
               eyebrow: 'Proximo passo',
-              title: 'Revise a lista apÃ³s aplicar contexto',
-              description: 'A lista de transaÃ§Ãµes fica mais Ãºtil depois que vocÃª define recorte, categoria e profissional.',
+              title: 'Revise a lista após aplicar contexto',
+              description: 'A lista de transações fica mais útil depois que você define recorte, categoria e profissional.',
             },
           ]}
         />
@@ -312,7 +312,7 @@ export default function Financial() {
 
         <WorkspaceNotice
           title="Area de trabalho financeira"
-          description="Ajuste perÃ­odo, filtros, visÃµes auxiliares e crie lanÃ§amentos sem perder o contexto do caixa atual."
+          description="Ajuste período, filtros, visões auxiliares e crie lançamentos sem perder o contexto do caixa atual."
           badge={`Saldo atual: ${formatCurrency(summary.balance)}`}
         />
 

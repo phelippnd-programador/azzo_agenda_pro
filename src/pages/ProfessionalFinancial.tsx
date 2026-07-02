@@ -569,7 +569,7 @@ export default function ProfessionalFinancial() {
                     </p>
                     {metricItem ? (
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {metricItem.totalAppointments} ag. â€¢ {metricItem.completedAppointments} concl. â€¢{" "}
+                        {metricItem.totalAppointments} ag. • {metricItem.completedAppointments} concl. •{" "}
                         {metricItem.canceledAppointments} cancel.
                       </p>
                     ) : null}
