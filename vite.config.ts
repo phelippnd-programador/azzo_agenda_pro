@@ -26,15 +26,21 @@ const DEV_TLS_CERT_PATH =
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => ({
   plugins: (() => {
-    const atomPlugins = atoms();
-    return [
-      viteSourceLocator({
-        prefix: "mgx",
-      }),
-      react(),
-      viteVersionPlugin(),
-      ...(Array.isArray(atomPlugins) ? atomPlugins : [atomPlugins]),
-    ];
+    const isDev = command === "serve";
+    // SEC-006/SEC-009: as ferramentas de editor visual do MetaGPT/Lovable
+    // (viteSourceLocator + atoms) arrastam uma cadeia de build vulneravel
+    // (rollup-plugin-terser -> serialize-javascript). Sao apenas dev tooling,
+    // entao so entram no dev-server; o build de producao nunca as inclui.
+    const devOnlyPlugins = isDev
+      ? (() => {
+          const atomPlugins = atoms();
+          return [
+            viteSourceLocator({ prefix: "mgx" }),
+            ...(Array.isArray(atomPlugins) ? atomPlugins : [atomPlugins]),
+          ];
+        })()
+      : [];
+    return [react(), viteVersionPlugin(), ...devOnlyPlugins];
   })(),
   server: {
     watch: { usePolling: true, interval: 800 /* 300~1500 */ },
