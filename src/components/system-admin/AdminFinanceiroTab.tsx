@@ -29,6 +29,7 @@ type PlanFormState = {
   trial: boolean;
   priority: string;
   maxProfessionals: string;
+  exclusivoVendaInterna: boolean;
 };
 
 const createEmptyPlanForm = (): PlanFormState => ({
@@ -44,6 +45,7 @@ const createEmptyPlanForm = (): PlanFormState => ({
   trial: false,
   priority: '0',
   maxProfessionals: '',
+  exclusivoVendaInterna: false,
 });
 
 interface AdminFinanceiroTabProps {
@@ -122,6 +124,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
       trial: plan.trial,
       priority: String(plan.priority ?? 0),
       maxProfessionals: plan.maxProfessionals != null ? String(plan.maxProfessionals) : '',
+      exclusivoVendaInterna: Boolean(plan.exclusivoVendaInterna),
     });
     setIsDialogOpen(true);
   };
@@ -144,6 +147,7 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
       trial: planForm.trial,
       priority: Number(planForm.priority || 0),
       maxProfessionals: planForm.maxProfessionals.trim() ? Number(planForm.maxProfessionals) : undefined,
+      exclusivoVendaInterna: planForm.exclusivoVendaInterna,
     };
   };
 
@@ -465,6 +469,14 @@ export function AdminFinanceiroTab({ selectedTenantId }: AdminFinanceiroTabProps
                 onCheckedChange={(checked) => setPlanForm((prev) => ({ ...prev, trial: Boolean(checked) }))}
               />
               Trial
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox
+                aria-label="Exclusivo para venda interna"
+                checked={planForm.exclusivoVendaInterna}
+                onCheckedChange={(checked) => setPlanForm((prev) => ({ ...prev, exclusivoVendaInterna: Boolean(checked) }))}
+              />
+              Exclusivo p/ venda interna
             </label>
           </div>
           </div>

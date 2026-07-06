@@ -86,6 +86,7 @@ export interface SystemPlanItem {
   trial: boolean;
   priority: number;
   maxProfessionals?: number | null;
+  exclusivoVendaInterna?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -107,6 +108,7 @@ export interface SystemPlanUpsertRequest {
   trial: boolean;
   priority: number;
   maxProfessionals?: number | null;
+  exclusivoVendaInterna?: boolean;
 }
 
 export interface AdminTenantItem {
