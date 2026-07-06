@@ -65,8 +65,15 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to={appRouteManifest.public.login} replace />;
   }
 
-  if (isFiscalOwnerPath(location.pathname) && user?.role !== "OWNER") {
-    return <Navigate to={appRouteManifest.shell.unauthorized} replace />;
+  // Rotas fiscais sao acoes alcancadas por botao (emitir-nota, nota-fiscal,
+  // apuracao-mensal) e nao existem como item de menu. A autorizacao delas e o
+  // proprio papel OWNER — profissionais continuam bloqueados. Curto-circuita o
+  // canAccess (baseado em menu) para o OWNER nao ser bloqueado indevidamente.
+  if (isFiscalOwnerPath(location.pathname)) {
+    if (user?.role !== "OWNER") {
+      return <Navigate to={appRouteManifest.shell.unauthorized} replace />;
+    }
+    return renderProtectedContent(children);
   }
 
   if (
@@ -87,6 +94,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to={appRouteManifest.shell.unauthorized} replace />;
   }
 
+  return renderProtectedContent(children);
+}
+
+function renderProtectedContent(children: React.ReactNode) {
   return (
     <Suspense
       fallback={

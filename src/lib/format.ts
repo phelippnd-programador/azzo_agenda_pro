@@ -3,9 +3,14 @@
 
 // ─── Moeda ────────────────────────────────────────────────────────────────────
 
-/** Formata um valor em reais. Ex: 1500 → "R$ 1.500,00" */
-export const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+/** Formata um valor em reais. Ex: 1500 → "R$ 1.500,00".
+ * Valores invalidos (null/undefined/NaN/string nao-numerica) viram 0
+ * para nunca exibir "R$ NaN" na interface. */
+export const formatCurrency = (value: number | string | null | undefined) => {
+  const numeric = typeof value === "number" ? value : Number(value);
+  const safe = Number.isFinite(numeric) ? numeric : 0;
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(safe);
+};
 
 // ─── Data / Hora ──────────────────────────────────────────────────────────────
 

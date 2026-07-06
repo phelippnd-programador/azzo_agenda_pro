@@ -140,11 +140,31 @@ export function buildDynamicSidebarMenu(
     (node) => !(node.children.length === 0 && childPaths.has(node.path))
   );
 
-  return moveStandaloneRoutesToEnd(deduplicatedRoots);
+  // Remove nos "orfaos": um pai (ex.: /financeiro "Resumo Financeiro") incluido
+  // apenas por um filho permitido, mas cuja propria rota o usuario NAO acessa e
+  // que ficou sem filhos visiveis (submenu colapsado). Evita expor item
+  // administrativo indevido, como um profissional ver "Resumo Financeiro".
+  const accessibleRoots = deduplicatedRoots.filter(
+    (node) => node.children.length > 0 || isRouteInAllowedSet(node.path, allowedSet)
+  );
+
+  return moveStandaloneRoutesToEnd(accessibleRoots);
+}
+
+/** Verifica se a rota do no esta coberta pelas rotas permitidas (match exato ou sub-rota). */
+function isRouteInAllowedSet(path: string, allowedSet: Set<string>): boolean {
+  if (allowedSet.has(path)) return true;
+  for (const allowed of allowedSet) {
+    if (path.startsWith(`${allowed}/`)) return true;
+  }
+  return false;
 }
 
 export function buildFallbackSidebarMenu(allowedSet: Set<string>): SidebarMenuNode[] {
-  const hasAnyFinanceAccess = FINANCIAL_GROUP_PATHS.some((route) => allowedSet.has(route));
+  // So o dono (que tem o proprio /financeiro) ve o hub financeiro. Um profissional
+  // com apenas /financeiro/profissionais nao deve ver "Resumo Financeiro" — a visao
+  // dele e "Minha Producao" (/minha-producao). Evita item administrativo indevido.
+  const hasAnyFinanceAccess = allowedSet.has("/financeiro");
   const fiscalItems = FISCAL_GROUP_PATHS
     .filter((route) => allowedSet.has(route))
     .map((route) => MENU_REGISTRY[route as keyof typeof MENU_REGISTRY])

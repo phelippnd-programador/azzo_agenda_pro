@@ -203,7 +203,7 @@ export default function ClientsReportPage() {
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Data inicial</p>
                 <Input
-                  type="date"
+                  type="date" aria-label="Data inicial"
                   value={fromInput}
                   onChange={(e) => { setFromInput(e.target.value); setPresetInput("CUSTOM"); }}
                 />
@@ -211,7 +211,7 @@ export default function ClientsReportPage() {
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Data final</p>
                 <Input
-                  type="date"
+                  type="date" aria-label="Data final"
                   value={toInput}
                   onChange={(e) => { setToInput(e.target.value); setPresetInput("CUSTOM"); }}
                 />
