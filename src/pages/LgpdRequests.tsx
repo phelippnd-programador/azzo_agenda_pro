@@ -465,10 +465,10 @@ export default function LgpdRequests() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="lgpd-create-document">Documento (opcional)</Label>
+              <Label htmlFor="lgpd-create-document">Documento</Label>
               <Input
                 id="lgpd-create-document"
-                placeholder="ex.: CPF"
+                placeholder="CPF (opcional)"
                 value={createForm.requesterDocument || ""}
                 onChange={(e) =>
                   setCreateForm((prev) => ({ ...prev, requesterDocument: e.target.value }))

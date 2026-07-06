@@ -118,11 +118,11 @@ export default function ProfessionalCommissionReport() {
           <CardContent className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-5">
             <div className="space-y-2">
               <Label>Data inicial</Label>
-              <Input type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
+              <Input type="date" aria-label="Data inicial" value={from} onChange={(event) => setFrom(event.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Data final</Label>
-              <Input type="date" value={to} onChange={(event) => setTo(event.target.value)} />
+              <Input type="date" aria-label="Data final" value={to} onChange={(event) => setTo(event.target.value)} />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total</p>

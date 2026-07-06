@@ -228,11 +228,11 @@ export default function NoShowReport() {
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Periodo inicial</p>
-                <Input type="date" value={fromInput} onChange={(event) => setFromInput(event.target.value)} />
+                <Input type="date" aria-label="Periodo inicial" value={fromInput} onChange={(event) => setFromInput(event.target.value)} />
               </div>
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Periodo final</p>
-                <Input type="date" value={toInput} onChange={(event) => setToInput(event.target.value)} />
+                <Input type="date" aria-label="Periodo final" value={toInput} onChange={(event) => setToInput(event.target.value)} />
               </div>
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Profissional</p>

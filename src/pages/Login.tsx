@@ -338,6 +338,7 @@ export default function Login() {
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="rememberPassword"
+                  aria-label="Salvar e-mail neste dispositivo"
                   checked={rememberPassword}
                   onCheckedChange={(checked) => setRememberPassword(Boolean(checked))}
                   disabled={isLoading}

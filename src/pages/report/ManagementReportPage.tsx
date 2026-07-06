@@ -183,7 +183,7 @@ export default function ManagementReportPage() {
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Data inicial</p>
                 <Input
-                  type="date"
+                  type="date" aria-label="Data inicial"
                   value={fromInput}
                   onChange={(e) => { setFromInput(e.target.value); setPresetInput("CUSTOM"); }}
                 />
@@ -191,7 +191,7 @@ export default function ManagementReportPage() {
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Data final</p>
                 <Input
-                  type="date"
+                  type="date" aria-label="Data final"
                   value={toInput}
                   onChange={(e) => { setToInput(e.target.value); setPresetInput("CUSTOM"); }}
                 />
@@ -204,8 +204,25 @@ export default function ManagementReportPage() {
         </Card>
 
         {error && (
-          <div className="text-sm text-destructive rounded-md border border-destructive/30 bg-destructive/10 p-3">
-            {error}
+          <div className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm">
+            <p className="font-medium text-destructive">Nao foi possivel carregar o relatorio gerencial.</p>
+            <p className="mt-1 text-muted-foreground">
+              Verifique sua conexao e tente novamente. Se o problema persistir, ajuste o periodo de analise.
+            </p>
+            <Button variant="outline" size="sm" className="mt-3" onClick={() => setReloadToken((t) => t + 1)}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Tentar novamente
+            </Button>
+          </div>
+        )}
+
+        {/* Empty state tratado: sem erro, sem loading e sem dados relevantes */}
+        {!isLoading && !error && data && !data.financeiro && !data.agendamentos && (
+          <div className="rounded-md border border-dashed p-8 text-center">
+            <p className="text-sm font-medium text-foreground">Nenhum dado no periodo selecionado</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Ajuste o intervalo de datas para visualizar as metricas do negocio.
+            </p>
           </div>
         )}
 

@@ -59,7 +59,10 @@ const ROUTE_ALIASES: Record<string, string> = {
   "/settings/integrations/whatsapp": "/configuracoes/integracoes/whatsapp",
 };
 
-const ALWAYS_ALLOWED_ROUTES = ["/unauthorized", "/financeiro/licenca"];
+// Rotas sempre acessiveis para qualquer usuario autenticado.
+// "/perfil-usuario" e o proprio perfil do usuario logado (nao e item de menu,
+// e alcancado pelo menu de conta no header), portanto nao depende de permissao.
+const ALWAYS_ALLOWED_ROUTES = ["/unauthorized", "/financeiro/licenca", "/perfil-usuario"];
 function normalizeRoute(route: string): string {
   const trimmed = route.trim();
   return ROUTE_ALIASES[trimmed] ?? trimmed;
