@@ -5,6 +5,7 @@ import {
   Boxes,
   Building2,
   CalendarRange,
+  CreditCard,
   PlugZap,
   Receipt,
   ShieldCheck,
@@ -47,7 +48,7 @@ export default function Settings() {
     if (canAccessSalon || isOwner) tabs.push('salon');
     if (isOwner) tabs.push('agenda');
     if (isOwner) tabs.push('lgpd');
-    if (canAccessWhatsApp || canAccessStock) tabs.push('integrations');
+    if (canAccessWhatsApp || canAccessStock || isOwner) tabs.push('integrations');
     if (canAccessTax || canAccessCerts || canAccessNfseConfig || canAccessNfseModule) tabs.push('fiscal');
     return tabs;
   }, [canAccessSalon, isOwner, canAccessWhatsApp, canAccessStock, canAccessTax, canAccessCerts, canAccessNfseConfig, canAccessNfseModule]);
@@ -199,6 +200,27 @@ export default function Settings() {
                     <Button asChild className="w-full justify-between">
                       <Link to="/configuracoes/integracoes/whatsapp">
                         Configurar WhatsApp
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+              {isOwner && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <CreditCard className="h-4 w-4 text-primary" />
+                      Pagamentos (Asaas)
+                    </CardTitle>
+                    <CardDescription>
+                      Conta de recebimento do salão para sinal, comandas e assinaturas.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild className="w-full justify-between">
+                      <Link to="/configuracoes/integracoes/pagamentos">
+                        Configurar pagamentos
                         <ArrowRight className="h-4 w-4" />
                       </Link>
                     </Button>

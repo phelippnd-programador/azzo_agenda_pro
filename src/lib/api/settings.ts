@@ -140,6 +140,27 @@ export const settingsApi = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+  // F00 — conta de recebimento do salao (Asaas do tenant)
+  getPaymentConfig: () => request<TenantPaymentConfig>("/settings/payments"),
+  savePaymentConfig: (data: SaveTenantPaymentConfigRequest) =>
+    request<TenantPaymentConfig>("/settings/payments", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+};
+
+// F00 — tipos da conta de recebimento do salao
+export type TenantPaymentConfig = {
+  provider: string;
+  ambiente: "SANDBOX" | "PRODUCAO";
+  ativo: boolean;
+  apiKeyMascarada: string | null;
+  webhookPath: string | null;
+};
+
+export type SaveTenantPaymentConfigRequest = {
+  apiKey: string;
+  ambiente: "SANDBOX" | "PRODUCAO";
 };
 
 export const usersApi = {
