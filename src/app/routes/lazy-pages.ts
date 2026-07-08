@@ -65,6 +65,8 @@ export const InvoiceEmission = lazy(() => import("@/pages/tax/InvoiceEmission"))
 export const ApuracaoMensal = lazy(() => import("@/pages/tax/ApuracaoMensal"));
 export const WhatsAppIntegration = lazy(() => import("@/pages/WhatsAppIntegration"));
 export const PaymentIntegrationSettings = lazy(() => import("@/pages/PaymentIntegrationSettings"));
+export const PosPage = lazy(() => import("@/pages/pos/PosPage"));
+export const PosComandaPage = lazy(() => import("@/pages/pos/PosComandaPage"));
 export const ReactivationSettings = lazy(() => import("@/pages/settings/ReactivationSettings"));
 export const Unauthorized = lazy(() => import("@/pages/Unauthorized"));
 export const LegalDocument = lazy(() => import("@/pages/LegalDocument"));

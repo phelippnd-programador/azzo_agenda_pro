@@ -21,6 +21,10 @@ export const appRouteManifest = {
     unauthorized: "/unauthorized",
     onboarding: "/onboarding",
   },
+  pos: {
+    root: "/pos",
+    detail: "/pos/:id",
+  },
   reports: {
     root: "/relatorio",
     appointments: "/relatorio/agendamento",
