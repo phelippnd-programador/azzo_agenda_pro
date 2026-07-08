@@ -79,6 +79,10 @@ export default function ServicesOverviewPage() {
   const [formCategory, setFormCategory] = useState('Cabelo');
   const [formProfessionalIds, setFormProfessionalIds] = useState<string[]>([]);
   const [formIsActive, setFormIsActive] = useState(true);
+  // F02 — sinal de reserva (anti no-show) no agendamento publico
+  const [formSinalObrigatorio, setFormSinalObrigatorio] = useState(false);
+  const [formSinalTipo, setFormSinalTipo] = useState<'PERCENTUAL' | 'FIXO'>('PERCENTUAL');
+  const [formSinalValor, setFormSinalValor] = useState('');
   const [formErrors, setFormErrors] = useState<ServiceFormErrors>({});
 
   const {
@@ -116,6 +120,9 @@ export default function ServicesOverviewPage() {
     setFormCategory('Cabelo');
     setFormProfessionalIds([]);
     setFormIsActive(true);
+    setFormSinalObrigatorio(false);
+    setFormSinalTipo('PERCENTUAL');
+    setFormSinalValor('');
     setFormErrors({});
     setEditingService(null);
   };
@@ -128,6 +135,9 @@ export default function ServicesOverviewPage() {
     setFormCategory(service.category);
     setFormProfessionalIds(Array.isArray(service.professionalIds) ? service.professionalIds : []);
     setFormIsActive(service.isActive);
+    setFormSinalObrigatorio(Boolean(service.sinalObrigatorio));
+    setFormSinalTipo(service.sinalTipo === 'FIXO' ? 'FIXO' : 'PERCENTUAL');
+    setFormSinalValor(service.sinalValor != null ? String(service.sinalValor) : '');
     setEditingService(service.id);
     setIsNewServiceOpen(true);
   };
@@ -153,6 +163,17 @@ export default function ServicesOverviewPage() {
     if (!Number.isFinite(formPrice) || formPrice <= 0) {
       nextErrors.price = 'Informe um preco maior que zero.';
     }
+    const sinalValorNumber = Number(formSinalValor.replace(',', '.'));
+    if (formSinalObrigatorio) {
+      if (!formSinalValor.trim() || !Number.isFinite(sinalValorNumber) || sinalValorNumber <= 0) {
+        toast.error('Informe o valor do sinal (maior que zero).');
+        return;
+      }
+      if (formSinalTipo === 'PERCENTUAL' && sinalValorNumber > 100) {
+        toast.error('O sinal percentual nao pode exceder 100%.');
+        return;
+      }
+    }
 
     if (Object.keys(nextErrors).length > 0) {
       setFormErrors(nextErrors);
@@ -171,6 +192,9 @@ export default function ServicesOverviewPage() {
         category: formCategory,
         professionalIds: formProfessionalIds,
         isActive: formIsActive,
+        sinalObrigatorio: formSinalObrigatorio,
+        sinalTipo: formSinalObrigatorio ? formSinalTipo : null,
+        sinalValor: formSinalObrigatorio ? sinalValorNumber : null,
       };
 
       if (editingService) {
@@ -470,6 +494,52 @@ export default function ServicesOverviewPage() {
                     </div>
                   ) : null}
                   </div>
+                </DialogSection>
+
+                <DialogSection className="space-y-3 bg-transparent">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <Label>Exigir sinal no agendamento online</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Cliente paga um PIX antecipado para confirmar o horario (anti no-show).
+                      </p>
+                    </div>
+                    <Switch
+                      checked={formSinalObrigatorio}
+                      onCheckedChange={setFormSinalObrigatorio}
+                    />
+                  </div>
+                  {formSinalObrigatorio && (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="sinal-tipo">Tipo do sinal</Label>
+                        <Select
+                          value={formSinalTipo}
+                          onValueChange={(value) => setFormSinalTipo(value as 'PERCENTUAL' | 'FIXO')}
+                        >
+                          <SelectTrigger id="sinal-tipo">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="PERCENTUAL">Percentual do preco (%)</SelectItem>
+                            <SelectItem value="FIXO">Valor fixo (R$)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="sinal-valor">
+                          {formSinalTipo === 'PERCENTUAL' ? 'Percentual (1 a 100)' : 'Valor (R$)'}
+                        </Label>
+                        <Input
+                          id="sinal-valor"
+                          inputMode="decimal"
+                          placeholder={formSinalTipo === 'PERCENTUAL' ? '30' : '20,00'}
+                          value={formSinalValor}
+                          onChange={(e) => setFormSinalValor(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </DialogSection>
 
                 <DialogSection className="flex flex-col gap-3 bg-transparent sm:flex-row sm:items-center sm:justify-between">
