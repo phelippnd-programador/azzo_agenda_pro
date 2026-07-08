@@ -21,6 +21,7 @@ import { SettingsNotificationsTab } from '@/components/settings/SettingsNotifica
 import { SettingsAccountTab } from '@/components/settings/SettingsAccountTab';
 import { AppointmentConflictSettingsCard } from '@/components/settings/AppointmentConflictSettingsCard';
 import { CancellationPolicyCard } from '@/components/settings/CancellationPolicyCard';
+import { ReminderSettingsCard } from '@/components/settings/ReminderSettingsCard';
 import { SettingsBusinessHoursTab } from '@/components/settings/SettingsBusinessHoursTab';
 import { SettingsClosuresTab } from '@/components/settings/SettingsClosuresTab';
 import { SettingsLgpdTab } from '@/components/settings/SettingsLgpdTab';
@@ -164,6 +165,7 @@ export default function Settings() {
               <div className="grid gap-4 lg:grid-cols-2">
                 <AppointmentConflictSettingsCard />
                 <CancellationPolicyCard />
+                <ReminderSettingsCard />
               </div>
             </TabsContent>
           )}

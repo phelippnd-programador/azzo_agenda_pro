@@ -147,6 +147,21 @@ export const settingsApi = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+  // F03 — regua de lembretes de agendamento
+  getReminderSettings: () => request<ReminderSettings>("/settings/reminders"),
+  updateReminderSettings: (data: ReminderSettings) =>
+    request<ReminderSettings>("/settings/reminders", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+};
+
+// F03 — regua de lembretes
+export type ReminderSettings = {
+  d1Habilitado: boolean;
+  d1Hora: string; // "HH:mm"
+  horasAntesHabilitado: boolean;
+  horasAntes: number; // 1..12
 };
 
 // F00 — tipos da conta de recebimento do salao
