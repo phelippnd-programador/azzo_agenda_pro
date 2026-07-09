@@ -1,16 +1,14 @@
 import { Download, X } from "lucide-react";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 
 export function PwaInstallBanner() {
-  const { canInstall, install } = usePwaInstall();
-  const [dismissed, setDismissed] = useState(false);
+  const { canInstall, install, dismiss } = usePwaInstall();
 
   // Mostra apenas em dispositivos moveis
   const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-  if (!canInstall || dismissed || !isMobile) return null;
+  if (!canInstall || !isMobile) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[9998] flex items-center gap-3 border-t bg-background px-4 py-3 shadow-lg safe-area-inset-bottom">
@@ -28,7 +26,7 @@ export function PwaInstallBanner() {
         type="button"
         aria-label="Fechar"
         className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted"
-        onClick={() => setDismissed(true)}
+        onClick={dismiss}
       >
         <X className="h-4 w-4" />
       </button>

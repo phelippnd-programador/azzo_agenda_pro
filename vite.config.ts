@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
 import { viteSourceLocator } from "@metagptx/vite-plugin-source-locator";
 import { atoms } from "@metagptx/web-sdk/plugins";
@@ -40,7 +41,45 @@ export default defineConfig(({ command }) => ({
           ];
         })()
       : [];
-    return [react(), viteVersionPlugin(), ...devOnlyPlugins];
+    return [
+      react(),
+      VitePWA({
+        registerType: "prompt",
+        includeAssets: ["favicon.ico", "icon-192.png", "icon-512.png"],
+        manifest: false,
+        workbox: {
+          navigateFallback: "/offline.html",
+          globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,json}"],
+          globIgnores: ["images/**"],
+          runtimeCaching: [
+            {
+              urlPattern: ({ request, url }) => {
+                if (request.method !== "GET") return false;
+                if (!url.pathname.startsWith("/api/")) return false;
+                return !/^\/api\/v1\/(auth|billing|finance|users|salon\/profile|admin|auditoria|lgpd)/.test(url.pathname);
+              },
+              handler: "NetworkFirst",
+              options: {
+                cacheName: "azzo-api-readonly",
+                networkTimeoutSeconds: 5,
+                expiration: {
+                  maxEntries: 80,
+                  maxAgeSeconds: 60 * 60,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+          ],
+        },
+        devOptions: {
+          enabled: false,
+        },
+      }),
+      viteVersionPlugin(),
+      ...devOnlyPlugins,
+    ];
   })(),
   server: {
     watch: { usePolling: true, interval: 800 /* 300~1500 */ },
