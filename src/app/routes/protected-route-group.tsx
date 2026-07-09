@@ -14,6 +14,7 @@ import {
   Agenda,
   AppointmentManagementReport,
   Auditoria,
+  CatalogReportPage,
   ChatPage,
   ClientImportDetailPage,
   ClientImportsPage,
@@ -110,6 +111,7 @@ export function ProtectedRouteGroup({
       <Route path={appRouteManifest.reports.licencas} element={<ProtectedRoute><LicenseReportPage /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.gerencial} element={<ProtectedRoute><ManagementReportPage /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.ocupacao} element={<ProtectedRoute><HeatmapReportPage /></ProtectedRoute>} />
+      <Route path={appRouteManifest.reports.catalogo} element={<ProtectedRoute><CatalogReportPage /></ProtectedRoute>} />
 
       <Route path={appRouteManifest.services.root} element={<ProtectedRoute><Services /></ProtectedRoute>}>
         <Route index element={<ServicesOverviewPage />} />

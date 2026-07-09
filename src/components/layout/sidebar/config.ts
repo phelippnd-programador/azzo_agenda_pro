@@ -9,6 +9,7 @@ import {
   DollarSign,
   Eye,
   FileSearch,
+  FileSpreadsheet,
   FileText,
   Grid3X3,
   LayoutDashboard,
@@ -88,6 +89,11 @@ export const MENU_REGISTRY = {
     icon: Grid3X3,
     label: "Ocupacao",
     path: appRouteManifest.reports.ocupacao,
+  },
+  [appRouteManifest.reports.catalogo]: {
+    icon: FileSpreadsheet,
+    label: "Catalogo avancado",
+    path: appRouteManifest.reports.catalogo,
   },
   [appRouteManifest.reports.gerencial]: {
     icon: BarChart3,
@@ -240,6 +246,7 @@ export const MAIN_MENU_ORDER = [
   appRouteManifest.reports.clientes,
   appRouteManifest.reports.licencas,
   appRouteManifest.reports.ocupacao,
+  appRouteManifest.reports.catalogo,
   appRouteManifest.reports.gerencial,
   appRouteManifest.services.root,
   appRouteManifest.specialties.root,
@@ -281,6 +288,7 @@ export const REPORTS_GROUP_PATHS = [
   appRouteManifest.reports.clientes,
   appRouteManifest.reports.licencas,
   appRouteManifest.reports.ocupacao,
+  appRouteManifest.reports.catalogo,
   appRouteManifest.reports.gerencial,
 ] as const;
 
@@ -307,6 +315,7 @@ export const ICON_REGISTRY: Record<string, LucideIcon> = {
   BarChart3,
   ShieldCheck,
   FileSearch,
+  FileSpreadsheet,
   Boxes,
   Grid3X3,
   User,

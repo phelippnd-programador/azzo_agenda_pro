@@ -53,6 +53,7 @@ export const ClientsReportPage = lazy(() => import("@/pages/report/ClientsReport
 export const LicenseReportPage = lazy(() => import("@/pages/report/LicenseReportPage"));
 export const ManagementReportPage = lazy(() => import("@/pages/report/ManagementReportPage"));
 export const HeatmapReportPage = lazy(() => import("@/pages/report/HeatmapReportPage"));
+export const CatalogReportPage = lazy(() => import("@/pages/report/CatalogReportPage"));
 export const FiscalPage = lazy(() => import("@/pages/fiscal/FiscalPage"));
 export const TaxConfig = lazy(() => import("@/pages/tax/TaxConfig"));
 export const FiscalCertificatesSettings = lazy(() => import("@/pages/tax/FiscalCertificatesSettings"));
