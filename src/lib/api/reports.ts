@@ -96,6 +96,22 @@ export type GerencialReportResponse = {
   occupancyRate?: number | null;
 };
 
+export type HeatmapCell = {
+  diaSemana: number;
+  hora: number;
+  agendamentos: number;
+  minutosOcupados: number;
+  minutosDisponiveis: number;
+  ocupacaoPercent: number | null;
+};
+
+export type HeatmapReportResponse = {
+  dataInicio: string;
+  dataFim: string;
+  professionalId?: string | null;
+  matrix: HeatmapCell[][];
+};
+
 export type LicencaTenantItem = {
   tenantId: string;
   tenantNome: string;
@@ -149,6 +165,14 @@ export const reportsApi = {
     if (params?.to) q.set("to", params.to);
     const suffix = q.toString() ? `?${q.toString()}` : "";
     return request<GerencialReportResponse>(`/reports/gerencial${suffix}`);
+  },
+  getHeatmap: (params?: { dataInicio?: string; dataFim?: string; professionalId?: string }) => {
+    const q = new URLSearchParams();
+    if (params?.dataInicio) q.set("dataInicio", params.dataInicio);
+    if (params?.dataFim) q.set("dataFim", params.dataFim);
+    if (params?.professionalId) q.set("professionalId", params.professionalId);
+    const suffix = q.toString() ? `?${q.toString()}` : "";
+    return request<HeatmapReportResponse>(`/reports/heatmap${suffix}`);
   },
   adminGetLicencas: () =>
     request<LicencasAdminReportResponse>("/billing/admin/reports/licencas"),

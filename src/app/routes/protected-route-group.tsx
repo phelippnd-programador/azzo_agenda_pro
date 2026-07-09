@@ -6,6 +6,7 @@ import {
   ReportsHubPage,
   ClientsReportPage,
   FinancialReportPage,
+  HeatmapReportPage,
   LicenseReportPage,
   ManagementReportPage,
   SalesReportPage,
@@ -108,6 +109,7 @@ export function ProtectedRouteGroup({
       <Route path={appRouteManifest.reports.clientes} element={<ProtectedRoute><ClientsReportPage /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.licencas} element={<ProtectedRoute><LicenseReportPage /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.gerencial} element={<ProtectedRoute><ManagementReportPage /></ProtectedRoute>} />
+      <Route path={appRouteManifest.reports.ocupacao} element={<ProtectedRoute><HeatmapReportPage /></ProtectedRoute>} />
 
       <Route path={appRouteManifest.services.root} element={<ProtectedRoute><Services /></ProtectedRoute>}>
         <Route index element={<ServicesOverviewPage />} />

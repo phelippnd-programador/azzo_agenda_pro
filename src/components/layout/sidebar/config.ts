@@ -10,6 +10,7 @@ import {
   Eye,
   FileSearch,
   FileText,
+  Grid3X3,
   LayoutDashboard,
   Lightbulb,
   MapPinned,
@@ -82,6 +83,11 @@ export const MENU_REGISTRY = {
     icon: ShieldCheck,
     label: "Licenças",
     path: appRouteManifest.reports.licencas,
+  },
+  [appRouteManifest.reports.ocupacao]: {
+    icon: Grid3X3,
+    label: "Ocupacao",
+    path: appRouteManifest.reports.ocupacao,
   },
   [appRouteManifest.reports.gerencial]: {
     icon: BarChart3,
@@ -233,6 +239,7 @@ export const MAIN_MENU_ORDER = [
   appRouteManifest.reports.vendas,
   appRouteManifest.reports.clientes,
   appRouteManifest.reports.licencas,
+  appRouteManifest.reports.ocupacao,
   appRouteManifest.reports.gerencial,
   appRouteManifest.services.root,
   appRouteManifest.specialties.root,
@@ -273,6 +280,7 @@ export const REPORTS_GROUP_PATHS = [
   appRouteManifest.reports.vendas,
   appRouteManifest.reports.clientes,
   appRouteManifest.reports.licencas,
+  appRouteManifest.reports.ocupacao,
   appRouteManifest.reports.gerencial,
 ] as const;
 
@@ -300,6 +308,7 @@ export const ICON_REGISTRY: Record<string, LucideIcon> = {
   ShieldCheck,
   FileSearch,
   Boxes,
+  Grid3X3,
   User,
   MessageCircleMore,
   MessageSquareDashed,

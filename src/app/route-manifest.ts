@@ -43,6 +43,7 @@ export const appRouteManifest = {
     estoque: "/relatorio/estoque",
     vendas: "/relatorio/vendas",
     clientes: "/relatorio/clientes",
+    ocupacao: "/relatorio/ocupacao",
     licencas: "/relatorio/licencas",
     gerencial: "/relatorio/gerencial",
     legacyRoot: "/relatorios",
