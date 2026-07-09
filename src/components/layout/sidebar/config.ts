@@ -12,6 +12,7 @@ import {
   FileText,
   LayoutDashboard,
   Lightbulb,
+  MapPinned,
   MessageCircleMore,
   MessageSquareDashed,
   Package,
@@ -162,6 +163,16 @@ export const MENU_REGISTRY = {
     label: "Plano",
     path: appRouteManifest.finance.license,
   },
+  [appRouteManifest.memberships.root]: {
+    icon: CreditCard,
+    label: "Clube de Assinaturas",
+    path: appRouteManifest.memberships.root,
+  },
+  [appRouteManifest.groups.dashboard]: {
+    icon: Building2,
+    label: "Multi-unidade",
+    path: appRouteManifest.groups.dashboard,
+  },
   [appRouteManifest.fiscal.root]: {
     icon: Receipt,
     label: "Fiscal",
@@ -191,6 +202,11 @@ export const MENU_REGISTRY = {
     icon: MessageSquareDashed,
     label: "Reativação WhatsApp",
     path: appRouteManifest.settings.reactivation,
+  },
+  [appRouteManifest.settings.googleBooking]: {
+    icon: MapPinned,
+    label: "Reserve with Google",
+    path: appRouteManifest.settings.googleBooking,
   },
   [appRouteManifest.profiles.user]: {
     icon: User,
@@ -231,11 +247,14 @@ export const MAIN_MENU_ORDER = [
   appRouteManifest.finance.commissions,
   appRouteManifest.finance.professionals,
   appRouteManifest.finance.license,
+  appRouteManifest.memberships.root,
+  appRouteManifest.groups.dashboard,
   appRouteManifest.fiscal.root,
   appRouteManifest.audit.root,
   appRouteManifest.audit.lgpd,
   appRouteManifest.settings.systemAdmin,
   appRouteManifest.settings.reactivation,
+  appRouteManifest.settings.googleBooking,
 ] as const;
 
 export const FINANCIAL_GROUP_PATHS = [
@@ -284,6 +303,7 @@ export const ICON_REGISTRY: Record<string, LucideIcon> = {
   User,
   MessageCircleMore,
   MessageSquareDashed,
+  MapPinned,
   Lightbulb,
   Wallet,
 };
@@ -361,9 +381,12 @@ export const SIDEBAR_SECTIONS = [
     paths: new Set([
       appRouteManifest.finance.root,
       appRouteManifest.stock.root,
+      appRouteManifest.memberships.root,
       appRouteManifest.shell.suggestions,
       appRouteManifest.audit.root,
       appRouteManifest.settings.systemAdmin,
+      appRouteManifest.groups.dashboard,
+      appRouteManifest.settings.googleBooking,
       appRouteManifest.fiscal.root,
       appRouteManifest.professionals.myHistory,
     ]),

@@ -68,7 +68,10 @@ export const PaymentIntegrationSettings = lazy(() => import("@/pages/PaymentInte
 export const PosPage = lazy(() => import("@/pages/pos/PosPage"));
 export const PosComandaPage = lazy(() => import("@/pages/pos/PosComandaPage"));
 export const PackagesPage = lazy(() => import("@/pages/packages/PackagesPage"));
+export const MembershipPlansPage = lazy(() => import("@/pages/memberships/MembershipPlansPage"));
+export const GroupDashboardPage = lazy(() => import("@/pages/groups/GroupDashboardPage"));
 export const ReactivationSettings = lazy(() => import("@/pages/settings/ReactivationSettings"));
+export const GoogleBookingSettingsPage = lazy(() => import("@/pages/settings/GoogleBookingSettingsPage"));
 export const Unauthorized = lazy(() => import("@/pages/Unauthorized"));
 export const LegalDocument = lazy(() => import("@/pages/LegalDocument"));
 export const SalePage = lazy(() => import("@/pages/SalePage"));

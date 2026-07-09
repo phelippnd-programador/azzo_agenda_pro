@@ -28,6 +28,12 @@ export const appRouteManifest = {
   packages: {
     root: "/pacotes",
   },
+  memberships: {
+    root: "/assinaturas-clientes",
+  },
+  groups: {
+    dashboard: "/grupo/dashboard",
+  },
   reports: {
     root: "/relatorio",
     appointments: "/relatorio/agendamento",
@@ -112,6 +118,7 @@ export const appRouteManifest = {
     fiscalNfse: "/configuracoes/fiscal/nfse",
     whatsapp: "/configuracoes/integracoes/whatsapp",
     payments: "/configuracoes/integracoes/pagamentos",
+    googleBooking: "/configuracoes/integracoes/google",
     reactivation: "/configuracoes/reativacao",
     systemAdmin: "/configuracoes/admin-sistema",
   },

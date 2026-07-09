@@ -67,7 +67,10 @@ import {
   PosPage,
   PosComandaPage,
   PackagesPage,
+  MembershipPlansPage,
+  GroupDashboardPage,
   ReactivationSettings,
+  GoogleBookingSettingsPage,
   OnboardingPage,
 } from "@/app/routes/lazy-pages";
 
@@ -173,7 +176,10 @@ export function ProtectedRouteGroup({
       <Route path={appRouteManifest.pos.root} element={<ProtectedRoute><PosPage /></ProtectedRoute>} />
       <Route path={appRouteManifest.pos.detail} element={<ProtectedRoute><PosComandaPage /></ProtectedRoute>} />
       <Route path={appRouteManifest.packages.root} element={<ProtectedRoute><PackagesPage /></ProtectedRoute>} />
+      <Route path={appRouteManifest.memberships.root} element={<ProtectedRoute><MembershipPlansPage /></ProtectedRoute>} />
+      <Route path={appRouteManifest.groups.dashboard} element={<ProtectedRoute><GroupDashboardPage /></ProtectedRoute>} />
       <Route path={appRouteManifest.settings.reactivation} element={<ProtectedRoute><ReactivationSettings /></ProtectedRoute>} />
+      <Route path={appRouteManifest.settings.googleBooking} element={<ProtectedRoute><GoogleBookingSettingsPage /></ProtectedRoute>} />
       <Route path={appRouteManifest.settings.systemAdmin} element={<ProtectedRoute><SystemAdminPage /></ProtectedRoute>} />
 
       {/* Pagina fiscal unificada */}
