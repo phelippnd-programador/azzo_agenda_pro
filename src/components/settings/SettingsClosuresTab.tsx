@@ -127,7 +127,7 @@ function ImpactModal({
             Agendamentos afetados
           </DialogTitle>
           <DialogDescription>
-            {affected.length} agendamento{affected.length !== 1 ? 's' : ''} sera{affected.length !== 1 ? 'o' : ''} afetado{affected.length !== 1 ? 's' : ''} pelo fechamento nessa data/horario.
+            {affected?.length} agendamento{affected?.length !== 1 ? 's' : ''} sera{affected?.length !== 1 ? 'o' : ''} afetado{affected?.length !== 1 ? 's' : ''} pelo fechamento nessa data/horario.
             Escolha como deseja prosseguir.
           </DialogDescription>
         </DialogHeader>
@@ -478,7 +478,7 @@ export function SettingsClosuresTab() {
       } else {
         const impact = await closuresApi.create(payload);
         setFormOpen(false);
-        if (impact.affectedAppointments.length > 0) {
+        if (impact?.affectedAppointments?.length > 0) {
           setPendingClosure(impact.closure);
           setImpactedAppointments(impact.affectedAppointments);
         } else {
@@ -609,7 +609,7 @@ export function SettingsClosuresTab() {
             <div className="py-10 text-center text-sm text-muted-foreground">
               Carregando fechamentos...
             </div>
-          ) : filteredClosures.length === 0 ? (
+          ) : filteredClosures?.length === 0 ? (
             <EmptyClosures />
           ) : (
             <div className="space-y-2">
