@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,7 +42,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Clock, MoreVertical, Scissors, Loader2 } from 'lucide-react';
+import { Plus, Clock, MoreVertical, Scissors, Loader2, Package } from 'lucide-react';
 import { useServices } from '@/hooks/useServices';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { useProfessionals } from '@/hooks/useProfessionals';
@@ -315,6 +316,15 @@ export default function ServicesOverviewPage() {
           },
         ]}
       />
+
+      <div className="flex justify-end">
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/pacotes">
+            <Package className="mr-2 h-4 w-4" />
+            Pacotes de servicos
+          </Link>
+        </Button>
+      </div>
 
       <Dialog
         open={isNewServiceOpen}

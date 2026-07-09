@@ -66,6 +66,7 @@ import {
   PaymentIntegrationSettings,
   PosPage,
   PosComandaPage,
+  PackagesPage,
   ReactivationSettings,
   OnboardingPage,
 } from "@/app/routes/lazy-pages";
@@ -171,6 +172,7 @@ export function ProtectedRouteGroup({
       <Route path={appRouteManifest.settings.payments} element={<ProtectedRoute><PaymentIntegrationSettings /></ProtectedRoute>} />
       <Route path={appRouteManifest.pos.root} element={<ProtectedRoute><PosPage /></ProtectedRoute>} />
       <Route path={appRouteManifest.pos.detail} element={<ProtectedRoute><PosComandaPage /></ProtectedRoute>} />
+      <Route path={appRouteManifest.packages.root} element={<ProtectedRoute><PackagesPage /></ProtectedRoute>} />
       <Route path={appRouteManifest.settings.reactivation} element={<ProtectedRoute><ReactivationSettings /></ProtectedRoute>} />
       <Route path={appRouteManifest.settings.systemAdmin} element={<ProtectedRoute><SystemAdminPage /></ProtectedRoute>} />
 

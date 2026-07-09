@@ -25,6 +25,9 @@ export const appRouteManifest = {
     root: "/pos",
     detail: "/pos/:id",
   },
+  packages: {
+    root: "/pacotes",
+  },
   reports: {
     root: "/relatorio",
     appointments: "/relatorio/agendamento",

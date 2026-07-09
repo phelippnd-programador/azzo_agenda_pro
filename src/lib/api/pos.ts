@@ -3,7 +3,7 @@ import { request } from "./core";
 // F01 — comanda / fechamento de conta (POS)
 
 export type ComandaStatus = "ABERTA" | "FECHADA" | "CANCELADA";
-export type ComandaItemTipo = "SERVICO" | "PRODUTO";
+export type ComandaItemTipo = "SERVICO" | "PRODUTO" | "PACOTE";
 export type ComandaMeioPagamento =
   | "DINHEIRO"
   | "PIX_ASAAS"
@@ -108,5 +108,12 @@ export const posApi = {
     request<Comanda>(`/pos/comandas/${id}/cancelar`, {
       method: "POST",
       body: JSON.stringify({ motivo }),
+    }),
+
+  // F08 — resgate de pontos de fidelidade como desconto na comanda.
+  resgatarFidelidade: (id: string, points: number) =>
+    request<Comanda>(`/pos/comandas/${id}/fidelidade/resgatar`, {
+      method: "POST",
+      body: JSON.stringify({ points }),
     }),
 };

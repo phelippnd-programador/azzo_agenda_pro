@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Copy, Percent, Plus, Trash2, Wallet } from 'lucide-react';
+import { ArrowLeft, Copy, Percent, Plus, Star, Trash2, Wallet } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,10 +24,12 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { posApi, type Comanda, type ComandaMeioPagamento } from '@/lib/api/pos';
+import { posApi, type Comanda, type ComandaMeioPagamento, type ComandaItemTipo } from '@/lib/api/pos';
 import { servicesApi, professionalsApi, type Service, type Professional } from '@/lib/api';
 import { stockApi } from '@/lib/api/stock';
 import type { StockItem } from '@/types/stock';
+import { packagesApi, type ServicePackage } from '@/lib/api/packages';
+import { loyaltyApi, type LoyaltyBalance } from '@/lib/api/loyalty';
 import { resolveUiError } from '@/lib/error-utils';
 import { formatCurrency } from '@/lib/format';
 
@@ -54,6 +56,8 @@ export default function PosComandaPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
+  const [packages, setPackages] = useState<ServicePackage[]>([]);
+  const [loyaltyBalance, setLoyaltyBalance] = useState<LoyaltyBalance | null>(null);
   const [troco, setTroco] = useState<number | null>(null);
 
   // dialogs
@@ -61,10 +65,12 @@ export default function PosComandaPage() {
   const [descontoOpen, setDescontoOpen] = useState(false);
   const [gorjetaOpen, setGorjetaOpen] = useState(false);
   const [pagamentoOpen, setPagamentoOpen] = useState(false);
+  const [fidelidadeOpen, setFidelidadeOpen] = useState(false);
+  const [resgatePontos, setResgatePontos] = useState('');
   const [busy, setBusy] = useState(false);
 
   // form: item
-  const [itemTipo, setItemTipo] = useState<'SERVICO' | 'PRODUTO'>('SERVICO');
+  const [itemTipo, setItemTipo] = useState<ComandaItemTipo>('SERVICO');
   const [itemRef, setItemRef] = useState('');
   const [itemQtd, setItemQtd] = useState('1');
   const [itemPreco, setItemPreco] = useState('');
@@ -96,7 +102,16 @@ export default function PosComandaPage() {
     servicesApi.getAll().then((d) => setServices(unwrapList(d))).catch(() => {});
     professionalsApi.getAll().then((d) => setProfessionals(unwrapList(d))).catch(() => {});
     stockApi.getItems({ ativo: true }).then((d) => setStockItems(unwrapList(d))).catch(() => {});
+    packagesApi.listar().then((d) => setPackages(d.filter((p) => p.ativo))).catch(() => {});
   }, [load]);
+
+  useEffect(() => {
+    if (!comanda?.clientId) {
+      setLoyaltyBalance(null);
+      return;
+    }
+    loyaltyApi.balance(comanda.clientId).then(setLoyaltyBalance).catch(() => setLoyaltyBalance(null));
+  }, [comanda?.clientId]);
 
   const faltando = useMemo(() => {
     if (!comanda) return 0;
@@ -159,6 +174,19 @@ export default function PosComandaPage() {
       })
     );
     if (okRun) setGorjetaOpen(false);
+  };
+
+  const resgatarFidelidade = async () => {
+    if (!id) return;
+    const okRun = await run(
+      () => posApi.resgatarFidelidade(id, Number(resgatePontos) || 0),
+      'Pontos resgatados como desconto.'
+    );
+    if (okRun) {
+      setFidelidadeOpen(false);
+      setResgatePontos('');
+      if (comanda?.clientId) loyaltyApi.balance(comanda.clientId).then(setLoyaltyBalance).catch(() => {});
+    }
   };
 
   const registrarPagamento = async () => {
@@ -255,30 +283,38 @@ export default function PosComandaPage() {
                     <div className="space-y-3">
                       <div className="space-y-1.5">
                         <Label>Tipo</Label>
-                        <Select value={itemTipo} onValueChange={(v) => { setItemTipo(v as 'SERVICO' | 'PRODUTO'); setItemRef(''); }}>
+                        <Select value={itemTipo} onValueChange={(v) => { setItemTipo(v as ComandaItemTipo); setItemRef(''); }}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="SERVICO">Servico</SelectItem>
                             <SelectItem value="PRODUTO">Produto (estoque)</SelectItem>
+                            {!!comanda.clientId && <SelectItem value="PACOTE">Pacote de servicos</SelectItem>}
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-1.5">
-                        <Label>{itemTipo === 'SERVICO' ? 'Servico' : 'Produto'}</Label>
+                        <Label>{itemTipo === 'SERVICO' ? 'Servico' : itemTipo === 'PRODUTO' ? 'Produto' : 'Pacote'}</Label>
                         <Select value={itemRef} onValueChange={setItemRef}>
                           <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                           <SelectContent>
-                            {itemTipo === 'SERVICO'
-                              ? services.map((s) => (
-                                  <SelectItem key={s.id} value={s.id}>
-                                    {s.name} — {formatCurrency(s.price)}
-                                  </SelectItem>
-                                ))
-                              : stockItems.map((p) => (
-                                  <SelectItem key={p.id} value={p.id}>
-                                    {p.nome} (saldo: {p.saldoAtual})
-                                  </SelectItem>
-                                ))}
+                            {itemTipo === 'SERVICO' &&
+                              services.map((s) => (
+                                <SelectItem key={s.id} value={s.id}>
+                                  {s.name} — {formatCurrency(s.price)}
+                                </SelectItem>
+                              ))}
+                            {itemTipo === 'PRODUTO' &&
+                              stockItems.map((p) => (
+                                <SelectItem key={p.id} value={p.id}>
+                                  {p.nome} (saldo: {p.saldoAtual})
+                                </SelectItem>
+                              ))}
+                            {itemTipo === 'PACOTE' &&
+                              packages.map((p) => (
+                                <SelectItem key={p.id} value={p.id}>
+                                  {p.nome} — {formatCurrency(p.preco)}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -411,6 +447,37 @@ export default function PosComandaPage() {
                         <DialogFooter><Button onClick={definirGorjeta} disabled={busy}>Salvar</Button></DialogFooter>
                       </DialogContent>
                     </Dialog>
+                    {!!loyaltyBalance && loyaltyBalance.points > 0 && (
+                      <Dialog open={fidelidadeOpen} onOpenChange={setFidelidadeOpen}>
+                        <DialogTrigger asChild>
+                          <Button size="sm" variant="outline">
+                            <Star className="mr-1 h-3 w-3" />
+                            Fidelidade ({loyaltyBalance.points} pts)
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader><DialogTitle>Resgatar pontos de fidelidade</DialogTitle></DialogHeader>
+                          <div className="space-y-3">
+                            <p className="text-sm text-muted-foreground">
+                              Saldo do cliente: {loyaltyBalance.points} pontos ({formatCurrency(loyaltyBalance.redeemableAmount)} em desconto)
+                            </p>
+                            <div className="space-y-1.5">
+                              <Label>Pontos a resgatar</Label>
+                              <Input
+                                type="number"
+                                min={1}
+                                max={loyaltyBalance.points}
+                                value={resgatePontos}
+                                onChange={(e) => setResgatePontos(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <DialogFooter>
+                            <Button onClick={resgatarFidelidade} disabled={busy || !resgatePontos}>Resgatar</Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    )}
                   </div>
                 )}
               </CardContent>
