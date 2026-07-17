@@ -3,9 +3,9 @@ FROM node:22-alpine AS build
 WORKDIR /app
 
 # Habilita o pnpm via corepack, na mesma versao travada no package.json.
-RUN corepack enable && corepack prepare pnpm@8.10.0 --activate
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY . .

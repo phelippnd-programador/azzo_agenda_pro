@@ -1,7 +1,15 @@
 {
   "name": "shadcnui",
   "type": "module",
-  "packageManager": "pnpm@8.10.0",
+  "packageManager": "pnpm@9.15.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@metagptx/vite-plugin-source-locator",
+      "@swc/core",
+      "esbuild",
+      "simple-git-hooks"
+    ]
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/prerender-sale-page.mjs",
