@@ -31,6 +31,10 @@ import { resolveUiError } from "@/lib/error-utils";
 
 const DEFAULT_TEST_MESSAGE = "Mensagem de teste do AZZO Agenda Pro.";
 
+// O Bot API do Telegram nao envia por telefone: chat_id e um id numerico (negativo
+// para grupos/canais) ou @usuario. Validar aqui evita o erro generico vindo da API.
+const CHAT_ID_PATTERN = /^(-?\d{1,20}|@[A-Za-z0-9_]{4,32})$/;
+
 export function TelegramIntegrationCard() {
   const [config, setConfig] = useState<TelegramConfigResponse | null>(null);
   const [botToken, setBotToken] = useState("");
@@ -202,6 +206,12 @@ export function TelegramIntegrationCard() {
     const chatId = testChatId.trim();
     if (!chatId) {
       toast.error("Informe o chat ID de destino para enviar a mensagem de teste.");
+      return;
+    }
+    if (!CHAT_ID_PATTERN.test(chatId)) {
+      toast.error(
+        "O Telegram nao envia por telefone. Informe o chat ID numerico (ex.: 123456789) ou @usuario."
+      );
       return;
     }
     try {
@@ -424,7 +434,7 @@ export function TelegramIntegrationCard() {
                   <Input
                     id="telegram-test-chat-id"
                     value={testChatId}
-                    placeholder="123456789"
+                    placeholder="123456789 ou @usuario"
                     onChange={(e) => setTestChatId(e.target.value)}
                   />
                 </div>
@@ -451,7 +461,9 @@ export function TelegramIntegrationCard() {
                   onChange={(e) => setTestMessageBody(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  O cliente precisa ter iniciado uma conversa com o bot para receber a mensagem.
+                  O Telegram nao envia por telefone: use o chat ID numerico (ex.: 123456789)
+                  ou @usuario. A pessoa precisa ter iniciado uma conversa com o bot antes de
+                  receber mensagens — o chat ID dela pode ser obtido com o @userinfobot.
                 </p>
               </div>
             </div>
