@@ -63,6 +63,7 @@ import {
   Unauthorized,
   UserProfile,
   WhatsAppIntegration,
+  TelegramIntegration,
   ReactivationSettings,
   OnboardingPage,
 } from "@/app/routes/lazy-pages";
@@ -165,6 +166,7 @@ export function ProtectedRouteGroup({
       <Route path={appRouteManifest.profiles.user} element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
       <Route path={appRouteManifest.profiles.salon} element={<ProtectedRoute><SalonProfile /></ProtectedRoute>} />
       <Route path={appRouteManifest.settings.whatsapp} element={<ProtectedRoute><WhatsAppIntegration /></ProtectedRoute>} />
+      <Route path={appRouteManifest.settings.telegram} element={<ProtectedRoute><TelegramIntegration /></ProtectedRoute>} />
       <Route path={appRouteManifest.settings.reactivation} element={<ProtectedRoute><ReactivationSettings /></ProtectedRoute>} />
       <Route path={appRouteManifest.settings.systemAdmin} element={<ProtectedRoute><SystemAdminPage /></ProtectedRoute>} />
 

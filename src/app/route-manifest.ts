@@ -104,6 +104,7 @@ export const appRouteManifest = {
     fiscalCertificates: "/configuracoes/fiscal/certificados",
     fiscalNfse: "/configuracoes/fiscal/nfse",
     whatsapp: "/configuracoes/integracoes/whatsapp",
+    telegram: "/configuracoes/integracoes/telegram",
     reactivation: "/configuracoes/reativacao",
     systemAdmin: "/configuracoes/admin-sistema",
   },
