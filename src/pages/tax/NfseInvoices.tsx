@@ -92,7 +92,7 @@ export function NfseInvoicesContent() {
           <Button variant="outline" onClick={() => void load()} disabled={isLoading}>
             Atualizar
           </Button>
-          <Button asChild>
+          <Button asChild data-tour="nfse-nova">
             <Link to="/fiscal/nfse/nova">Nova NFS-e</Link>
           </Button>
         </div>

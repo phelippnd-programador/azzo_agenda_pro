@@ -10,6 +10,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { NotificationsProvider } from "@/providers/NotificationsProvider";
 import { AttendanceConfirmationProvider } from "@/providers/AttendanceConfirmationProvider";
 import { AppRoutes } from "@/app/AppRoutes";
+import { TutorialHost } from "@/components/tutorial/TutorialHost";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
                 <AttendanceConfirmationProvider>
                   <AppUpdateBanner />
                   <AppRoutes />
+                  <TutorialHost />
                   <PwaInstallBanner />
                   <CookieConsentBanner />
                 </AttendanceConfirmationProvider>
