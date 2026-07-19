@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { auditoriaApi } from "@/lib/api";
 import { useAuditEventDetail } from "@/hooks/useAuditEventDetail";
@@ -192,69 +193,73 @@ export default function Auditoria() {
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Modulo</p>
-                <select
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                  value={moduleInput}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setModuleInput(value === "" || isAuditModule(value) ? value : "");
-                  }}
+                <Select
+                  value={moduleInput || "all"}
+                  onValueChange={(value) => setModuleInput(value === "all" || isAuditModule(value) ? (value === "all" ? "" : value) : "")}
                 >
-                  <option value="">Todos</option>
-                  {filterOptions?.modules.map((module) => (
-                    <option key={module} value={module}>
-                      {moduleLabel(module)}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {filterOptions?.modules.map((module) => (
+                      <SelectItem key={module} value={module}>
+                        {moduleLabel(module)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Status</p>
-                <select
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                  value={statusInput}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setStatusInput(value === "" || isAuditStatus(value) ? value : "");
-                  }}
+                <Select
+                  value={statusInput || "all"}
+                  onValueChange={(value) => setStatusInput(value === "all" || isAuditStatus(value) ? (value === "all" ? "" : value) : "")}
                 >
-                  <option value="">Todos</option>
-                  {filterOptions?.statuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {filterOptions?.statuses.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Acao</p>
-                <select
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                  value={actionInput}
-                  onChange={(e) => setActionInput(e.target.value)}
-                >
-                  <option value="">Todas</option>
-                  {filterOptions?.actions.map((action) => (
-                    <option key={action} value={action}>
-                      {actionMeta(action).label}
-                    </option>
-                  ))}
-                </select>
+                <Select value={actionInput || "all"} onValueChange={(value) => setActionInput(value === "all" ? "" : value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {filterOptions?.actions.map((action) => (
+                      <SelectItem key={action} value={action}>
+                        {actionMeta(action).label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Registro afetado</p>
-                <select
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                  value={entityTypeInput}
-                  onChange={(e) => setEntityTypeInput(e.target.value)}
-                >
-                  <option value="">Todas</option>
-                  {filterOptions?.entityTypes.map((entityType) => (
-                    <option key={entityType} value={entityType}>
-                      {entityMeta(entityType).label}
-                    </option>
-                  ))}
-                </select>
+                <Select value={entityTypeInput || "all"} onValueChange={(value) => setEntityTypeInput(value === "all" ? "" : value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {filterOptions?.entityTypes.map((entityType) => (
+                      <SelectItem key={entityType} value={entityType}>
+                        {entityMeta(entityType).label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="grid gap-3 md:grid-cols-3">

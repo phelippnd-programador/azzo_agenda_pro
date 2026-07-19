@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageEmptyState } from "@/components/ui/page-states";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
@@ -321,16 +322,19 @@ export default function StockInventoriesPage() {
             </div>
             <div className="min-w-[160px] space-y-1">
               <Label className="text-xs" htmlFor="inventory-status-filter">Status</Label>
-              <select
-                id="inventory-status-filter"
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as StockInventoryStatus | "")}
+              <Select
+                value={statusFilter || "all"}
+                onValueChange={(value) => setStatusFilter(value === "all" ? "" : (value as StockInventoryStatus))}
               >
-                {STATUS_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+                <SelectTrigger id="inventory-status-filter">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value || "all"} value={opt.value || "all"}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <Button onClick={applyFilters} disabled={isLoading}>Filtrar</Button>
             {hasActiveFilters && (
@@ -451,22 +455,24 @@ export default function StockInventoriesPage() {
                       {isLoadingItems ? (
                         <Skeleton className="h-10 w-full" />
                       ) : (
-                        <select
-                          id="inventory-count-item"
-                          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                        <Select
                           value={countForm.itemEstoqueId}
-                          onChange={(e) => setCountForm((prev) => ({ ...prev, itemEstoqueId: e.target.value }))}
+                          onValueChange={(value) => setCountForm((prev) => ({ ...prev, itemEstoqueId: value }))}
                         >
-                          <option value="">Selecione</option>
-                          {items.map((item) => {
-                            const jaContado = counts.some((c) => c.itemEstoqueId === item.id);
-                            return (
-                              <option key={item.id} value={item.id} disabled={jaContado}>
-                                {item.nome} ({item.unidadeMedida}){jaContado ? " — ja contado" : ""}
-                              </option>
-                            );
-                          })}
-                        </select>
+                          <SelectTrigger id="inventory-count-item">
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {items.map((item) => {
+                              const jaContado = counts.some((c) => c.itemEstoqueId === item.id);
+                              return (
+                                <SelectItem key={item.id} value={item.id} disabled={jaContado}>
+                                  {item.nome} ({item.unidadeMedida}){jaContado ? " — ja contado" : ""}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
                       )}
                       {countForm.itemEstoqueId && counts.some((c) => c.itemEstoqueId === countForm.itemEstoqueId) && (
                         <p className="text-xs text-amber-600">Este item ja foi contado. Use o botao Editar na tabela abaixo.</p>

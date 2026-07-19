@@ -4,6 +4,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { nfseApi, type NfseAccountingExportFormat, type NfseInvoice } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import { toast } from "sonner";
@@ -107,15 +108,16 @@ export function NfseInvoicesContent() {
               value={exportStatus}
               onChange={(e) => setExportStatus(e.target.value)}
             />
-            <select
-              className="h-10 rounded-md border bg-background px-3 text-sm"
-              value={exportFormat}
-              onChange={(e) => setExportFormat(e.target.value as NfseAccountingExportFormat)}
-            >
-              <option value="CSV">CSV</option>
-              <option value="XLSX">XLSX</option>
-              <option value="ZIP_XML">ZIP XML</option>
-            </select>
+            <Select value={exportFormat} onValueChange={(value) => setExportFormat(value as NfseAccountingExportFormat)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="CSV">CSV</SelectItem>
+                <SelectItem value="XLSX">XLSX</SelectItem>
+                <SelectItem value="ZIP_XML">ZIP XML</SelectItem>
+              </SelectContent>
+            </Select>
             <Button onClick={() => void handleExport()} disabled={isExporting || !exportFrom || !exportTo}>
               {isExporting ? "Exportando..." : "Exportar"}
             </Button>

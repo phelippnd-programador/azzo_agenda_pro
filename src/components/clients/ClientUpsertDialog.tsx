@@ -4,6 +4,7 @@ import { Dialog, DialogBody, DialogContent, DialogDescription, DialogHeader, Dia
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { maskPhoneBr } from '@/lib/input-masks';
 import { utilsApi } from '@/lib/api';
@@ -282,14 +283,15 @@ export function ClientUpsertDialog({
               </div>
               <div className="space-y-2">
                 <Label>Tipo de pessoa</Label>
-                <select
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  value={formClientType}
-                  onChange={(e) => setFormClientType(e.target.value as 'PF' | 'PJ')}
-                >
-                  <option value="PF">Pessoa Fisica (PF)</option>
-                  <option value="PJ">Pessoa Juridica (PJ)</option>
-                </select>
+                <Select value={formClientType} onValueChange={(value) => setFormClientType(value as 'PF' | 'PJ')}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PF">Pessoa Fisica (PF)</SelectItem>
+                    <SelectItem value="PJ">Pessoa Juridica (PJ)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

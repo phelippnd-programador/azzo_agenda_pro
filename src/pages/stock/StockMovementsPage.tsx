@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageEmptyState } from "@/components/ui/page-states";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
 import { CurrencyInput } from "@/components/ui/currency-input";
@@ -149,19 +150,34 @@ export default function StockMovementsPage() {
               <div className="space-y-3">
                 <div className="space-y-1">
                   <Label>Item</Label>
-                  <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={form.itemEstoqueId} onChange={(e) => setForm((prev) => ({ ...prev, itemEstoqueId: e.target.value }))}>
-                    <option value="">Selecione</option>
-                    {items.map((item) => <option key={item.id} value={item.id}>{item.nome}</option>)}
-                  </select>
+                  <Select
+                    value={form.itemEstoqueId}
+                    onValueChange={(value) => setForm((prev) => ({ ...prev, itemEstoqueId: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {items.map((item) => <SelectItem key={item.id} value={item.id}>{item.nome}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label>Tipo</Label>
-                    <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={form.tipo} onChange={(e) => setForm((prev) => ({ ...prev, tipo: e.target.value as CreateStockMovementRequest["tipo"] }))}>
-                      <option value="ENTRADA">ENTRADA</option>
-                      <option value="SAIDA">SAIDA</option>
-                      <option value="AJUSTE">AJUSTE</option>
-                    </select>
+                    <Select
+                      value={form.tipo}
+                      onValueChange={(value) => setForm((prev) => ({ ...prev, tipo: value as CreateStockMovementRequest["tipo"] }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ENTRADA">ENTRADA</SelectItem>
+                        <SelectItem value="SAIDA">SAIDA</SelectItem>
+                        <SelectItem value="AJUSTE">AJUSTE</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-1">
                     <Label>Quantidade</Label>
@@ -201,16 +217,26 @@ export default function StockMovementsPage() {
         </p>
 
         <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-          <select className="h-10 rounded-md border border-input bg-background px-3 text-sm" value={selectedType} onChange={(e) => setSelectedType(e.target.value as "all" | StockMovementType)}>
-            <option value="all">Todos os tipos</option>
-            <option value="ENTRADA">Entradas</option>
-            <option value="SAIDA">Saidas</option>
-            <option value="AJUSTE">Ajustes</option>
-          </select>
-          <select className="h-10 rounded-md border border-input bg-background px-3 text-sm" value={selectedItem} onChange={(e) => setSelectedItem(e.target.value)}>
-            <option value="all">Todos os itens</option>
-            {items.map((item) => <option key={item.id} value={item.id}>{item.nome}</option>)}
-          </select>
+          <Select value={selectedType} onValueChange={(value) => setSelectedType(value as "all" | StockMovementType)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os tipos</SelectItem>
+              <SelectItem value="ENTRADA">Entradas</SelectItem>
+              <SelectItem value="SAIDA">Saidas</SelectItem>
+              <SelectItem value="AJUSTE">Ajustes</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={selectedItem} onValueChange={setSelectedItem}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os itens</SelectItem>
+              {items.map((item) => <SelectItem key={item.id} value={item.id}>{item.nome}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
       <CardContent className="space-y-2">

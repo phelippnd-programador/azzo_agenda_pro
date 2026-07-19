@@ -118,10 +118,10 @@ describe("StockInventoriesPage", () => {
     // O formulario de contagem fica no modal aberto pelo botao Gerenciar
     await user.click(await screen.findByRole("button", { name: "Gerenciar" }));
 
-    // Aguarda o select de itens sair do skeleton e as opcoes carregarem
+    // Aguarda o select (Radix) de itens sair do skeleton, abre o dropdown e escolhe o item
     const itemSelect = await screen.findByLabelText("Item para contagem");
-    await screen.findByRole("option", { name: /Shampoo/ });
-    await user.selectOptions(itemSelect, "item-1");
+    await user.click(itemSelect);
+    await user.click(await screen.findByRole("option", { name: /Shampoo/ }));
     await user.clear(screen.getByLabelText("Quantidade contada"));
     await user.type(screen.getByLabelText("Quantidade contada"), "12");
     await user.click(screen.getByRole("button", { name: "Registrar contagem" }));

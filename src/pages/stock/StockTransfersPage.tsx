@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageEmptyState } from "@/components/ui/page-states";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
@@ -210,19 +211,21 @@ export default function StockTransfersPage() {
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div className="space-y-1">
                 <Label htmlFor="transfer-item">Item</Label>
-                <select
-                  id="transfer-item"
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                <Select
                   value={form.itemEstoqueId}
-                  onChange={(e) => setForm((prev) => ({ ...prev, itemEstoqueId: e.target.value }))}
+                  onValueChange={(value) => setForm((prev) => ({ ...prev, itemEstoqueId: value }))}
                 >
-                  <option value="">Selecione</option>
-                  {items.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.nome}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger id="transfer-item">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {items.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1">
                 <Label htmlFor="transfer-quantidade">Quantidade</Label>

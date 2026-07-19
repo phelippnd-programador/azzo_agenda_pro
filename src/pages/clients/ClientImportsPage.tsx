@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageEmptyState } from "@/components/ui/page-states";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { clientImportApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import type {
@@ -163,26 +164,28 @@ export default function ClientImportsPage() {
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <div className="space-y-1">
               <Label>Modo de importacao</Label>
-              <select
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                value={modoImportacao}
-                onChange={(e) => setModoImportacao(e.target.value as ClientImportMode)}
-              >
-                {IMPORT_MODE_OPTIONS.map((option) => (
-                  <option key={option} value={option}>{IMPORT_MODE_LABELS[option]}</option>
-                ))}
-              </select>
+              <Select value={modoImportacao} onValueChange={(value) => setModoImportacao(value as ClientImportMode)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {IMPORT_MODE_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>{IMPORT_MODE_LABELS[option]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1">
               <Label>Formato do modelo</Label>
-              <select
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                value={formatoModelo}
-                onChange={(e) => setFormatoModelo(e.target.value as ClientImportTemplateFormat)}
-              >
-                <option value="xlsx">XLSX</option>
-                <option value="csv">CSV</option>
-              </select>
+              <Select value={formatoModelo} onValueChange={(value) => setFormatoModelo(value as ClientImportTemplateFormat)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="xlsx">XLSX</SelectItem>
+                  <SelectItem value="csv">CSV</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1">
               <Label>Arquivo (xlsx/csv)</Label>

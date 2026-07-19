@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import type { NotificationStatus, NotificationsFilters as FiltersType } from "@/types/notification";
 
@@ -28,44 +29,50 @@ export function NotificationsFilters({
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
       <div className="space-y-1">
         <Label htmlFor="notifications-status">Status</Label>
-        <select
-          id="notifications-status"
-          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-          value={filters.status || ""}
-          onChange={(event) =>
+        <Select
+          value={filters.status || "all"}
+          onValueChange={(value) =>
             onChange({
               ...filters,
-              status: (event.target.value || undefined) as NotificationStatus | undefined,
+              status: (value === "all" ? undefined : value) as NotificationStatus | undefined,
             })
           }
         >
-          <option value="">Todos</option>
-          <option value="FAILED">FAILED</option>
-          <option value="SENT">SENT</option>
-          <option value="PENDING">PENDING</option>
-        </select>
+          <SelectTrigger id="notifications-status">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="FAILED">FAILED</SelectItem>
+            <SelectItem value="SENT">SENT</SelectItem>
+            <SelectItem value="PENDING">PENDING</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-1">
         <Label htmlFor="notifications-channel">Canal</Label>
-        <select
-          id="notifications-channel"
-          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-          value={filters.channel || ""}
-          onChange={(event) =>
+        <Select
+          value={filters.channel || "all"}
+          onValueChange={(value) =>
             onChange({
               ...filters,
-              channel: event.target.value || undefined,
+              channel: value === "all" ? undefined : value,
             })
           }
         >
-          <option value="">Todos</option>
-          {CHANNEL_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger id="notifications-channel">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            {CHANNEL_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-1">
