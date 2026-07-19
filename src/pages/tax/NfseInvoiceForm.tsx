@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { CnpjAutoFillField } from "@/components/shared/CnpjAutoFillField";
 import { NbsCatalogSearch } from "@/components/nfse/NbsCatalogSearch";
@@ -19,6 +19,7 @@ import { nfseApi, type NfseInvoice } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import type { CnpjConsultaResponse } from "@/lib/api/cnpj";
+import { getNfseEmissionPendencies } from "@/lib/nfse-emission-pendencies";
 import { resolveUiError } from "@/lib/error-utils";
 import { toast } from "sonner";
 
@@ -42,6 +43,8 @@ export default function NfseInvoiceForm() {
   const mode: Mode = id ? "edit" : "create";
   const [isSaving, setIsSaving] = useState(false);
   const [isEmitting, setIsEmitting] = useState(false);
+  const [configMissing, setConfigMissing] = useState(false);
+  const [emitPendencies, setEmitPendencies] = useState<string[]>([]);
   const [tomadorAddressPreview, setTomadorAddressPreview] = useState<string | null>(null);
   const [invoice, setInvoice] = useState<Partial<NfseInvoice>>({
     ambiente: "HOMOLOGACAO",
@@ -69,27 +72,40 @@ export default function NfseInvoiceForm() {
   useEffect(() => {
     if (mode !== "create") return;
     void (async () => {
-      try {
-        const cfg = await nfseApi.getConfig("HOMOLOGACAO");
-        setInvoice((prev) => ({
-          ...prev,
-          municipioCodigoIbge: cfg.municipioCodigoIbge || prev.municipioCodigoIbge,
-          provedor: cfg.provedor || prev.provedor,
-          serieRps: cfg.serieRps || prev.serieRps,
-          aliquotaIss: cfg.aliquotaIssPadrao ?? prev.aliquotaIss,
-          itemListaServico: cfg.itemListaServicoPadrao || prev.itemListaServico,
-          codigoTributacaoMunicipio: cfg.codigoTributacaoMunicipio || prev.codigoTributacaoMunicipio,
-          items: [
-            {
-              ...(prev.items?.[0] || BASE_ITEM),
-              itemListaServico: cfg.itemListaServicoPadrao || prev.items?.[0]?.itemListaServico || "1.01",
-              aliquotaIss: cfg.aliquotaIssPadrao ?? prev.items?.[0]?.aliquotaIss ?? 5,
-            },
-          ],
-        }));
-      } catch {
-        // config nao configurada ainda — manter defaults
+      // Busca os padrões do tenant em qualquer ambiente configurado (antes só
+      // HOMOLOGACAO: quem configurou direto PRODUCAO não recebia os padrões).
+      let cfg: Awaited<ReturnType<typeof nfseApi.getConfig>> | null = null;
+      for (const ambiente of ["HOMOLOGACAO", "PRODUCAO"] as const) {
+        try {
+          cfg = await nfseApi.getConfig(ambiente);
+          break;
+        } catch {
+          // tenta o próximo ambiente
+        }
       }
+      if (!cfg) {
+        // Antecipação de erro: sem configuração NFS-e a emissão falharia no
+        // final do preenchimento — avisa já na entrada, com atalho para a tela.
+        setConfigMissing(true);
+        return;
+      }
+      const config = cfg;
+      setInvoice((prev) => ({
+        ...prev,
+        municipioCodigoIbge: config.municipioCodigoIbge || prev.municipioCodigoIbge,
+        provedor: config.provedor || prev.provedor,
+        serieRps: config.serieRps || prev.serieRps,
+        aliquotaIss: config.aliquotaIssPadrao ?? prev.aliquotaIss,
+        itemListaServico: config.itemListaServicoPadrao || prev.itemListaServico,
+        codigoTributacaoMunicipio: config.codigoTributacaoMunicipio || prev.codigoTributacaoMunicipio,
+        items: [
+          {
+            ...(prev.items?.[0] || BASE_ITEM),
+            itemListaServico: config.itemListaServicoPadrao || prev.items?.[0]?.itemListaServico || "1.01",
+            aliquotaIss: config.aliquotaIssPadrao ?? prev.items?.[0]?.aliquotaIss ?? 5,
+          },
+        ],
+      }));
     })();
   }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -197,6 +213,23 @@ export default function NfseInvoiceForm() {
   };
 
   const handleEmitir = async () => {
+    // Validação antecipada: aponta o que falta ANTES de chamar a API, em vez
+    // de deixar o usuário esperar para receber um erro do provedor.
+    const pendencies = getNfseEmissionPendencies({
+      municipioCodigoIbge: invoice.municipioCodigoIbge,
+      customerType: (invoice.customer?.type || "CPF") as "CPF" | "CNPJ" | "EXTERIOR",
+      customerName: invoice.customer?.name,
+      customerDocument: invoice.customer?.document,
+      descricaoServico: invoice.items?.[0]?.descricaoServico,
+      quantidade: invoice.items?.[0]?.quantidade,
+      valorUnitario: invoice.items?.[0]?.valorUnitario,
+    });
+    setEmitPendencies(pendencies);
+    if (pendencies.length > 0) {
+      toast.error("Para emitir, complete os campos pendentes listados no formulario.");
+      return;
+    }
+
     setIsEmitting(true);
     try {
       setIsSaving(true);
@@ -265,13 +298,29 @@ export default function NfseInvoiceForm() {
       title={mode === "edit" ? "Editar rascunho NFS-e" : "Nova NFS-e"}
       subtitle="Cadastro manual para emissao posterior."
     >
+      {configMissing ? (
+        <div className="mb-4 flex items-start gap-3 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+          <div>
+            <p className="font-medium">Configuracao NFS-e nao encontrada</p>
+            <p className="mt-0.5">
+              Sem municipio, provedor e certificado configurados, a emissao vai falhar. Configure
+              primeiro em{" "}
+              <Link to="/fiscal?tab=config&subtab=nfse" className="font-medium underline">
+                Fiscal &gt; Configuracoes &gt; NFS-e
+              </Link>
+              . Voce ainda pode preencher e salvar um rascunho.
+            </p>
+          </div>
+        </div>
+      ) : null}
       <Card>
         <CardHeader>
           <CardTitle>Dados principais</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
+            <div className="space-y-2" data-tour="nfse-ambiente">
               <Label>Ambiente</Label>
               <Select
                 value={invoice.ambiente || "HOMOLOGACAO"}
@@ -283,8 +332,8 @@ export default function NfseInvoiceForm() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="HOMOLOGACAO">HOMOLOGACAO</SelectItem>
-                  <SelectItem value="PRODUCAO">PRODUCAO</SelectItem>
+                  <SelectItem value="HOMOLOGACAO">Homologacao (teste, sem valor fiscal)</SelectItem>
+                  <SelectItem value="PRODUCAO">Producao (emite a nota de verdade)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -313,7 +362,7 @@ export default function NfseInvoiceForm() {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-3" data-tour="nfse-tomador">
             <div className="space-y-2">
               <Label>Tipo do tomador</Label>
               <Select
@@ -405,7 +454,7 @@ export default function NfseInvoiceForm() {
             </div>
           ) : null}
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-3" data-tour="nfse-servico">
             <div className="space-y-2">
               <Label htmlFor="nfse-descricao-servico">Descricao servico</Label>
               <Input
@@ -471,7 +520,7 @@ export default function NfseInvoiceForm() {
 
           <NbsCatalogSearch onSelect={applyNbsCode} />
 
-          <div className="rounded-md border p-3 text-sm">
+          <div className="rounded-md border p-3 text-sm" data-tour="nfse-resumo">
             <p>
               Total servicos: <strong>{formatCurrency(preview.total)}</strong>
             </p>
@@ -480,15 +529,29 @@ export default function NfseInvoiceForm() {
             </p>
           </div>
 
-          <div className="flex gap-2">
-            <Button onClick={() => void save()} disabled={isSaving || isEmitting}>
-              {isSaving && !isEmitting
-                ? "Salvando..."
-                : mode === "edit"
-                ? "Atualizar rascunho"
-                : "Salvar rascunho"}
-            </Button>
-            <Button onClick={() => void handleEmitir()} disabled={isEmitting || isSaving}>
+          {emitPendencies.length > 0 ? (
+            <div
+              className="flex items-start gap-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+              role="alert"
+            >
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+              <div>
+                <p className="font-medium">Para emitir, complete:</p>
+                <ul className="mt-1 list-disc pl-4">
+                  {emitPendencies.map((pendency) => (
+                    <li key={pendency}>{pendency}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={() => void handleEmitir()}
+              disabled={isEmitting || isSaving}
+              data-tour="nfse-emitir"
+            >
               {isEmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -498,7 +561,14 @@ export default function NfseInvoiceForm() {
                 "Emitir NFS-e"
               )}
             </Button>
-            <Button variant="outline" asChild>
+            <Button variant="outline" onClick={() => void save()} disabled={isSaving || isEmitting}>
+              {isSaving && !isEmitting
+                ? "Salvando..."
+                : mode === "edit"
+                ? "Atualizar rascunho"
+                : "Salvar rascunho"}
+            </Button>
+            <Button variant="ghost" asChild>
               <Link to="/fiscal/nfse">Cancelar</Link>
             </Button>
           </div>

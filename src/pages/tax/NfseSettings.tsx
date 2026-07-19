@@ -181,7 +181,7 @@ export function NfseSettingsContent() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-tour="nfse-config">
       <NfseConfigCard
         config={config}
         configStateUf={configStateUf}
