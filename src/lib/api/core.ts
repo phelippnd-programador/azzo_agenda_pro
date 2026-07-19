@@ -5,6 +5,7 @@ import {
   type LicenseAccessStatus,
 } from "@/lib/license-access";
 import { toast } from "sonner";
+import { getEnv } from "@/config/env";
 
 export type StandardApiErrorPayload = {
   code?: string;
@@ -16,7 +17,7 @@ export type StandardApiErrorPayload = {
 };
 
 export const API_URL =
-  (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ||
+  (getEnv("VITE_API_URL") || import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ||
   "http://localhost:8080/api/v1";
 
 const USER_KEY = "auth_user";

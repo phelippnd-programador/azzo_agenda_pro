@@ -16,6 +16,7 @@ import { ChatSidebar, type ConversationFilter } from "@/components/chat/ChatSide
 import { ChatTimeline } from "@/components/chat/ChatTimeline";
 import { ChatMessageComposer } from "@/components/chat/ChatMessageComposer";
 import { ChatClientAppointments } from "@/components/chat/ChatClientAppointments";
+import { getEnv } from "@/config/env";
 
 export default function ChatPage() {
   const navigate = useNavigate();
@@ -112,7 +113,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     const apiBase =
-      ((import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ||
+      ((getEnv("VITE_API_URL") || import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ||
         "http://localhost:8080/api/v1");
     const streamUrl = `${apiBase}/chat/stream`;
     const eventSource = new EventSource(streamUrl, { withCredentials: true });

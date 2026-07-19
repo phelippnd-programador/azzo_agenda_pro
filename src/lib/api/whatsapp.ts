@@ -40,6 +40,7 @@ export interface WhatsAppConfigResponse {
   confirmationMessageTemplate?: string;
   cancellationMessageTemplate?: string;
   reminderMessageTemplate?: string;
+  enabled?: boolean;
 }
 
 export interface WhatsAppMessageLogItem {

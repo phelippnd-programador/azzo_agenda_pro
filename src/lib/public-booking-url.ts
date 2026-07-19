@@ -1,3 +1,5 @@
+import { getEnv } from "@/config/env";
+
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1"]);
 
 const isLocalHost = (host: string) => LOCAL_HOSTS.has(host.toLowerCase());
@@ -22,8 +24,8 @@ const resolveCandidate = (raw: string | undefined): URL | null => {
 
 export const resolvePublicAppBaseUrl = (): string => {
   const fromEnv =
-    resolveCandidate(import.meta.env.NEXT_PUBLIC_APP_URL as string | undefined) ??
-    resolveCandidate(import.meta.env.VITE_PUBLIC_BOOKING_BASE_URL as string | undefined);
+    resolveCandidate(getEnv("NEXT_PUBLIC_APP_URL") || import.meta.env.NEXT_PUBLIC_APP_URL as string | undefined) ??
+    resolveCandidate(getEnv("VITE_PUBLIC_BOOKING_BASE_URL") || import.meta.env.VITE_PUBLIC_BOOKING_BASE_URL as string | undefined);
 
   if (fromEnv) return normalizeBaseUrl(fromEnv.toString());
 

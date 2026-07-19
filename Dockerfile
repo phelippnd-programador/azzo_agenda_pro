@@ -14,7 +14,7 @@ COPY . .
 # runtime. Os defaults abaixo reproduzem o build de producao atual
 # (.env.production, que e local/gitignored); sobrescreva via --build-arg
 # para outros ambientes (staging, etc.).
-ARG VITE_API_URL=https://app.azzoholding.com.br/agenda/api/v1
+ARG VITE_API_URL=https://app.azzoholding.com.br/api/v1
 ARG VITE_PUBLIC_BOOKING_BASE_URL=https://app.azzoholding.com.br
 ARG VITE_META_APP_ID=1910429473193881
 ARG VITE_META_CONFIG_ID=1622918758755980

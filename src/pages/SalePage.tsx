@@ -26,6 +26,7 @@ import { SaleRegisterForm } from '@/components/sales/SaleRegisterForm';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { useCheckoutProducts } from '@/hooks/useCheckoutProducts';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { getEnv } from '@/config/env';
 
 const scrollToSection = (id: string, source?: string) => {
   if (source) {
@@ -140,7 +141,7 @@ export default function SalePage() {
   const { products } = useCheckoutProducts();
   const selectedProduct = products[0] ?? null;
   const appUrl =
-    (import.meta.env.NEXT_PUBLIC_APP_URL as string | undefined)?.replace(/\/$/, '') ||
+    (getEnv("NEXT_PUBLIC_APP_URL") || import.meta.env.NEXT_PUBLIC_APP_URL as string | undefined)?.replace(/\/$/, '') ||
     'https://www.azzoholding.com.br';
   const canonicalUrl = `${appUrl}/compras`;
   const ogImageUrl = `${appUrl}${heroImage}`;
