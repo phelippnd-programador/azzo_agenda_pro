@@ -33,6 +33,7 @@ import type {
   AuditSearchQueryDto,
   AuditStatus,
 } from "@/types/auditoria";
+import { getEnv } from "@/config/env";
 
 const isAuditModule = (value: string): value is AuditModule =>
   (AUDIT_MODULES as readonly string[]).includes(value);
@@ -303,7 +304,7 @@ export default function Auditoria() {
                 <AlertDescription className="space-y-1 text-xs">
                   <div className="flex items-center gap-2">
                     <a
-                      href={`${(import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, "") || "http://localhost:8080/api/v1"}${auditoriaApi.downloadExport(lastExport.exportId)}`}
+                      href={`${(getEnv("VITE_API_URL") || import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, "") || "http://localhost:8080/api/v1"}${auditoriaApi.downloadExport(lastExport.exportId)}`}
                       download
                       className="inline-flex items-center gap-1 rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90"
                     >

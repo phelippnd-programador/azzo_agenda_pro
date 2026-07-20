@@ -45,6 +45,7 @@ import {
   type SetupMode,
 } from "@/components/settings/whatsapp-integration/shared";
 import { TemplateEditor } from "@/components/settings/whatsapp-integration/TemplateEditor";
+import { getEnv } from "@/config/env";
 
 export function WhatsAppIntegrationCard() {
   const queryClient = useQueryClient();
@@ -89,12 +90,12 @@ export function WhatsAppIntegrationCard() {
   const pendingSetupInfoRef = useRef<EmbeddedSetupInfo | null>(null);
 
   const apiBaseUrl =
-    (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, "") ||
+    ( getEnv('VITE_API_URL') || import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, "") ||
     "http://localhost:8080/api/v1";
-  const metaAppId = (import.meta.env.VITE_META_APP_ID as string | undefined)?.trim() || "";
-  const metaConfigId = (import.meta.env.VITE_META_CONFIG_ID as string | undefined)?.trim() || "";
+  const metaAppId = (getEnv('VITE_META_APP_ID') || import.meta.env.VITE_META_APP_ID as string | undefined)?.trim() || "";
+  const metaConfigId = (getEnv('VITE_META_CONFIG_ID') || import.meta.env.VITE_META_CONFIG_ID as string | undefined)?.trim() || "";
   const metaRedirectUri =
-    (import.meta.env.VITE_META_EMBEDDED_REDIRECT_URI as string | undefined)?.trim() || "";
+    (getEnv('VITE_META_EMBEDDED_REDIRECT_URI') || import.meta.env.VITE_META_EMBEDDED_REDIRECT_URI as string | undefined)?.trim() || "";
   const webhookUrl = apiBaseUrl.replace(/\/api\/v\d+$/, "") + "/webhook/whatsapp";
   const webhookNeedsPublicUrl = /localhost|127\.0\.0\.1/i.test(webhookUrl);
 
