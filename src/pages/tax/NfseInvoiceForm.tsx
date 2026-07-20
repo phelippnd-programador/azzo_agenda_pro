@@ -4,6 +4,7 @@ import { AlertTriangle, Loader2 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { CnpjAutoFillField } from "@/components/shared/CnpjAutoFillField";
 import { NbsCatalogSearch } from "@/components/nfse/NbsCatalogSearch";
+import { NfseAuthorizeDialog, type NfseAuthorizePayload } from "@/components/nfse/NfseAuthorizeDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -43,6 +44,8 @@ export default function NfseInvoiceForm() {
   const mode: Mode = id ? "edit" : "create";
   const [isSaving, setIsSaving] = useState(false);
   const [isEmitting, setIsEmitting] = useState(false);
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [configMissing, setConfigMissing] = useState(false);
   const [emitPendencies, setEmitPendencies] = useState<string[]>([]);
   const [tomadorAddressPreview, setTomadorAddressPreview] = useState<string | null>(null);
@@ -230,7 +233,16 @@ export default function NfseInvoiceForm() {
       return;
     }
 
+    // A senha do certificado e obrigatoria para assinar o XML (e pode haver
+    // mais de um provedor disponivel): coleta ambos ANTES de chamar a API,
+    // em vez de deixar o backend responder erro de senha ausente.
+    setAuthError(null);
+    setIsAuthDialogOpen(true);
+  };
+
+  const handleAuthorizeConfirm = async ({ certificatePassword, provedor }: NfseAuthorizePayload) => {
     setIsEmitting(true);
+    setAuthError(null);
     try {
       setIsSaving(true);
       const payload = buildPayload();
@@ -242,13 +254,16 @@ export default function NfseInvoiceForm() {
 
       if (!saved?.id) return;
 
-      await nfseApi.authorizeInvoice(saved.id, {});
+      await nfseApi.authorizeInvoice(saved.id, { certificatePassword, provedor });
+      setIsAuthDialogOpen(false);
       toast.success("NFS-e emitida com sucesso!", {
         description: "A nota foi enviada para autorizacao na prefeitura.",
       });
       navigate(`/fiscal/nfse/${saved.id}`);
     } catch (error) {
-      showError(error, "Erro ao emitir NFS-e");
+      // Senha invalida/erro do provedor: mensagem no proprio dialogo, sem fecha-lo.
+      const uiError = resolveUiError(error, "Erro ao emitir NFS-e");
+      setAuthError(uiError.code ? `[${uiError.code}] ${uiError.message}` : uiError.message);
     } finally {
       setIsSaving(false);
       setIsEmitting(false);
@@ -574,6 +589,19 @@ export default function NfseInvoiceForm() {
           </div>
         </CardContent>
       </Card>
+
+      <NfseAuthorizeDialog
+        open={isAuthDialogOpen}
+        onOpenChange={(open) => {
+          setIsAuthDialogOpen(open);
+          if (!open) setAuthError(null);
+        }}
+        municipioCodigoIbge={invoice.municipioCodigoIbge}
+        currentProvedor={invoice.provedor}
+        isAuthorizing={isEmitting}
+        errorMessage={authError}
+        onConfirm={(payload) => void handleAuthorizeConfirm(payload)}
+      />
     </MainLayout>
   );
 }

@@ -446,7 +446,10 @@ export const nfseApi = {
       headers: withIdempotencyHeader(`nfse-update-${id}`),
       body: JSON.stringify(payload),
     }),
-  authorizeInvoice: (id: string, payload: { certificatePassword?: string; unlockTokenId?: string }) =>
+  authorizeInvoice: (
+    id: string,
+    payload: { certificatePassword?: string; unlockTokenId?: string; provedor?: string }
+  ) =>
     request<NfseInvoice>(`/fiscal/nfse/invoices/${id}/authorize`, {
       method: "POST",
       headers: withIdempotencyHeader(`nfse-authorize-${id}`),
