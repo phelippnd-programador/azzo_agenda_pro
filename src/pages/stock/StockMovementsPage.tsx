@@ -139,7 +139,7 @@ export default function StockMovementsPage() {
               }
             }}
           >
-            <Button variant="outline" className="gap-2" asChild>
+            <Button data-tour="stock-movement-new-button" variant="outline" className="gap-2" asChild>
               <Link to="/estoque/movimentacoes/nova"><ArrowLeftRight className="h-4 w-4" />Nova movimentacao</Link>
             </Button>
             <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
@@ -154,7 +154,7 @@ export default function StockMovementsPage() {
                     value={form.itemEstoqueId}
                     onValueChange={(value) => setForm((prev) => ({ ...prev, itemEstoqueId: value }))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger data-tour="stock-movement-item-select">
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
@@ -169,7 +169,7 @@ export default function StockMovementsPage() {
                       value={form.tipo}
                       onValueChange={(value) => setForm((prev) => ({ ...prev, tipo: value as CreateStockMovementRequest["tipo"] }))}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger data-tour="stock-movement-type-select">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -181,12 +181,12 @@ export default function StockMovementsPage() {
                   </div>
                   <div className="space-y-1">
                     <Label>Quantidade</Label>
-                    <Input type="number" min="0.0001" step="0.0001" value={form.quantidade} onChange={(e) => setForm((prev) => ({ ...prev, quantidade: Number(e.target.value || 0) }))} />
+                    <Input data-tour="stock-movement-quantity-input" type="number" min="0.0001" step="0.0001" value={form.quantidade} onChange={(e) => setForm((prev) => ({ ...prev, quantidade: Number(e.target.value || 0) }))} />
                   </div>
                 </div>
                 <div className="space-y-1">
                   <Label>Motivo</Label>
-                  <Input value={form.motivo} onChange={(e) => setForm((prev) => ({ ...prev, motivo: e.target.value }))} />
+                  <Input data-tour="stock-movement-reason-input" value={form.motivo} onChange={(e) => setForm((prev) => ({ ...prev, motivo: e.target.value }))} />
                 </div>
                 <div className="space-y-1">
                   <Label>Valor unitario pago (opcional)</Label>
@@ -206,7 +206,7 @@ export default function StockMovementsPage() {
                 >
                   Cancelar
                 </Button>
-                <Button onClick={() => void handleCreate()} disabled={isSaving}>{isSaving ? "Salvando..." : "Registrar"}</Button>
+                <Button data-tour="stock-movement-dialog-submit" onClick={() => void handleCreate()} disabled={isSaving}>{isSaving ? "Salvando..." : "Registrar"}</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -218,7 +218,7 @@ export default function StockMovementsPage() {
 
         <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
           <Select value={selectedType} onValueChange={(value) => setSelectedType(value as "all" | StockMovementType)}>
-            <SelectTrigger>
+            <SelectTrigger data-tour="stock-movements-filter-type">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -229,7 +229,7 @@ export default function StockMovementsPage() {
             </SelectContent>
           </Select>
           <Select value={selectedItem} onValueChange={setSelectedItem}>
-            <SelectTrigger>
+            <SelectTrigger data-tour="stock-movements-filter-item">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -259,6 +259,7 @@ export default function StockMovementsPage() {
             return (
               <div
                 key={movement.id}
+                data-tour="stock-movement-row"
                 className="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 transition-colors hover:bg-muted/35 sm:gap-4 sm:p-4"
               >
                 <div

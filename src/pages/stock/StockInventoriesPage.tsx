@@ -300,7 +300,7 @@ export default function StockInventoriesPage() {
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle>Inventarios de estoque</CardTitle>
-            <Button asChild>
+            <Button data-tour="stock-inventory-new-button" asChild>
               <Link to="/estoque/inventarios/novo">Novo inventario</Link>
             </Button>
           </div>
@@ -376,6 +376,7 @@ export default function StockInventoriesPage() {
                   </p>
                 </div>
                 <Button
+                  data-tour="stock-inventory-manage-button"
                   size="sm"
                   variant="outline"
                   onClick={() => void openManage(inventory)}
@@ -447,7 +448,7 @@ export default function StockInventoriesPage() {
 
               {/* Formulário de contagem — somente se não finalizado */}
               {!inventarioFinalizado && (
-                <div className="space-y-3 rounded-xl border border-border/60 bg-muted/10 p-4">
+                <div data-tour="stock-inventory-count-form" className="space-y-3 rounded-xl border border-border/60 bg-muted/10 p-4">
                   <p className="text-sm font-medium">Registrar contagem</p>
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                     <div className="space-y-1 md:col-span-2">
@@ -517,7 +518,7 @@ export default function StockInventoriesPage() {
               )}
 
               {/* Tabela de contagens */}
-              <div>
+              <div data-tour="stock-inventory-counts-table">
                 <p className="text-sm font-medium mb-2">Contagens registradas</p>
                 {isLoadingCounts ? (
                   <Skeleton className="h-24 w-full" />
@@ -579,7 +580,7 @@ export default function StockInventoriesPage() {
               </div>
 
               {/* Ações de ciclo de vida */}
-              <DialogFooter className="flex-wrap gap-2 sm:justify-start">
+              <DialogFooter data-tour="stock-inventory-lifecycle-actions" className="flex-wrap gap-2 sm:justify-start">
                 <Button
                   variant="outline"
                   onClick={() => void handleCloseInventory()}
@@ -647,7 +648,7 @@ export default function StockInventoriesPage() {
               Esta acao e irreversivel. O inventario sera marcado como cancelado e nao podera ser reaberto. Confirme com sua senha.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
+          <div data-tour="stock-inventory-cancel-form" className="space-y-3">
             <div className="space-y-1">
               <Label>Motivo do cancelamento (opcional)</Label>
               <Input

@@ -74,7 +74,7 @@ export default function StockSettingsPage() {
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3">
+          <div data-tour="stock-settings-alerts" className="grid gap-3">
             <label className="flex items-start gap-3 rounded-xl border border-border/70 bg-muted/20 px-4 py-3">
               <Checkbox
                 checked={settings.alertaEstoqueMinimoAtivo}
@@ -127,7 +127,7 @@ export default function StockSettingsPage() {
             </label>
           </div>
 
-          <div className="space-y-1">
+          <div data-tour="stock-settings-coverage" className="space-y-1">
             <Label>Dias de cobertura meta</Label>
             <Input
               type="number"
@@ -142,7 +142,7 @@ export default function StockSettingsPage() {
             </p>
           </div>
 
-          <Button onClick={() => void handleSave()} disabled={isSaving}>
+          <Button data-tour="stock-settings-save" onClick={() => void handleSave()} disabled={isSaving}>
             {isSaving ? "Salvando..." : "Salvar configuracoes"}
           </Button>
         </CardContent>

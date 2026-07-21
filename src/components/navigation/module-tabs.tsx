@@ -10,11 +10,15 @@ export type ModuleTabItem = {
 type ModuleTabsProps = {
   items: ModuleTabItem[];
   pathname: string;
+  "data-tour"?: string;
 };
 
-export function ModuleTabs({ items, pathname }: ModuleTabsProps) {
+export function ModuleTabs({ items, pathname, ...rest }: ModuleTabsProps) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-border/70 bg-card/70 p-1.5 shadow-[0_12px_32px_-28px_rgba(15,23,42,0.22)]">
+    <div
+      data-tour={rest["data-tour"]}
+      className="overflow-x-auto rounded-xl border border-border/70 bg-card/70 p-1.5 shadow-[0_12px_32px_-28px_rgba(15,23,42,0.22)]"
+    >
       <div className="flex min-w-max gap-1.5">
       {items.map((item) => {
         const customIsActive =

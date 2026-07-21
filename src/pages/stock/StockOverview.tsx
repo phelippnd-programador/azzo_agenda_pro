@@ -83,7 +83,7 @@ export default function StockOverview() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div data-tour="stock-summary-cards" className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <HighlightMetricCard
           title="Itens cadastrados"
           value={String(summary.totalItens)}
@@ -146,7 +146,7 @@ export default function StockOverview() {
         />
       </div>
 
-      <Card className="border-border/80">
+      <Card data-tour="stock-recent-movements" className="border-border/80">
         <CardHeader>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>Ultimas movimentacoes</CardTitle>
@@ -212,7 +212,7 @@ export default function StockOverview() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+      <div data-tour="stock-charts" className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <Card className="border-border/80">
           <CardHeader>
             <CardTitle>Saldo por item (top 8)</CardTitle>
