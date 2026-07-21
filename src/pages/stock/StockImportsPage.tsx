@@ -157,7 +157,7 @@ export default function StockImportsPage() {
             Escolha o tipo de arquivo, baixe o modelo correto e acompanhe o processamento por job.
           </p>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent data-tour="stock-imports-form" className="space-y-3">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
             <div className="space-y-1">
               <Label>Tipo de importacao</Label>

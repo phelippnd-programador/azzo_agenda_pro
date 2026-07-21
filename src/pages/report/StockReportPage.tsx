@@ -153,6 +153,7 @@ export default function StockReportPage() {
                 </Button>
                 {data && (
                   <Button
+                    data-tour="stock-report-export"
                     variant="outline"
                     className="w-full sm:w-auto"
                     onClick={() => downloadCsv(data, activeFilters.from, activeFilters.to)}
@@ -164,7 +165,7 @@ export default function StockReportPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent data-tour="stock-report-filters" className="space-y-4">
             <div className="flex flex-wrap gap-2">
               {presets.map((p) => (
                 <Button
@@ -221,7 +222,7 @@ export default function StockReportPage() {
         {error && <div className="text-sm text-destructive">{error}</div>}
 
         {data?.summary && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div data-tour="stock-report-summary" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Card>
               <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground flex items-center gap-1"><ArrowDown className="w-3 h-3 text-emerald-500" /> Entradas</CardTitle></CardHeader>
               <CardContent><p className="text-2xl font-semibold">{data.summary.totalEntradas}</p><p className="text-xs text-muted-foreground">{formatCurrency(data.summary.valorTotalEntradas)}</p></CardContent>

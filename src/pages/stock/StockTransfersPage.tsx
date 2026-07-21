@@ -121,7 +121,7 @@ export default function StockTransfersPage() {
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle>Transferencias</CardTitle>
-          <Button onClick={() => setIsDialogOpen(true)}>Nova transferencia</Button>
+          <Button data-tour="stock-transfer-new-button" onClick={() => setIsDialogOpen(true)}>Nova transferencia</Button>
         </div>
         <p className="text-sm text-muted-foreground">
           Organize envios entre unidades e acompanhe o status de cada transferencia em um unico fluxo.
@@ -136,7 +136,7 @@ export default function StockTransfersPage() {
           />
         ) : (
           pagedTransfers.map((transfer) => (
-            <div key={transfer.id} className="rounded-xl border border-border/70 bg-card p-4">
+            <div key={transfer.id} data-tour="stock-transfer-row" className="rounded-xl border border-border/70 bg-card p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-medium text-foreground">
                   {transfer.origem} {"->"} {transfer.destino}
@@ -153,7 +153,7 @@ export default function StockTransfersPage() {
                   <p className="mt-1 font-medium text-foreground">{transfer.quantidade}</p>
                 </div>
               </div>
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div data-tour="stock-transfer-actions" className="mt-2 flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"

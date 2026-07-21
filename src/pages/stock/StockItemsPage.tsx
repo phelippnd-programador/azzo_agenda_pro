@@ -164,7 +164,7 @@ export default function StockItemsPage() {
   };
 
   const FormFields = (
-    <div className="space-y-3">
+    <div data-tour="stock-items-form" className="space-y-3">
       <div className="space-y-1">
         <Label htmlFor="item-nome">Nome</Label>
         <Input id="item-nome" value={form.nome} onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))} />
@@ -204,7 +204,7 @@ export default function StockItemsPage() {
               }
             }}
           >
-            <Button className="gap-2 sm:self-auto" asChild>
+            <Button data-tour="stock-items-new-button" className="gap-2 sm:self-auto" asChild>
               <Link to="/estoque/itens/novo"><Plus className="h-4 w-4" />Novo item</Link>
             </Button>
             <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
@@ -223,7 +223,7 @@ export default function StockItemsPage() {
                 >
                   Cancelar
                 </Button>
-                <Button onClick={() => void handleCreate()} disabled={isSaving}>{isSaving ? "Salvando..." : "Salvar"}</Button>
+                <Button data-tour="stock-items-dialog-submit" onClick={() => void handleCreate()} disabled={isSaving}>{isSaving ? "Salvando..." : "Salvar"}</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -233,12 +233,13 @@ export default function StockItemsPage() {
         </p>
         <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
           <Input
+            data-tour="stock-items-search"
             placeholder="Buscar por nome ou SKU"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
           <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}>
-            <SelectTrigger>
+            <SelectTrigger data-tour="stock-items-status-filter">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -263,6 +264,7 @@ export default function StockItemsPage() {
           pagedItems.map((item) => (
             <div
               key={item.id}
+              data-tour="stock-item-row"
               className="flex flex-col gap-4 rounded-xl border border-border/70 bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0 flex-1">
@@ -289,10 +291,10 @@ export default function StockItemsPage() {
                   <Badge variant={item.ativo ? "secondary" : "outline"}>
                     {item.ativo ? "Ativo" : "Inativo"}
                   </Badge>
-                  <Button variant="outline" size="sm" className="gap-1" asChild>
+                  <Button data-tour="stock-item-edit-button" variant="outline" size="sm" className="gap-1" asChild>
                     <Link to={`/estoque/itens/${item.id}/editar`}><Edit className="h-3 w-3" />Editar</Link>
                   </Button>
-                  <Button variant="outline" size="sm" className="gap-1" onClick={() => void handleToggleActive(item)}>
+                  <Button data-tour="stock-item-toggle-button" variant="outline" size="sm" className="gap-1" onClick={() => void handleToggleActive(item)}>
                     <Power className="h-3 w-3" />
                     {item.ativo ? "Inativar" : "Ativar"}
                   </Button>
