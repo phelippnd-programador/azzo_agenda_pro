@@ -207,6 +207,7 @@ export function AgendaDayView({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
+            data-tour="agenda-appointment-menu"
             variant="ghost"
             size="icon"
             className={options?.compact ? 'h-7 w-7' : 'h-6 w-6 sm:h-7 sm:w-7'}
@@ -265,6 +266,7 @@ export function AgendaDayView({
     return (
       <div
         key={appointment.id}
+        data-tour="agenda-appointment-card"
         className={`p-2 sm:p-3 rounded-lg ${getStatusColor(appointment.status)} mb-1.5 cursor-pointer hover:shadow-md hover:-translate-y-px transition-all duration-150`}
         onClick={() => onAppointmentClick(appointment)}
       >
@@ -361,6 +363,7 @@ export function AgendaDayView({
                 return (
                   <div
                     key={appointment.id}
+                    data-tour="agenda-appointment-card"
                     className={`min-w-[280px] max-w-[360px] flex-1 snap-start rounded-xl border border-white/80 p-3 sm:min-w-[320px] sm:p-4 lg:min-w-[340px] dark:border-slate-700/70 ${getStatusColor(appointment.status)} cursor-pointer hover:shadow-md hover:-translate-y-px transition-all duration-150`}
                     onClick={() => onAppointmentClick(appointment)}
                   >
@@ -454,7 +457,7 @@ export function AgendaDayView({
     const totalHeight = columnDisplayedSlots.length * SLOT_HEIGHT;
 
     return (
-      <Card className="border-border/70 bg-card/96 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.14)]">
+      <Card data-tour="agenda-day-grid" className="border-border/70 bg-card/96 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.14)]">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <div style={{ minWidth: `${68 + colCount * 180}px` }}>
@@ -552,6 +555,7 @@ export function AgendaDayView({
                           return (
                             <div
                               key={apt.id}
+                              data-tour="agenda-appointment-card"
                               className={`absolute left-1 right-1 rounded-md p-1.5 cursor-pointer hover:shadow-md hover:-translate-y-px transition-all duration-150 border overflow-hidden z-10 ${color.border} ${getStatusColor(apt.status)}`}
                               style={{ top: top + 2, height: height - 2 }}
                               onClick={() => onAppointmentClick(apt)}
@@ -584,6 +588,7 @@ export function AgendaDayView({
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <Button
+                                        data-tour="agenda-appointment-menu"
                                         variant="ghost"
                                         size="icon"
                                         className="h-5 w-5"
@@ -633,7 +638,7 @@ export function AgendaDayView({
 
   return (
     <>
-      <Card className="border-border/70 bg-card/96 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.14)]">
+      <Card data-tour="agenda-day-grid" className="border-border/70 bg-card/96 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.14)]">
         <CardContent className="p-0">
           {appointments.length === 0 && (
             <div className="flex items-center gap-2 border-b border-border/50 bg-muted/20 px-4 py-3 text-xs text-muted-foreground">

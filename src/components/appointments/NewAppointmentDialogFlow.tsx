@@ -152,6 +152,7 @@ export function NewAppointmentDialogFlow({
 
       <div className="space-y-4 py-4">
         <div
+          data-tour="apt-client-step"
           className={`${currentStep === 1 ? "" : "hidden "}space-y-3 rounded-xl border p-4 ${
             selectedNewClient ? "border-primary/30 bg-primary/[0.03]" : ""
           }`}
@@ -254,6 +255,7 @@ export function NewAppointmentDialogFlow({
         </div>
 
         <div
+          data-tour="apt-service-step"
           className={`${currentStep === 2 ? "" : "hidden "}space-y-3 rounded-xl border p-4 ${
             selectedNewService ? "border-primary/30 bg-primary/[0.03]" : ""
           }`}
@@ -316,7 +318,7 @@ export function NewAppointmentDialogFlow({
                   {formatCurrency(Number(selectedNewService.price))}
                 </span>
               </div>
-              <div className="mt-3 space-y-2">
+              <div data-tour="apt-discount-input" className="mt-3 space-y-2">
                 <Label htmlFor="appointment-discount">Desconto opcional</Label>
                 <CurrencyInput
                   id="appointment-discount"
@@ -336,6 +338,7 @@ export function NewAppointmentDialogFlow({
         </div>
 
         <div
+          data-tour="apt-professional-step"
           className={`${currentStep === 3 ? "" : "hidden "}space-y-3 rounded-xl border p-4 ${
             isEffectiveProfessionalValid
               ? "border-primary/30 bg-primary/[0.03]"
@@ -390,6 +393,7 @@ export function NewAppointmentDialogFlow({
         </div>
 
         <div
+          data-tour="apt-date-step"
           className={`${currentStep === 4 ? "" : "hidden "}space-y-3 rounded-xl border p-4 ${
             canChooseDate ? "border-primary/30 bg-primary/[0.03]" : "opacity-60"
           }`}
@@ -420,6 +424,7 @@ export function NewAppointmentDialogFlow({
         </div>
 
         <div
+          data-tour="apt-slots-step"
           className={`${currentStep === 4 ? "" : "hidden "}space-y-4 rounded-xl border p-4 ${
             canChooseSlot ? "" : "opacity-60"
           } ${newStartTime ? "border-primary/30 bg-primary/[0.03]" : ""}`}
@@ -574,7 +579,7 @@ export function NewAppointmentDialogFlow({
       </div>
 
       {currentStep === 5 ? (
-        <div className="space-y-4 rounded-xl border p-4">
+        <div data-tour="apt-review-step" className="space-y-4 rounded-xl border p-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Etapa 5

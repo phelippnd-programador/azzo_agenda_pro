@@ -321,29 +321,31 @@ export function AppointmentDetailsSheet({
 
         {appointment ? (
           <div className="mt-6 space-y-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <span className="text-sm text-muted-foreground">Status</span>
-              <StatusBadge
-                status={appointment.status}
-                labelMap={appointmentStatusLabelMap}
-                toneMap={appointmentStatusBadgeToneMap}
-                className="text-xs"
-              />
-            </div>
+            <div data-tour="apt-details-status" className="space-y-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-sm text-muted-foreground">Status</span>
+                <StatusBadge
+                  status={appointment.status}
+                  labelMap={appointmentStatusLabelMap}
+                  toneMap={appointmentStatusBadgeToneMap}
+                  className="text-xs"
+                />
+              </div>
 
-            {flowMeta ? (
-              <Alert className="border-primary/20 bg-primary/5">
-                <Info className="h-4 w-4" />
-                <AlertTitle>
-                  Etapa {flowMeta.currentStep} de {flowMeta.totalSteps}
-                </AlertTitle>
-                <AlertDescription>
-                  {flowMeta.nextLabel
-                    ? `Proximo passo esperado: ${flowMeta.nextLabel}.`
-                    : 'Atendimento finalizado no fluxo operacional.'}
-                </AlertDescription>
-              </Alert>
-            ) : null}
+              {flowMeta ? (
+                <Alert className="border-primary/20 bg-primary/5">
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>
+                    Etapa {flowMeta.currentStep} de {flowMeta.totalSteps}
+                  </AlertTitle>
+                  <AlertDescription>
+                    {flowMeta.nextLabel
+                      ? `Proximo passo esperado: ${flowMeta.nextLabel}.`
+                      : 'Atendimento finalizado no fluxo operacional.'}
+                  </AlertDescription>
+                </Alert>
+              ) : null}
+            </div>
 
             <Separator />
 
@@ -589,7 +591,7 @@ export function AppointmentDetailsSheet({
                 )}
               </div>
 
-              <div className="space-y-3 rounded-lg border bg-muted/20 p-4">
+              <div data-tour="apt-details-notes" className="space-y-3 rounded-lg border bg-muted/20 p-4">
                 <div className="space-y-2">
                   <Label htmlFor="serviceExecutionNotes">
                     Execucao do servico
@@ -765,7 +767,7 @@ export function AppointmentDetailsSheet({
               </>
             ) : null}
 
-            <div className="space-y-2 pt-4">
+            <div data-tour="apt-details-actions" className="space-y-2 pt-4">
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {appointment.status === 'PENDING' ? (
                   <Button
@@ -809,6 +811,7 @@ export function AppointmentDetailsSheet({
 
               {showNoShowButton ? (
                 <Button
+                  data-tour="apt-details-noshow"
                   variant="outline"
                   className="col-span-full w-full border-destructive text-destructive hover:bg-destructive/10"
                   onClick={() => setIsNoShowDialogOpen(true)}
@@ -820,6 +823,7 @@ export function AppointmentDetailsSheet({
 
               {!['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(appointment.status) ? (
                 <Button
+                  data-tour="apt-details-edit"
                   variant="outline"
                   className="w-full"
                   onClick={() => setIsEditOpen(true)}
@@ -830,6 +834,7 @@ export function AppointmentDetailsSheet({
 
               {!isProfessionalUser && canReassignAppointments ? (
                 <Button
+                  data-tour="apt-details-reassign"
                   variant="outline"
                   className="w-full"
                   onClick={() => onReassignRequest(appointment)}
@@ -839,6 +844,7 @@ export function AppointmentDetailsSheet({
               ) : null}
 
               <Button
+                data-tour="apt-details-delete"
                 variant="destructive"
                 className="w-full"
                 onClick={() => onDeleteRequest(appointment.id)}

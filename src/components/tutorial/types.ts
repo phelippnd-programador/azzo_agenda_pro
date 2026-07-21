@@ -20,6 +20,15 @@ export interface GuidedTourStep {
   placement?: Placement | "auto" | "center";
   /** Desabilita o recorte de clique no alvo (padrão: interação bloqueada durante o tour). */
   spotlightClicks?: boolean;
+  /**
+   * Remove o overlay escurecido deste passo, liberando clique em QUALQUER
+   * parte da página/diálogo (não só no alvo destacado). Use quando o próximo
+   * passo depende de uma ação real fora do elemento em destaque — o caso
+   * clássico é um wizard que esconde etapas via CSS (`display:none`) em vez
+   * de desmontar: o botão "Continuar" fica fora do alvo, então sem isso o
+   * usuário fica bloqueado pelo overlay e não consegue avançar o formulário.
+   */
+  allowInteraction?: boolean;
 }
 
 export interface GuidedTourDefinition {

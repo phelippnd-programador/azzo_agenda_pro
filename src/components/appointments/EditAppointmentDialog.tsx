@@ -85,7 +85,7 @@ export function EditAppointmentDialog({
           <DialogTitle>Editar agendamento</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
+        <div data-tour="apt-edit-fields" className="space-y-4 py-2">
           <div className="space-y-2">
             <Label htmlFor="edit-date">Data</Label>
             <Input
@@ -145,7 +145,7 @@ export function EditAppointmentDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
             Cancelar
           </Button>
-          <Button onClick={() => void handleSave()} disabled={isSaving}>
+          <Button data-tour="apt-edit-save" onClick={() => void handleSave()} disabled={isSaving}>
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

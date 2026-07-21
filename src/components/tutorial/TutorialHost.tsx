@@ -14,6 +14,7 @@ import { useTourStore } from "./tour-store";
 
 // Tours disponíveis — importar aqui registra no registry (side effect).
 import "@/components/fiscal/tutorial/nfse-emission-tour";
+import "@/components/appointments/tutorial/agenda-tours";
 
 /**
  * Runner global de tutoriais guiados. Montado UMA vez no App (dentro do

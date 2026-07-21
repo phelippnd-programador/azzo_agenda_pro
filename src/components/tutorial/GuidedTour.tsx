@@ -65,6 +65,10 @@ export function toJoyrideSteps(steps: GuidedTourStep[]): Step[] {
     content: step.content,
     placement: step.placement ?? "auto",
     blockTargetInteraction: !(step.spotlightClicks ?? false),
+    // allowInteraction remove o overlay inteiro (não só o alvo): necessário
+    // quando o próximo passo depende de um clique FORA do elemento destacado
+    // (ex.: botão "Continuar" de um wizard que só esconde etapas via CSS).
+    hideOverlay: step.allowInteraction ?? false,
     // A rota do passo viaja no `data`: o hook `before` (TutorialHost) navega
     // até ela antes de o Joyride procurar o alvo.
     data: { route: step.route },
