@@ -114,7 +114,7 @@ export function WhatsAppSetupWizard({
 }: WhatsAppSetupWizardProps) {
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-center gap-1 sm:gap-2">
+      <div data-tour="whatsapp-wizard-progress" className="flex items-start justify-center gap-1 sm:gap-2">
         {WIZARD_STEPS.map((step, index) => {
           const stepNumber = index + 1;
           const stepStatus = resolveStepStatus(currentStep, stepNumber);
@@ -162,7 +162,7 @@ export function WhatsAppSetupWizard({
             Fluxo guiado para conectar o WhatsApp Cloud API do tenant sem Embedded Signup.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent data-tour="whatsapp-wizard-step-content" className="space-y-4">
           {currentStep === 1 ? (
             <>
               <Alert>
@@ -635,7 +635,7 @@ export function WhatsAppSetupWizard({
             </div>
           ) : null}
 
-          <div className="flex flex-col gap-2 border-t pt-4 sm:flex-row sm:justify-between">
+          <div data-tour="whatsapp-wizard-nav" className="flex flex-col gap-2 border-t pt-4 sm:flex-row sm:justify-between">
             <Button
               type="button"
               variant="outline"

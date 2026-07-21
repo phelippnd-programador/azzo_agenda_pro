@@ -16,6 +16,7 @@ import { useTourStore } from "./tour-store";
 import "@/components/fiscal/tutorial/nfse-emission-tour";
 import "@/components/appointments/tutorial/agenda-tours";
 import "@/components/stock/tutorial/stock-tours";
+import "@/components/settings/tutorial/whatsapp-integration-tour";
 
 /**
  * Runner global de tutoriais guiados. Montado UMA vez no App (dentro do
