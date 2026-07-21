@@ -158,7 +158,7 @@ export function ChatTimeline({
                   </span>
                 </div>
                 <p className="whitespace-pre-wrap text-sm">
-                  {message.content || "[Conteudo expirado]"}
+                  {message.content || "[Mensagem sem texto]"}
                 </p>
                 <div className="mt-2 flex items-center justify-between gap-2">
                   <span
