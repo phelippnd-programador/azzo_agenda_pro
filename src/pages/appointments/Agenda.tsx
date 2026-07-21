@@ -41,6 +41,9 @@ import type { PaymentMethod } from '@/types';
 import { OnboardingBanner } from '@/components/dashboard/OnboardingBanner';
 import { useCashClosingGuard } from '@/hooks/useCashClosingGuard';
 import { CashClosingGuardDialog } from '@/components/financial/CashClosingGuardDialog';
+import { TutorialLauncherButton } from '@/components/tutorial/TutorialLauncherButton';
+import { useTourStore } from '@/components/tutorial/tour-store';
+import { AGENDA_TOUR_FULL_ID, AGENDA_TOUR_MODULE_OPTIONS } from '@/components/appointments/tutorial/agenda-tours';
 
 const APPOINTMENT_PAYMENT_METHODS: Array<{ value: PaymentMethod; label: string }> = [
   { value: 'PIX', label: 'Pix' },
@@ -205,6 +208,16 @@ export default function Agenda() {
     if (!isProfessionalUser || !loggedProfessional?.id) return;
     setSelectedProfessional(loggedProfessional.id);
   }, [isProfessionalUser, loggedProfessional?.id]);
+
+  const startTourIfNeverSeen = useTourStore((state) => state.startTourIfNeverSeen);
+  // Tutorial guiado da agenda: inicia sozinho so no primeiro acesso (persistido
+  // por tour+versao) e so depois que a pagina termina de carregar, para o
+  // primeiro passo encontrar o elemento de cara em vez de disputar com o loading.
+  useEffect(() => {
+    if (isLoading || error) return;
+    const timer = window.setTimeout(() => startTourIfNeverSeen(AGENDA_TOUR_FULL_ID), 600);
+    return () => window.clearTimeout(timer);
+  }, [isLoading, error, startTourIfNeverSeen]);
 
   const navigateDate = (direction: 'prev' | 'next') => {
     const next = new Date(currentDate);
@@ -498,7 +511,10 @@ export default function Agenda() {
     <MainLayout title="Agenda" subtitle="Gerencie seus agendamentos">
       <OnboardingBanner />
       <div className="space-y-4 sm:space-y-6">
-        <Card className="border-border/70 bg-card/90 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.16)]">
+        <Card
+          data-tour="agenda-summary"
+          className="border-border/70 bg-card/90 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.16)]"
+        >
           <CardContent className="space-y-4 p-4 sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="space-y-1.5">
@@ -615,7 +631,7 @@ export default function Agenda() {
             </div>
 
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-              <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
+              <div data-tour="agenda-date-nav" className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
                 <Button
                   variant="outline"
                   size="icon"
@@ -643,7 +659,7 @@ export default function Agenda() {
               <div className="flex w-full flex-wrap items-center gap-2 sm:gap-3 xl:w-auto xl:justify-end">
             {!isProfessionalUser ? (
               <Select value={effectiveSelectedProfessional || selectedProfessional} onValueChange={setSelectedProfessional}>
-                <SelectTrigger className="h-8 w-full text-xs sm:h-9 sm:w-44 sm:text-sm">
+                <SelectTrigger data-tour="agenda-filter-professional" className="h-8 w-full text-xs sm:h-9 sm:w-44 sm:text-sm">
                   <SelectValue placeholder="Profissional" />
                 </SelectTrigger>
                 <SelectContent>
@@ -654,13 +670,13 @@ export default function Agenda() {
                 </SelectContent>
               </Select>
             ) : (
-              <div className="flex h-8 w-full items-center rounded-md border bg-muted/40 px-3 text-xs text-muted-foreground sm:h-9 sm:min-w-44 sm:w-auto sm:text-sm">
+              <div data-tour="agenda-filter-professional" className="flex h-8 w-full items-center rounded-md border bg-muted/40 px-3 text-xs text-muted-foreground sm:h-9 sm:min-w-44 sm:w-auto sm:text-sm">
                 {loggedProfessional?.name || 'Profissional logado'}
               </div>
             )}
 
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger className="h-8 w-full text-xs sm:h-9 sm:w-44 sm:text-sm">
+              <SelectTrigger data-tour="agenda-filter-status" className="h-8 w-full text-xs sm:h-9 sm:w-44 sm:text-sm">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -674,7 +690,7 @@ export default function Agenda() {
               </SelectContent>
             </Select>
 
-            <div className="flex w-full overflow-hidden rounded-lg border sm:w-auto">
+            <div data-tour="agenda-view-toggle" className="flex w-full overflow-hidden rounded-lg border sm:w-auto">
               <Button
                 variant={viewMode === 'day' ? 'secondary' : 'ghost'}
                 size="sm"
@@ -701,11 +717,21 @@ export default function Agenda() {
               </Button>
             </div>
 
-            <Button size="sm" className="h-8 w-full gap-1 text-xs sm:h-9 sm:w-auto sm:gap-2 sm:text-sm" onClick={() => setIsNewAppointmentOpen(true)}>
+            <Button
+              data-tour="agenda-new-appointment-button"
+              size="sm"
+              className="h-8 w-full gap-1 text-xs sm:h-9 sm:w-auto sm:gap-2 sm:text-sm"
+              onClick={() => setIsNewAppointmentOpen(true)}
+            >
               <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="sm:hidden">Novo agendamento</span>
               <span className="hidden sm:inline">Novo Agendamento</span>
             </Button>
+
+            <TutorialLauncherButton
+              fullTour={{ id: AGENDA_TOUR_FULL_ID, label: 'Tour completo da agenda' }}
+              modules={AGENDA_TOUR_MODULE_OPTIONS}
+            />
               </div>
             </div>
           </CardContent>

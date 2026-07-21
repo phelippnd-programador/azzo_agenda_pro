@@ -529,7 +529,12 @@ export function NewAppointmentDialog({
                 <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             ) : (
-              <Button className="w-full sm:w-auto" onClick={handleSubmit} disabled={isSubmitting || !canSubmit}>
+              <Button
+                data-tour="apt-dialog-submit"
+                className="w-full sm:w-auto"
+                onClick={handleSubmit}
+                disabled={isSubmitting || !canSubmit}
+              >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
