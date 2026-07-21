@@ -10,6 +10,7 @@ const {
   cancelInvoiceMock,
   createCertificateUnlockMock,
   revokeCertificateUnlockMock,
+  listProviderCapabilitiesMock,
   toastSuccessMock,
   toastErrorMock,
   navigateMock,
@@ -20,6 +21,7 @@ const {
   cancelInvoiceMock: vi.fn(),
   createCertificateUnlockMock: vi.fn(),
   revokeCertificateUnlockMock: vi.fn(),
+  listProviderCapabilitiesMock: vi.fn(),
   toastSuccessMock: vi.fn(),
   toastErrorMock: vi.fn(),
   navigateMock: vi.fn(),
@@ -61,6 +63,7 @@ vi.mock("@/lib/api", async () => {
       cancelInvoice: cancelInvoiceMock,
       createCertificateUnlock: createCertificateUnlockMock,
       revokeCertificateUnlock: revokeCertificateUnlockMock,
+      listProviderCapabilities: listProviderCapabilitiesMock,
     },
   };
 });
@@ -89,6 +92,7 @@ describe("NfseInvoiceDetails", () => {
     cancelInvoiceMock.mockResolvedValue(undefined);
     createCertificateUnlockMock.mockResolvedValue({ unlockTokenId: "token-1" });
     revokeCertificateUnlockMock.mockResolvedValue(undefined);
+    listProviderCapabilitiesMock.mockResolvedValue([]);
   });
 
   it("should redirect to nfse settings when authorization fails due to missing config", async () => {
@@ -143,5 +147,27 @@ describe("NfseInvoiceDetails", () => {
       );
       expect(navigateMock).toHaveBeenCalledWith("/configuracoes/fiscal/impostos");
     });
+  });
+
+  it("exige selecao de provedor antes de autorizar quando ha mais de um disponivel", async () => {
+    listProviderCapabilitiesMock.mockResolvedValue([
+      { municipioCodigoIbge: "3304557", provedor: "ABRASF", layoutVersion: "1", cancelSupported: true, cancelMode: "SYNC" },
+      { municipioCodigoIbge: "3304557", provedor: "SEFIN_NACIONAL", layoutVersion: "1", cancelSupported: true, cancelMode: "SYNC" },
+    ]);
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <NfseInvoiceDetails />
+      </MemoryRouter>
+    );
+
+    await screen.findByText("Provedor da prefeitura");
+    await user.click(screen.getByRole("button", { name: "Autorizar" }));
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith("Selecione o provedor da prefeitura.");
+    });
+    expect(authorizeInvoiceMock).not.toHaveBeenCalled();
   });
 });

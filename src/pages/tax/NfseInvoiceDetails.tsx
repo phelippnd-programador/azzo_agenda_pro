@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { nfseApi, type NfseInvoice } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import {
@@ -23,6 +30,8 @@ export default function NfseInvoiceDetails() {
   const [unlockTokenId, setUnlockTokenId] = useState<string | undefined>(undefined);
   const [cancelReason, setCancelReason] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [availableProviders, setAvailableProviders] = useState<string[]>([]);
+  const [selectedProvedor, setSelectedProvedor] = useState("");
   const showError = (error: unknown, fallbackMessage: string) => {
     const uiError = resolveUiError(error, fallbackMessage);
     toast.error(uiError.code ? `[${uiError.code}] ${uiError.message}` : uiError.message);
@@ -38,6 +47,28 @@ export default function NfseInvoiceDetails() {
       ]);
       setInvoice(invoiceResponse);
       setUnlockTokenId(unlockStatus.active ? unlockStatus.unlockTokenId : undefined);
+
+      // Provedores disponiveis para a empresa no municipio do documento. Com
+      // apenas um, seleciona automaticamente; com mais de um, o usuario escolhe.
+      try {
+        const capabilities = await nfseApi.listProviderCapabilities(
+          invoiceResponse.municipioCodigoIbge
+            ? { municipioCodigoIbge: invoiceResponse.municipioCodigoIbge }
+            : undefined
+        );
+        const unique = [...new Set(capabilities.map((c) => c.provedor))];
+        setAvailableProviders(unique);
+        setSelectedProvedor(
+          unique.length === 1
+            ? unique[0]
+            : unique.includes(invoiceResponse.provedor)
+              ? invoiceResponse.provedor
+              : ""
+        );
+      } catch {
+        setAvailableProviders([]);
+        setSelectedProvedor("");
+      }
     } catch (error) {
       showError(error, "Erro ao carregar detalhes da NFS-e");
     } finally {
@@ -132,6 +163,26 @@ export default function NfseInvoiceDetails() {
             <CardTitle>Acoes fiscais</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {availableProviders.length > 1 && (
+              <div className="space-y-2">
+                <Label htmlFor="nfse-details-provedor">Provedor da prefeitura</Label>
+                <Select value={selectedProvedor || undefined} onValueChange={setSelectedProvedor}>
+                  <SelectTrigger id="nfse-details-provedor">
+                    <SelectValue placeholder="Selecione o provedor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableProviders.map((provedor) => (
+                      <SelectItem key={provedor} value={provedor}>
+                        {provedor}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Mais de um provedor disponivel para este municipio — escolha qual utilizar.
+                </p>
+              </div>
+            )}
             <div className="space-y-2">
               <Label>Senha do certificado (deixe vazio para usar unlock token)</Label>
               <Input
@@ -144,10 +195,15 @@ export default function NfseInvoiceDetails() {
               <Button
                 onClick={async () => {
                   if (!id) return;
+                  if (availableProviders.length > 1 && !selectedProvedor) {
+                    toast.error("Selecione o provedor da prefeitura.");
+                    return;
+                  }
                   try {
                     await nfseApi.authorizeInvoice(id, {
                       certificatePassword: certificatePassword.trim() || undefined,
                       unlockTokenId: !certificatePassword.trim() ? unlockTokenId : undefined,
+                      provedor: selectedProvedor || undefined,
                     });
                     toast.success("NFS-e enviada para autorizacao.");
                     await load();
