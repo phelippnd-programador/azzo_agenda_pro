@@ -521,7 +521,7 @@ export function WhatsAppIntegrationCard() {
   };
 
   const renderStatusPanel = () => (
-    <div className="space-y-4">
+    <div data-tour="whatsapp-status-panel" className="space-y-4">
       <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4">
         <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
         <div className="min-w-0 flex-1">
@@ -586,7 +586,7 @@ export function WhatsAppIntegrationCard() {
       </div>
 
       {/* Templates de mensagem */}
-      <div className="rounded-lg border p-4 space-y-4">
+      <div data-tour="whatsapp-templates" className="rounded-lg border p-4 space-y-4">
         <div>
           <p className="text-sm font-semibold">Templates de mensagem automatica</p>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -618,7 +618,7 @@ export function WhatsAppIntegrationCard() {
       </div>
 
       {/* Log de mensagens */}
-      <div className="rounded-lg border p-4 space-y-3">
+      <div data-tour="whatsapp-message-log" className="rounded-lg border p-4 space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold">Histórico de mensagens</p>
           <Button
@@ -707,7 +707,7 @@ export function WhatsAppIntegrationCard() {
   );
 
   return (
-    <Card className="w-full">
+    <Card data-tour="whatsapp-integration-card" className="w-full">
       <CardHeader className="space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -720,11 +720,11 @@ export function WhatsAppIntegrationCard() {
             </CardDescription>
           </div>
           {isConnected ? (
-            <Badge className="border border-green-200 bg-green-50 text-green-700">
+            <Badge data-tour="whatsapp-status-badge" className="border border-green-200 bg-green-50 text-green-700">
               WhatsApp Conectado
             </Badge>
           ) : (
-            <Badge variant="outline">Nao conectado</Badge>
+            <Badge data-tour="whatsapp-status-badge" variant="outline">Nao conectado</Badge>
           )}
         </div>
 
@@ -752,7 +752,7 @@ export function WhatsAppIntegrationCard() {
           renderStatusPanel()
         ) : embeddedSignupEnabled ? (
           <Tabs value={setupMode} onValueChange={(value) => setSetupMode(value as SetupMode)} className="space-y-4">
-            <TabsList className="grid h-auto w-full grid-cols-2 gap-2">
+            <TabsList data-tour="whatsapp-setup-tabs" className="grid h-auto w-full grid-cols-2 gap-2">
               <TabsTrigger value="wizard">Cloud API guiado</TabsTrigger>
               <TabsTrigger value="meta">Meta</TabsTrigger>
             </TabsList>
@@ -821,7 +821,7 @@ export function WhatsAppIntegrationCard() {
           renderWizard()
         )}
 
-        <div className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div data-tour="whatsapp-activate-switch" className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-medium">Ativar integracao</p>
             <p className="text-xs text-muted-foreground">
@@ -838,7 +838,7 @@ export function WhatsAppIntegrationCard() {
           />
         </div>
 
-        <div className="rounded-lg border p-3">
+        <div data-tour="whatsapp-usage-profile" className="rounded-lg border p-3">
           <p className="text-sm font-medium">Como voce quer usar o WhatsApp?</p>
           <p className="text-xs text-muted-foreground">
             Escolha o perfil de uso. Ele determina quais mensagens automaticas serao enviadas e impacta o custo por conversa na Meta.
@@ -906,7 +906,7 @@ export function WhatsAppIntegrationCard() {
           )}
         </div>
 
-        <div className="rounded-lg border p-3">
+        <div data-tour="whatsapp-permissions" className="rounded-lg border p-3">
           <p className="text-sm font-medium">Permissoes de acao via WhatsApp</p>
           <p className="text-xs text-muted-foreground">
             Defina quais operacoes o cliente pode executar pelo WhatsApp.
