@@ -6,8 +6,16 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function usePwaInstall() {
+  const dismissedKey = "azzo-pwa-install-dismissed";
   const [promptEvent, setPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [dismissed, setDismissedState] = useState(() => {
+    try {
+      return localStorage.getItem(dismissedKey) === "true";
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     // Ja esta rodando como PWA instalado
@@ -18,16 +26,19 @@ export function usePwaInstall() {
 
     const handler = (e: Event) => {
       e.preventDefault();
+      if (dismissed) return;
       setPromptEvent(e as BeforeInstallPromptEvent);
     };
+    const installedHandler = () => setIsInstalled(true);
 
     window.addEventListener("beforeinstallprompt", handler);
-    window.addEventListener("appinstalled", () => setIsInstalled(true));
+    window.addEventListener("appinstalled", installedHandler);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("appinstalled", installedHandler);
     };
-  }, []);
+  }, [dismissed]);
 
   const install = async () => {
     if (!promptEvent) return;
@@ -39,7 +50,17 @@ export function usePwaInstall() {
     }
   };
 
-  const canInstall = !isInstalled && promptEvent !== null;
+  const dismiss = () => {
+    setDismissedState(true);
+    setPromptEvent(null);
+    try {
+      localStorage.setItem(dismissedKey, "true");
+    } catch {
+      // ignore storage issues
+    }
+  };
 
-  return { canInstall, install };
+  const canInstall = !dismissed && !isInstalled && promptEvent !== null;
+
+  return { canInstall, install, dismiss };
 }
