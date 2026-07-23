@@ -48,7 +48,13 @@ export default defineConfig(({ command }) => ({
         includeAssets: ["favicon.ico", "icon-192.png", "icon-512.png"],
         manifest: false,
         workbox: {
-          navigateFallback: "/offline.html",
+          // navigateFallback é o "app shell" servido para navegações (F5, URL
+          // direta) quando não há match direto no precache — TEM que ser o
+          // index.html real, nunca a offline.html. Apontar para offline.html
+          // faz o service worker responder toda navegação com a tela de
+          // "sem conexão", mesmo com internet normal.
+          navigateFallback: "/index.html",
+          navigateFallbackDenylist: [/^\/api\//],
           globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,json}"],
           globIgnores: ["images/**"],
           runtimeCaching: [
