@@ -52,6 +52,8 @@ export const SalesReportPage = lazy(() => import("@/pages/report/SalesReportPage
 export const ClientsReportPage = lazy(() => import("@/pages/report/ClientsReportPage"));
 export const LicenseReportPage = lazy(() => import("@/pages/report/LicenseReportPage"));
 export const ManagementReportPage = lazy(() => import("@/pages/report/ManagementReportPage"));
+export const HeatmapReportPage = lazy(() => import("@/pages/report/HeatmapReportPage"));
+export const CatalogReportPage = lazy(() => import("@/pages/report/CatalogReportPage"));
 export const FiscalPage = lazy(() => import("@/pages/fiscal/FiscalPage"));
 export const TaxConfig = lazy(() => import("@/pages/tax/TaxConfig"));
 export const FiscalCertificatesSettings = lazy(() => import("@/pages/tax/FiscalCertificatesSettings"));
@@ -65,6 +67,11 @@ export const InvoiceEmission = lazy(() => import("@/pages/tax/InvoiceEmission"))
 export const ApuracaoMensal = lazy(() => import("@/pages/tax/ApuracaoMensal"));
 export const WhatsAppIntegration = lazy(() => import("@/pages/WhatsAppIntegration"));
 export const TelegramIntegration = lazy(() => import("@/pages/TelegramIntegration"));
+export const PaymentIntegrationSettings = lazy(() => import("@/pages/PaymentIntegrationSettings"));
+export const PosPage = lazy(() => import("@/pages/pos/PosPage"));
+export const PosComandaPage = lazy(() => import("@/pages/pos/PosComandaPage"));
+export const PackagesPage = lazy(() => import("@/pages/packages/PackagesPage"));
+export const MembershipPlansPage = lazy(() => import("@/pages/memberships/MembershipPlansPage"));
 export const ReactivationSettings = lazy(() => import("@/pages/settings/ReactivationSettings"));
 export const Unauthorized = lazy(() => import("@/pages/Unauthorized"));
 export const LegalDocument = lazy(() => import("@/pages/LegalDocument"));

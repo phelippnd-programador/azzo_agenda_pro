@@ -21,6 +21,16 @@ export const appRouteManifest = {
     unauthorized: "/unauthorized",
     onboarding: "/onboarding",
   },
+  pos: {
+    root: "/pos",
+    detail: "/pos/:id",
+  },
+  packages: {
+    root: "/pacotes",
+  },
+  memberships: {
+    root: "/assinaturas-clientes",
+  },
   reports: {
     root: "/relatorio",
     appointments: "/relatorio/agendamento",
@@ -30,6 +40,8 @@ export const appRouteManifest = {
     estoque: "/relatorio/estoque",
     vendas: "/relatorio/vendas",
     clientes: "/relatorio/clientes",
+    ocupacao: "/relatorio/ocupacao",
+    catalogo: "/relatorio/catalogo",
     licencas: "/relatorio/licencas",
     gerencial: "/relatorio/gerencial",
     legacyRoot: "/relatorios",
@@ -105,6 +117,7 @@ export const appRouteManifest = {
     fiscalNfse: "/configuracoes/fiscal/nfse",
     whatsapp: "/configuracoes/integracoes/whatsapp",
     telegram: "/configuracoes/integracoes/telegram",
+    payments: "/configuracoes/integracoes/pagamentos",
     reactivation: "/configuracoes/reativacao",
     systemAdmin: "/configuracoes/admin-sistema",
   },

@@ -65,6 +65,10 @@ export interface Service {
   professionalIds: string[];
   isActive: boolean;
   createdAt: Date;
+  // F02 — sinal de reserva (anti no-show) no agendamento publico
+  sinalObrigatorio?: boolean;
+  sinalTipo?: 'PERCENTUAL' | 'FIXO' | null;
+  sinalValor?: number | null;
 }
 
 export interface AppointmentItem {

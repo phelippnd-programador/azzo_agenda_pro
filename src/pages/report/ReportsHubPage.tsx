@@ -6,6 +6,8 @@ import {
   CalendarX2,
   CalendarCheck2,
   DollarSign,
+  FileSpreadsheet,
+  Grid3X3,
   MessageCircleMore,
   ShieldCheck,
   ShoppingCart,
@@ -68,6 +70,18 @@ const REPORT_CARDS: ReportCard[] = [
     title: "Estoque",
     description: "Posição de estoque, movimentações e itens abaixo do mínimo.",
     icon: Boxes,
+  },
+  {
+    path: appRouteManifest.reports.ocupacao,
+    title: "Ocupacao",
+    description: "Mapa de calor por dia e horario para identificar picos, ociosidade e oportunidades.",
+    icon: Grid3X3,
+  },
+  {
+    path: appRouteManifest.reports.catalogo,
+    title: "Catalogo avancado",
+    description: "Relatorios detalhados de faturamento, clientes, comissoes, pacotes e operacao.",
+    icon: FileSpreadsheet,
   },
   {
     path: appRouteManifest.reports.gerencial,
