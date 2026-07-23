@@ -394,9 +394,12 @@ export default function Agenda() {
     }
 
     try {
-      await updateAppointmentStatus(appointmentId, newStatus);
+      const atualizado = await updateAppointmentStatus(appointmentId, newStatus);
       if (selectedAppointment?.id === appointmentId) {
         setSelectedAppointment((prev) => (prev ? { ...prev, status: newStatus } : null));
+      }
+      if (newStatus === 'IN_PROGRESS' && atualizado?.comandaId) {
+        navigate(`/pos/${atualizado.comandaId}`);
       }
     } catch {
       // tratado no hook
