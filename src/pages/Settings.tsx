@@ -5,6 +5,7 @@ import {
   Boxes,
   Building2,
   CalendarRange,
+  CreditCard,
   PlugZap,
   Receipt,
   Send,
@@ -21,6 +22,8 @@ import { SettingsNotificationsTab } from '@/components/settings/SettingsNotifica
 import { SettingsAccountTab } from '@/components/settings/SettingsAccountTab';
 import { AppointmentConflictSettingsCard } from '@/components/settings/AppointmentConflictSettingsCard';
 import { CancellationPolicyCard } from '@/components/settings/CancellationPolicyCard';
+import { ReminderSettingsCard } from '@/components/settings/ReminderSettingsCard';
+import { LoyaltySettingsCard } from '@/components/settings/LoyaltySettingsCard';
 import { SettingsBusinessHoursTab } from '@/components/settings/SettingsBusinessHoursTab';
 import { SettingsClosuresTab } from '@/components/settings/SettingsClosuresTab';
 import { SettingsLgpdTab } from '@/components/settings/SettingsLgpdTab';
@@ -164,6 +167,8 @@ export default function Settings() {
               <div className="grid gap-4 lg:grid-cols-2">
                 <AppointmentConflictSettingsCard />
                 <CancellationPolicyCard />
+                <ReminderSettingsCard />
+                <LoyaltySettingsCard />
               </div>
             </TabsContent>
           )}
@@ -221,6 +226,27 @@ export default function Settings() {
                     <Button asChild className="w-full justify-between">
                       <Link to="/configuracoes/integracoes/telegram">
                         Configurar Telegram
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+              {isOwner && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <CreditCard className="h-4 w-4 text-primary" />
+                      Pagamentos (Asaas)
+                    </CardTitle>
+                    <CardDescription>
+                      Conta de recebimento do salão para sinal, comandas e assinaturas.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild className="w-full justify-between">
+                      <Link to="/configuracoes/integracoes/pagamentos">
+                        Configurar pagamentos
                         <ArrowRight className="h-4 w-4" />
                       </Link>
                     </Button>

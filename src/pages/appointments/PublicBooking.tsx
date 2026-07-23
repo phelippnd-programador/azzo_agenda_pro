@@ -13,6 +13,7 @@ import {
   Service,
   servicesApi,
 } from '@/lib/api';
+import type { PublicAppointmentCreated } from '@/lib/api/public-booking';
 import { resolveUiError } from '@/lib/error-utils';
 import { toast } from 'sonner';
 import { BookingCustomerStep } from '@/components/public-booking/BookingCustomerStep';
@@ -57,6 +58,7 @@ export default function PublicBooking() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProfessionals, setIsLoadingProfessionals] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
+  const [depositInfo, setDepositInfo] = useState<PublicAppointmentCreated | null>(null); // F02
   const [serviceSearch, setServiceSearch] = useState('');
   const [servicePage, setServicePage] = useState(1);
   const [salonName, setSalonName] = useState('Agende seu horario');
@@ -331,7 +333,7 @@ export default function PublicBooking() {
       const endTime = `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
 
       if (slug) {
-        await publicBookingApi.createAppointment(slug, {
+        const created = await publicBookingApi.createAppointment(slug, {
           customerName,
           customerPhone,
           customerEmail,
@@ -344,6 +346,8 @@ export default function PublicBooking() {
           date: formatDateParam(selectedDate),
           startTime: selectedTime,
         });
+        // F02 — horario com sinal: guarda os dados do PIX para a tela final.
+        setDepositInfo(created.depositRequired ? created : null);
       } else {
         await appointmentsApi.create({
           clientId: `public_${Date.now()}`,
@@ -406,6 +410,7 @@ export default function PublicBooking() {
         selectedDate={selectedDate}
         selectedTime={selectedTime}
         selectedServiceTotal={selectedServiceTotal}
+        deposit={depositInfo}
       />
     );
   }

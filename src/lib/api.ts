@@ -128,6 +128,7 @@ export { systemAdminApi } from "./api/system-admin";
 export { publicLegalApi, lgpdApi } from "./api/legal";
 export { checkoutApi, billingApi } from "./api/commerce";
 export { fiscalApi, nfseApi } from "./api/fiscal";
+export { membershipApi } from "./api/membership";
 export { publicBookingApi } from "./api/public-booking";
 export { resolveApiMediaUrl } from "./api/media";
 export type { SpecialClosure, ClosureImpact, AffectedAppointment, ClosureType } from "./api/closures";
