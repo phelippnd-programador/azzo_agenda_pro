@@ -60,6 +60,8 @@ export type {
   AppointmentCustomerNoteRequest,
   AppointmentManagementReportParams,
   AppointmentMonthlyMetric,
+  AppointmentConclusionAction,
+  AppointmentStatusUpdatePayload,
 } from "./api/appointments";
 export type {
   RecurringTransaction,
