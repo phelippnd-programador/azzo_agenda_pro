@@ -92,6 +92,8 @@ export default function FinancialCashClosing() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const [isDeletingTransaction, setIsDeletingTransaction] = useState(false);
+  const [closingToRemove, setClosingToRemove] = useState<string | null>(null);
+  const [isRemovingClosing, setIsRemovingClosing] = useState(false);
 
   const selectedClosing = useMemo(
     () => closings.find((item) => item.id === selectedId) ?? closings[0] ?? null,
@@ -188,6 +190,10 @@ export default function FinancialCashClosing() {
   };
 
   const handleOpenCashClosing = async () => {
+    if (openingDate > todayDateKey()) {
+      toast.error("Não é possível abrir caixa para uma data futura.");
+      return;
+    }
     setIsSubmittingOpen(true);
     try {
       const created = await cashClosingsApi.open({
@@ -253,6 +259,22 @@ export default function FinancialCashClosing() {
       // Erro tratado no hook.
     } finally {
       setIsDeletingTransaction(false);
+    }
+  };
+
+  const handleRemoveClosing = async () => {
+    if (!closingToRemove) return;
+    setIsRemovingClosing(true);
+    try {
+      await cashClosingsApi.remove(closingToRemove);
+      if (selectedId === closingToRemove) setSelectedId(null);
+      await loadClosings(true);
+      setClosingToRemove(null);
+      toast.success("Caixa removido.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível remover o caixa");
+    } finally {
+      setIsRemovingClosing(false);
     }
   };
 
@@ -499,9 +521,20 @@ export default function FinancialCashClosing() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-semibold">Totais por forma de pagamento</h3>
-                      {isSelectedCashOpen ? (
-                        <Button onClick={() => setIsCloseDialogVisible(true)}>Fechar caixa</Button>
-                      ) : null}
+                      <div className="flex gap-2">
+                        {isSelectedCashOpen && selectedClosing.businessDate > todayDateKey() ? (
+                          <Button
+                            variant="outline"
+                            className="border-red-200 text-red-600 hover:bg-red-50"
+                            onClick={() => setClosingToRemove(selectedClosing.id)}
+                          >
+                            Remover caixa
+                          </Button>
+                        ) : null}
+                        {isSelectedCashOpen ? (
+                          <Button onClick={() => setIsCloseDialogVisible(true)}>Fechar caixa</Button>
+                        ) : null}
+                      </div>
                     </div>
                     <div className="overflow-x-auto rounded-2xl border">
                       <Table>
@@ -566,6 +599,7 @@ export default function FinancialCashClosing() {
               <Input
                 id="cash-opening-date"
                 type="date"
+                max={todayDateKey()}
                 value={openingDate}
                 onChange={(event) => setOpeningDate(event.target.value)}
               />
@@ -582,7 +616,10 @@ export default function FinancialCashClosing() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsOpenDialogVisible(false)}>Cancelar</Button>
-            <Button onClick={handleOpenCashClosing} disabled={isSubmittingOpen || !openingDate}>
+            <Button
+              onClick={handleOpenCashClosing}
+              disabled={isSubmittingOpen || !openingDate || openingDate > todayDateKey()}
+            >
               {isSubmittingOpen ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CalendarDays className="mr-2 h-4 w-4" />}
               Confirmar abertura
             </Button>
@@ -656,6 +693,18 @@ export default function FinancialCashClosing() {
           if (!isDeletingTransaction && !open) setTransactionToDelete(null);
         }}
         onConfirm={handleDeleteTransaction}
+      />
+
+      <DeleteConfirmationDialog
+        open={!!closingToRemove}
+        isLoading={isRemovingClosing}
+        title="Remover caixa futuro?"
+        description="Remove este registro de caixa. Só é permitido para datas futuras e sem nenhum lançamento - use isso para corrigir um caixa aberto por engano."
+        confirmLabel="Remover"
+        onOpenChange={(open) => {
+          if (!isRemovingClosing && !open) setClosingToRemove(null);
+        }}
+        onConfirm={handleRemoveClosing}
       />
     </MainLayout>
   );
