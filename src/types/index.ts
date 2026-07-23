@@ -424,6 +424,9 @@ export interface Appointment {
   notes?: string;
   totalPrice: number;
   createdAt: Date;
+  /** Preenchido apenas na resposta de PATCH /status quando transiciona pra
+   * IN_PROGRESS: id da comanda aberta automaticamente para este atendimento. */
+  comandaId?: string;
 }
 
 export interface TransactionCategory {
