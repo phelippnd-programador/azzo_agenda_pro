@@ -50,14 +50,40 @@ export type Comanda = {
   troco: number;
 };
 
+// Shape bruto devolvido pelo backend (ComandaDtos.ComandaResponse) — sem
+// totalPago/troco, que o backend não calcula. O client deriva esses campos
+// a partir de `pagamentos` para a UI nunca quebrar nem exibir valor errado.
+type ComandaApiResponse = Omit<Comanda, "totalPago" | "troco">;
+
+type ComandaPageApiResponse = {
+  content: ComandaApiResponse[];
+  totalElements: number;
+  page: number;
+  size: number;
+};
+
+function toComanda(raw: ComandaApiResponse): Comanda {
+  const totalPago = (raw.pagamentos ?? [])
+    .filter((p) => p.status === "CONFIRMADO")
+    .reduce((sum, p) => sum + p.valor, 0);
+  const troco = raw.status === "FECHADA" ? Math.max(0, totalPago - (raw.total + raw.gorjeta)) : 0;
+  return { ...raw, totalPago, troco };
+}
+
 export const posApi = {
   abrir: (data: { appointmentId?: string; clientId?: string }) =>
-    request<Comanda>("/pos/comandas", { method: "POST", body: JSON.stringify(data) }),
+    request<ComandaApiResponse>("/pos/comandas", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }).then(toComanda),
 
   listar: (status: ComandaStatus = "ABERTA", page = 0, size = 20) =>
-    request<Comanda[]>(`/pos/comandas?status=${status}&page=${page}&size=${size}`),
+    request<ComandaPageApiResponse>(
+      `/pos/comandas?status=${status}&page=${page}&size=${size}`
+    ).then((res) => res.content.map(toComanda)),
 
-  detalhe: (id: string) => request<Comanda>(`/pos/comandas/${id}`),
+  detalhe: (id: string) =>
+    request<ComandaApiResponse>(`/pos/comandas/${id}`).then(toComanda),
 
   adicionarItem: (
     id: string,
@@ -69,51 +95,53 @@ export const posApi = {
       professionalId?: string;
     }
   ) =>
-    request<Comanda>(`/pos/comandas/${id}/itens`, {
+    request<ComandaApiResponse>(`/pos/comandas/${id}/itens`, {
       method: "POST",
       body: JSON.stringify(data),
-    }),
+    }).then(toComanda),
 
   removerItem: (id: string, itemId: string) =>
-    request<Comanda>(`/pos/comandas/${id}/itens/${itemId}`, { method: "DELETE" }),
+    request<ComandaApiResponse>(`/pos/comandas/${id}/itens/${itemId}`, {
+      method: "DELETE",
+    }).then(toComanda),
 
   aplicarDesconto: (
     id: string,
     data: { descontoValor?: number; descontoPercent?: number; motivo?: string }
   ) =>
-    request<Comanda>(`/pos/comandas/${id}/desconto`, {
-      method: "PUT",
+    request<ComandaApiResponse>(`/pos/comandas/${id}/desconto`, {
+      method: "POST",
       body: JSON.stringify(data),
-    }),
+    }).then(toComanda),
 
   definirGorjeta: (id: string, data: { gorjeta: number; professionalId?: string }) =>
-    request<Comanda>(`/pos/comandas/${id}/gorjeta`, {
-      method: "PUT",
+    request<ComandaApiResponse>(`/pos/comandas/${id}/gorjeta`, {
+      method: "POST",
       body: JSON.stringify(data),
-    }),
+    }).then(toComanda),
 
   registrarPagamento: (id: string, data: { meio: ComandaMeioPagamento; valor: number }) =>
-    request<Comanda>(`/pos/comandas/${id}/pagamentos`, {
+    request<ComandaApiResponse>(`/pos/comandas/${id}/pagamentos`, {
       method: "POST",
       body: JSON.stringify(data),
-    }),
+    }).then(toComanda),
 
   fechar: (id: string, meioPredominante?: ComandaMeioPagamento) =>
-    request<Comanda>(`/pos/comandas/${id}/fechar`, {
+    request<ComandaApiResponse>(`/pos/comandas/${id}/fechar`, {
       method: "POST",
       body: JSON.stringify({ meioPredominante }),
-    }),
+    }).then(toComanda),
 
   cancelar: (id: string, motivo: string) =>
-    request<Comanda>(`/pos/comandas/${id}/cancelar`, {
+    request<ComandaApiResponse>(`/pos/comandas/${id}/cancelar`, {
       method: "POST",
       body: JSON.stringify({ motivo }),
-    }),
+    }).then(toComanda),
 
   // F08 — resgate de pontos de fidelidade como desconto na comanda.
   resgatarFidelidade: (id: string, points: number) =>
-    request<Comanda>(`/pos/comandas/${id}/fidelidade/resgatar`, {
+    request<ComandaApiResponse>(`/pos/comandas/${id}/fidelidade/resgatar`, {
       method: "POST",
       body: JSON.stringify({ points }),
-    }),
+    }).then(toComanda),
 };
