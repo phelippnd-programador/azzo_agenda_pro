@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar, ChevronLeft, ChevronRight, Clock3, Info, Plus, Users } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Clock3, Info, Plus, ShoppingCart, Users, Wallet } from 'lucide-react';
 import { PageErrorState } from '@/components/ui/page-states';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { NewAppointmentDialog } from '@/components/appointments/NewAppointmentDialog';
@@ -38,6 +38,7 @@ import { toDateKey } from '@/lib/format';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import type { PaymentMethod } from '@/types';
+import type { AppointmentConclusionAction } from '@/lib/api';
 import { OnboardingBanner } from '@/components/dashboard/OnboardingBanner';
 import { useCashClosingGuard } from '@/hooks/useCashClosingGuard';
 import { CashClosingGuardDialog } from '@/components/financial/CashClosingGuardDialog';
@@ -45,12 +46,13 @@ import { TutorialLauncherButton } from '@/components/tutorial/TutorialLauncherBu
 import { useTourStore } from '@/components/tutorial/tour-store';
 import { AGENDA_TOUR_FULL_ID, AGENDA_TOUR_MODULE_OPTIONS } from '@/components/appointments/tutorial/agenda-tours';
 
+// Metodos aceitos pelo backend para "Pagar agora" (fecha a comanda na hora,
+// exige confirmacao instantanea) - Pix e Outro exigem o fluxo assincrono da
+// tela de Comandas (QR code Asaas / lancamento manual).
 const APPOINTMENT_PAYMENT_METHODS: Array<{ value: PaymentMethod; label: string }> = [
-  { value: 'PIX', label: 'Pix' },
+  { value: 'CASH', label: 'Dinheiro' },
   { value: 'CREDIT_CARD', label: 'Cartao de credito' },
   { value: 'DEBIT_CARD', label: 'Cartao de debito' },
-  { value: 'CASH', label: 'Dinheiro' },
-  { value: 'OTHER', label: 'Outro' },
 ];
 
 const AGENDA_HINTS_KEY = 'azzo:agenda:hints-dismissed';
@@ -86,6 +88,7 @@ export default function Agenda() {
   const [isDeletingAppointment, setIsDeletingAppointment] = useState(false);
   const [completionAppointmentId, setCompletionAppointmentId] = useState<string | null>(null);
   const [completionPaymentMethod, setCompletionPaymentMethod] = useState<PaymentMethod | ''>('');
+  const [completionAction, setCompletionAction] = useState<AppointmentConclusionAction | null>(null);
   const [isNfseConfirmOpen, setIsNfseConfirmOpen] = useState(false);
   const [nfseConfirmUrl, setNfseConfirmUrl] = useState('');
 
@@ -390,6 +393,7 @@ export default function Agenda() {
     if (newStatus === 'COMPLETED') {
       setCompletionAppointmentId(appointmentId);
       setCompletionPaymentMethod('');
+      setCompletionAction(null);
       return;
     }
 
@@ -407,15 +411,23 @@ export default function Agenda() {
   };
 
   const handleConfirmCompletion = async () => {
-    if (!completionAppointmentId || !completionPaymentMethod) {
-      toast.error('Selecione a forma de pagamento para concluir o atendimento.');
+    if (!completionAppointmentId || !completionAction) {
+      toast.error('Selecione o que fazer com este atendimento para concluir.');
+      return;
+    }
+    if (completionAction === 'PAY_NOW' && !completionPaymentMethod) {
+      toast.error('Selecione a forma de pagamento para concluir com pagamento agora.');
       return;
     }
 
     try {
-      await updateAppointmentStatus(completionAppointmentId, 'COMPLETED', {
-        paymentMethod: completionPaymentMethod,
-      });
+      const payload: Parameters<typeof updateAppointmentStatus>[2] = {
+        conclusionAction: completionAction,
+      };
+      if (completionAction === 'PAY_NOW' && completionPaymentMethod) {
+        payload.paymentMethod = completionPaymentMethod;
+      }
+      await updateAppointmentStatus(completionAppointmentId, 'COMPLETED', payload);
       if (selectedAppointment?.id === completionAppointmentId) {
         setSelectedAppointment((prev) => (prev ? { ...prev, status: 'COMPLETED' } : null));
       }
@@ -425,6 +437,7 @@ export default function Agenda() {
       if (apt) await handleNfseOnAppointmentCompleted(apt);
       setCompletionAppointmentId(null);
       setCompletionPaymentMethod('');
+      setCompletionAction(null);
       void checkAfterCompletion();
     } catch {
       // tratado no hook
@@ -860,6 +873,7 @@ export default function Agenda() {
             if (!open) {
               setCompletionAppointmentId(null);
               setCompletionPaymentMethod('');
+              setCompletionAction(null);
             }
           }}
         >
@@ -867,25 +881,65 @@ export default function Agenda() {
             <DialogHeader>
               <DialogTitle>Concluir atendimento</DialogTitle>
               <DialogDescription>
-                Selecione a forma de pagamento para registrar a receita automatica deste atendimento.
+                O que fazer com o valor deste atendimento?
               </DialogDescription>
             </DialogHeader>
-            <div className="py-2">
-              <Select
-                value={completionPaymentMethod || undefined}
-                onValueChange={(value) => setCompletionPaymentMethod(value as PaymentMethod)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a forma de pagamento" />
-                </SelectTrigger>
-                <SelectContent>
-                  {APPOINTMENT_PAYMENT_METHODS.map((method) => (
-                    <SelectItem key={method.value} value={method.value}>
-                      {method.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-3 py-2">
+              <div className="grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setCompletionAction('ADD_TO_COMANDA')}
+                  className={`flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-colors ${
+                    completionAction === 'ADD_TO_COMANDA'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:bg-accent'
+                  }`}
+                >
+                  <span className="flex items-center gap-2 text-sm font-medium">
+                    <ShoppingCart className="h-4 w-4" />
+                    Adicionar em uma comanda
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Vincula o servico a uma comanda. Nada e lancado no caixa agora - so quando a
+                    comanda for paga.
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCompletionAction('PAY_NOW')}
+                  className={`flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-colors ${
+                    completionAction === 'PAY_NOW'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:bg-accent'
+                  }`}
+                >
+                  <span className="flex items-center gap-2 text-sm font-medium">
+                    <Wallet className="h-4 w-4" />
+                    Pagar agora
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Recebe o pagamento na hora e ja lanca a receita no caixa.
+                  </span>
+                </button>
+              </div>
+
+              {completionAction === 'PAY_NOW' ? (
+                <Select
+                  value={completionPaymentMethod || undefined}
+                  onValueChange={(value) => setCompletionPaymentMethod(value as PaymentMethod)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a forma de pagamento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {APPOINTMENT_PAYMENT_METHODS.map((method) => (
+                      <SelectItem key={method.value} value={method.value}>
+                        {method.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : null}
             </div>
             <DialogFooter>
               <Button
@@ -893,11 +947,15 @@ export default function Agenda() {
                 onClick={() => {
                   setCompletionAppointmentId(null);
                   setCompletionPaymentMethod('');
+                  setCompletionAction(null);
                 }}
               >
                 Cancelar
               </Button>
-              <Button onClick={() => void handleConfirmCompletion()} disabled={!completionPaymentMethod}>
+              <Button
+                onClick={() => void handleConfirmCompletion()}
+                disabled={!completionAction || (completionAction === 'PAY_NOW' && !completionPaymentMethod)}
+              >
                 Concluir atendimento
               </Button>
             </DialogFooter>
