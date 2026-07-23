@@ -236,6 +236,8 @@ export const cashClosingsApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  remove: (id: string) =>
+    request<void>(`/finance/cash-closings/${id}`, { method: "DELETE" }),
 };
 
 export const reportsApi = {
