@@ -175,6 +175,16 @@ export const MENU_REGISTRY = {
     label: "Plano",
     path: appRouteManifest.finance.license,
   },
+  [appRouteManifest.pos.root]: {
+    icon: ShoppingCart,
+    label: "Comanda / PDV",
+    path: appRouteManifest.pos.root,
+  },
+  [appRouteManifest.packages.root]: {
+    icon: Package,
+    label: "Pacotes",
+    path: appRouteManifest.packages.root,
+  },
   [appRouteManifest.memberships.root]: {
     icon: CreditCard,
     label: "Clube de Assinaturas",
@@ -251,6 +261,8 @@ export const MAIN_MENU_ORDER = [
   appRouteManifest.finance.commissions,
   appRouteManifest.finance.professionals,
   appRouteManifest.finance.license,
+  appRouteManifest.pos.root,
+  appRouteManifest.packages.root,
   appRouteManifest.memberships.root,
   appRouteManifest.fiscal.root,
   appRouteManifest.audit.root,
