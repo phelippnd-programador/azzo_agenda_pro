@@ -127,10 +127,10 @@ export const posApi = {
       body: JSON.stringify(data),
     }).then(toComanda),
 
-  fechar: (id: string, meioPredominante?: ComandaMeioPagamento) =>
+  // Backend nao aceita corpo neste endpoint (ComandaResource.fechar so recebe o id).
+  fechar: (id: string) =>
     request<ComandaApiResponse>(`/pos/comandas/${id}/fechar`, {
       method: "POST",
-      body: JSON.stringify({ meioPredominante }),
     }).then(toComanda),
 
   cancelar: (id: string, motivo: string) =>

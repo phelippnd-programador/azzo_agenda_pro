@@ -4,11 +4,15 @@
 // ─── Moeda ────────────────────────────────────────────────────────────────────
 
 /** Formata um valor em reais. Ex: 1500 → "R$ 1.500,00".
- * Valores invalidos (null/undefined/NaN/string nao-numerica) viram 0
- * para nunca exibir "R$ NaN" na interface. */
+ * Valores invalidos (null/undefined/NaN/string nao-numerica) viram 0 para nunca exibir
+ * "R$ NaN" na interface, mas geram um warning no console (dev) para nao mascarar
+ * silenciosamente um bug upstream que estaria passando um valor quebrado. */
 export const formatCurrency = (value: number | string | null | undefined) => {
   const numeric = typeof value === "number" ? value : Number(value);
   const safe = Number.isFinite(numeric) ? numeric : 0;
+  if (!Number.isFinite(numeric) && value !== null && value !== undefined) {
+    console.warn(`formatCurrency recebeu um valor invalido e caiu para 0: ${JSON.stringify(value)}`);
+  }
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(safe);
 };
 
