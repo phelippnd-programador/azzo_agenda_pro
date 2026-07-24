@@ -158,7 +158,7 @@ export default function PosComandaPage() {
     if (!id) return;
     const okRun = await run(() =>
       posApi.aplicarDesconto(id, {
-        descontoPercent: Number(descontoPercent) || 0,
+        percentual: Number(descontoPercent) || 0,
         motivo: descontoMotivo,
       })
     );
@@ -166,11 +166,11 @@ export default function PosComandaPage() {
   };
 
   const definirGorjeta = async () => {
-    if (!id) return;
+    if (!id || !gorjetaProfissional) return;
     const okRun = await run(() =>
       posApi.definirGorjeta(id, {
-        gorjeta: Number(gorjetaValor.replace(',', '.')) || 0,
-        professionalId: gorjetaProfissional || undefined,
+        valor: Number(gorjetaValor.replace(',', '.')) || 0,
+        professionalId: gorjetaProfissional,
       })
     );
     if (okRun) setGorjetaOpen(false);
@@ -444,7 +444,7 @@ export default function PosComandaPage() {
                             </Select>
                           </div>
                         </div>
-                        <DialogFooter><Button onClick={definirGorjeta} disabled={busy}>Salvar</Button></DialogFooter>
+                        <DialogFooter><Button onClick={definirGorjeta} disabled={busy || !gorjetaProfissional}>Salvar</Button></DialogFooter>
                       </DialogContent>
                     </Dialog>
                     {!!loyaltyBalance && loyaltyBalance.points > 0 && (
@@ -473,7 +473,7 @@ export default function PosComandaPage() {
                             </div>
                           </div>
                           <DialogFooter>
-                            <Button onClick={resgatarFidelidade} disabled={busy || !resgatePontos}>Resgatar</Button>
+                            <Button onClick={resgatarFidelidade} disabled={busy || Number(resgatePontos) < 1}>Resgatar</Button>
                           </DialogFooter>
                         </DialogContent>
                       </Dialog>
