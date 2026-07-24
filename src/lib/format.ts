@@ -69,6 +69,23 @@ export function parseCurrencyInputToCents(raw: string): number {
   return Math.round(parseCurrencyInput(raw) * 100);
 }
 
+/**
+ * Converte string em notacao pt-BR (virgula decimal, ponto como milhar) para float,
+ * para campos de texto livre que nao sao moeda (ex: percentual). Ex: "1.500,50" → 1500.5,
+ * "30,5" → 30.5, "30" → 30. Retorna 0 para entrada invalida ou vazia.
+ */
+export function parseDecimalInput(raw: string): number {
+  const trimmed = raw.trim();
+  if (!trimmed) return 0;
+  const hasComma = trimmed.includes(',');
+  const hasDot = trimmed.includes('.');
+  const normalized = hasComma && hasDot
+    ? trimmed.replace(/\./g, '').replace(',', '.')
+    : trimmed.replace(',', '.');
+  const value = Number(normalized);
+  return Number.isFinite(value) ? value : 0;
+}
+
 // ─── Chave de data ────────────────────────────────────────────────────────────
 
 /**

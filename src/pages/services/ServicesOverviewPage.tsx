@@ -47,7 +47,7 @@ import { useServices } from '@/hooks/useServices';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { useProfessionals } from '@/hooks/useProfessionals';
 import { toast } from 'sonner';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, parseDecimalInput } from '@/lib/format';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
 
@@ -164,7 +164,7 @@ export default function ServicesOverviewPage() {
     if (!Number.isFinite(formPrice) || formPrice <= 0) {
       nextErrors.price = 'Informe um preco maior que zero.';
     }
-    const sinalValorNumber = Number(formSinalValor.replace(',', '.'));
+    const sinalValorNumber = parseDecimalInput(formSinalValor);
     if (formSinalObrigatorio) {
       if (!formSinalValor.trim() || !Number.isFinite(sinalValorNumber) || sinalValorNumber <= 0) {
         toast.error('Informe o valor do sinal (maior que zero).');

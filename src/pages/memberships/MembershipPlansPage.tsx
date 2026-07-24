@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -25,7 +26,7 @@ import { formatCurrency } from "@/lib/format";
 const EMPTY_FORM = {
   nome: "",
   descricao: "",
-  precoMensal: "",
+  precoMensal: 0,
   cumulativo: false,
   ativo: true,
 };
@@ -72,7 +73,7 @@ export default function MembershipPlansPage() {
     setForm({
       nome: plan.nome,
       descricao: plan.descricao || "",
-      precoMensal: String(plan.precoMensal),
+      precoMensal: plan.precoMensal,
       cumulativo: plan.cumulativo,
       ativo: plan.ativo,
     });
@@ -87,7 +88,7 @@ export default function MembershipPlansPage() {
   };
 
   const save = async () => {
-    if (!form.nome.trim() || !form.precoMensal || benefits.length === 0) {
+    if (!form.nome.trim() || !(form.precoMensal > 0) || benefits.length === 0) {
       toast.error("Informe nome, valor mensal e ao menos um beneficio.");
       return;
     }
@@ -96,7 +97,7 @@ export default function MembershipPlansPage() {
       const payload = {
         nome: form.nome.trim(),
         descricao: form.descricao.trim() || undefined,
-        precoMensal: Number(form.precoMensal.replace(",", ".")),
+        precoMensal: form.precoMensal,
         cumulativo: form.cumulativo,
         ativo: form.ativo,
         beneficios: benefits,
@@ -186,10 +187,9 @@ export default function MembershipPlansPage() {
               </div>
               <div className="space-y-1.5">
                 <Label>Mensalidade (R$)*</Label>
-                <Input
-                  inputMode="decimal"
+                <CurrencyInput
                   value={form.precoMensal}
-                  onChange={(event) => setForm((current) => ({ ...current, precoMensal: event.target.value }))}
+                  onChange={(value) => setForm((current) => ({ ...current, precoMensal: value }))}
                 />
               </div>
             </div>

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
@@ -27,7 +28,7 @@ function unwrapList<T>(data: T[] | { items: T[] }): T[] {
   return Array.isArray(data) ? data : data.items ?? [];
 }
 
-const EMPTY_FORM = { nome: '', descricao: '', preco: '', validadeDias: '90', ativo: true };
+const EMPTY_FORM = { nome: '', descricao: '', preco: 0, validadeDias: '90', ativo: true };
 
 /** F04 — catalogo de pacotes de servicos (venda antecipada de sessoes). */
 export default function PackagesPage() {
@@ -68,7 +69,7 @@ export default function PackagesPage() {
     setForm({
       nome: pacote.nome,
       descricao: pacote.descricao || '',
-      preco: String(pacote.preco),
+      preco: pacote.preco,
       validadeDias: String(pacote.validadeDias),
       ativo: pacote.ativo,
     });
@@ -84,7 +85,7 @@ export default function PackagesPage() {
   };
 
   const salvar = async () => {
-    if (!form.nome.trim() || !form.preco || !form.validadeDias || itens.length === 0) {
+    if (!form.nome.trim() || !(form.preco > 0) || !form.validadeDias || itens.length === 0) {
       toast.error('Preencha nome, preco, validade e ao menos um servico.');
       return;
     }
@@ -93,7 +94,7 @@ export default function PackagesPage() {
       const payload = {
         nome: form.nome.trim(),
         descricao: form.descricao.trim() || undefined,
-        preco: Number(form.preco.replace(',', '.')),
+        preco: form.preco,
         validadeDias: Number(form.validadeDias),
         ativo: form.ativo,
         itens,
@@ -141,7 +142,7 @@ export default function PackagesPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Preco (R$)*</Label>
-                    <Input inputMode="decimal" value={form.preco} onChange={(e) => setForm((f) => ({ ...f, preco: e.target.value }))} />
+                    <CurrencyInput value={form.preco} onChange={(value) => setForm((f) => ({ ...f, preco: value }))} />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Validade (dias)*</Label>
