@@ -66,6 +66,9 @@ function toComanda(raw: ComandaApiResponse): Comanda {
   const totalPago = (raw.pagamentos ?? [])
     .filter((p) => p.status === "CONFIRMADO")
     .reduce((sum, p) => sum + p.valor, 0);
+  // O backend só fecha a comanda quando o pago == total + gorjeta (quitação exata,
+  // sem troco) — ver ServicoComanda.fechar. Esse cálculo fica só como garantia
+  // defensiva; na prática sempre resulta em 0.
   const troco = raw.status === "FECHADA" ? Math.max(0, totalPago - (raw.total + raw.gorjeta)) : 0;
   return { ...raw, totalPago, troco };
 }
