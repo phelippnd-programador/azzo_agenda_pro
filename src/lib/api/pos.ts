@@ -66,6 +66,9 @@ function toComanda(raw: ComandaApiResponse): Comanda {
   const totalPago = (raw.pagamentos ?? [])
     .filter((p) => p.status === "CONFIRMADO")
     .reduce((sum, p) => sum + p.valor, 0);
+  // O backend só fecha a comanda quando o pago == total + gorjeta (quitação exata,
+  // sem troco) — ver ServicoComanda.fechar. Esse cálculo fica só como garantia
+  // defensiva; na prática sempre resulta em 0.
   const troco = raw.status === "FECHADA" ? Math.max(0, totalPago - (raw.total + raw.gorjeta)) : 0;
   return { ...raw, totalPago, troco };
 }
@@ -105,16 +108,14 @@ export const posApi = {
       method: "DELETE",
     }).then(toComanda),
 
-  aplicarDesconto: (
-    id: string,
-    data: { descontoValor?: number; descontoPercent?: number; motivo?: string }
-  ) =>
+  // Backend só suporta desconto percentual (ComandaDtos.AplicarDescontoRequest).
+  aplicarDesconto: (id: string, data: { percentual: number; motivo: string }) =>
     request<ComandaApiResponse>(`/pos/comandas/${id}/desconto`, {
       method: "POST",
       body: JSON.stringify(data),
     }).then(toComanda),
 
-  definirGorjeta: (id: string, data: { gorjeta: number; professionalId?: string }) =>
+  definirGorjeta: (id: string, data: { valor: number; professionalId: string }) =>
     request<ComandaApiResponse>(`/pos/comandas/${id}/gorjeta`, {
       method: "POST",
       body: JSON.stringify(data),
@@ -139,9 +140,9 @@ export const posApi = {
     }).then(toComanda),
 
   // F08 — resgate de pontos de fidelidade como desconto na comanda.
-  resgatarFidelidade: (id: string, points: number) =>
+  resgatarFidelidade: (id: string, pontos: number) =>
     request<ComandaApiResponse>(`/pos/comandas/${id}/fidelidade/resgatar`, {
       method: "POST",
-      body: JSON.stringify({ points }),
+      body: JSON.stringify({ pontos }),
     }).then(toComanda),
 };
