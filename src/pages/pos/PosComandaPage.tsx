@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Label } from '@/components/ui/label';
 import {
   Dialog,
@@ -73,17 +74,17 @@ export default function PosComandaPage() {
   const [itemTipo, setItemTipo] = useState<ComandaItemTipo>('SERVICO');
   const [itemRef, setItemRef] = useState('');
   const [itemQtd, setItemQtd] = useState('1');
-  const [itemPreco, setItemPreco] = useState('');
+  const [itemPreco, setItemPreco] = useState(0);
   const [itemProfissional, setItemProfissional] = useState('');
   // form: desconto
   const [descontoPercent, setDescontoPercent] = useState('');
   const [descontoMotivo, setDescontoMotivo] = useState('');
   // form: gorjeta
-  const [gorjetaValor, setGorjetaValor] = useState('');
+  const [gorjetaValor, setGorjetaValor] = useState(0);
   const [gorjetaProfissional, setGorjetaProfissional] = useState('');
   // form: pagamento
   const [pagMeio, setPagMeio] = useState<ComandaMeioPagamento>('DINHEIRO');
-  const [pagValor, setPagValor] = useState('');
+  const [pagValor, setPagValor] = useState(0);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -142,7 +143,7 @@ export default function PosComandaPage() {
         tipo: itemTipo,
         referenciaId: itemRef,
         quantidade: Number(itemQtd) || 1,
-        precoUnitario: itemPreco.trim() ? Number(itemPreco.replace(',', '.')) : undefined,
+        precoUnitario: itemPreco > 0 ? itemPreco : undefined,
         professionalId: itemProfissional || undefined,
       })
     );
@@ -150,7 +151,7 @@ export default function PosComandaPage() {
       setItemOpen(false);
       setItemRef('');
       setItemQtd('1');
-      setItemPreco('');
+      setItemPreco(0);
     }
   };
 
@@ -169,7 +170,7 @@ export default function PosComandaPage() {
     if (!id || !gorjetaProfissional) return;
     const okRun = await run(() =>
       posApi.definirGorjeta(id, {
-        valor: Number(gorjetaValor.replace(',', '.')) || 0,
+        valor: gorjetaValor,
         professionalId: gorjetaProfissional,
       })
     );
@@ -192,12 +193,12 @@ export default function PosComandaPage() {
   const registrarPagamento = async () => {
     if (!id) return;
     const okRun = await run(
-      () => posApi.registrarPagamento(id, { meio: pagMeio, valor: Number(pagValor.replace(',', '.')) }),
+      () => posApi.registrarPagamento(id, { meio: pagMeio, valor: pagValor }),
       pagMeio === 'PIX_ASAAS' ? 'Cobranca PIX gerada — aguarde a confirmacao.' : 'Pagamento registrado.'
     );
     if (okRun) {
       setPagamentoOpen(false);
-      setPagValor('');
+      setPagValor(0);
     }
   };
 
@@ -325,7 +326,7 @@ export default function PosComandaPage() {
                         </div>
                         <div className="space-y-1.5">
                           <Label>{itemTipo === 'PRODUTO' ? 'Preco de venda (R$)*' : 'Preco (R$, opcional)'}</Label>
-                          <Input inputMode="decimal" value={itemPreco} onChange={(e) => setItemPreco(e.target.value)} />
+                          <CurrencyInput value={itemPreco} onChange={setItemPreco} />
                         </div>
                       </div>
                       <div className="space-y-1.5">
@@ -430,7 +431,7 @@ export default function PosComandaPage() {
                         <div className="space-y-3">
                           <div className="space-y-1.5">
                             <Label>Valor (R$)</Label>
-                            <Input inputMode="decimal" value={gorjetaValor} onChange={(e) => setGorjetaValor(e.target.value)} />
+                            <CurrencyInput value={gorjetaValor} onChange={setGorjetaValor} />
                           </div>
                           <div className="space-y-1.5">
                             <Label>Profissional*</Label>
@@ -507,16 +508,15 @@ export default function PosComandaPage() {
                         </div>
                         <div className="space-y-1.5">
                           <Label>Valor (R$)</Label>
-                          <Input
-                            inputMode="decimal"
-                            placeholder={faltando > 0 ? String(faltando.toFixed(2)) : ''}
+                          <CurrencyInput
+                            placeholder={faltando > 0 ? faltando.toFixed(2).replace('.', ',') : undefined}
                             value={pagValor}
-                            onChange={(e) => setPagValor(e.target.value)}
+                            onChange={setPagValor}
                           />
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button onClick={registrarPagamento} disabled={busy || !pagValor.trim()}>Registrar</Button>
+                        <Button onClick={registrarPagamento} disabled={busy || !(pagValor > 0)}>Registrar</Button>
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
