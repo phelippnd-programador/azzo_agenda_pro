@@ -2,7 +2,7 @@ import { request } from "./core";
 
 // F01 — comanda / fechamento de conta (POS)
 
-export type ComandaStatus = "ABERTA" | "FECHADA" | "CANCELADA";
+export type ComandaStatus = "ABERTA" | "FECHADA" | "CANCELADA" | "ESTORNADA";
 export type ComandaItemTipo = "SERVICO" | "PRODUTO" | "PACOTE";
 export type ComandaMeioPagamento =
   | "DINHEIRO"
@@ -42,6 +42,9 @@ export type Comanda = {
   gorjeta: number;
   gorjetaProfessionalId?: string | null;
   total: number;
+  cancelMotivo?: string | null;
+  estornoMotivo?: string | null;
+  estornadoEm?: string | null;
   openedAt?: string;
   closedAt?: string | null;
   itens: ComandaItem[];
@@ -135,6 +138,14 @@ export const posApi = {
 
   cancelar: (id: string, motivo: string) =>
     request<ComandaApiResponse>(`/pos/comandas/${id}/cancelar`, {
+      method: "POST",
+      body: JSON.stringify({ motivo }),
+    }).then(toComanda),
+
+  // Estorna uma comanda ja FECHADA: reverte pagamento, estoque, comissao e fidelidade.
+  // Sem volta - a comanda fica ESTORNADA para sempre.
+  estornar: (id: string, motivo: string) =>
+    request<ComandaApiResponse>(`/pos/comandas/${id}/estornar`, {
       method: "POST",
       body: JSON.stringify({ motivo }),
     }).then(toComanda),

@@ -229,6 +229,17 @@ export default function PosComandaPage() {
     if (okRun) navigate('/pos');
   };
 
+  const estornar = async () => {
+    if (!id) return;
+    const motivo = window.prompt(
+      'Motivo do estorno (reverte pagamento, estoque, comissao e fidelidade - sem volta):'
+    );
+    if (!motivo) return;
+    if (!window.confirm('Confirma o estorno desta comanda? Essa acao nao pode ser desfeita.')) return;
+    const okRun = await run(() => posApi.estornar(id, motivo), 'Comanda estornada.');
+    if (okRun) navigate('/pos');
+  };
+
   const copiarPix = (payload: string) => {
     navigator.clipboard.writeText(payload);
     toast.success('Codigo PIX copiado.');
@@ -564,6 +575,23 @@ export default function PosComandaPage() {
                   </Button>
                 )}
               </div>
+            )}
+
+            {comanda.status === 'FECHADA' && isOwner && (
+              <div className="flex flex-col gap-2">
+                <Button variant="outline" className="text-destructive" onClick={estornar} disabled={busy}>
+                  Estornar comanda
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Reverte pagamento, estoque, comissao e fidelidade desta venda. Nao pode ser desfeito.
+                </p>
+              </div>
+            )}
+
+            {comanda.status === 'ESTORNADA' && comanda.estornoMotivo && (
+              <p className="text-xs text-muted-foreground">
+                Estornada em {comanda.estornadoEm ? new Date(comanda.estornadoEm).toLocaleString('pt-BR') : '-'}: {comanda.estornoMotivo}
+              </p>
             )}
           </div>
         </div>
