@@ -57,6 +57,7 @@ export default function OnboardingPage() {
   const [lgpdConsent, setLgpdConsent] = useState(false);
   const [salonValid, setSalonValid] = useState(false);
   const [pendingSalonData, setPendingSalonData] = useState<SalonDraft | null>(null);
+  const [legalVersions, setLegalVersions] = useState<{ termsVersion: string; privacyVersion: string } | null>(null);
 
   const { isLoading: statusLoading } = useQuery({
     queryKey: ["onboarding-status"],
@@ -74,8 +75,8 @@ export default function OnboardingPage() {
   });
 
   const { mutate: acceptTerms, isLoading: acceptingTerms } = useMutation({
-    mutationFn: () =>
-      onboardingApi.acceptTerms({ termsVersion: "1.0", privacyVersion: "1.0" }),
+    mutationFn: (versions: { termsVersion: string; privacyVersion: string }) =>
+      onboardingApi.acceptTerms(versions),
     onError: () => toast.error("Erro ao aceitar os termos. Tente novamente."),
   });
 
@@ -110,7 +111,11 @@ export default function OnboardingPage() {
 
   const handleNext = () => {
     if (currentStep === 0) {
-      acceptTerms(undefined, {
+      if (!legalVersions) {
+        toast.error("Não foi possível carregar a versão dos termos. Recarregue a página e tente novamente.");
+        return;
+      }
+      acceptTerms(legalVersions, {
         onSuccess: () => {
           const next = 1;
           store.setStep(next);
@@ -235,6 +240,7 @@ export default function OnboardingPage() {
                 lgpdConsent={lgpdConsent}
                 onReadComplete={setTermsRead}
                 onLgpdConsent={setLgpdConsent}
+                onVersionsLoaded={setLegalVersions}
               />
             )}
             {currentStep === 1 && (

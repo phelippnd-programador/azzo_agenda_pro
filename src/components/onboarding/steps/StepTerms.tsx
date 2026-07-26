@@ -1,11 +1,15 @@
-import { useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
+import { LegalDocumentDialog } from "@/components/register/LegalDocumentDialog";
+import { publicLegalApi } from "@/lib/api/legal";
+import type { LegalDocumentResponse, TermsDocumentType } from "@/types/terms";
 
 type StepTermsProps = {
   onReadComplete: (complete: boolean) => void;
   onLgpdConsent: (consent: boolean) => void;
+  onVersionsLoaded: (versions: { termsVersion: string; privacyVersion: string } | null) => void;
   termsRead: boolean;
   lgpdConsent: boolean;
 };
@@ -13,17 +17,64 @@ type StepTermsProps = {
 export function StepTerms({
   onReadComplete,
   onLgpdConsent,
+  onVersionsLoaded,
   termsRead,
   lgpdConsent,
 }: StepTermsProps) {
   const [scrolledToEnd, setScrolledToEnd] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [termsOfUseVersion, setTermsOfUseVersion] = useState("");
+  const [privacyPolicyVersion, setPrivacyPolicyVersion] = useState("");
+  const [versionsError, setVersionsError] = useState(false);
+
+  const [isLegalOpen, setIsLegalOpen] = useState(false);
+  const [legalType, setLegalType] = useState<TermsDocumentType>("TERMS_OF_USE");
+  const [legalDocument, setLegalDocument] = useState<LegalDocumentResponse | null>(null);
+  const [isLoadingLegal, setIsLoadingLegal] = useState(false);
+  const [legalError, setLegalError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadLegalVersions = async () => {
+      try {
+        const legal = await publicLegalApi.getAll();
+        const terms = legal.termsOfUse?.version || "";
+        const privacy = legal.privacyPolicy?.version || "";
+        setTermsOfUseVersion(terms);
+        setPrivacyPolicyVersion(privacy);
+        setVersionsError(false);
+        onVersionsLoaded(terms && privacy ? { termsVersion: terms, privacyVersion: privacy } : null);
+      } catch {
+        setVersionsError(true);
+        onVersionsLoaded(null);
+      }
+    };
+    void loadLegalVersions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     if (scrolledToEnd) return;
     const el = e.currentTarget;
     const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
     if (atBottom) setScrolledToEnd(true);
+  };
+
+  const openLegalDialog = async (type: TermsDocumentType) => {
+    try {
+      setIsLegalOpen(true);
+      setIsLoadingLegal(true);
+      setLegalError(null);
+      setLegalType(type);
+      const data =
+        type === "PRIVACY_POLICY"
+          ? await publicLegalApi.getPrivacyPolicy()
+          : await publicLegalApi.getTermsOfUse();
+      setLegalDocument(data);
+    } catch {
+      setLegalError("Nao foi possivel carregar o documento.");
+      setLegalDocument(null);
+    } finally {
+      setIsLoadingLegal(false);
+    }
   };
 
   return (
@@ -41,7 +92,7 @@ export function StepTerms({
           className="h-48 rounded-md border p-4"
           onScrollCapture={handleScroll}
         >
-          <div ref={scrollRef} className="space-y-3 text-sm text-muted-foreground pr-2">
+          <div className="space-y-3 text-sm text-muted-foreground pr-2">
             <p>
               Ao utilizar o Azzo Agenda Pro, você concorda com nossos Termos de Uso e Política de Privacidade. Leia atentamente as condições abaixo antes de prosseguir.
             </p>
@@ -66,15 +117,7 @@ export function StepTerms({
               Você pode cancelar o uso do serviço a qualquer momento. Após o cancelamento, seus dados serão mantidos por 90 dias e então excluídos permanentemente.
             </p>
             <p>
-              Para ler a versão completa dos nossos termos, acesse{" "}
-              <a
-                href="/termos-de-uso"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary underline"
-              >
-                /termos-de-uso
-              </a>.
+              Este é um resumo. Para ler a versão completa e vigente, use os links abaixo.
             </p>
           </div>
         </ScrollArea>
@@ -84,6 +127,11 @@ export function StepTerms({
             Role até o final para habilitar a confirmação.
           </p>
         )}
+        {versionsError && (
+          <p className="text-xs text-destructive">
+            Não foi possível carregar a versão vigente dos termos. Recarregue a página antes de continuar.
+          </p>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -91,7 +139,7 @@ export function StepTerms({
           <Checkbox
             id="terms-accept"
             checked={termsRead}
-            disabled={!scrolledToEnd}
+            disabled={!scrolledToEnd || !termsOfUseVersion || !privacyPolicyVersion}
             onCheckedChange={(checked) => onReadComplete(Boolean(checked))}
           />
           <Label
@@ -99,13 +147,21 @@ export function StepTerms({
             className={`text-sm leading-relaxed cursor-pointer ${!scrolledToEnd ? "text-muted-foreground" : ""}`}
           >
             Li e aceito os{" "}
-            <a href="/termos-de-uso" target="_blank" rel="noopener noreferrer" className="text-primary underline">
-              Termos de Uso
-            </a>{" "}
+            <button
+              type="button"
+              onClick={() => void openLegalDialog("TERMS_OF_USE")}
+              className="text-primary underline"
+            >
+              Termos de Uso{termsOfUseVersion ? ` (v${termsOfUseVersion})` : ""}
+            </button>{" "}
             e a{" "}
-            <a href="/politica-privacidade" target="_blank" rel="noopener noreferrer" className="text-primary underline">
-              Política de Privacidade
-            </a>
+            <button
+              type="button"
+              onClick={() => void openLegalDialog("PRIVACY_POLICY")}
+              className="text-primary underline"
+            >
+              Política de Privacidade{privacyPolicyVersion ? ` (v${privacyPolicyVersion})` : ""}
+            </button>
           </Label>
         </div>
 
@@ -120,6 +176,15 @@ export function StepTerms({
           </Label>
         </div>
       </div>
+
+      <LegalDocumentDialog
+        open={isLegalOpen}
+        onOpenChange={setIsLegalOpen}
+        legalType={legalType}
+        legalDocument={legalDocument}
+        isLoadingLegal={isLoadingLegal}
+        legalError={legalError}
+      />
     </div>
   );
 }
