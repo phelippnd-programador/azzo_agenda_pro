@@ -62,7 +62,10 @@ const ROUTE_ALIASES: Record<string, string> = {
 // Rotas sempre acessiveis para qualquer usuario autenticado.
 // "/perfil-usuario" e o proprio perfil do usuario logado (nao e item de menu,
 // e alcancado pelo menu de conta no header), portanto nao depende de permissao.
-const ALWAYS_ALLOWED_ROUTES = ["/unauthorized", "/financeiro/licenca", "/perfil-usuario"];
+// "/onboarding" e o passo a passo inicial (profissionais/servicos), alcancado
+// pelo botao "Configurar agora" do banner do dashboard, tambem nao e item de
+// menu e nao deve depender do catalogo de menus configurado.
+const ALWAYS_ALLOWED_ROUTES = ["/unauthorized", "/financeiro/licenca", "/perfil-usuario", "/onboarding"];
 function normalizeRoute(route: string): string {
   const trimmed = route.trim();
   return ROUTE_ALIASES[trimmed] ?? trimmed;
