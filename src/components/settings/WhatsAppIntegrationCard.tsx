@@ -47,9 +47,27 @@ import {
 import { TemplateEditor } from "@/components/settings/whatsapp-integration/TemplateEditor";
 import { getEnv } from "@/config/env";
 
+/**
+ * Meta e a opcao recomendada (onboarding rapido via Embedded Signup) e fica
+ * selecionada por padrao quando disponivel. So volta pro "Cloud API guiado"
+ * se o tenant ja tiver uma conexao manual configurada (nao pisa em cima do
+ * que a pessoa ja fez ali).
+ */
+function resolveSetupMode(
+  embeddedEnabled: boolean,
+  config: WhatsAppConfigResponse,
+  embedded: WhatsAppEmbeddedSignupStatusResponse
+): SetupMode {
+  if (!embeddedEnabled) return "wizard";
+  const tokenSource = embedded.tokenSource || config.tokenSource || "MANUAL";
+  const isTokenConfigured = Boolean(embedded.accessTokenConfigured || config.accessTokenConfigured);
+  const jaConectadoViaWizard = tokenSource === "MANUAL" && isTokenConfigured;
+  return jaConectadoViaWizard ? "wizard" : "meta";
+}
+
 export function WhatsAppIntegrationCard() {
   const queryClient = useQueryClient();
-  const [setupMode, setSetupMode] = useState<SetupMode>("wizard");
+  const [setupMode, setSetupMode] = useState<SetupMode>("meta");
   const [currentStep, setCurrentStep] = useState(1);
   const [activateIntegration, setActivateIntegration] = useState(false);
   const [usageProfile, setUsageProfile] = useState<import("@/lib/api/whatsapp").WhatsAppUsageProfile>("COMPLETE");
@@ -142,7 +160,7 @@ export function WhatsAppIntegrationCard() {
 
         setConfigStatus(config);
         setEmbeddedStatus(embedded);
-        setSetupMode(embeddedEnabled && tokenSource === "EMBEDDED_CODE_EXCHANGE" ? "meta" : "wizard");
+        setSetupMode(resolveSetupMode(embeddedEnabled, config, embedded));
         setActivateIntegration(Boolean(config.whatsappEnabled));
         setUsageProfile((config.usageProfile as import("@/lib/api/whatsapp").WhatsAppUsageProfile) ?? "COMPLETE");
         setCanSchedule(config.canSchedule ?? true);
@@ -219,7 +237,7 @@ export function WhatsAppIntegrationCard() {
 
     setConfigStatus(config);
     setEmbeddedStatus(embedded);
-    setSetupMode(embeddedEnabled && tokenSource === "EMBEDDED_CODE_EXCHANGE" ? "meta" : "wizard");
+    setSetupMode(resolveSetupMode(embeddedEnabled, config, embedded));
     setActivateIntegration(Boolean(config.whatsappEnabled));
     setUsageProfile((config.usageProfile as import("@/lib/api/whatsapp").WhatsAppUsageProfile) ?? "COMPLETE");
     setCanSchedule(config.canSchedule ?? true);
@@ -716,7 +734,7 @@ export function WhatsAppIntegrationCard() {
               Integracao WhatsApp
             </CardTitle>
             <CardDescription className="mt-1">
-              Fluxo guiado para conectar o WhatsApp Cloud API por tenant, com validacao, persistencia e teste de envio.
+              Conecte o WhatsApp do seu tenant: login rapido com a Meta (recomendado) ou o passo a passo manual da Cloud API.
             </CardDescription>
           </div>
           {isConnected ? (
@@ -753,13 +771,9 @@ export function WhatsAppIntegrationCard() {
         ) : embeddedSignupEnabled ? (
           <Tabs value={setupMode} onValueChange={(value) => setSetupMode(value as SetupMode)} className="space-y-4">
             <TabsList data-tour="whatsapp-setup-tabs" className="grid h-auto w-full grid-cols-2 gap-2">
+              <TabsTrigger value="meta">Meta (recomendado)</TabsTrigger>
               <TabsTrigger value="wizard">Cloud API guiado</TabsTrigger>
-              <TabsTrigger value="meta">Meta</TabsTrigger>
             </TabsList>
-
-            <TabsContent value="wizard" className="space-y-4">
-              {renderWizard()}
-            </TabsContent>
 
             <TabsContent value="meta" className="space-y-4">
               <div className="rounded-xl border border-dashed bg-muted/30 p-4">
@@ -767,7 +781,7 @@ export function WhatsAppIntegrationCard() {
                   <div className="space-y-1">
                     <p className="text-sm font-medium">Conectar com a Meta</p>
                     <p className="text-xs text-muted-foreground">
-                      Fluxo futuro de Embedded Signup. O onboarding guiado da Cloud API continua disponivel na aba ao lado.
+                      Forma mais rapida de conectar: faca login com a conta da Meta e autorize o WhatsApp Business em poucos cliques. Prefere configurar manualmente? Use a aba "Cloud API guiado".
                     </p>
                   </div>
                   <Button
@@ -815,6 +829,10 @@ export function WhatsAppIntegrationCard() {
                   </p>
                 </div>
               </div>
+            </TabsContent>
+
+            <TabsContent value="wizard" className="space-y-4">
+              {renderWizard()}
             </TabsContent>
           </Tabs>
         ) : (
