@@ -35,6 +35,7 @@ import { StepAssignments } from "@/components/onboarding/steps/StepAssignments";
 import { StepOptional } from "@/components/onboarding/steps/StepOptional";
 import { StepDone } from "@/components/onboarding/steps/StepDone";
 import { onboardingApi } from "@/lib/api/onboarding";
+import { salonApi } from "@/lib/api/salon";
 import { useOnboardingStore } from "@/stores/onboarding";
 import { appRouteManifest } from "@/app/route-manifest";
 import type { SalonDraft } from "@/stores/onboarding";
@@ -58,6 +59,26 @@ export default function OnboardingPage() {
   const [salonValid, setSalonValid] = useState(false);
   const [pendingSalonData, setPendingSalonData] = useState<SalonDraft | null>(null);
   const [legalVersions, setLegalVersions] = useState<{ termsVersion: string; privacyVersion: string } | null>(null);
+
+  const { data: salonProfile } = useQuery({
+    queryKey: ["onboarding-salon-prefill"],
+    queryFn: salonApi.getProfile,
+    retry: false,
+    enabled: !store.salonData,
+  });
+
+  const salonInitialData: SalonDraft | null =
+    store.salonData ??
+    (salonProfile
+      ? {
+          name: salonProfile.salonName || "",
+          type: "",
+          phone: salonProfile.salonPhone || "",
+          city: salonProfile.city || "",
+          state: salonProfile.state || "",
+          email: salonProfile.salonEmail || "",
+        }
+      : null);
 
   const { isLoading: statusLoading } = useQuery({
     queryKey: ["onboarding-status"],
@@ -245,7 +266,7 @@ export default function OnboardingPage() {
             )}
             {currentStep === 1 && (
               <StepSalon
-                initialData={store.salonData}
+                initialData={salonInitialData}
                 onValidityChange={setSalonValid}
                 onDataChange={handleSalonDataChange}
               />
