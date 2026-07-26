@@ -69,6 +69,8 @@ interface ProfessionalFormDialogProps {
   refetchSpecialties: () => void;
   onCreate: (data: FormPayload) => Promise<unknown>;
   onUpdate: (id: string, data: Partial<FormPayload>) => Promise<unknown>;
+  /** Limite de profissionais do plano ja atingido — bloqueia apenas a criacao (edicao continua liberada). */
+  creationLimitReached?: boolean;
 }
 
 export function ProfessionalFormDialog({
@@ -82,6 +84,7 @@ export function ProfessionalFormDialog({
   refetchSpecialties,
   onCreate,
   onUpdate,
+  creationLimitReached = false,
 }: ProfessionalFormDialogProps) {
   const { user } = useAuth();
   const [formName, setFormName] = useState('');
@@ -152,6 +155,10 @@ export function ProfessionalFormDialog({
   };
 
   const handleSubmit = async () => {
+    if (!editingProfessional && creationLimitReached) {
+      toast.error('Limite de profissionais do seu plano atingido. Faca upgrade para adicionar mais.');
+      return;
+    }
     if (linkCurrentUser && hasLinkedCurrentUserProfessional) {
       toast.error('Seu usuario ja esta vinculado a um profissional.');
       return;
@@ -385,7 +392,11 @@ export function ProfessionalFormDialog({
         </DialogBody>
         <DialogStickyFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting || (!editingProfessional && creationLimitReached)}
+            title={!editingProfessional && creationLimitReached ? 'Limite de profissionais do seu plano atingido' : undefined}
+          >
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

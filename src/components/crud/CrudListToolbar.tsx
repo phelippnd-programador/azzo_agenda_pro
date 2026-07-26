@@ -16,6 +16,8 @@ type CrudListToolbarProps = {
   actionIcon?: LucideIcon;
   actionLabelMobile?: string;
   actionLabelDesktop?: string;
+  actionDisabled?: boolean;
+  actionDisabledReason?: string;
   searchMaxWidthClassName?: string;
 };
 
@@ -32,6 +34,8 @@ export function CrudListToolbar({
   actionIcon: ActionIcon = Plus,
   actionLabelMobile,
   actionLabelDesktop,
+  actionDisabled = false,
+  actionDisabledReason,
   searchMaxWidthClassName = "max-w-md",
 }: CrudListToolbarProps) {
   const mobileActionLabel = actionLabelMobile || actionLabel;
@@ -78,7 +82,9 @@ export function CrudListToolbar({
           <Button
             className="h-10 w-full gap-2 sm:w-auto"
             onClick={onAction}
+            disabled={actionDisabled}
             aria-label={desktopActionLabel}
+            title={actionDisabled ? actionDisabledReason : undefined}
           >
             <ActionIcon className="h-4 w-4" />
             <span className="sm:hidden">{mobileActionLabel}</span>
