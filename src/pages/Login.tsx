@@ -155,6 +155,11 @@ export default function Login() {
         }
       }
 
+      // Uma nova tentativa de login nunca deve herdar o status de bloqueio
+      // (BLOCKED) de uma sessao/tenant anterior na mesma aba — sessionStorage
+      // persiste entre reloads, entao sem isso um usuario cujo pagamento
+      // acabou de ser regularizado ficaria travado no login ate fechar a aba.
+      setLicenseAccessStatus("UNKNOWN");
       await login(values.email, values.password, mfaRequired ? mfaCode : undefined);
       toast.success('Login realizado com sucesso!');
       setMfaRequired(false);

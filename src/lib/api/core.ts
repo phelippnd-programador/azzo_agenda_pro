@@ -98,6 +98,7 @@ const ALLOWED_ENDPOINT_PREFIXES_WHEN_PLAN_BLOCKED = [
   "/billing/subscriptions",
   "/billing/payments",
   "/checkout/products",
+  "/auth/login",
   "/auth/me",
   "/auth/logout",
   "/config/menus/current",
