@@ -327,7 +327,12 @@ export const request = async <T>(
   }
 
   if (response.status === 204) return {} as T;
-  return response.json() as Promise<T>;
+  // Alguns endpoints (ex.: /onboarding/accept-terms) respondem 200 sem corpo
+  // (Response.ok().build() no backend). response.json() em corpo vazio lanca
+  // SyntaxError, fazendo uma chamada bem-sucedida cair no onError do caller.
+  const text = await response.text();
+  if (!text) return {} as T;
+  return JSON.parse(text) as T;
 };
 
 export const requestBlob = async (
