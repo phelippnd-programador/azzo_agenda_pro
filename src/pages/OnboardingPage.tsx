@@ -36,15 +36,18 @@ import { StepOptional } from "@/components/onboarding/steps/StepOptional";
 import { StepDone } from "@/components/onboarding/steps/StepDone";
 import { onboardingApi } from "@/lib/api/onboarding";
 import { salonApi } from "@/lib/api/salon";
+import { servicesApi } from "@/lib/api/services";
+import { professionalsApi } from "@/lib/api/professionals";
+import { resolveUiError } from "@/lib/error-utils";
 import { useOnboardingStore } from "@/stores/onboarding";
 import { appRouteManifest } from "@/app/route-manifest";
-import type { SalonDraft } from "@/stores/onboarding";
+import type { ProfessionalDraft, SalonDraft, ServiceDraft } from "@/stores/onboarding";
 
 const STEPS = [
   { index: 0, label: "Termos de uso", icon: FileText },
   { index: 1, label: "Seu salão", icon: Store },
-  { index: 2, label: "Profissionais", icon: UserCircle2 },
-  { index: 3, label: "Serviços", icon: Scissors },
+  { index: 2, label: "Serviços", icon: Scissors },
+  { index: 3, label: "Profissionais", icon: UserCircle2 },
   { index: 4, label: "Atribuições", icon: LayoutGrid },
   { index: 5, label: "Extras", icon: Settings },
   { index: 6, label: "Pronto!", icon: PartyPopper },
@@ -59,6 +62,7 @@ export default function OnboardingPage() {
   const [salonValid, setSalonValid] = useState(false);
   const [pendingSalonData, setPendingSalonData] = useState<SalonDraft | null>(null);
   const [legalVersions, setLegalVersions] = useState<{ termsVersion: string; privacyVersion: string } | null>(null);
+  const [savingSalon, setSavingSalon] = useState(false);
 
   const { data: salonProfile } = useQuery({
     queryKey: ["onboarding-salon-prefill"],
@@ -129,12 +133,18 @@ export default function OnboardingPage() {
   const canAdvance = (() => {
     if (currentStep === 0) return termsRead;
     if (currentStep === 1) return salonValid;
-    if (currentStep === 2) return store.professionals.length > 0;
-    if (currentStep === 3) return store.services.length > 0;
+    if (currentStep === 2) return store.services.length > 0;
+    if (currentStep === 3) return store.professionals.length > 0;
     return true;
   })();
 
-  const handleNext = () => {
+  const advanceStep = () => {
+    const next = currentStep + 1;
+    store.setStep(next);
+    updateStep(next);
+  };
+
+  const handleNext = async () => {
     if (currentStep === 0) {
       if (!legalVersions) {
         toast.error("Não foi possível carregar a versão dos termos. Recarregue a página e tente novamente.");
@@ -151,12 +161,90 @@ export default function OnboardingPage() {
     }
 
     if (currentStep === 1 && pendingSalonData) {
-      store.setSalonData(pendingSalonData);
+      setSavingSalon(true);
+      try {
+        await salonApi.updateProfile({
+          salonName: pendingSalonData.name,
+          salonPhone: pendingSalonData.phone,
+          salonEmail: pendingSalonData.email,
+          city: pendingSalonData.city,
+          state: pendingSalonData.state,
+        });
+        store.setSalonData(pendingSalonData);
+      } catch (error) {
+        toast.error(resolveUiError(error, "Não foi possível salvar os dados do salão. Tente novamente.").message);
+        return;
+      } finally {
+        setSavingSalon(false);
+      }
     }
 
-    const next = currentStep + 1;
-    store.setStep(next);
-    updateStep(next);
+    advanceStep();
+  };
+
+  const handleServiceAdd = async (draft: ServiceDraft) => {
+    const created = await servicesApi.create({
+      name: draft.name,
+      description: draft.description,
+      duration: draft.durationMinutes,
+      price: draft.price,
+      category: draft.category,
+      professionalIds: [],
+      isActive: true,
+    });
+    store.addService({
+      id: created.id,
+      name: created.name,
+      durationMinutes: created.duration,
+      price: created.price,
+      description: created.description,
+      category: created.category,
+      professionalIds: created.professionalIds ?? [],
+    });
+  };
+
+  const handleServiceRemove = async (index: number) => {
+    const service = store.services[index];
+    if (service?.id) {
+      await servicesApi.delete(service.id);
+    }
+    store.removeService(index);
+  };
+
+  const handleProfessionalAdd = async (draft: ProfessionalDraft) => {
+    const created = await professionalsApi.create({
+      name: draft.name,
+      email: draft.email,
+      phone: draft.phone,
+      specialties: draft.specialties,
+      workingHours: draft.workingHours,
+      isActive: true,
+      commissionRate: 0,
+      createUser: true,
+    });
+    store.addProfessional({
+      id: created.id,
+      name: created.name,
+      email: created.email,
+      phone: created.phone,
+      specialties: created.specialties ?? [],
+      workingHours: created.workingHours ?? draft.workingHours,
+    });
+  };
+
+  const handleProfessionalRemove = async (index: number) => {
+    const professional = store.professionals[index];
+    if (professional?.id) {
+      await professionalsApi.delete(professional.id);
+    }
+    store.removeProfessional(index);
+  };
+
+  const handleServiceProfessionalsChange = async (serviceIndex: number, professionalIds: string[]) => {
+    const service = store.services[serviceIndex];
+    if (!service?.id) return;
+    const updated = await servicesApi.update(service.id, { professionalIds });
+    store.updateService(serviceIndex, { ...service, professionalIds: updated.professionalIds ?? professionalIds });
   };
 
   const handleBack = () => {
@@ -276,26 +364,25 @@ export default function OnboardingPage() {
               />
             )}
             {currentStep === 2 && (
-              <StepProfessionals
-                professionals={store.professionals}
-                onAdd={store.addProfessional}
-                onRemove={store.removeProfessional}
-              />
-            )}
-            {currentStep === 3 && (
               <StepServices
                 services={store.services}
                 businessType={store.salonData?.type}
-                onAdd={store.addService}
-                onRemove={store.removeService}
+                onAdd={handleServiceAdd}
+                onRemove={handleServiceRemove}
+              />
+            )}
+            {currentStep === 3 && (
+              <StepProfessionals
+                professionals={store.professionals}
+                onAdd={handleProfessionalAdd}
+                onRemove={handleProfessionalRemove}
               />
             )}
             {currentStep === 4 && (
               <StepAssignments
                 professionals={store.professionals}
                 services={store.services}
-                assignments={store.assignments}
-                onAssignmentsChange={store.setAssignments}
+                onServiceProfessionalsChange={handleServiceProfessionalsChange}
               />
             )}
             {currentStep === 5 && <StepOptional />}
@@ -336,10 +423,10 @@ export default function OnboardingPage() {
 
                 <Button
                   onClick={handleNext}
-                  disabled={!canAdvance || acceptingTerms}
+                  disabled={!canAdvance || acceptingTerms || savingSalon}
                   className="w-36"
                 >
-                  {acceptingTerms ? (
+                  {acceptingTerms || savingSalon ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}
                   {currentStep === 5 ? "Finalizar" : "Próxima etapa"}
