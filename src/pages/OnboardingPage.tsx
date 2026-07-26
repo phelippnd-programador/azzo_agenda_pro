@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
@@ -67,18 +67,22 @@ export default function OnboardingPage() {
     enabled: !store.salonData,
   });
 
-  const salonInitialData: SalonDraft | null =
-    store.salonData ??
-    (salonProfile
-      ? {
-          name: salonProfile.salonName || "",
-          type: "",
-          phone: salonProfile.salonPhone || "",
-          city: salonProfile.city || "",
-          state: salonProfile.state || "",
-          email: salonProfile.salonEmail || "",
-        }
-      : null);
+  // Memoizado: um objeto novo a cada render faria o efeito de pre-preenchimento
+  // do StepSalon (dependente de initialData por referencia) disparar de novo a
+  // cada render, chamando reset() -> watch() -> setPendingSalonData no pai ->
+  // novo render -> novo objeto aqui -> loop infinito (React error #185).
+  const salonInitialData: SalonDraft | null = useMemo(() => {
+    if (store.salonData) return store.salonData;
+    if (!salonProfile) return null;
+    return {
+      name: salonProfile.salonName || "",
+      type: "",
+      phone: salonProfile.salonPhone || "",
+      city: salonProfile.city || "",
+      state: salonProfile.state || "",
+      email: salonProfile.salonEmail || "",
+    };
+  }, [store.salonData, salonProfile]);
 
   const { isLoading: statusLoading } = useQuery({
     queryKey: ["onboarding-status"],
