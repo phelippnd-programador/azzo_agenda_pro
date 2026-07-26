@@ -7,6 +7,7 @@ type StateAction = {
   label: string;
   onClick: () => void;
   variant?: "default" | "outline";
+  disabled?: boolean;
 };
 
 type PageStateProps = {
@@ -44,7 +45,12 @@ export function PageEmptyState({ title, description, action }: PageStateProps) {
         <p className="text-base font-semibold text-foreground">{title}</p>
         <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-muted-foreground">{description}</p>
         {action ? (
-          <Button className="mt-4" variant={action.variant ?? "default"} onClick={action.onClick}>
+          <Button
+            className="mt-4"
+            variant={action.variant ?? "default"}
+            onClick={action.onClick}
+            disabled={action.disabled}
+          >
             {action.label}
           </Button>
         ) : null}

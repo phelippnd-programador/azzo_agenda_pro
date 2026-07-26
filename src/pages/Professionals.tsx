@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -76,6 +77,7 @@ export default function Professionals() {
     );
   });
   const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.limit));
+  const limitReached = !!professionalLimits && professionalLimits.remaining <= 0;
   const canAccessFinancialCommissions = canAccess('/financeiro/comissoes');
   const hasLinkedCurrentUserProfessional = professionals.some((professional) => professional.userId === user?.id);
   const activeProfessionalsCount = professionals.filter((professional) => professional.isActive).length;
@@ -83,6 +85,15 @@ export default function Professionals() {
 
   const openEditDialog = (prof: ProfessionalData) => {
     setEditingProfessional(prof);
+    setIsDialogOpen(true);
+  };
+
+  const openCreateDialog = () => {
+    if (limitReached) {
+      toast.error('Limite de profissionais do seu plano atingido. Faca upgrade para adicionar mais.');
+      return;
+    }
+    setEditingProfessional(null);
     setIsDialogOpen(true);
   };
 
@@ -236,10 +247,9 @@ export default function Professionals() {
           actionLabelMobile="Novo"
           actionLabelDesktop="Novo profissional"
           actionIcon={Plus}
-          onAction={() => {
-            setEditingProfessional(null);
-            setIsDialogOpen(true);
-          }}
+          actionDisabled={limitReached}
+          actionDisabledReason="Limite de profissionais do seu plano atingido"
+          onAction={openCreateDialog}
         />
 
         {filteredProfessionals.length === 0 ? (
@@ -257,10 +267,10 @@ export default function Professionals() {
                   setSearchTerm('');
                   return;
                 }
-                setEditingProfessional(null);
-                setIsDialogOpen(true);
+                openCreateDialog();
               },
               variant: searchTerm ? "outline" : "default",
+              disabled: !searchTerm && limitReached,
             }}
           />
         ) : (
@@ -417,6 +427,7 @@ export default function Professionals() {
         onOpenChange={handleDialogOpenChange}
         editingProfessional={editingProfessional}
         hasLinkedCurrentUserProfessional={hasLinkedCurrentUserProfessional}
+        creationLimitReached={limitReached}
         specialties={specialties}
         isLoadingSpecialties={isLoadingSpecialties}
         specialtiesError={specialtiesError}
