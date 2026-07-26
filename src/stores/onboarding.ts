@@ -1,19 +1,20 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type DayOfWeek = "SEG" | "TER" | "QUA" | "QUI" | "SEX" | "SAB" | "DOM";
-
-export type BusinessHoursDraft = {
-  day: DayOfWeek;
+export type WorkingHoursDraft = {
+  dayOfWeek: number;
   startTime: string;
   endTime: string;
+  isWorking: boolean;
 };
 
 export type ProfessionalDraft = {
   id?: string;
   name: string;
-  role: string;
-  businessHours: BusinessHoursDraft[];
+  email: string;
+  phone: string;
+  specialties: string[];
+  workingHours: WorkingHoursDraft[];
 };
 
 export type ServiceDraft = {
@@ -22,6 +23,8 @@ export type ServiceDraft = {
   durationMinutes: number;
   price: number;
   description?: string;
+  category: string;
+  professionalIds: string[];
 };
 
 export type SalonDraft = {
@@ -39,7 +42,6 @@ type OnboardingStore = {
   salonData: SalonDraft | null;
   professionals: ProfessionalDraft[];
   services: ServiceDraft[];
-  assignments: Record<string, string[]>;
   setStep: (step: number) => void;
   setSalonData: (data: SalonDraft) => void;
   addProfessional: (p: ProfessionalDraft) => void;
@@ -48,7 +50,6 @@ type OnboardingStore = {
   addService: (s: ServiceDraft) => void;
   updateService: (index: number, s: ServiceDraft) => void;
   removeService: (index: number) => void;
-  setAssignments: (assignments: Record<string, string[]>) => void;
   reset: () => void;
 };
 
@@ -57,7 +58,6 @@ const initialState = {
   salonData: null,
   professionals: [],
   services: [],
-  assignments: {},
 };
 
 export const useOnboardingStore = create<OnboardingStore>()(
@@ -90,7 +90,6 @@ export const useOnboardingStore = create<OnboardingStore>()(
         set((state) => ({
           services: state.services.filter((_, i) => i !== index),
         })),
-      setAssignments: (assignments) => set({ assignments }),
       reset: () => set(initialState),
     }),
     {
