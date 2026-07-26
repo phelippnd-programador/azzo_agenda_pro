@@ -94,6 +94,15 @@ export const useOnboardingStore = create<OnboardingStore>()(
     }),
     {
       name: "azzo:onboarding:draft",
+      // v2: ServiceDraft/ProfessionalDraft mudaram de forma (category/
+      // professionalIds; email/phone/specialties/workingHours) para bater
+      // com o cadastro real. Rascunhos salvos com a forma antiga quebravam
+      // as novas telas (ex.: p.specialties.map em profissional sem esse
+      // campo) ao avancar de etapa. Como esses dados nunca foram
+      // persistidos de verdade no backend (o wizard antigo nao chamava
+      // nenhuma API real), e seguro descartar e comecar do zero.
+      version: 2,
+      migrate: () => ({ ...initialState }),
     }
   )
 );
