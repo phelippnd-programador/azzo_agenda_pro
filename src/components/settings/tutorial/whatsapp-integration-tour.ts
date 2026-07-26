@@ -41,7 +41,7 @@ export const WHATSAPP_INTEGRATION_TOUR = registerTour({
       route: "/configuracoes/integracoes/whatsapp",
       target: '[data-tour="whatsapp-setup-tabs"]',
       title: "Duas formas de conectar",
-      content: '"Cloud API guiado" e o passo a passo manual (recomendado). "Meta" e um fluxo mais rapido via Embedded Signup, quando disponivel para o seu tenant.',
+      content: '"Meta" e a forma recomendada: login com a conta da Meta e autorizacao em poucos cliques, quando disponivel para o seu tenant. "Cloud API guiado" e o passo a passo manual, para quem prefere configurar campo a campo.',
       placement: "bottom",
     },
     {
