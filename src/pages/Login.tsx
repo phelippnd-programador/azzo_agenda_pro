@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { getCurrentBillingSubscription } from '@/services/billingService';
 import { ApiError } from '@/lib/api/core';
 import { authApi } from '@/lib/api/auth';
+import { onboardingApi } from '@/lib/api/onboarding';
 import { resolveUiError } from '@/lib/error-utils';
 import { setLicenseAccessStatus } from '@/lib/license-access';
 import { loginSchema, type LoginForm } from '@/schemas/auth';
@@ -120,6 +121,16 @@ export default function Login() {
       setLicenseAccessStatus("ACTIVE");
       if (currentUser?.role === "PROFESSIONAL") {
         return "/agenda";
+      }
+      if (currentUser?.role === "OWNER") {
+        try {
+          const onboardingStatus = await onboardingApi.getStatus();
+          if (!onboardingStatus.onboardingComplete && !onboardingStatus.onboardingSkipped) {
+            return "/onboarding";
+          }
+        } catch {
+          // Se o status nao puder ser consultado, segue para o dashboard normalmente.
+        }
       }
       return '/dashboard';
     } catch (error) {
