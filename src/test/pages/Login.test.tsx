@@ -12,6 +12,18 @@ const mocks = vi.hoisted(() => ({
     licenseStatus: "ACTIVE",
     currentPaymentStatus: "PAID",
   }),
+  getOnboardingStatus: vi.fn().mockResolvedValue({
+    onboardingComplete: true,
+    onboardingSkipped: false,
+    currentStep: 6,
+    hasProfessionals: true,
+    hasServices: true,
+    hasAssignments: true,
+    hasBusinessHours: true,
+    termsAccepted: true,
+    termsVersion: "1.0",
+    completedAt: "2026-01-01T00:00:00Z",
+  }),
   navigate: vi.fn(),
 }));
 
@@ -44,6 +56,17 @@ vi.mock("@/lib/api/auth", async () => {
   };
 });
 
+vi.mock("@/lib/api/onboarding", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/api/onboarding")>("@/lib/api/onboarding");
+  return {
+    ...actual,
+    onboardingApi: {
+      ...actual.onboardingApi,
+      getStatus: mocks.getOnboardingStatus,
+    },
+  };
+});
+
 vi.mock("sonner", () => ({
   toast: {
     success: vi.fn(),
@@ -61,6 +84,18 @@ describe("Login", () => {
       status: "ACTIVE",
       licenseStatus: "ACTIVE",
       currentPaymentStatus: "PAID",
+    });
+    mocks.getOnboardingStatus.mockResolvedValue({
+      onboardingComplete: true,
+      onboardingSkipped: false,
+      currentStep: 6,
+      hasProfessionals: true,
+      hasServices: true,
+      hasAssignments: true,
+      hasBusinessHours: true,
+      termsAccepted: true,
+      termsVersion: "1.0",
+      completedAt: "2026-01-01T00:00:00Z",
     });
   });
 
@@ -168,6 +203,66 @@ describe("Login", () => {
 
     expect(mocks.login).toHaveBeenCalledWith("prof@qa.local", "Pr14052019!", undefined);
     expect(mocks.navigate).toHaveBeenCalledWith("/agenda");
+  });
+
+  it("should redirect owner to onboarding when it is not complete nor skipped", async () => {
+    const user = userEvent.setup();
+    mocks.getOnboardingStatus.mockResolvedValue({
+      onboardingComplete: false,
+      onboardingSkipped: false,
+      currentStep: 0,
+      hasProfessionals: false,
+      hasServices: false,
+      hasAssignments: false,
+      hasBusinessHours: false,
+      termsAccepted: false,
+      termsVersion: null,
+      completedAt: null,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/login"]}>
+        <Login />
+      </MemoryRouter>
+    );
+
+    await user.type(screen.getByLabelText("E-mail"), "owner@qa.local");
+    await user.type(screen.getByLabelText("Senha"), "Pr14052019!");
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
+
+    await waitFor(() => {
+      expect(mocks.navigate).toHaveBeenCalledWith("/onboarding");
+    });
+  });
+
+  it("should not redirect owner to onboarding when it was explicitly skipped", async () => {
+    const user = userEvent.setup();
+    mocks.getOnboardingStatus.mockResolvedValue({
+      onboardingComplete: false,
+      onboardingSkipped: true,
+      currentStep: 0,
+      hasProfessionals: false,
+      hasServices: false,
+      hasAssignments: false,
+      hasBusinessHours: false,
+      termsAccepted: true,
+      termsVersion: "1.0",
+      completedAt: null,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/login"]}>
+        <Login />
+      </MemoryRouter>
+    );
+
+    await user.type(screen.getByLabelText("E-mail"), "owner@qa.local");
+    await user.type(screen.getByLabelText("Senha"), "Pr14052019!");
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
+
+    await waitFor(() => {
+      expect(mocks.navigate).toHaveBeenCalledWith("/dashboard");
+    });
   });
 
   it("should request MFA code when backend requires additional verification", async () => {
