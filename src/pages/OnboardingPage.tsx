@@ -163,7 +163,20 @@ export default function OnboardingPage() {
     if (currentStep === 1 && pendingSalonData) {
       setSavingSalon(true);
       try {
+        // PUT /salon/profile trata a chamada como substituicao completa (todo
+        // campo ausente no payload sobrescreve o existente com null/vazio) e
+        // exige CPF/CNPJ em toda atualizacao. O formulario do onboarding so
+        // coleta nome/telefone/e-mail/cidade/estado, entao busca o perfil
+        // completo primeiro e manda os demais campos (endereco, redes
+        // sociais, documento, horarios etc.) inalterados junto — nunca so o
+        // que mudou, senao o resto do perfil e apagado.
+        const currentProfile = salonProfile ?? (await salonApi.getProfile());
+        if (!currentProfile.salonCpfCnpj) {
+          toast.error("CPF ou CNPJ do salão não encontrado. Cadastre em Perfil do Salão antes de continuar.");
+          return;
+        }
         await salonApi.updateProfile({
+          ...currentProfile,
           salonName: pendingSalonData.name,
           salonPhone: pendingSalonData.phone,
           salonEmail: pendingSalonData.email,
