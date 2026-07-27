@@ -16,6 +16,7 @@ describe("StepServices", () => {
 
     await user.click(screen.getByRole("button", { name: /Adicionar serviço/ }));
     await user.type(screen.getByLabelText(/Nome do serviço/), "Corte feminino");
+    await user.type(screen.getByLabelText(/Preço/), "5000");
 
     await user.click(screen.getByRole("button", { name: /Salvar serviço/ }));
 
@@ -25,10 +26,40 @@ describe("StepServices", () => {
           name: "Corte feminino",
           category: "Cabelo",
           durationMinutes: 30,
+          price: 50,
           professionalIds: [],
         })
       );
     });
+  });
+
+  it("refuses to create a service with price zero", async () => {
+    const user = userEvent.setup();
+    const onAdd = vi.fn().mockResolvedValue(undefined);
+
+    render(<StepServices services={[]} businessType={undefined} onAdd={onAdd} onRemove={vi.fn()} />);
+
+    await user.click(screen.getByRole("button", { name: /Adicionar serviço/ }));
+    await user.type(screen.getByLabelText(/Nome do serviço/), "Corte grátis");
+    await user.click(screen.getByRole("button", { name: /Salvar serviço/ }));
+
+    expect(await screen.findByText(/Informe um preço maior que zero/)).toBeInTheDocument();
+    expect(onAdd).not.toHaveBeenCalled();
+  });
+
+  it("clears the form when the sheet is cancelled", async () => {
+    const user = userEvent.setup();
+
+    render(<StepServices services={[]} businessType={undefined} onAdd={vi.fn()} onRemove={vi.fn()} />);
+
+    await user.click(screen.getByRole("button", { name: /Adicionar serviço/ }));
+    await user.type(screen.getByLabelText(/Nome do serviço/), "Serviço descartado");
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    await user.click(screen.getByRole("button", { name: /Adicionar serviço/ }));
+
+    expect(screen.getByLabelText(/Nome do serviço/)).toHaveValue("");
+    expect(screen.getByLabelText(/Preço/)).toHaveValue("");
   });
 
   it("keeps the sheet open and shows an error toast when creation fails", async () => {
@@ -40,6 +71,7 @@ describe("StepServices", () => {
 
     await user.click(screen.getByRole("button", { name: /Adicionar serviço/ }));
     await user.type(screen.getByLabelText(/Nome do serviço/), "Corte feminino");
+    await user.type(screen.getByLabelText(/Preço/), "5000");
     await user.click(screen.getByRole("button", { name: /Salvar serviço/ }));
 
     await waitFor(() => {

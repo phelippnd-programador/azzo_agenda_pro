@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
@@ -41,6 +41,7 @@ import { professionalsApi } from "@/lib/api/professionals";
 import { resolveUiError } from "@/lib/error-utils";
 import { useOnboardingStore } from "@/stores/onboarding";
 import { appRouteManifest } from "@/app/route-manifest";
+import type { ListResponse } from "@/lib/api/contracts";
 import type { ProfessionalDraft, SalonDraft, ServiceDraft } from "@/stores/onboarding";
 
 const STEPS = [
@@ -103,6 +104,53 @@ export default function OnboardingPage() {
     },
   });
 
+  // O rascunho local (Zustand + localStorage) so existe no navegador onde o
+  // wizard foi iniciado. Retomando em outro dispositivo/sessao — ou apos
+  // limpar o storage — as listas apareceriam vazias mesmo com servicos e
+  // profissionais ja criados de verdade, levando a duplicatas e impedindo a
+  // etapa de atribuicoes de funcionar. Sincroniza uma vez no mount com o que
+  // existe no backend (fonte de verdade).
+  const hydratedRef = useRef(false);
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
+
+    const toList = <T,>(data: ListResponse<T>): T[] =>
+      Array.isArray(data) ? data : data.items ?? [];
+
+    void (async () => {
+      try {
+        const [servicesData, professionalsData] = await Promise.all([
+          servicesApi.getAll({ limit: 200 }),
+          professionalsApi.getAll({ limit: 200 }),
+        ]);
+        store.hydrateFromServer({
+          services: toList(servicesData).map((s) => ({
+            id: s.id,
+            name: s.name,
+            durationMinutes: s.duration,
+            price: s.price,
+            description: s.description,
+            category: s.category,
+            professionalIds: s.professionalIds ?? [],
+          })),
+          professionals: toList(professionalsData).map((p) => ({
+            id: p.id,
+            name: p.name,
+            email: p.email,
+            phone: p.phone,
+            specialties: p.specialties ?? [],
+            workingHours: p.workingHours ?? [],
+          })),
+        });
+      } catch {
+        // Falha ao sincronizar nao impede o uso do wizard — segue com o
+        // rascunho local que ja estiver carregado.
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const { mutate: acceptTerms, isLoading: acceptingTerms } = useMutation({
     mutationFn: (versions: { termsVersion: string; privacyVersion: string }) =>
       onboardingApi.acceptTerms(versions),
@@ -128,7 +176,11 @@ export default function OnboardingPage() {
     onError: () => toast.error("Erro ao finalizar. Tente novamente."),
   });
 
-  const currentStep = store.currentStep;
+  // Clampeado: o backend aceita qualquer step maior que o atual sem limite
+  // superior, e a tela renderiza por igualdade exata (currentStep === N). Um
+  // valor fora da faixa deixaria a pagina em branco e sem rodape, sem saida.
+  const currentStep = Math.min(Math.max(store.currentStep, 0), STEPS.length - 1);
+  const lastStepIndex = STEPS.length - 1;
 
   const canAdvance = (() => {
     if (currentStep === 0) return termsRead;
@@ -160,7 +212,11 @@ export default function OnboardingPage() {
       return;
     }
 
-    if (currentStep === 1 && pendingSalonData) {
+    if (currentStep === 1) {
+      if (!pendingSalonData) {
+        toast.error("Preencha os dados do salão antes de continuar.");
+        return;
+      }
       setSavingSalon(true);
       try {
         // PUT /salon/profile trata a chamada como substituicao completa (todo
@@ -399,7 +455,7 @@ export default function OnboardingPage() {
               />
             )}
             {currentStep === 5 && <StepOptional />}
-            {currentStep === 6 && (
+            {currentStep === lastStepIndex && (
               <StepDone
                 professionalsCount={store.professionals.length}
                 servicesCount={store.services.length}
@@ -410,7 +466,7 @@ export default function OnboardingPage() {
           </div>
 
           {/* Rodapé fixo */}
-          {currentStep < 6 && (
+          {currentStep < lastStepIndex && (
             <footer className="border-t bg-background px-4 py-4 sm:px-8">
               <div className="max-w-2xl mx-auto w-full flex items-center gap-4">
                 <Button
@@ -442,7 +498,9 @@ export default function OnboardingPage() {
                   {acceptingTerms || savingSalon ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}
-                  {currentStep === 5 ? "Finalizar" : "Próxima etapa"}
+                  {/* Esta etapa so avanca para a tela "Pronto!" — a conclusao
+                      de fato (POST /onboarding/complete) acontece la. */}
+                  {currentStep === lastStepIndex - 1 ? "Revisar e concluir" : "Próxima etapa"}
                 </Button>
               </div>
             </footer>

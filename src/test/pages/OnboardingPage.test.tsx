@@ -13,8 +13,26 @@ const mocks = vi.hoisted(() => ({
   acceptTerms: vi.fn(),
   getSalonProfile: vi.fn(),
   updateSalonProfile: vi.fn(),
+  getAllServices: vi.fn(),
+  getAllProfessionals: vi.fn(),
   navigate: vi.fn(),
 }));
+
+vi.mock("@/lib/api/services", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/api/services")>("@/lib/api/services");
+  return {
+    ...actual,
+    servicesApi: { ...actual.servicesApi, getAll: mocks.getAllServices },
+  };
+});
+
+vi.mock("@/lib/api/professionals", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/api/professionals")>("@/lib/api/professionals");
+  return {
+    ...actual,
+    professionalsApi: { ...actual.professionalsApi, getAll: mocks.getAllProfessionals },
+  };
+});
 
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
@@ -92,6 +110,8 @@ describe("OnboardingPage", () => {
       specialClosureDates: [],
     });
     mocks.updateSalonProfile.mockResolvedValue({});
+    mocks.getAllServices.mockResolvedValue([]);
+    mocks.getAllProfessionals.mockResolvedValue([]);
   });
 
   it("renders the salon step with prefilled data and keeps the render loop stable", async () => {
@@ -227,5 +247,52 @@ describe("OnboardingPage", () => {
     });
     expect(mocks.updateSalonProfile).not.toHaveBeenCalled();
     expect(screen.getByText("Conte-nos sobre o seu salão")).toBeInTheDocument();
+  });
+
+  it("hydrates services and professionals already created on the server", async () => {
+    // O rascunho local so existe no navegador de origem; retomando em outro
+    // dispositivo as listas viriam vazias e gerariam duplicatas.
+    useOnboardingStore.setState({ currentStep: 2, salonData: null, professionals: [], services: [] });
+    mocks.getAllServices.mockResolvedValue([
+      {
+        id: "svc-1",
+        name: "Corte existente",
+        duration: 45,
+        price: 80,
+        description: "",
+        category: "Cabelo",
+        professionalIds: [],
+      },
+    ]);
+    mocks.getAllProfessionals.mockResolvedValue({
+      items: [
+        {
+          id: "pro-1",
+          name: "Maria existente",
+          email: "maria@salao.com",
+          phone: "(11) 90000-0000",
+          specialties: ["Corte"],
+          workingHours: [],
+        },
+      ],
+    });
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/onboarding"]}>
+          <OnboardingPage />
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    expect(await screen.findByText("Corte existente")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(useOnboardingStore.getState().professionals).toHaveLength(1);
+    });
+    expect(useOnboardingStore.getState().professionals[0].name).toBe("Maria existente");
   });
 });

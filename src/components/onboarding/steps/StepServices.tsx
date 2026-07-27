@@ -35,7 +35,10 @@ const CATEGORIES = ["Cabelo", "Barba", "Unhas", "Estetica", "Maquiagem", "Outros
 const serviceSchema = z.object({
   name: z.string().min(2, "Nome é obrigatório"),
   durationMinutes: z.coerce.number().min(1, "Duração é obrigatória"),
-  price: z.coerce.number().min(0, "Preço é obrigatório"),
+  // Mesma regra do cadastro real de servicos (ServicesOverviewPage): preco
+  // precisa ser maior que zero. So >= 0 deixaria criar servico gratuito sem
+  // querer, ja que o campo comeca zerado.
+  price: z.coerce.number().gt(0, "Informe um preço maior que zero"),
   category: z.string().min(1, "Categoria é obrigatória"),
   description: z.string().optional(),
 });
@@ -77,18 +80,29 @@ export function StepServices({ services, businessType, onAdd, onRemove }: StepSe
   const suggestions = businessType ? (SUGGESTIONS[businessType] ?? []) : [];
   const addedNames = new Set(services.map((s) => s.name.toLowerCase()));
 
+  const resetForm = () => {
+    reset();
+    setPriceRaw("");
+  };
+
   const onSubmit = async (values: ServiceFormValues) => {
     setIsSaving(true);
     try {
       await onAdd({ ...values, professionalIds: [] });
-      reset();
-      setPriceRaw("");
+      resetForm();
       setSheetOpen(false);
     } catch (error) {
       toast.error(resolveUiError(error, "Não foi possível salvar o serviço. Tente novamente.").message);
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Fechar/cancelar precisa limpar o formulario — senao o proximo "Adicionar
+  // servico" reabre com os dados do servico anterior ainda preenchidos.
+  const handleSheetOpenChange = (open: boolean) => {
+    if (!open) resetForm();
+    setSheetOpen(open);
   };
 
   const handleSuggestionClick = (name: string) => {
@@ -142,7 +156,7 @@ export function StepServices({ services, businessType, onAdd, onRemove }: StepSe
                     : "border-border hover:border-primary hover:text-primary"
                 }`}
               >
-                {addedNames.has(s.toLowerCase()) ? "+" : "+"} {s}
+                {addedNames.has(s.toLowerCase()) ? "✓" : "+"} {s}
               </button>
             ))}
           </div>
@@ -204,7 +218,7 @@ export function StepServices({ services, businessType, onAdd, onRemove }: StepSe
         Adicionar serviço
       </Button>
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+      <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
         <SheetContent className="overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Novo serviço</SheetTitle>
@@ -309,7 +323,7 @@ export function StepServices({ services, businessType, onAdd, onRemove }: StepSe
             </div>
 
             <SheetFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={() => setSheetOpen(false)} disabled={isSaving}>
+              <Button type="button" variant="outline" onClick={() => handleSheetOpenChange(false)} disabled={isSaving}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSaving}>

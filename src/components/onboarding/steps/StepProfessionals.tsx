@@ -115,6 +115,14 @@ export function StepProfessionals({ professionals, onAdd, onRemove }: StepProfes
     setWorkingHours(defaultWorkingHours);
   };
 
+  // Fechar/cancelar precisa limpar o formulario — senao o proximo "Adicionar
+  // profissional" reabre com os dados do anterior (nome, especialidades,
+  // horarios editados) ainda preenchidos.
+  const handleSheetOpenChange = (open: boolean) => {
+    if (!open) resetForm();
+    setSheetOpen(open);
+  };
+
   const onSubmit = async (values: ProfessionalFormValues) => {
     const invalidWorkingRange = workingHours.some((item) => item.isWorking && item.startTime >= item.endTime);
     if (invalidWorkingRange) {
@@ -141,6 +149,17 @@ export function StepProfessionals({ professionals, onAdd, onRemove }: StepProfes
   };
 
   const handleRemove = async (index: number) => {
+    const professional = professionals[index];
+    // A remocao desativa o profissional, mas o login criado no cadastro (com
+    // a senha temporaria ja enviada por e-mail) continua existindo — precisa
+    // ser tratado em Equipe/acessos. Confirma antes para a pessoa saber.
+    const confirmed = window.confirm(
+      `Remover ${professional?.name ?? "este profissional"}?\n\n` +
+        "O acesso criado para o e-mail informado continuará existindo e precisa ser revogado " +
+        "separadamente na tela de Profissionais."
+    );
+    if (!confirmed) return;
+
     setRemovingIndex(index);
     try {
       await onRemove(index);
@@ -237,7 +256,7 @@ export function StepProfessionals({ professionals, onAdd, onRemove }: StepProfes
         Adicionar profissional
       </Button>
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+      <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
         <SheetContent className="overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Novo profissional</SheetTitle>
@@ -351,7 +370,7 @@ export function StepProfessionals({ professionals, onAdd, onRemove }: StepProfes
             </div>
 
             <SheetFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={() => setSheetOpen(false)} disabled={isSaving}>
+              <Button type="button" variant="outline" onClick={() => handleSheetOpenChange(false)} disabled={isSaving}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSaving}>
