@@ -51,6 +51,10 @@ vi.mock("@/lib/api/salon", async () => {
   };
 });
 
+vi.mock("sonner", () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
+}));
+
 describe("OnboardingPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -80,6 +84,8 @@ describe("OnboardingPage", () => {
       salonSlug: "salao-da-maria",
       salonPhone: "(11) 99999-9999",
       salonEmail: "contato@salaodamaria.com.br",
+      salonCpfCnpj: "12345678900",
+      salonWebsite: "https://salaodamaria.com.br",
       city: "",
       state: "",
       businessHours: [],
@@ -163,11 +169,63 @@ describe("OnboardingPage", () => {
           salonEmail: "contato@salaodamaria.com.br",
           city: "São Paulo",
           state: "SP",
+          // PUT /salon/profile substitui o perfil inteiro e exige CPF/CNPJ em
+          // toda chamada — precisa ir junto mesmo o onboarding nao coletando
+          // esse campo, e o resto do perfil (site, etc.) nao pode ser perdido.
+          salonCpfCnpj: "12345678900",
+          salonWebsite: "https://salaodamaria.com.br",
         })
       );
     });
 
     // Ordem pedida: Servicos antes de Profissionais.
     expect(await screen.findByText("Quais serviços vocês oferecem?")).toBeInTheDocument();
+  });
+
+  it("blocks advancing when the tenant has no CPF/CNPJ on file instead of sending an incomplete update", async () => {
+    const { toast } = await import("sonner");
+    const user = userEvent.setup();
+    mocks.getSalonProfile.mockResolvedValue({
+      salonName: "Salão da Maria",
+      salonSlug: "salao-da-maria",
+      salonPhone: "(11) 99999-9999",
+      salonEmail: "contato@salaodamaria.com.br",
+      salonCpfCnpj: null,
+      city: "",
+      state: "",
+      businessHours: [],
+      specialClosureDates: [],
+    });
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/onboarding"]}>
+          <OnboardingPage />
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Nome do salão/)).toHaveValue("Salão da Maria");
+    });
+
+    await user.click(screen.getByLabelText(/Tipo de negócio/));
+    await user.click(await screen.findByText("Salão Feminino"));
+    await user.type(screen.getByLabelText(/Cidade/), "São Paulo");
+    await user.click(screen.getByLabelText(/Estado/));
+    await user.click(await screen.findByText("SP"));
+
+    const nextButton = await screen.findByRole("button", { name: /Próxima etapa/ });
+    await waitFor(() => expect(nextButton).toBeEnabled());
+    await user.click(nextButton);
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(expect.stringMatching(/CPF ou CNPJ do salão não encontrado/));
+    });
+    expect(mocks.updateSalonProfile).not.toHaveBeenCalled();
+    expect(screen.getByText("Conte-nos sobre o seu salão")).toBeInTheDocument();
   });
 });
