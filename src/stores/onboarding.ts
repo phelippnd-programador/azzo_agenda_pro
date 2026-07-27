@@ -50,6 +50,8 @@ type OnboardingStore = {
   addService: (s: ServiceDraft) => void;
   updateService: (index: number, s: ServiceDraft) => void;
   removeService: (index: number) => void;
+  /** Substitui as listas locais pelo que existe de fato no backend (retomada em outro dispositivo/sessao). */
+  hydrateFromServer: (data: { professionals: ProfessionalDraft[]; services: ServiceDraft[] }) => void;
   reset: () => void;
 };
 
@@ -90,6 +92,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
         set((state) => ({
           services: state.services.filter((_, i) => i !== index),
         })),
+      hydrateFromServer: ({ professionals, services }) => set({ professionals, services }),
       reset: () => set(initialState),
     }),
     {

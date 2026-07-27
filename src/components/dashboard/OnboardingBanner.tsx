@@ -16,6 +16,11 @@ export function OnboardingBanner() {
 
   if (!status) return null;
   if (status.onboardingComplete) return null;
+  // Quem escolheu explicitamente "Pular configuracao" nao deve continuar
+  // vendo a cobranca: skipOnboarding marca so onboardingSkipped no backend
+  // (nunca onboardingComplete), entao sem esta checagem o aviso ficaria para
+  // sempre mesmo apos a pessoa ja ter recusado.
+  if (status.onboardingSkipped) return null;
   if (status.hasProfessionals && status.hasServices && status.hasAssignments) return null;
 
   return (
