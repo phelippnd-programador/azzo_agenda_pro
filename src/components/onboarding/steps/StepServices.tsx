@@ -27,7 +27,7 @@ type ProfessionalOption = {
 type StepServicesProps = {
   services: ServiceDraft[];
   businessType: string | undefined;
-  /** Profissionais ja criados. Vazio no primeiro acesso — Servicos vem antes de Profissionais. */
+  /** Profissionais criados na etapa anterior, para escolher quem executa o servico. */
   professionals: ProfessionalOption[];
   onAdd: (payload: ServiceFormPayload) => Promise<void>;
   onRemove: (index: number) => Promise<void>;

@@ -52,8 +52,10 @@ type ProfessionalCreatePayload = ProfessionalUpsertPayload;
 const STEPS = [
   { index: 0, label: "Termos de uso", icon: FileText },
   { index: 1, label: "Seu salão", icon: Store },
-  { index: 2, label: "Serviços", icon: Scissors },
-  { index: 3, label: "Profissionais", icon: UserCircle2 },
+  // Profissionais vem antes de Servicos: o formulario de servico escolhe quais
+  // profissionais executam o servico, entao a lista precisa ja estar preenchida.
+  { index: 2, label: "Profissionais", icon: UserCircle2 },
+  { index: 3, label: "Serviços", icon: Scissors },
   { index: 4, label: "Atribuições", icon: LayoutGrid },
   { index: 5, label: "Extras", icon: Settings },
   { index: 6, label: "Pronto!", icon: PartyPopper },
@@ -192,8 +194,8 @@ export default function OnboardingPage() {
   const canAdvance = (() => {
     if (currentStep === 0) return termsRead;
     if (currentStep === 1) return salonValid;
-    if (currentStep === 2) return store.services.length > 0;
-    if (currentStep === 3) return store.professionals.length > 0;
+    if (currentStep === 2) return store.professionals.length > 0;
+    if (currentStep === 3) return store.services.length > 0;
     return true;
   })();
 
@@ -424,6 +426,14 @@ export default function OnboardingPage() {
               />
             )}
             {currentStep === 2 && (
+              <StepProfessionals
+                professionals={store.professionals}
+                currentUserId={user?.id}
+                onAdd={handleProfessionalAdd}
+                onRemove={handleProfessionalRemove}
+              />
+            )}
+            {currentStep === 3 && (
               <StepServices
                 services={store.services}
                 businessType={store.salonData?.type}
@@ -432,14 +442,6 @@ export default function OnboardingPage() {
                   .map((p) => ({ id: p.id, name: p.name }))}
                 onAdd={handleServiceAdd}
                 onRemove={handleServiceRemove}
-              />
-            )}
-            {currentStep === 3 && (
-              <StepProfessionals
-                professionals={store.professionals}
-                currentUserId={user?.id}
-                onAdd={handleProfessionalAdd}
-                onRemove={handleProfessionalRemove}
               />
             )}
             {currentStep === 4 && (
