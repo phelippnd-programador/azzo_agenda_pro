@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -142,55 +143,43 @@ export default function Agenda() {
     { defaultLimit: viewMode === 'day' && selectedProfessional === 'all' ? 200 : 20, enabled: viewMode === 'day' },
   );
 
-  // Hook separado para a visão semanal (sem paginação, busca dia a dia via múltiplos requests)
-  // A API suporta busca por data única; buscamos todos os 7 dias da semana em paralelo
-  // Usando useAppointments com limit alto e sem filtro de data para capturar a semana inteira
-  // não é ideal — em vez disso fazemos 7 fetches individuais gerenciados localmente.
-  // Para simplificar e não quebrar o hook existente, filtramos client-side dos appointments
-  // já carregados quando o usuário navega do dia. Para a semana, carregamos via React Query
-  // diretamente com o appointmentsApi.
-  const [weekAppointments, setWeekAppointments] = useState<Appointment[]>([]);
-  const [isLoadingWeek, setIsLoadingWeek] = useState(false);
+  // Visao semanal (sem paginacao, busca dia a dia via multiplos requests -
+  // a API so aceita data unica). React Query cacheia por chave de filtro:
+  // trocar so o status ou o profissional reaproveita as semanas ja buscadas
+  // em vez de refazer as 7 chamadas do zero a cada troca.
+  const weekStartKey = toDateKey(weekStartDate);
+  const { data: weekAppointmentsData, isFetching: isLoadingWeek, error: weekError } = useQuery({
+    queryKey: ['agenda-week', weekStartKey, selectedProfessional, selectedStatus],
+    queryFn: async () => {
+      const days = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(weekStartDate);
+        d.setDate(weekStartDate.getDate() + i);
+        return toDateKey(d);
+      });
+
+      const results = await Promise.all(
+        days.map((date) =>
+          appointmentsApi.getAll({
+            date,
+            page: 1,
+            limit: 100,
+            professionalId: selectedProfessional !== 'all' ? selectedProfessional : undefined,
+            status: selectedStatus !== 'all' ? selectedStatus : undefined,
+          }),
+        ),
+      );
+      return results.flatMap((r) =>
+        Array.isArray(r) ? r : ((r as { items?: Appointment[] }).items ?? []),
+      );
+    },
+    enabled: viewMode === 'week',
+    staleTime: 60_000,
+  });
+  const weekAppointments = weekAppointmentsData ?? [];
 
   useEffect(() => {
-    if (viewMode !== 'week') return;
-    let active = true;
-    setIsLoadingWeek(true);
-
-    const days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(weekStartDate);
-      d.setDate(weekStartDate.getDate() + i);
-      return toDateKey(d);
-    });
-
-    Promise.all(
-      days.map((date) =>
-        appointmentsApi.getAll({
-          date,
-          page: 1,
-          limit: 100,
-          professionalId: selectedProfessional !== 'all' ? selectedProfessional : undefined,
-          status: selectedStatus !== 'all' ? selectedStatus : undefined,
-        }),
-      ),
-    )
-      .then((results) => {
-        if (!active) return;
-        const all = results.flatMap((r) =>
-          Array.isArray(r) ? r : ((r as { items?: Appointment[] }).items ?? []),
-        );
-        setWeekAppointments(all);
-      })
-      .catch(() => {
-        if (active) {
-          toast.error('Não foi possível carregar os agendamentos da semana.');
-          setWeekAppointments([]);
-        }
-      })
-      .finally(() => { if (active) setIsLoadingWeek(false); });
-
-    return () => { active = false; };
-  }, [viewMode, weekStartDate, selectedProfessional, selectedStatus]);
+    if (weekError) toast.error('Não foi possível carregar os agendamentos da semana.');
+  }, [weekError]);
 
   const { professionals } = useProfessionals();
   const activeProfessionals = professionals.filter((p) => p.isActive);

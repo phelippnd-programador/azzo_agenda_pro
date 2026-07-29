@@ -4,7 +4,7 @@ export const appointmentStatusCardToneMap: Record<string, string> = {
   IN_PROGRESS: 'bg-primary/10 text-primary border border-primary/20 border-l-4 border-l-primary',
   COMPLETED: 'bg-green-50 text-green-900 border border-green-200 border-l-4 border-l-green-500',
   CANCELLED: 'bg-red-50 text-red-900 border border-red-200 border-l-4 border-l-red-500',
-  NO_SHOW: 'bg-slate-100 text-slate-600 border border-slate-200 border-l-4 border-l-slate-400',
+  NO_SHOW: 'bg-muted/60 text-muted-foreground border border-border/70 border-l-4 border-l-muted-foreground/40',
 };
 
 export const appointmentStatusBadgeToneMap: Record<string, string> = {
@@ -13,7 +13,7 @@ export const appointmentStatusBadgeToneMap: Record<string, string> = {
   IN_PROGRESS: 'border-primary/30 bg-primary/12 text-primary',
   COMPLETED: 'border-green-300 bg-green-100 text-green-900',
   CANCELLED: 'border-red-300 bg-red-100 text-red-900',
-  NO_SHOW: 'border-slate-300 bg-slate-100 text-slate-800',
+  NO_SHOW: 'border-border bg-muted text-muted-foreground',
 };
 
 export const appointmentStatusLabelMap: Record<string, string> = {
