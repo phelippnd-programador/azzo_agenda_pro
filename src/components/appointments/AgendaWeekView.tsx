@@ -23,7 +23,7 @@ const toMinutes = (time: string) => {
   return Number(h) * 60 + Number(m);
 };
 
-const DAY_NAMES_LONG = ['Domingo', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado'];
+const DAY_NAMES_LONG = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 const DAY_NAMES_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
 
 interface WeekDay {
@@ -218,7 +218,7 @@ function WeekAppointmentCard({
   const serviceName =
     appointment.items?.[0]?.service?.name ??
     (appointment as { service?: { name?: string } }).service?.name ??
-    'Servico';
+    'Serviço';
 
   return (
     <button

@@ -40,7 +40,7 @@ export function AgendaMonthView({
               {currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
             </p>
             <p className="text-sm text-foreground">
-              Distribuicao mensal para localizar picos, dias ociosos e concentracao de demanda.
+              Distribuição mensal para localizar picos, dias ociosos e concentração de demanda.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -72,7 +72,7 @@ export function AgendaMonthView({
             <p className="mt-1 text-xl font-semibold text-foreground sm:text-2xl">{highestVolume}</p>
           </div>
           <div className="rounded-2xl border border-border/70 bg-muted/20 p-3">
-            <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Media por dia ativo</p>
+            <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Média por dia ativo</p>
             <p className="mt-1 text-xl font-semibold text-foreground sm:text-2xl">{averageByActiveDay}</p>
           </div>
         </div>
@@ -171,7 +171,7 @@ export function AgendaMonthView({
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Clique em um dia para abrir a grade por horario.
+          Clique em um dia para abrir a grade por horário.
         </p>
       </CardContent>
     </Card>
