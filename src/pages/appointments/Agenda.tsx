@@ -183,7 +183,7 @@ export default function Agenda() {
       })
       .catch(() => {
         if (active) {
-          toast.error('Nao foi possivel carregar os agendamentos da semana.');
+          toast.error('Não foi possível carregar os agendamentos da semana.');
           setWeekAppointments([]);
         }
       })
@@ -263,7 +263,7 @@ export default function Agenda() {
     appointmentsApi
       .getMonthlyMetric(currentDate.getMonth() + 1, currentDate.getFullYear())
       .then((data) => { if (active) setMonthlyMetrics(data); })
-      .catch(() => { if (active) { toast.error('Nao foi possivel carregar os totais mensais.'); setMonthlyMetrics([]); } })
+      .catch(() => { if (active) { toast.error('Não foi possível carregar os totais mensais.'); setMonthlyMetrics([]); } })
       .finally(() => { if (active) setIsLoadingMonthlyMetrics(false); });
     return () => { active = false; };
   }, [currentDate, viewMode]);
@@ -317,7 +317,11 @@ export default function Agenda() {
     const source = filteredAppointments;
     return {
       total: source.length,
-      pending: source.filter((appointment) => appointment.status === 'PENDING' || appointment.status === 'CONFIRMED').length,
+      // Contagens separadas por status, no mesmo grau de detalhe do filtro de
+      // status acima - "pendente" e "confirmado" nao sao a mesma coisa para
+      // quem esta lendo o resumo.
+      pending: source.filter((appointment) => appointment.status === 'PENDING').length,
+      confirmed: source.filter((appointment) => appointment.status === 'CONFIRMED').length,
       inProgress: source.filter((appointment) => appointment.status === 'IN_PROGRESS').length,
       completed: source.filter((appointment) => appointment.status === 'COMPLETED').length,
     };
@@ -356,7 +360,7 @@ export default function Agenda() {
         serieRps: config.serieRps,
         numeroRps: Date.now(),
         dataCompetencia: toDateKey(appointment.date),
-        naturezaOperacao: 'Prestacao de servico',
+        naturezaOperacao: 'Prestação de serviço',
         itemListaServico: config.itemListaServicoPadrao,
         valorServicos: totalValue,
         valorDeducoes: 0,
@@ -374,7 +378,7 @@ export default function Agenda() {
           const itemTotal = Number(item.totalPrice || item.unitPrice || 0);
           return {
             lineNumber: index + 1,
-            descricaoServico: item.service?.name || `Servico ${index + 1}`,
+            descricaoServico: item.service?.name || `Serviço ${index + 1}`,
             quantidade: 1,
             valorUnitario: itemTotal,
             valorTotal: itemTotal,
@@ -395,10 +399,10 @@ export default function Agenda() {
         return;
       }
 
-      toast.info('Fluxo NFS-e preparado a partir do agendamento concluido.');
+      toast.info('Fluxo NFS-e preparado a partir do agendamento concluído.');
       navigate(targetUrl);
     } catch (err) {
-      const uiError = resolveUiError(err, 'Nao foi possivel preparar a emissao automatica de NFS-e.');
+      const uiError = resolveUiError(err, 'Não foi possível preparar a emissão automática de NFS-e.');
       toast.warning(`${uiError.code ? `[${uiError.code}] ` : ''}${uiError.message}`);
     }
   };
@@ -419,7 +423,7 @@ export default function Agenda() {
           return;
         }
       } catch (err) {
-        toast.error(resolveUiError(err, 'Nao foi possivel verificar o registro do atendimento.').message);
+        toast.error(resolveUiError(err, 'Não foi possível verificar o registro do atendimento.').message);
         return;
       }
       setCompletionAppointment(findAppointmentById(appointmentId));
@@ -564,7 +568,7 @@ export default function Agenda() {
     return (
       <MainLayout title="Agenda" subtitle="Gerencie seus agendamentos">
         <PageErrorState
-          title="Nao foi possivel carregar a agenda"
+          title="Não foi possível carregar a agenda"
           description={error}
           action={{ label: 'Tentar novamente', onClick: refetch }}
         />
@@ -583,11 +587,11 @@ export default function Agenda() {
           <CardContent className="space-y-4 p-4 sm:p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Operacao do dia
+                Operação do dia
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="bg-background/80">
-                  {viewMode === 'day' ? 'Visao diaria' : viewMode === 'week' ? 'Visao semanal' : 'Visao mensal'}
+                  {viewMode === 'day' ? 'Visão diária' : viewMode === 'week' ? 'Visão semanal' : 'Visão mensal'}
                 </Badge>
                 <Badge variant="outline" className="bg-background/80">
                   {formattedDate}
@@ -597,12 +601,18 @@ export default function Agenda() {
                     ? `${daySummary.total} no dia`
                     : viewMode === 'week'
                     ? `${weekAppointments.length} na semana`
-                    : `${totalAppointmentsInMonth} no mes`}
+                    : `${totalAppointmentsInMonth} no mês`}
                 </Badge>
                 {viewMode === 'day' && daySummary.pending > 0 && (
                   <Badge variant="outline" className="gap-1.5 bg-background/80">
                     <Info className="h-3 w-3" />
                     {daySummary.pending} pendente{daySummary.pending === 1 ? '' : 's'}
+                  </Badge>
+                )}
+                {viewMode === 'day' && daySummary.confirmed > 0 && (
+                  <Badge variant="outline" className="gap-1.5 bg-background/80">
+                    <Info className="h-3 w-3" />
+                    {daySummary.confirmed} confirmado{daySummary.confirmed === 1 ? '' : 's'}
                   </Badge>
                 )}
                 {viewMode === 'day' && daySummary.inProgress > 0 && (
@@ -614,7 +624,7 @@ export default function Agenda() {
                 {viewMode === 'day' && daySummary.completed > 0 && (
                   <Badge variant="outline" className="gap-1.5 bg-background/80">
                     <Calendar className="h-3 w-3" />
-                    {daySummary.completed} concluido{daySummary.completed === 1 ? '' : 's'}
+                    {daySummary.completed} concluído{daySummary.completed === 1 ? '' : 's'}
                   </Badge>
                 )}
               </div>
@@ -642,7 +652,7 @@ export default function Agenda() {
                 </div>
                 <div className="rounded-2xl border border-border/70 bg-background/80 p-4 relative">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    Proximo passo
+                    Próximo passo
                   </p>
                   <p className="mt-2 text-sm font-medium text-foreground">Defina contexto e então aja</p>
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -661,21 +671,19 @@ export default function Agenda() {
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div data-tour="agenda-date-nav" className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
                 <Button
-                  variant="outline"
                   size="icon"
                   onClick={() => navigateDate('prev')}
                   className="h-8 w-8 sm:h-9 sm:w-9"
-                  aria-label={viewMode === 'day' ? 'Ir para o dia anterior' : viewMode === 'week' ? 'Semana anterior' : 'Ir para o mes anterior'}
+                  aria-label={viewMode === 'day' ? 'Ir para o dia anterior' : viewMode === 'week' ? 'Semana anterior' : 'Ir para o mês anterior'}
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
                 <Button variant="outline" size="sm" onClick={goToToday} className="text-xs sm:text-sm">Hoje</Button>
                 <Button
-                  variant="outline"
                   size="icon"
                   onClick={() => navigateDate('next')}
                   className="h-8 w-8 sm:h-9 sm:w-9"
-                  aria-label={viewMode === 'day' ? 'Ir para o proximo dia' : viewMode === 'week' ? 'Proxima semana' : 'Ir para o proximo mes'}
+                  aria-label={viewMode === 'day' ? 'Ir para o próximo dia' : viewMode === 'week' ? 'Próxima semana' : 'Ir para o próximo mês'}
                 >
                   <ChevronRight className="w-4 h-4" />
                 </Button>
@@ -712,9 +720,9 @@ export default function Agenda() {
                 <SelectItem value="PENDING">Pendente</SelectItem>
                 <SelectItem value="CONFIRMED">Confirmado</SelectItem>
                 <SelectItem value="IN_PROGRESS">Em atendimento</SelectItem>
-                <SelectItem value="COMPLETED">Concluido</SelectItem>
+                <SelectItem value="COMPLETED">Concluído</SelectItem>
                 <SelectItem value="CANCELLED">Cancelado</SelectItem>
-                <SelectItem value="NO_SHOW">Nao compareceu</SelectItem>
+                <SelectItem value="NO_SHOW">Não compareceu</SelectItem>
               </SelectContent>
             </Select>
 
@@ -770,7 +778,7 @@ export default function Agenda() {
             <Info className="h-4 w-4" />
             <AlertTitle>Fluxo de atendimento</AlertTitle>
             <AlertDescription className="flex items-center justify-between gap-4">
-              <span>{"Para concluir um atendimento, siga sempre esta sequencia: Confirmado -> Em atendimento -> Concluido."}</span>
+              <span>{"Para concluir um atendimento, siga sempre esta sequência: Confirmado → Em atendimento → Concluído."}</span>
               <button
                 onClick={dismissHints}
                 className="shrink-0 text-[11px] text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
@@ -872,7 +880,7 @@ export default function Agenda() {
           open={isDeleteOpen}
           isLoading={isDeletingAppointment}
           title="Excluir agendamento?"
-          description="Voce tem certeza que deseja excluir este agendamento? Esta acao nao pode ser desfeita."
+          description="Você tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita."
           cancelLabel="Cancelar"
           confirmLabel="Confirmar exclusao"
           loadingLabel="Excluindo..."
@@ -910,7 +918,7 @@ export default function Agenda() {
                   {getAppointmentItems(completionAppointment)
                     .map((item) => item.service?.name)
                     .filter((name): name is string => !!name)
-                    .join(', ') || 'Servico'}
+                    .join(', ') || 'Serviço'}
                   {' · '}
                   {professionals.find((p) => p.id === completionAppointment.professionalId)?.name || 'Profissional'}
                 </p>
@@ -943,7 +951,7 @@ export default function Agenda() {
                     Adicionar em uma comanda
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    Vincula o servico a uma comanda. Nada e lancado no caixa agora - so quando a
+                    Vincula o serviço a uma comanda. Nada é lançado no caixa agora - só quando a
                     comanda for paga.
                   </span>
                 </button>
@@ -1011,17 +1019,17 @@ export default function Agenda() {
           description={
             appointmentToCancel ? (
               <>
-                Voce vai cancelar o agendamento de{' '}
+                Você vai cancelar o agendamento de{' '}
                 <strong className="text-foreground">{appointmentToCancel.client?.name || 'cliente'}</strong> em{' '}
                 {new Date(`${toDateKey(appointmentToCancel.date)}T12:00:00`).toLocaleDateString('pt-BR', {
                   day: 'numeric',
                   month: 'long',
                 })}{' '}
-                as {appointmentToCancel.startTime}. Esta acao nao pode ser desfeita e o horario fica livre para novo
+                às {appointmentToCancel.startTime}. Esta ação não pode ser desfeita e o horário fica livre para novo
                 agendamento.
               </>
             ) : (
-              'Esta acao nao pode ser desfeita.'
+              'Esta ação não pode ser desfeita.'
             )
           }
           isLoading={isCancelling}
@@ -1042,7 +1050,7 @@ export default function Agenda() {
           <DialogHeader>
             <DialogTitle>Emitir NFS-e</DialogTitle>
             <DialogDescription>
-              Atendimento concluido. Deseja abrir a emissao da NFS-e agora?
+              Atendimento concluído. Deseja abrir a emissão da NFS-e agora?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -1052,7 +1060,7 @@ export default function Agenda() {
             <Button
               onClick={() => {
                 setIsNfseConfirmOpen(false);
-                toast.info('Fluxo NFS-e preparado a partir do agendamento concluido.');
+                toast.info('Fluxo NFS-e preparado a partir do agendamento concluído.');
                 navigate(nfseConfirmUrl);
               }}
             >

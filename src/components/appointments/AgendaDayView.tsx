@@ -8,6 +8,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -197,8 +198,7 @@ export function AgendaDayView({
     return names.length ? names.join(', ') : 'Servico';
   };
 
-  const getOverlapLabel = (count: number) =>
-    count === 2 ? '2 agendamentos no mesmo horario' : `${count} agendamentos no mesmo horario`;
+  const getOverlapLabel = (count: number) => `${count} agendamentos no mesmo horário`;
 
   const isOverlapGroupOpen = (slotTime: string) => openOverlapGroups[slotTime] ?? true;
 
@@ -253,7 +253,7 @@ export function AgendaDayView({
           )}
           {(allowedTransitions[appointment.status] ?? []).includes('IN_PROGRESS') && (
             <DropdownMenuItem onClick={() => onStatusChange(appointment.id, 'IN_PROGRESS')}>
-              Iniciar Atendimento
+              Iniciar atendimento
             </DropdownMenuItem>
           )}
           {(allowedTransitions[appointment.status] ?? []).includes('COMPLETED') && (
@@ -263,7 +263,7 @@ export function AgendaDayView({
           )}
           {(allowedTransitions[appointment.status] ?? []).includes('NO_SHOW') && (
             <DropdownMenuItem onClick={() => onStatusChange(appointment.id, 'NO_SHOW')}>
-              Nao Compareceu
+              Não compareceu
             </DropdownMenuItem>
           )}
           {!isProfessionalUser && canReassignAppointments && (
@@ -271,15 +271,16 @@ export function AgendaDayView({
               Realocar profissional
             </DropdownMenuItem>
           )}
+          <DropdownMenuSeparator />
           {(allowedTransitions[appointment.status] ?? []).includes('CANCELLED') && (
             <DropdownMenuItem
-              className="text-red-600"
+              className="text-destructive focus:text-destructive"
               onClick={() => onStatusChange(appointment.id, 'CANCELLED')}
             >
               Cancelar
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem className="text-red-600" onClick={() => onDeleteRequest(appointment.id)}>
+          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDeleteRequest(appointment.id)}>
             Excluir
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -374,7 +375,7 @@ export function AgendaDayView({
                 <span>
                   {isOpen
                     ? 'Compare os atendimentos lado a lado para decidir o proximo passo.'
-                    : 'Grupo recolhido. Abra para comparar os atendimentos deste horario.'}
+                    : 'Grupo recolhido. Abra para comparar os atendimentos deste horário.'}
                 </span>
                 <span className="hidden sm:inline text-amber-700 dark:text-amber-300">
                   {isOpen ? 'Arraste horizontalmente se precisar' : 'Toque para expandir'}
@@ -614,7 +615,7 @@ export function AgendaDayView({
                             <button
                               key={time}
                               type="button"
-                              aria-label={`Novo agendamento as ${time} com ${prof.name}`}
+                              aria-label={`Novo agendamento às ${time} com ${prof.name}`}
                               className="absolute left-0 right-0 border-b border-border/30 cursor-pointer group hover:bg-primary/5 focus-visible:bg-primary/5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-primary/50 transition-colors"
                               style={{ top: slotIdx * SLOT_HEIGHT, height: SLOT_HEIGHT }}
                               onClick={() => onNewAppointmentFromSlot?.(time, prof.id)}
@@ -704,10 +705,11 @@ export function AgendaDayView({
                                       {!isProfessionalUser && canReassignAppointments && (
                                         <DropdownMenuItem onClick={() => onReassignRequest(apt)}>Realocar profissional</DropdownMenuItem>
                                       )}
+                                      <DropdownMenuSeparator />
                                       {(allowedTransitions[apt.status] ?? []).includes('CANCELLED') && (
-                                        <DropdownMenuItem className="text-red-600" onClick={() => onStatusChange(apt.id, 'CANCELLED')}>Cancelar</DropdownMenuItem>
+                                        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onStatusChange(apt.id, 'CANCELLED')}>Cancelar</DropdownMenuItem>
                                       )}
-                                      <DropdownMenuItem className="text-red-600" onClick={() => onDeleteRequest(apt.id)}>Excluir</DropdownMenuItem>
+                                      <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDeleteRequest(apt.id)}>Excluir</DropdownMenuItem>
                                     </DropdownMenuContent>
                                   </DropdownMenu>
                                 </div>

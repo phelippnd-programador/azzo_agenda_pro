@@ -20,9 +20,9 @@ export const appointmentStatusLabelMap: Record<string, string> = {
   PENDING: 'Pendente',
   CONFIRMED: 'Confirmado',
   IN_PROGRESS: 'Em atendimento',
-  COMPLETED: 'Concluido',
+  COMPLETED: 'Concluído',
   CANCELLED: 'Cancelado',
-  NO_SHOW: 'Nao compareceu',
+  NO_SHOW: 'Não compareceu',
 };
 
 export const getStatusColor = (status: string): string =>
