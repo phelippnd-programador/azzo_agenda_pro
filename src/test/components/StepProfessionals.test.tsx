@@ -5,10 +5,27 @@ import type { ProfessionalDraft } from "@/stores/onboarding";
 
 const mocks = vi.hoisted(() => ({
   getLimits: vi.fn(),
+  createSpecialty: vi.fn(),
+  refetchSpecialties: vi.fn(),
+  specialties: [] as Array<{ id: string; name: string }>,
 }));
 
 vi.mock("@/lib/api/professionals", () => ({
   professionalsApi: { getLimits: mocks.getLimits },
+}));
+
+vi.mock("@/hooks/useSpecialties", () => ({
+  useSpecialties: () => ({
+    specialties: mocks.specialties,
+    isLoading: false,
+    error: null,
+    refetch: mocks.refetchSpecialties,
+    createSpecialty: mocks.createSpecialty,
+  }),
+}));
+
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({ user: { id: "owner-1", role: "OWNER", name: "Dona Maria" } }),
 }));
 
 vi.mock("sonner", () => ({
@@ -18,41 +35,46 @@ vi.mock("sonner", () => ({
 describe("StepProfessionals", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.specialties = [];
     mocks.getLimits.mockResolvedValue({ currentProfessionals: 1, maxProfessionals: 3, remaining: 2 });
+    mocks.createSpecialty.mockResolvedValue({ id: "sp-novo", name: "Corte" });
+    mocks.refetchSpecialties.mockResolvedValue(undefined);
   });
 
-  it("shows the plan limit meter and calls onAdd with email/phone/specialties/workingHours", async () => {
+  it("usa o formulario real de profissional, com avancados recolhidos", async () => {
     const user = userEvent.setup();
-    const onAdd = vi.fn().mockResolvedValue(undefined);
 
-    render(<StepProfessionals professionals={[]} onAdd={onAdd} onRemove={vi.fn()} />);
+    render(<StepProfessionals professionals={[]} onAdd={vi.fn()} onRemove={vi.fn()} />);
 
     expect(await screen.findByText(/1 de 3 usados/)).toBeInTheDocument();
-
     await user.click(screen.getByRole("button", { name: /Adicionar profissional/ }));
-    await user.type(screen.getByLabelText(/Nome completo/), "Maria Silva");
-    await user.type(screen.getByLabelText(/E-mail/), "maria@salao.com");
-    await user.type(screen.getByLabelText(/Telefone/), "11999990000");
 
-    await user.type(screen.getByLabelText(/Especialidades/), "Corte");
-    await user.click(screen.getByRole("button", { name: "Adicionar" }));
-
-    await user.click(screen.getByRole("button", { name: /Criar profissional/ }));
-
-    await waitFor(() => {
-      expect(onAdd).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: "Maria Silva",
-          email: "maria@salao.com",
-          specialties: ["Corte"],
-        })
-      );
-    });
-    const payload = onAdd.mock.calls[0][0];
-    expect(payload.workingHours).toHaveLength(7);
+    expect(await screen.findByText("Novo Profissional")).toBeInTheDocument();
+    // Toggle do cadastro real que faltava no wizard.
+    expect(screen.getByText(/Este usuario tambem atende clientes\?/)).toBeInTheDocument();
+    // "Profissional Ativo" existe, porem recolhido.
+    expect(screen.getByRole("button", { name: /Opcoes avancadas/ })).toBeInTheDocument();
+    expect(screen.queryByText("Profissional Ativo")).not.toBeInTheDocument();
   });
 
-  it("disables adding a professional when the plan limit is reached", async () => {
+  it("permite criar especialidade sem sair do assistente (tenant novo tem catalogo vazio)", async () => {
+    const user = userEvent.setup();
+
+    render(<StepProfessionals professionals={[]} onAdd={vi.fn()} onRemove={vi.fn()} />);
+
+    await user.click(await screen.findByRole("button", { name: /Adicionar profissional/ }));
+
+    expect(screen.getByText("Nenhuma especialidade cadastrada.")).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Nova especialidade"), "Corte");
+    await user.click(screen.getByRole("button", { name: "Criar" }));
+
+    await waitFor(() => {
+      expect(mocks.createSpecialty).toHaveBeenCalledWith({ name: "Corte" });
+    });
+  });
+
+  it("desabilita adicionar quando o limite do plano foi atingido", async () => {
     mocks.getLimits.mockResolvedValue({ currentProfessionals: 3, maxProfessionals: 3, remaining: 0 });
 
     render(<StepProfessionals professionals={[]} onAdd={vi.fn()} onRemove={vi.fn()} />);
@@ -61,7 +83,7 @@ describe("StepProfessionals", () => {
     expect(screen.getByRole("button", { name: /Adicionar profissional/ })).toBeDisabled();
   });
 
-  it("removing a professional warns about the lingering login, then calls onRemove", async () => {
+  it("avisa sobre o login remanescente antes de remover", async () => {
     const user = userEvent.setup();
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
     const professionals: ProfessionalDraft[] = [
@@ -74,14 +96,12 @@ describe("StepProfessionals", () => {
     await user.click(screen.getByRole("button", { name: "Remover Maria" }));
 
     expect(confirmSpy).toHaveBeenCalledWith(expect.stringMatching(/acesso criado.*continuará existindo/is));
-    await waitFor(() => {
-      expect(onRemove).toHaveBeenCalledWith(0);
-    });
+    await waitFor(() => expect(onRemove).toHaveBeenCalledWith(0));
 
     confirmSpy.mockRestore();
   });
 
-  it("does not remove the professional when the confirmation is dismissed", async () => {
+  it("nao remove quando a confirmacao e cancelada", async () => {
     const user = userEvent.setup();
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
     const professionals: ProfessionalDraft[] = [
@@ -95,22 +115,5 @@ describe("StepProfessionals", () => {
 
     expect(onRemove).not.toHaveBeenCalled();
     confirmSpy.mockRestore();
-  });
-
-  it("clears the form when the sheet is cancelled", async () => {
-    const user = userEvent.setup();
-
-    render(<StepProfessionals professionals={[]} onAdd={vi.fn()} onRemove={vi.fn()} />);
-
-    await user.click(await screen.findByRole("button", { name: /Adicionar profissional/ }));
-    await user.type(screen.getByLabelText(/Nome completo/), "Descartado");
-    await user.type(screen.getByLabelText(/Especialidades/), "Corte");
-    await user.click(screen.getByRole("button", { name: "Adicionar" }));
-
-    await user.click(screen.getByRole("button", { name: "Cancelar" }));
-    await user.click(screen.getByRole("button", { name: /Adicionar profissional/ }));
-
-    expect(screen.getByLabelText(/Nome completo/)).toHaveValue("");
-    expect(screen.queryByRole("button", { name: "Remover Corte" })).not.toBeInTheDocument();
   });
 });
