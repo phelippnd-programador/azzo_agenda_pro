@@ -272,14 +272,20 @@ export function ServiceFormDialog({
         if (!nextOpen) resetForm();
       }}
     >
-      <DialogContent className="mx-4 max-h-[85vh] max-w-md overflow-y-auto sm:mx-auto sm:max-w-2xl">
-        <DialogHeader className="border-b border-border/70 pb-4 pr-10">
+      {/*
+        O scroll fica no DialogBody, nao no DialogContent: o DialogStickyFooter
+        usa position:sticky e, com o DialogContent em `grid` + overflow, o bloco
+        conteiner do rodape vira a propria celula do grid (altura exata dele),
+        sem espaco para grudar — o rodape acabava rolando no meio do conteudo.
+      */}
+      <DialogContent className="mx-4 flex max-h-[85vh] max-w-md flex-col overflow-hidden sm:mx-auto sm:max-w-2xl">
+        <DialogHeader className="shrink-0 border-b border-border/70 pb-4 pr-10">
           <DialogTitle>{editingService ? 'Editar servico' : 'Novo servico'}</DialogTitle>
           <DialogDescription>
             {editingService ? 'Atualize os dados do servico' : 'Preencha os dados do novo servico'}
           </DialogDescription>
         </DialogHeader>
-        <DialogBody>
+        <DialogBody className="min-h-0 flex-1 overflow-y-auto">
           <DialogSection>
             <p className="text-sm font-medium text-foreground">
               {editingService

@@ -69,6 +69,10 @@ vi.mock("@/lib/api/salon", async () => {
   };
 });
 
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({ user: { id: "owner-1", role: "OWNER", name: "Dona Maria" } }),
+}));
+
 vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
@@ -153,7 +157,7 @@ describe("OnboardingPage", () => {
     consoleErrorSpy.mockRestore();
   });
 
-  it("persists the salon profile via salonApi.updateProfile before advancing to Serviços", async () => {
+  it("persists the salon profile via salonApi.updateProfile before advancing to Profissionais", async () => {
     const user = userEvent.setup();
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -198,8 +202,9 @@ describe("OnboardingPage", () => {
       );
     });
 
-    // Ordem pedida: Servicos antes de Profissionais.
-    expect(await screen.findByText("Quais serviços vocês oferecem?")).toBeInTheDocument();
+    // Ordem pedida: Profissionais antes de Servicos — o formulario de servico
+    // escolhe quais profissionais executam o servico, entao eles ja precisam existir.
+    expect(await screen.findByText("Quem trabalha no seu salão?")).toBeInTheDocument();
   });
 
   it("blocks advancing when the tenant has no CPF/CNPJ on file instead of sending an incomplete update", async () => {
@@ -252,7 +257,8 @@ describe("OnboardingPage", () => {
   it("hydrates services and professionals already created on the server", async () => {
     // O rascunho local so existe no navegador de origem; retomando em outro
     // dispositivo as listas viriam vazias e gerariam duplicatas.
-    useOnboardingStore.setState({ currentStep: 2, salonData: null, professionals: [], services: [] });
+    // Etapa 3 = Servicos (Profissionais e a 2).
+    useOnboardingStore.setState({ currentStep: 3, salonData: null, professionals: [], services: [] });
     mocks.getAllServices.mockResolvedValue([
       {
         id: "svc-1",
