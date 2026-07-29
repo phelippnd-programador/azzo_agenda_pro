@@ -5,10 +5,11 @@ import { MemoryRouter } from "react-router-dom";
 import Agenda from "@/pages/appointments/Agenda";
 import type { Appointment } from "@/hooks/useAppointments";
 
-const { getMonthlyMetricMock, getByIdMock, updateAppointmentStatusMock } = vi.hoisted(() => ({
+const { getMonthlyMetricMock, getByIdMock, updateAppointmentStatusMock, getAllMock } = vi.hoisted(() => ({
   getMonthlyMetricMock: vi.fn(),
   getByIdMock: vi.fn(),
   updateAppointmentStatusMock: vi.fn(),
+  getAllMock: vi.fn(),
 }));
 
 const baseAppointment: Appointment = {
@@ -100,6 +101,7 @@ vi.mock("@/lib/api", async () => {
       ...actual.appointmentsApi,
       getMonthlyMetric: getMonthlyMetricMock,
       getById: getByIdMock,
+      getAll: getAllMock,
     },
     nfseApi: {
       getByAppointmentId: vi.fn(),
@@ -125,6 +127,7 @@ describe("Agenda", () => {
     mockAppointments = [];
     getMonthlyMetricMock.mockResolvedValue([]);
     updateAppointmentStatusMock.mockResolvedValue({});
+    getAllMock.mockResolvedValue([]);
   });
 
   const renderAgenda = () => {
@@ -153,8 +156,7 @@ describe("Agenda", () => {
     const user = userEvent.setup();
     renderAgenda();
 
-    const menuButtons = await screen.findAllByRole("button", { name: "" });
-    const menuTrigger = menuButtons.find((btn) => btn.querySelector("svg.lucide-ellipsis-vertical"));
+    const menuTrigger = await screen.findByRole("button", { name: "Mais ações do agendamento" });
     expect(menuTrigger).toBeTruthy();
     await user.click(menuTrigger!);
 
@@ -183,8 +185,7 @@ describe("Agenda", () => {
     const user = userEvent.setup();
     renderAgenda();
 
-    const menuButtons = await screen.findAllByRole("button", { name: "" });
-    const menuTrigger = menuButtons.find((btn) => btn.querySelector("svg.lucide-ellipsis-vertical"));
+    const menuTrigger = await screen.findByRole("button", { name: "Mais ações do agendamento" });
     await user.click(menuTrigger!);
     await user.click(await screen.findByText("Concluir atendimento"));
 
@@ -209,8 +210,7 @@ describe("Agenda", () => {
     const user = userEvent.setup();
     renderAgenda();
 
-    const menuButtons = await screen.findAllByRole("button", { name: "" });
-    const menuTrigger = menuButtons.find((btn) => btn.querySelector("svg.lucide-ellipsis-vertical"));
+    const menuTrigger = await screen.findByRole("button", { name: "Mais ações do agendamento" });
     await user.click(menuTrigger!);
     await user.click(await screen.findByText("Concluir atendimento"));
 
@@ -221,5 +221,33 @@ describe("Agenda", () => {
     expect(within(moneyDialog).getByText("Maria Souza")).toBeInTheDocument();
     expect(within(moneyDialog).getByText(/Corte/)).toBeInTheDocument();
     expect(within(moneyDialog).getByText("R$ 80,00")).toBeInTheDocument();
+  }, 15000);
+
+  it("caches the weekly view per filter instead of refetching all 7 days every time", async () => {
+    const user = userEvent.setup();
+    const { container } = renderAgenda();
+    const statusTrigger = () =>
+      container.querySelector('[data-tour="agenda-filter-status"]') as HTMLElement;
+
+    await user.click(await screen.findByRole("button", { name: "Semana" }));
+    await waitFor(() => {
+      expect(getAllMock).toHaveBeenCalledTimes(7);
+    });
+
+    // Troca de status: filtro novo, precisa buscar de novo (mais 7 chamadas).
+    await user.click(statusTrigger());
+    await user.click(await screen.findByText("Confirmado"));
+    await waitFor(() => {
+      expect(getAllMock).toHaveBeenCalledTimes(14);
+    });
+
+    // Volta para "Todos status": chave ja usada antes (a primeira busca) -
+    // react-query serve do cache, sem nenhuma chamada nova.
+    await user.click(statusTrigger());
+    await user.click(await screen.findByText("Todos status"));
+    await waitFor(() => {
+      expect(statusTrigger()).toHaveTextContent("Todos status");
+    });
+    expect(getAllMock).toHaveBeenCalledTimes(14);
   }, 15000);
 });

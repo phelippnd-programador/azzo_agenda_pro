@@ -195,7 +195,7 @@ export function AgendaDayView({
   const getAppointmentServiceLabel = (appointment: Appointment) => {
     const items = getAppointmentItems(appointment);
     const names = items.map((item) => item.service?.name).filter((name): name is string => !!name);
-    return names.length ? names.join(', ') : 'Servico';
+    return names.length ? names.join(', ') : 'Serviço';
   };
 
   const getOverlapLabel = (count: number) => `${count} agendamentos no mesmo horário`;
@@ -221,7 +221,8 @@ export function AgendaDayView({
       <Button
         variant="ghost"
         size="icon"
-        className={options?.compact ? 'h-7 w-7' : 'h-6 w-6 sm:h-7 sm:w-7'}
+        aria-label="Ver detalhes do agendamento"
+        className={options?.compact ? 'h-8 w-8' : 'h-7 w-7 sm:h-8 sm:w-8'}
         onClick={(event) => {
           event.stopPropagation();
           onAppointmentClick(appointment);
@@ -235,7 +236,8 @@ export function AgendaDayView({
             data-tour="agenda-appointment-menu"
             variant="ghost"
             size="icon"
-            className={options?.compact ? 'h-7 w-7' : 'h-6 w-6 sm:h-7 sm:w-7'}
+            aria-label="Mais ações do agendamento"
+            className={options?.compact ? 'h-8 w-8' : 'h-7 w-7 sm:h-8 sm:w-8'}
             onClick={(event) => event.stopPropagation()}
           >
             <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -360,11 +362,11 @@ export function AgendaDayView({
                   </div>
                 </div>
                 <div className="flex items-center gap-2 self-start sm:self-auto">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-medium text-amber-900 dark:bg-slate-900/70 dark:text-amber-100">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-medium text-amber-900 dark:bg-background/80 dark:text-amber-100">
                     <Layers3 className="h-3.5 w-3.5" />
                     Sobrepostos
                   </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-medium text-amber-900 dark:bg-slate-900/70 dark:text-amber-100">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-medium text-amber-900 dark:bg-background/80 dark:text-amber-100">
                     {isOpen ? 'Recolher' : 'Expandir'}
                     <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isOpen ? '' : '-rotate-90'}`} />
                   </span>
@@ -374,7 +376,7 @@ export function AgendaDayView({
               <div className="flex items-center justify-between gap-2 text-[11px] text-amber-800 dark:text-amber-200">
                 <span>
                   {isOpen
-                    ? 'Compare os atendimentos lado a lado para decidir o proximo passo.'
+                    ? 'Compare os atendimentos lado a lado para decidir o próximo passo.'
                     : 'Grupo recolhido. Abra para comparar os atendimentos deste horário.'}
                 </span>
                 <span className="hidden sm:inline text-amber-700 dark:text-amber-300">
@@ -394,12 +396,12 @@ export function AgendaDayView({
                   <div
                     key={appointment.id}
                     data-tour="agenda-appointment-card"
-                    className={`min-w-[280px] max-w-[360px] flex-1 snap-start rounded-xl border border-white/80 p-3 sm:min-w-[320px] sm:p-4 lg:min-w-[340px] dark:border-slate-700/70 ${getStatusColor(appointment.status)} cursor-pointer hover:shadow-md hover:-translate-y-px transition-all duration-150`}
+                    className={`min-w-[280px] max-w-[360px] flex-1 snap-start rounded-xl border border-white/80 p-3 sm:min-w-[320px] sm:p-4 lg:min-w-[340px] dark:border-border/70 ${getStatusColor(appointment.status)} cursor-pointer hover:shadow-md hover:-translate-y-px transition-all duration-150`}
                     onClick={() => onAppointmentClick(appointment)}
                   >
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <div className="flex flex-wrap items-center gap-2">
-                        <div className="inline-flex items-center gap-1 rounded-full bg-white/75 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-foreground/80 dark:bg-slate-900/55 dark:text-slate-200">
+                        <div className="inline-flex items-center gap-1 rounded-full bg-white/75 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-foreground/80 dark:bg-background/70 dark:text-foreground/80">
                           #{index + 1} de {appointmentsAtSameTime.length}
                         </div>
                         <StatusBadge
@@ -412,7 +414,7 @@ export function AgendaDayView({
                     </div>
 
                     <div className="flex items-start gap-3 min-w-0">
-                      <Avatar className="w-10 h-10 flex-shrink-0 ring-1 ring-white/80 dark:ring-slate-700">
+                      <Avatar className="w-10 h-10 flex-shrink-0 ring-1 ring-white/80 dark:ring-border">
                         <AvatarImage src={professional?.avatar} />
                         <AvatarFallback className="text-xs font-medium">
                           {client?.name?.slice(0, 2).toUpperCase() ?? '??'}
@@ -672,6 +674,7 @@ export function AgendaDayView({
                                   <Button
                                     variant="ghost"
                                     size="icon"
+                                    aria-label="Ver detalhes do agendamento"
                                     className="h-5 w-5"
                                     onClick={(e) => { e.stopPropagation(); onAppointmentClick(apt); }}
                                   >
@@ -683,6 +686,7 @@ export function AgendaDayView({
                                         data-tour="agenda-appointment-menu"
                                         variant="ghost"
                                         size="icon"
+                                        aria-label="Mais ações do agendamento"
                                         className="h-5 w-5"
                                         onClick={(e) => e.stopPropagation()}
                                       >
@@ -792,7 +796,7 @@ export function AgendaDayView({
                           : (
                             <button
                               type="button"
-                              className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-muted-foreground opacity-0 hover:opacity-100 hover:bg-primary/5 transition-all duration-150 cursor-pointer"
+                              className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-muted-foreground opacity-0 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 hover:bg-primary/5 transition-all duration-150 cursor-pointer"
                               onClick={() => onNewAppointmentFromSlot?.(time)}
                             >
                               <Plus className="w-3 h-3 text-primary/50" />

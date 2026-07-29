@@ -218,6 +218,28 @@
 }
 
 /* ------------------------------------------------------------------ */
+/* Movimento reduzido: o estado ainda muda (cor, sombra), so o          */
+/* deslocamento de posicao (translateY dos hovers) e a duracao da       */
+/* transicao somem. Preserva a hierarquia e a confirmacao visual do     */
+/* estado sem o movimento que o usuario pediu para evitar.              */
+/* ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .hover\:-translate-y-px:hover,
+  .hover\:-translate-y-0\.5:hover {
+    transform: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* CSS de impressao para relatórios (window.print())                   */
 /* ------------------------------------------------------------------ */
 @media print {
