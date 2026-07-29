@@ -589,43 +589,53 @@ export default function Agenda() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Operação do dia
               </p>
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className="bg-background/80">
-                  {viewMode === 'day' ? 'Visão diária' : viewMode === 'week' ? 'Visão semanal' : 'Visão mensal'}
-                </Badge>
-                <Badge variant="outline" className="bg-background/80">
-                  {formattedDate}
-                </Badge>
-                <Badge variant="outline" className="bg-background/80">
-                  {viewMode === 'day'
-                    ? `${daySummary.total} no dia`
-                    : viewMode === 'week'
-                    ? `${weekAppointments.length} na semana`
-                    : `${totalAppointmentsInMonth} no mês`}
-                </Badge>
-                {viewMode === 'day' && daySummary.pending > 0 && (
-                  <Badge variant="outline" className="gap-1.5 bg-background/80">
-                    <Info className="h-3 w-3" />
-                    {daySummary.pending} pendente{daySummary.pending === 1 ? '' : 's'}
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Contexto (o que estou vendo) separado por proximidade dos
+                    contadores de status (o que precisa de atencao) - mesmo
+                    peso visual, mas agrupados por significado. */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Badge variant="outline" className="bg-background/80">
+                    {viewMode === 'day' ? 'Visão diária' : viewMode === 'week' ? 'Visão semanal' : 'Visão mensal'}
                   </Badge>
-                )}
-                {viewMode === 'day' && daySummary.confirmed > 0 && (
-                  <Badge variant="outline" className="gap-1.5 bg-background/80">
-                    <Info className="h-3 w-3" />
-                    {daySummary.confirmed} confirmado{daySummary.confirmed === 1 ? '' : 's'}
+                  <Badge variant="outline" className="bg-background/80">
+                    {formattedDate}
                   </Badge>
-                )}
-                {viewMode === 'day' && daySummary.inProgress > 0 && (
-                  <Badge variant="outline" className="gap-1.5 bg-background/80">
-                    <Users className="h-3 w-3" />
-                    {daySummary.inProgress} em atendimento
+                  <Badge variant="outline" className="bg-background/80">
+                    {viewMode === 'day'
+                      ? `${daySummary.total} no dia`
+                      : viewMode === 'week'
+                      ? `${weekAppointments.length} na semana`
+                      : `${totalAppointmentsInMonth} no mês`}
                   </Badge>
-                )}
-                {viewMode === 'day' && daySummary.completed > 0 && (
-                  <Badge variant="outline" className="gap-1.5 bg-background/80">
-                    <Calendar className="h-3 w-3" />
-                    {daySummary.completed} concluído{daySummary.completed === 1 ? '' : 's'}
-                  </Badge>
+                </div>
+                {viewMode === 'day' &&
+                  (daySummary.pending > 0 || daySummary.confirmed > 0 || daySummary.inProgress > 0 || daySummary.completed > 0) && (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {daySummary.pending > 0 && (
+                      <Badge variant="outline" className="gap-1.5 bg-background/80">
+                        <Info className="h-3 w-3" />
+                        {daySummary.pending} pendente{daySummary.pending === 1 ? '' : 's'}
+                      </Badge>
+                    )}
+                    {daySummary.confirmed > 0 && (
+                      <Badge variant="outline" className="gap-1.5 bg-background/80">
+                        <Info className="h-3 w-3" />
+                        {daySummary.confirmed} confirmado{daySummary.confirmed === 1 ? '' : 's'}
+                      </Badge>
+                    )}
+                    {daySummary.inProgress > 0 && (
+                      <Badge variant="outline" className="gap-1.5 bg-background/80">
+                        <Users className="h-3 w-3" />
+                        {daySummary.inProgress} em atendimento
+                      </Badge>
+                    )}
+                    {daySummary.completed > 0 && (
+                      <Badge variant="outline" className="gap-1.5 bg-background/80">
+                        <Calendar className="h-3 w-3" />
+                        {daySummary.completed} concluído{daySummary.completed === 1 ? '' : 's'}
+                      </Badge>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -692,82 +702,89 @@ export default function Agenda() {
                 </span>
               </div>
 
-              <div className="flex w-full flex-wrap items-center gap-2 sm:gap-3 xl:w-auto xl:justify-end">
-            {!isProfessionalUser ? (
-              <Select value={effectiveSelectedProfessional || selectedProfessional} onValueChange={setSelectedProfessional}>
-                <SelectTrigger data-tour="agenda-filter-professional" className="h-8 w-full text-xs sm:h-9 sm:w-44 sm:text-sm">
-                  <SelectValue placeholder="Profissional" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  {activeProfessionals.map((prof) => (
-                    <SelectItem key={prof.id} value={prof.id}>{prof.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <div data-tour="agenda-filter-professional" className="flex h-8 w-full items-center rounded-md border bg-muted/40 px-3 text-xs text-muted-foreground sm:h-9 sm:min-w-44 sm:w-auto sm:text-sm">
-                {loggedProfessional?.name || 'Profissional logado'}
-              </div>
-            )}
+              <div className="flex w-full flex-wrap items-center gap-3 sm:gap-4 xl:w-auto xl:justify-end">
+                {/* Filtros (o que estou olhando) agrupados por proximidade,
+                    separados das acoes (o que vou fazer agora) por um gap
+                    maior que o interno de cada grupo. */}
+                <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-3">
+                  {!isProfessionalUser ? (
+                    <Select value={effectiveSelectedProfessional || selectedProfessional} onValueChange={setSelectedProfessional}>
+                      <SelectTrigger data-tour="agenda-filter-professional" className="h-8 w-full text-xs sm:h-9 sm:w-44 sm:text-sm">
+                        <SelectValue placeholder="Profissional" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        {activeProfessionals.map((prof) => (
+                          <SelectItem key={prof.id} value={prof.id}>{prof.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div data-tour="agenda-filter-professional" className="flex h-8 w-full items-center rounded-md border bg-muted/40 px-3 text-xs text-muted-foreground sm:h-9 sm:min-w-44 sm:w-auto sm:text-sm">
+                      {loggedProfessional?.name || 'Profissional logado'}
+                    </div>
+                  )}
 
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger data-tour="agenda-filter-status" className="h-8 w-full text-xs sm:h-9 sm:w-44 sm:text-sm">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos status</SelectItem>
-                <SelectItem value="PENDING">Pendente</SelectItem>
-                <SelectItem value="CONFIRMED">Confirmado</SelectItem>
-                <SelectItem value="IN_PROGRESS">Em atendimento</SelectItem>
-                <SelectItem value="COMPLETED">Concluído</SelectItem>
-                <SelectItem value="CANCELLED">Cancelado</SelectItem>
-                <SelectItem value="NO_SHOW">Não compareceu</SelectItem>
-              </SelectContent>
-            </Select>
+                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                    <SelectTrigger data-tour="agenda-filter-status" className="h-8 w-full text-xs sm:h-9 sm:w-44 sm:text-sm">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos status</SelectItem>
+                      <SelectItem value="PENDING">Pendente</SelectItem>
+                      <SelectItem value="CONFIRMED">Confirmado</SelectItem>
+                      <SelectItem value="IN_PROGRESS">Em atendimento</SelectItem>
+                      <SelectItem value="COMPLETED">Concluído</SelectItem>
+                      <SelectItem value="CANCELLED">Cancelado</SelectItem>
+                      <SelectItem value="NO_SHOW">Não compareceu</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div data-tour="agenda-view-toggle" className="flex w-full overflow-hidden rounded-lg border sm:w-auto">
-              <Button
-                variant={viewMode === 'day' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => { setViewMode('day'); setDayAppointmentsFallback(null); }}
-                className="rounded-none text-xs sm:text-sm h-8 sm:h-9"
-              >
-                Dia
-              </Button>
-              <Button
-                variant={viewMode === 'week' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('week')}
-                className="rounded-none border-x text-xs sm:text-sm h-8 sm:h-9"
-              >
-                Semana
-              </Button>
-              <Button
-                variant={viewMode === 'month' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('month')}
-                className="rounded-none text-xs sm:text-sm h-8 sm:h-9"
-              >
-                Mensal
-              </Button>
-            </div>
+                <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-3">
+                  <div data-tour="agenda-view-toggle" className="flex w-full overflow-hidden rounded-lg border sm:w-auto">
+                    <Button
+                      variant={viewMode === 'day' ? 'secondary' : 'ghost'}
+                      size="sm"
+                      onClick={() => { setViewMode('day'); setDayAppointmentsFallback(null); }}
+                      className="rounded-none text-xs sm:text-sm h-8 sm:h-9"
+                    >
+                      Dia
+                    </Button>
+                    <Button
+                      variant={viewMode === 'week' ? 'secondary' : 'ghost'}
+                      size="sm"
+                      onClick={() => setViewMode('week')}
+                      className="rounded-none border-x text-xs sm:text-sm h-8 sm:h-9"
+                    >
+                      Semana
+                    </Button>
+                    <Button
+                      variant={viewMode === 'month' ? 'secondary' : 'ghost'}
+                      size="sm"
+                      onClick={() => setViewMode('month')}
+                      className="rounded-none text-xs sm:text-sm h-8 sm:h-9"
+                    >
+                      Mensal
+                    </Button>
+                  </div>
 
-            <Button
-              data-tour="agenda-new-appointment-button"
-              size="sm"
-              className="h-8 w-full gap-1 text-xs sm:h-9 sm:w-auto sm:gap-2 sm:text-sm"
-              onClick={() => setIsNewAppointmentOpen(true)}
-            >
-              <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="sm:hidden">Novo agendamento</span>
-              <span className="hidden sm:inline">Novo Agendamento</span>
-            </Button>
+                  <Button
+                    data-tour="agenda-new-appointment-button"
+                    size="sm"
+                    className="h-8 w-full gap-1 text-xs sm:h-9 sm:w-auto sm:gap-2 sm:text-sm"
+                    onClick={() => setIsNewAppointmentOpen(true)}
+                  >
+                    <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="sm:hidden">Novo agendamento</span>
+                    <span className="hidden sm:inline">Novo Agendamento</span>
+                  </Button>
 
-            <TutorialLauncherButton
-              fullTour={{ id: AGENDA_TOUR_FULL_ID, label: 'Tour completo da agenda' }}
-              modules={AGENDA_TOUR_MODULE_OPTIONS}
-            />
+                  <TutorialLauncherButton
+                    fullTour={{ id: AGENDA_TOUR_FULL_ID, label: 'Tour completo da agenda' }}
+                    modules={AGENDA_TOUR_MODULE_OPTIONS}
+                  />
+                </div>
               </div>
             </div>
           </CardContent>
