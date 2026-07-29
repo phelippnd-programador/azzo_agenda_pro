@@ -40,9 +40,14 @@ import { servicesApi } from "@/lib/api/services";
 import { professionalsApi } from "@/lib/api/professionals";
 import { resolveUiError } from "@/lib/error-utils";
 import { useOnboardingStore } from "@/stores/onboarding";
+import { useAuth } from "@/contexts/AuthContext";
 import { appRouteManifest } from "@/app/route-manifest";
 import type { ListResponse } from "@/lib/api/contracts";
-import type { ProfessionalDraft, SalonDraft, ServiceDraft } from "@/stores/onboarding";
+import type { ServiceFormPayload } from "@/components/services/ServiceFormDialog";
+import type { ProfessionalUpsertPayload } from "@/lib/api/professionals";
+import type { SalonDraft } from "@/stores/onboarding";
+
+type ProfessionalCreatePayload = ProfessionalUpsertPayload;
 
 const STEPS = [
   { index: 0, label: "Termos de uso", icon: FileText },
@@ -57,6 +62,7 @@ const STEPS = [
 export default function OnboardingPage() {
   const navigate = useNavigate();
   const store = useOnboardingStore();
+  const { user } = useAuth();
 
   const [termsRead, setTermsRead] = useState(false);
   const [lgpdConsent, setLgpdConsent] = useState(false);
@@ -136,6 +142,7 @@ export default function OnboardingPage() {
           })),
           professionals: toList(professionalsData).map((p) => ({
             id: p.id,
+            userId: p.userId,
             name: p.name,
             email: p.email,
             phone: p.phone,
@@ -251,16 +258,8 @@ export default function OnboardingPage() {
     advanceStep();
   };
 
-  const handleServiceAdd = async (draft: ServiceDraft) => {
-    const created = await servicesApi.create({
-      name: draft.name,
-      description: draft.description,
-      duration: draft.durationMinutes,
-      price: draft.price,
-      category: draft.category,
-      professionalIds: [],
-      isActive: true,
-    });
+  const handleServiceAdd = async (payload: ServiceFormPayload) => {
+    const created = await servicesApi.create(payload);
     store.addService({
       id: created.id,
       name: created.name,
@@ -280,24 +279,16 @@ export default function OnboardingPage() {
     store.removeService(index);
   };
 
-  const handleProfessionalAdd = async (draft: ProfessionalDraft) => {
-    const created = await professionalsApi.create({
-      name: draft.name,
-      email: draft.email,
-      phone: draft.phone,
-      specialties: draft.specialties,
-      workingHours: draft.workingHours,
-      isActive: true,
-      commissionRate: 0,
-      createUser: true,
-    });
+  const handleProfessionalAdd = async (payload: ProfessionalCreatePayload) => {
+    const created = await professionalsApi.create(payload);
     store.addProfessional({
       id: created.id,
+      userId: created.userId,
       name: created.name,
       email: created.email,
       phone: created.phone,
       specialties: created.specialties ?? [],
-      workingHours: created.workingHours ?? draft.workingHours,
+      workingHours: created.workingHours ?? payload.workingHours ?? [],
     });
   };
 
@@ -436,6 +427,9 @@ export default function OnboardingPage() {
               <StepServices
                 services={store.services}
                 businessType={store.salonData?.type}
+                professionals={store.professionals
+                  .filter((p): p is typeof p & { id: string } => Boolean(p.id))
+                  .map((p) => ({ id: p.id, name: p.name }))}
                 onAdd={handleServiceAdd}
                 onRemove={handleServiceRemove}
               />
@@ -443,6 +437,7 @@ export default function OnboardingPage() {
             {currentStep === 3 && (
               <StepProfessionals
                 professionals={store.professionals}
+                currentUserId={user?.id}
                 onAdd={handleProfessionalAdd}
                 onRemove={handleProfessionalRemove}
               />

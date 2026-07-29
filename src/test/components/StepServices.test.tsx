@@ -8,79 +8,84 @@ vi.mock("sonner", () => ({
 }));
 
 describe("StepServices", () => {
-  it("calls onAdd with the real fields (including category) and closes the sheet on success", async () => {
+  it("usa o formulario real de servico, com duracao livre e avancados recolhidos", async () => {
     const user = userEvent.setup();
     const onAdd = vi.fn().mockResolvedValue(undefined);
 
-    render(<StepServices services={[]} businessType={undefined} onAdd={onAdd} onRemove={vi.fn()} />);
+    render(
+      <StepServices
+        services={[]}
+        businessType={undefined}
+        professionals={[]}
+        onAdd={onAdd}
+        onRemove={vi.fn()}
+      />
+    );
 
     await user.click(screen.getByRole("button", { name: /Adicionar serviço/ }));
-    await user.type(screen.getByLabelText(/Nome do serviço/), "Corte feminino");
-    await user.type(screen.getByLabelText(/Preço/), "5000");
 
-    await user.click(screen.getByRole("button", { name: /Salvar serviço/ }));
+    // Campos do cadastro consolidado (nao mais o form simplificado do wizard).
+    expect(await screen.findByText("Novo servico")).toBeInTheDocument();
+    const duracao = screen.getByPlaceholderText("60");
+    expect(duracao).toHaveAttribute("type", "number");
+
+    // Sinal/PIX e "ativo" existem, porem dentro do bloco recolhido.
+    expect(screen.getByRole("button", { name: /Opcoes avancadas/ })).toBeInTheDocument();
+    expect(screen.queryByText(/Exigir sinal no agendamento online/)).not.toBeInTheDocument();
+  });
+
+  it("cria servico com duracao fora das opcoes fixas antigas (ex.: 180 min)", async () => {
+    const user = userEvent.setup();
+    const onAdd = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <StepServices
+        services={[]}
+        businessType={undefined}
+        professionals={[]}
+        onAdd={onAdd}
+        onRemove={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: /Adicionar serviço/ }));
+    await user.type(screen.getByPlaceholderText("Ex: Corte Feminino"), "Progressiva");
+
+    const duracao = screen.getByPlaceholderText("60");
+    await user.clear(duracao);
+    await user.type(duracao, "180");
+
+    await user.clear(screen.getByPlaceholderText("0,00"));
+    await user.type(screen.getByPlaceholderText("0,00"), "150,00");
+
+    await user.click(screen.getByRole("button", { name: /Criar servico/ }));
 
     await waitFor(() => {
       expect(onAdd).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: "Corte feminino",
-          category: "Cabelo",
-          durationMinutes: 30,
-          price: 50,
-          professionalIds: [],
-        })
+        expect.objectContaining({ name: "Progressiva", duration: 180, price: 150 })
       );
     });
   });
 
-  it("refuses to create a service with price zero", async () => {
-    const user = userEvent.setup();
-    const onAdd = vi.fn().mockResolvedValue(undefined);
-
-    render(<StepServices services={[]} businessType={undefined} onAdd={onAdd} onRemove={vi.fn()} />);
-
-    await user.click(screen.getByRole("button", { name: /Adicionar serviço/ }));
-    await user.type(screen.getByLabelText(/Nome do serviço/), "Corte grátis");
-    await user.click(screen.getByRole("button", { name: /Salvar serviço/ }));
-
-    expect(await screen.findByText(/Informe um preço maior que zero/)).toBeInTheDocument();
-    expect(onAdd).not.toHaveBeenCalled();
-  });
-
-  it("clears the form when the sheet is cancelled", async () => {
+  it("clicar numa sugestao pre-preenche o nome no formulario real", async () => {
     const user = userEvent.setup();
 
-    render(<StepServices services={[]} businessType={undefined} onAdd={vi.fn()} onRemove={vi.fn()} />);
+    render(
+      <StepServices
+        services={[]}
+        businessType="BARBEARIA"
+        professionals={[]}
+        onAdd={vi.fn()}
+        onRemove={vi.fn()}
+      />
+    );
 
-    await user.click(screen.getByRole("button", { name: /Adicionar serviço/ }));
-    await user.type(screen.getByLabelText(/Nome do serviço/), "Serviço descartado");
-    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+    await user.click(screen.getByRole("button", { name: /\+ Barba/ }));
 
-    await user.click(screen.getByRole("button", { name: /Adicionar serviço/ }));
-
-    expect(screen.getByLabelText(/Nome do serviço/)).toHaveValue("");
-    expect(screen.getByLabelText(/Preço/)).toHaveValue("");
+    expect(await screen.findByPlaceholderText("Ex: Corte Feminino")).toHaveValue("Barba");
   });
 
-  it("keeps the sheet open and shows an error toast when creation fails", async () => {
-    const { toast } = await import("sonner");
-    const user = userEvent.setup();
-    const onAdd = vi.fn().mockRejectedValue(new Error("network error"));
-
-    render(<StepServices services={[]} businessType={undefined} onAdd={onAdd} onRemove={vi.fn()} />);
-
-    await user.click(screen.getByRole("button", { name: /Adicionar serviço/ }));
-    await user.type(screen.getByLabelText(/Nome do serviço/), "Corte feminino");
-    await user.type(screen.getByLabelText(/Preço/), "5000");
-    await user.click(screen.getByRole("button", { name: /Salvar serviço/ }));
-
-    await waitFor(() => {
-      expect(toast.error).toHaveBeenCalled();
-    });
-    expect(screen.getByLabelText(/Nome do serviço/)).toBeInTheDocument();
-  });
-
-  it("removing a service calls onRemove and shows an error toast on failure", async () => {
+  it("remover servico chama onRemove e avisa em caso de falha", async () => {
     const { toast } = await import("sonner");
     const user = userEvent.setup();
     const services: ServiceDraft[] = [
@@ -88,7 +93,15 @@ describe("StepServices", () => {
     ];
     const onRemove = vi.fn().mockRejectedValue(new Error("boom"));
 
-    render(<StepServices services={services} businessType={undefined} onAdd={vi.fn()} onRemove={onRemove} />);
+    render(
+      <StepServices
+        services={services}
+        businessType={undefined}
+        professionals={[]}
+        onAdd={vi.fn()}
+        onRemove={onRemove}
+      />
+    );
 
     await user.click(screen.getByRole("button", { name: "Remover Corte" }));
 

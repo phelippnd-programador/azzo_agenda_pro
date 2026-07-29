@@ -15,7 +15,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
-import { Loader2 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, Loader2 } from 'lucide-react';
 import { maskPhoneBr } from '@/lib/input-masks';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -71,6 +72,18 @@ interface ProfessionalFormDialogProps {
   onUpdate: (id: string, data: Partial<FormPayload>) => Promise<unknown>;
   /** Limite de profissionais do plano ja atingido — bloqueia apenas a criacao (edicao continua liberada). */
   creationLimitReached?: boolean;
+  /**
+   * Habilita criar especialidade sem sair do dialogo. Quando ausente (padrao da
+   * pagina consolidada), a caixa segue sendo apenas selecao do catalogo
+   * existente. O onboarding fornece porque um tenant novo comeca com zero
+   * especialidades e ficaria sem saida dentro do assistente.
+   */
+  onCreateSpecialty?: (name: string) => Promise<unknown>;
+  /**
+   * Agrupa "profissional ativo" num bloco "Opcoes avancadas" recolhido. Default
+   * false mantem o layout da pagina consolidada intacto.
+   */
+  advancedCollapsed?: boolean;
 }
 
 export function ProfessionalFormDialog({
@@ -85,8 +98,13 @@ export function ProfessionalFormDialog({
   onCreate,
   onUpdate,
   creationLimitReached = false,
+  onCreateSpecialty,
+  advancedCollapsed = false,
 }: ProfessionalFormDialogProps) {
   const { user } = useAuth();
+  const [newSpecialty, setNewSpecialty] = useState('');
+  const [isCreatingSpecialty, setIsCreatingSpecialty] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(!advancedCollapsed);
   const [formName, setFormName] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formPhone, setFormPhone] = useState('');
@@ -150,6 +168,34 @@ export function ProfessionalFormDialog({
     setSelectedSpecialties((prev) => prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]);
   };
 
+  const handleCreateSpecialty = async () => {
+    if (!onCreateSpecialty) return;
+    const name = newSpecialty.trim();
+    if (!name) return;
+    const alreadyExists = specialties.some(
+      (item) => item.name.trim().toLowerCase() === name.toLowerCase()
+    );
+    if (alreadyExists) {
+      // Evita duplicar o catalogo so por diferenca de caixa/espaco: apenas marca a existente.
+      const existing = specialties.find(
+        (item) => item.name.trim().toLowerCase() === name.toLowerCase()
+      );
+      if (existing && !selectedSpecialties.includes(existing.name)) {
+        setSelectedSpecialties((prev) => [...prev, existing.name]);
+      }
+      setNewSpecialty('');
+      return;
+    }
+    setIsCreatingSpecialty(true);
+    try {
+      await onCreateSpecialty(name);
+      setSelectedSpecialties((prev) => (prev.includes(name) ? prev : [...prev, name]));
+      setNewSpecialty('');
+    } finally {
+      setIsCreatingSpecialty(false);
+    }
+  };
+
   const updateWorkingHour = (dayOfWeek: number, field: 'startTime' | 'endTime' | 'isWorking', value: string | boolean) => {
     setFormWorkingHours((prev) => prev.map((item) => item.dayOfWeek === dayOfWeek ? { ...item, [field]: value } : item));
   };
@@ -191,6 +237,16 @@ export function ProfessionalFormDialog({
       setIsSubmitting(false);
     }
   };
+
+  const activeToggleSection = (
+    <DialogSection className="flex flex-col gap-3 bg-transparent sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <Label>Profissional Ativo</Label>
+        <p className="text-xs text-muted-foreground">Disponivel para agendamentos</p>
+      </div>
+      <Switch checked={formIsActive} onCheckedChange={setFormIsActive} />
+    </DialogSection>
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -306,6 +362,30 @@ export function ProfessionalFormDialog({
 
             <div className="space-y-2">
               <Label>Especialidades</Label>
+              {onCreateSpecialty ? (
+                <div className="flex gap-2">
+                  <Input
+                    aria-label="Nova especialidade"
+                    placeholder="Ex: Corte, Coloracao"
+                    value={newSpecialty}
+                    onChange={(e) => setNewSpecialty(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        void handleCreateSpecialty();
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void handleCreateSpecialty()}
+                    disabled={isCreatingSpecialty || !newSpecialty.trim()}
+                  >
+                    {isCreatingSpecialty ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Criar'}
+                  </Button>
+                </div>
+              ) : null}
               <div className="max-h-48 space-y-3 overflow-y-auto rounded-xl border border-border/70 bg-background/80 p-3">
               {isLoadingSpecialties && <p className="text-sm text-muted-foreground">Carregando especialidades...</p>}
               {specialtiesError && (
@@ -382,13 +462,25 @@ export function ProfessionalFormDialog({
             </div>
           </DialogSection>
 
-          <DialogSection className="flex flex-col gap-3 bg-transparent sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <Label>Profissional Ativo</Label>
-              <p className="text-xs text-muted-foreground">Disponivel para agendamentos</p>
-            </div>
-            <Switch checked={formIsActive} onCheckedChange={setFormIsActive} />
-          </DialogSection>
+          {advancedCollapsed ? (
+            <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="flex w-full items-center justify-between px-4 text-sm font-medium"
+                >
+                  Opcoes avancadas
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${advancedOpen ? 'rotate-180' : ''}`}
+                  />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>{activeToggleSection}</CollapsibleContent>
+            </Collapsible>
+          ) : (
+            activeToggleSection
+          )}
         </DialogBody>
         <DialogStickyFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>

@@ -10,6 +10,8 @@ export type WorkingHoursDraft = {
 
 export type ProfessionalDraft = {
   id?: string;
+  /** Usuario vinculado. Permite saber se o dono ja se cadastrou como profissional. */
+  userId?: string;
   name: string;
   email: string;
   phone: string;
