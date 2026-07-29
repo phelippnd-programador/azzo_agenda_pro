@@ -20,9 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar, ChevronLeft, ChevronRight, Clock3, Info, Plus, ShoppingCart, Users, Wallet } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Info, Plus, ShoppingCart, Users, Wallet } from 'lucide-react';
 import { PageErrorState } from '@/components/ui/page-states';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
+import { ConfirmationDialog } from '@/components/common/ConfirmationDialog';
 import { NewAppointmentDialog } from '@/components/appointments/NewAppointmentDialog';
 import { AppointmentDetailsSheet } from '@/components/appointments/AppointmentDetailsSheet';
 import { ReassignAppointmentDialog } from '@/components/appointments/ReassignAppointmentDialog';
@@ -34,7 +35,8 @@ import { useProfessionals } from '@/hooks/useProfessionals';
 import { useAuth } from '@/contexts/AuthContext';
 import { appointmentsApi, nfseApi } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
-import { toDateKey } from '@/lib/format';
+import { toDateKey, formatCurrency } from '@/lib/format';
+import { getAppointmentItems } from '@/lib/appointment-status';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import type { PaymentMethod } from '@/types';
@@ -86,11 +88,14 @@ export default function Agenda() {
   const [appointmentToDeleteId, setAppointmentToDeleteId] = useState<string | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeletingAppointment, setIsDeletingAppointment] = useState(false);
-  const [completionAppointmentId, setCompletionAppointmentId] = useState<string | null>(null);
+  const [completionAppointment, setCompletionAppointment] = useState<Appointment | null>(null);
   const [completionPaymentMethod, setCompletionPaymentMethod] = useState<PaymentMethod | ''>('');
   const [completionAction, setCompletionAction] = useState<AppointmentConclusionAction | null>(null);
   const [isNfseConfirmOpen, setIsNfseConfirmOpen] = useState(false);
   const [nfseConfirmUrl, setNfseConfirmUrl] = useState('');
+  const [appointmentToCancel, setAppointmentToCancel] = useState<Appointment | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [focusNotesOnDetailsOpen, setFocusNotesOnDetailsOpen] = useState(false);
 
   const {
     guardState,
@@ -318,6 +323,15 @@ export default function Agenda() {
     };
   }, [filteredAppointments]);
 
+  // Um agendamento pode estar selecionado (sheet aberto), na lista do dia/mes
+  // ja carregada, ou so na lista da semana (que vive fora de useAppointments) -
+  // confere as tres fontes antes de desistir.
+  const findAppointmentById = (id: string): Appointment | null =>
+    (selectedAppointment?.id === id ? selectedAppointment : null) ??
+    filteredAppointments.find((a) => a.id === id) ??
+    weekAppointments.find((a) => a.id === id) ??
+    null;
+
   const handleNfseOnAppointmentCompleted = async (appointment: Appointment) => {
     try {
       const config = await nfseApi.getConfig('HOMOLOGACAO');
@@ -391,9 +405,31 @@ export default function Agenda() {
 
   const handleStatusChange = async (appointmentId: string, newStatus: Appointment['status']) => {
     if (newStatus === 'COMPLETED') {
-      setCompletionAppointmentId(appointmentId);
+      // Gate unico: antes so o sheet bloqueava o botao quando faltava registro
+      // operacional (careNotes vazio) - o menu da grade abria o mesmo dialogo
+      // de conclusao sem checar nada. Concluir gera receita, comissao e baixa
+      // de estoque, entao os dois caminhos tem que respeitar a mesma regra.
+      try {
+        const detail = await appointmentsApi.getById(appointmentId);
+        if (!detail.careNotes || detail.careNotes.length === 0) {
+          toast.error('Registre ao menos um detalhe do atendimento antes de concluir.');
+          setSelectedAppointment(findAppointmentById(appointmentId) ?? detail.appointment);
+          setFocusNotesOnDetailsOpen(true);
+          setIsDetailsOpen(true);
+          return;
+        }
+      } catch (err) {
+        toast.error(resolveUiError(err, 'Nao foi possivel verificar o registro do atendimento.').message);
+        return;
+      }
+      setCompletionAppointment(findAppointmentById(appointmentId));
       setCompletionPaymentMethod('');
       setCompletionAction(null);
+      return;
+    }
+
+    if (newStatus === 'CANCELLED') {
+      setAppointmentToCancel(findAppointmentById(appointmentId));
       return;
     }
 
@@ -410,8 +446,24 @@ export default function Agenda() {
     }
   };
 
+  const handleConfirmCancel = async () => {
+    if (!appointmentToCancel) return;
+    setIsCancelling(true);
+    try {
+      await updateAppointmentStatus(appointmentToCancel.id, 'CANCELLED');
+      if (selectedAppointment?.id === appointmentToCancel.id) {
+        setSelectedAppointment((prev) => (prev ? { ...prev, status: 'CANCELLED' } : null));
+      }
+      setAppointmentToCancel(null);
+    } catch {
+      // tratado no hook
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   const handleConfirmCompletion = async () => {
-    if (!completionAppointmentId || !completionAction) {
+    if (!completionAppointment || !completionAction) {
       toast.error('Selecione o que fazer com este atendimento para concluir.');
       return;
     }
@@ -427,15 +479,12 @@ export default function Agenda() {
       if (completionAction === 'PAY_NOW' && completionPaymentMethod) {
         payload.paymentMethod = completionPaymentMethod;
       }
-      await updateAppointmentStatus(completionAppointmentId, 'COMPLETED', payload);
-      if (selectedAppointment?.id === completionAppointmentId) {
+      await updateAppointmentStatus(completionAppointment.id, 'COMPLETED', payload);
+      if (selectedAppointment?.id === completionAppointment.id) {
         setSelectedAppointment((prev) => (prev ? { ...prev, status: 'COMPLETED' } : null));
       }
-      const apt =
-        appointments.find((a) => a.id === completionAppointmentId) ??
-        (selectedAppointment?.id === completionAppointmentId ? selectedAppointment : null);
-      if (apt) await handleNfseOnAppointmentCompleted(apt);
-      setCompletionAppointmentId(null);
+      await handleNfseOnAppointmentCompleted(completionAppointment);
+      setCompletionAppointment(null);
       setCompletionPaymentMethod('');
       setCompletionAction(null);
       void checkAfterCompletion();
@@ -532,18 +581,10 @@ export default function Agenda() {
           className="border-border/70 bg-card/90 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.16)]"
         >
           <CardContent className="space-y-4 p-4 sm:p-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="space-y-1.5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  Operacao do dia
-                </p>
-                <p className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
-                  Leia a agenda em duas etapas: primeiro o volume do dia, depois os horarios e conflitos.
-                </p>
-                <p className="max-w-3xl text-sm text-muted-foreground">
-                  Use a visao diaria para execucao e a mensal para distribuicao de carga e concentracao de demanda.
-                </p>
-              </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Operacao do dia
+              </p>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="bg-background/80">
                   {viewMode === 'day' ? 'Visao diaria' : viewMode === 'week' ? 'Visao semanal' : 'Visao mensal'}
@@ -558,6 +599,24 @@ export default function Agenda() {
                     ? `${weekAppointments.length} na semana`
                     : `${totalAppointmentsInMonth} no mes`}
                 </Badge>
+                {viewMode === 'day' && daySummary.pending > 0 && (
+                  <Badge variant="outline" className="gap-1.5 bg-background/80">
+                    <Info className="h-3 w-3" />
+                    {daySummary.pending} pendente{daySummary.pending === 1 ? '' : 's'}
+                  </Badge>
+                )}
+                {viewMode === 'day' && daySummary.inProgress > 0 && (
+                  <Badge variant="outline" className="gap-1.5 bg-background/80">
+                    <Users className="h-3 w-3" />
+                    {daySummary.inProgress} em atendimento
+                  </Badge>
+                )}
+                {viewMode === 'day' && daySummary.completed > 0 && (
+                  <Badge variant="outline" className="gap-1.5 bg-background/80">
+                    <Calendar className="h-3 w-3" />
+                    {daySummary.completed} concluido{daySummary.completed === 1 ? '' : 's'}
+                  </Badge>
+                )}
               </div>
             </div>
 
@@ -598,53 +657,6 @@ export default function Agenda() {
                 </div>
               </div>
             )}
-
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <div className="rounded-2xl border border-border/70 bg-muted/20 p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Agendados</p>
-                    <p className="mt-1 text-2xl font-semibold text-foreground">{viewMode === 'day' ? daySummary.total : totalAppointmentsInMonth}</p>
-                  </div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/12 text-primary">
-                    <Clock3 className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-              <div className="rounded-2xl border border-amber-200/70 bg-amber-50/70 p-3 dark:border-amber-500/20 dark:bg-amber-500/10">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-amber-700 dark:text-amber-300">Pendentes</p>
-                    <p className="mt-1 text-2xl font-semibold text-amber-950 dark:text-amber-50">{daySummary.pending}</p>
-                  </div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
-                    <Info className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-              <div className="rounded-2xl border border-blue-200/70 bg-blue-50/70 p-3 dark:border-blue-500/20 dark:bg-blue-500/10">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-blue-700 dark:text-blue-300">Em atendimento</p>
-                    <p className="mt-1 text-2xl font-semibold text-blue-950 dark:text-blue-50">{daySummary.inProgress}</p>
-                  </div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
-                    <Users className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-              <div className="rounded-2xl border border-emerald-200/70 bg-emerald-50/70 p-3 dark:border-emerald-500/20 dark:bg-emerald-500/10">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-emerald-700 dark:text-emerald-300">Concluidos</p>
-                    <p className="mt-1 text-2xl font-semibold text-emerald-950 dark:text-emerald-50">{daySummary.completed}</p>
-                  </div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-                    <Calendar className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-            </div>
 
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div data-tour="agenda-date-nav" className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
@@ -800,6 +812,7 @@ export default function Agenda() {
             appointments={filteredAppointments}
             professionals={professionals}
             formattedDate={formattedDate}
+            isToday={dateString === toDateKey(new Date())}
             pagination={pagination}
             isProfessionalUser={isProfessionalUser}
             canReassignAppointments={canReassignAppointments}
@@ -829,13 +842,17 @@ export default function Agenda() {
 
         <AppointmentDetailsSheet
           open={isDetailsOpen}
-          onOpenChange={setIsDetailsOpen}
+          onOpenChange={(open) => {
+            setIsDetailsOpen(open);
+            if (!open) setFocusNotesOnDetailsOpen(false);
+          }}
           appointment={selectedAppointment}
           professionals={professionals}
           services={[]}
           clients={[]}
           isProfessionalUser={isProfessionalUser}
           canReassignAppointments={canReassignAppointments}
+          focusNotesOnOpen={focusNotesOnDetailsOpen}
           onStatusChange={handleStatusChange}
           onDeleteRequest={handleDeleteRequest}
           onReassignRequest={(apt) => { handleReassignRequest(apt); setIsDetailsOpen(false); }}
@@ -868,10 +885,10 @@ export default function Agenda() {
         />
 
         <Dialog
-          open={!!completionAppointmentId}
+          open={!!completionAppointment}
           onOpenChange={(open) => {
             if (!open) {
-              setCompletionAppointmentId(null);
+              setCompletionAppointment(null);
               setCompletionPaymentMethod('');
               setCompletionAction(null);
             }
@@ -884,6 +901,32 @@ export default function Agenda() {
                 O que fazer com o valor deste atendimento?
               </DialogDescription>
             </DialogHeader>
+            {completionAppointment ? (
+              <div className="rounded-lg border border-border/70 bg-muted/30 p-3">
+                <p className="text-sm font-semibold text-foreground">
+                  {completionAppointment.client?.name || 'Cliente'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {getAppointmentItems(completionAppointment)
+                    .map((item) => item.service?.name)
+                    .filter((name): name is string => !!name)
+                    .join(', ') || 'Servico'}
+                  {' · '}
+                  {professionals.find((p) => p.id === completionAppointment.professionalId)?.name || 'Profissional'}
+                </p>
+                <p className="mt-1 text-lg font-semibold text-primary">
+                  {formatCurrency(
+                    Number(
+                      completionAppointment.totalPrice ||
+                        getAppointmentItems(completionAppointment).reduce(
+                          (sum, item) => sum + Number(item.totalPrice || 0),
+                          0,
+                        ),
+                    ),
+                  )}
+                </p>
+              </div>
+            ) : null}
             <div className="space-y-3 py-2">
               <div className="grid gap-2 sm:grid-cols-2">
                 <button
@@ -945,7 +988,7 @@ export default function Agenda() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  setCompletionAppointmentId(null);
+                  setCompletionAppointment(null);
                   setCompletionPaymentMethod('');
                   setCompletionAction(null);
                 }}
@@ -961,6 +1004,37 @@ export default function Agenda() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <ConfirmationDialog
+          open={!!appointmentToCancel}
+          title="Cancelar agendamento?"
+          description={
+            appointmentToCancel ? (
+              <>
+                Voce vai cancelar o agendamento de{' '}
+                <strong className="text-foreground">{appointmentToCancel.client?.name || 'cliente'}</strong> em{' '}
+                {new Date(`${toDateKey(appointmentToCancel.date)}T12:00:00`).toLocaleDateString('pt-BR', {
+                  day: 'numeric',
+                  month: 'long',
+                })}{' '}
+                as {appointmentToCancel.startTime}. Esta acao nao pode ser desfeita e o horario fica livre para novo
+                agendamento.
+              </>
+            ) : (
+              'Esta acao nao pode ser desfeita.'
+            )
+          }
+          isLoading={isCancelling}
+          cancelLabel="Manter agendamento"
+          confirmLabel="Cancelar agendamento"
+          loadingLabel="Cancelando..."
+          confirmClassName="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          onOpenChange={(open) => {
+            if (isCancelling) return;
+            if (!open) setAppointmentToCancel(null);
+          }}
+          onConfirm={() => void handleConfirmCancel()}
+        />
       </div>
 
       <Dialog open={isNfseConfirmOpen} onOpenChange={setIsNfseConfirmOpen}>

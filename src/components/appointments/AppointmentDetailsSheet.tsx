@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Calendar as CalendarIcon,
   DollarSign,
@@ -69,6 +69,8 @@ interface AppointmentDetailsSheetProps {
   clients: Client[];
   isProfessionalUser: boolean;
   canReassignAppointments: boolean;
+  /** Quando true, ao abrir rola ate o bloco de registro operacional e foca o primeiro campo. */
+  focusNotesOnOpen?: boolean;
   onStatusChange: (id: string, status: Appointment['status']) => Promise<void>;
   onDeleteRequest: (id: string) => void;
   onReassignRequest: (appointment: Appointment) => void;
@@ -85,12 +87,14 @@ export function AppointmentDetailsSheet({
   clients,
   isProfessionalUser,
   canReassignAppointments,
+  focusNotesOnOpen = false,
   onStatusChange,
   onDeleteRequest,
   onReassignRequest,
   onViewInvoice,
   onEditSuccess,
 }: AppointmentDetailsSheetProps) {
+  const notesSectionRef = useRef<HTMLDivElement>(null);
   const [historyItem, setHistoryItem] =
     useState<ClientAppointmentHistoryItem | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -224,6 +228,15 @@ export function AppointmentDetailsSheet({
       active = false;
     };
   }, [appointment, open, selectedClient?.id]);
+
+  useEffect(() => {
+    if (!open || !focusNotesOnOpen) return;
+    const timer = window.setTimeout(() => {
+      notesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      notesSectionRef.current?.querySelector('textarea')?.focus();
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [open, focusNotesOnOpen]);
 
   const handleDeleteNote = async (noteId: string) => {
     if (!appointment) return;
@@ -591,7 +604,11 @@ export function AppointmentDetailsSheet({
                 )}
               </div>
 
-              <div data-tour="apt-details-notes" className="space-y-3 rounded-lg border bg-muted/20 p-4">
+              <div
+                ref={notesSectionRef}
+                data-tour="apt-details-notes"
+                className="space-y-3 rounded-lg border bg-muted/20 p-4 scroll-mt-6"
+              >
                 <div className="space-y-2">
                   <Label htmlFor="serviceExecutionNotes">
                     Execucao do servico
@@ -789,7 +806,6 @@ export function AppointmentDetailsSheet({
                 {appointment.status === 'IN_PROGRESS' ? (
                   <Button
                     className="w-full bg-green-600 hover:bg-green-700"
-                    disabled={careNotes.length === 0}
                     onClick={() => onStatusChange(appointment.id, 'COMPLETED')}
                   >
                     Concluir atendimento
