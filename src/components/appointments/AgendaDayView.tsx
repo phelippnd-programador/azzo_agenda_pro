@@ -215,7 +215,7 @@ export function AgendaDayView({
           status={appointment.status}
           labelMap={appointmentStatusLabelMap}
           toneMap={appointmentStatusBadgeToneMap}
-          className="hidden px-1.5 py-0.5 text-[9px] sm:inline-flex sm:text-[10px]"
+          className="hidden px-1.5 py-0.5 text-[11px] sm:inline-flex"
         />
       )}
       <Button
@@ -314,10 +314,10 @@ export function AgendaDayView({
               <p className="font-semibold text-xs sm:text-sm leading-tight truncate">
                 {client?.name || 'Cliente'}
               </p>
-              <p className="text-[10px] sm:text-xs leading-tight truncate mt-0.5 opacity-80">
+              <p className="text-[11px] sm:text-xs leading-tight truncate mt-0.5 opacity-80">
                 {serviceLabel}
               </p>
-              <p className="text-[10px] opacity-60 truncate leading-tight hidden sm:block">
+              <p className="text-[11px] opacity-60 truncate leading-tight hidden sm:block">
                 {professional?.name}
               </p>
             </div>
@@ -401,7 +401,7 @@ export function AgendaDayView({
                   >
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <div className="flex flex-wrap items-center gap-2">
-                        <div className="inline-flex items-center gap-1 rounded-full bg-white/75 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-foreground/80 dark:bg-background/70 dark:text-foreground/80">
+                        <div className="inline-flex items-center gap-1 rounded-full bg-white/75 px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-foreground/80 dark:bg-background/70 dark:text-foreground/80">
                           #{index + 1} de {appointmentsAtSameTime.length}
                         </div>
                         <StatusBadge
@@ -544,7 +544,7 @@ export function AgendaDayView({
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-semibold truncate leading-tight">{prof.name}</p>
-                          <p className="text-[10px] text-muted-foreground">{count} agend.</p>
+                          <p className="text-[11px] text-muted-foreground">{count} agend.</p>
                         </div>
                       </div>
                     </div>
@@ -561,7 +561,7 @@ export function AgendaDayView({
                       style={{ top: nowTop }}
                     >
                       <span className="ml-[68px] h-px w-full bg-primary" />
-                      <span className="absolute left-2 -translate-y-1/2 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-soft">
+                      <span className="absolute left-2 -translate-y-1/2 rounded-full bg-primary px-1.5 py-0.5 text-[11px] font-semibold text-primary-foreground shadow-soft">
                         {toSlotLabel(nowMinutes)}
                       </span>
                     </div>
@@ -655,17 +655,17 @@ export function AgendaDayView({
                                     {client?.name || 'Cliente'}
                                   </p>
                                   {height > 48 && (
-                                    <p className="text-[10px] font-medium uppercase tracking-[0.08em] opacity-70 truncate leading-tight mt-0.5">
+                                    <p className="text-[11px] font-medium uppercase tracking-[0.08em] opacity-70 truncate leading-tight mt-0.5">
                                       {appointmentStatusLabelMap[apt.status] ?? apt.status}
                                     </p>
                                   )}
                                   {height > 48 && (
-                                    <p className="text-[10px] opacity-75 truncate leading-tight mt-0.5">
+                                    <p className="text-[11px] opacity-75 truncate leading-tight mt-0.5">
                                       {serviceLabel}
                                     </p>
                                   )}
                                   {height > 64 && (
-                                    <p className="text-[10px] opacity-50 mt-0.5">
+                                    <p className="text-[11px] opacity-50 mt-0.5">
                                       {normalizeTime(apt.startTime)} – {normalizeTime(apt.endTime)}
                                     </p>
                                   )}
@@ -783,7 +783,7 @@ export function AgendaDayView({
                           {time}
                         </span>
                         {isNowSlot && (
-                          <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
+                          <span className="mt-1 block text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
                             Agora
                           </span>
                         )}

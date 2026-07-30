@@ -118,7 +118,7 @@ export function AgendaMonthView({
                       {day.day}
                     </span>
                     {isToday ? (
-                      <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                      <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">
                         Hoje
                       </span>
                     ) : null}
@@ -154,11 +154,11 @@ export function AgendaMonthView({
                         <p className="text-base font-semibold text-foreground">{apptCount}</p>
                       </div>
                       {isBusy ? (
-                        <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                        <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[11px] font-semibold text-primary">
                           Pico
                         </span>
                       ) : isWarm ? (
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
                           Ativo
                         </span>
                       ) : null}

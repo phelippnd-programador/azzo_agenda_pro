@@ -105,8 +105,8 @@ export function AgendaWeekView({
         <div className="flex items-center gap-2 border-b border-border/60 bg-muted/25 px-4 py-3">
           <CalendarIcon className="h-4 w-4 text-primary" />
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              Visao semanal
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Visão semanal
             </p>
             <p className="text-sm font-medium capitalize text-foreground">{weekRange}</p>
           </div>
@@ -132,7 +132,7 @@ export function AgendaWeekView({
                 >
                   <p
                     className={[
-                      'text-[10px] font-semibold uppercase tracking-[0.12em]',
+                      'text-[11px] font-semibold uppercase tracking-[0.12em]',
                       day.isToday ? 'text-primary' : 'text-muted-foreground',
                     ].join(' ')}
                   >
@@ -172,8 +172,8 @@ export function AgendaWeekView({
                         onClick={() => onNewAppointmentSlot(day.date, '09:00')}
                         className="flex flex-1 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border/50 py-6 text-center transition-colors hover:border-primary/40 hover:bg-primary/4"
                       >
-                        <span className="text-[10px] text-muted-foreground/60">Sem agendamentos</span>
-                        <span className="text-[10px] font-medium text-primary/60 hover:text-primary transition-colors">
+                        <span className="text-[11px] text-muted-foreground/60">Sem agendamentos</span>
+                        <span className="text-[11px] font-medium text-primary/60 hover:text-primary transition-colors">
                           + Novo
                         </span>
                       </button>
@@ -189,7 +189,7 @@ export function AgendaWeekView({
                         <button
                           type="button"
                           onClick={() => onNewAppointmentSlot(day.date, '09:00')}
-                          className="mt-auto rounded-md border border-dashed border-border/40 py-1 text-center text-[10px] text-muted-foreground/50 transition-colors hover:border-primary/30 hover:text-primary/70"
+                          className="mt-auto rounded-md border border-dashed border-border/40 py-1 text-center text-[11px] text-muted-foreground/50 transition-colors hover:border-primary/30 hover:text-primary/70"
                         >
                           + Novo
                         </button>
@@ -230,16 +230,16 @@ function WeekAppointmentCard({
       ].join(' ')}
     >
       <div className="flex items-center justify-between gap-1 mb-0.5">
-        <span className="text-[10px] font-semibold leading-none opacity-75">{startTime}</span>
+        <span className="text-[11px] font-semibold leading-none opacity-75">{startTime}</span>
         <StatusBadge
           status={appointment.status}
           labelMap={appointmentStatusLabelMap}
           toneMap={appointmentStatusBadgeToneMap}
-          className="px-1 py-0 text-[8px] leading-tight"
+          className="px-1 py-0 text-[11px] leading-tight"
         />
       </div>
       <p className="text-xs font-semibold leading-tight truncate">{clientName}</p>
-      <p className="text-[10px] leading-tight truncate opacity-70 mt-0.5">{serviceName}</p>
+      <p className="text-[11px] leading-tight truncate opacity-70 mt-0.5">{serviceName}</p>
     </button>
   );
 }
