@@ -97,7 +97,7 @@ export function Header({
                 variant="ghost"
                 size="icon"
               className="relative rounded-xl border border-transparent text-muted-foreground hover:border-border/70 hover:bg-card/80 hover:text-foreground"
-              aria-label="Abrir notificacoes"
+              aria-label="Abrir notificações"
             >
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 ? (
@@ -108,10 +108,10 @@ export function Header({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72 sm:w-80">
-              <DropdownMenuLabel>Notificacoes</DropdownMenuLabel>
+              <DropdownMenuLabel>Notificações</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {!summaryItems.length ? (
-                <DropdownMenuItem className="text-sm text-muted-foreground">Nenhuma notificacao</DropdownMenuItem>
+                <DropdownMenuItem className="text-sm text-muted-foreground">Nenhuma notificação</DropdownMenuItem>
               ) : null}
               {summaryItems.slice(0, 5).map((item) => (
                 <DropdownMenuItem
@@ -123,7 +123,7 @@ export function Header({
                 >
                   <span className="flex items-center gap-2 text-sm font-medium">
                     {!(item.viewed ?? Boolean(item.viewedAt)) ? <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" /> : null}
-                    {item.channel || "Notificacao"}
+                    {item.channel || "Notificação"}
                     {!(item.viewed ?? Boolean(item.viewedAt)) ? (
                       <Badge variant="outline" className="border-primary/30 bg-primary/5 px-1.5 py-0 text-xs text-primary">
                         Nova

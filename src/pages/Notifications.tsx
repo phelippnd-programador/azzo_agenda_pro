@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PageEmptyState } from "@/components/ui/page-states";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -184,8 +185,8 @@ export default function Notifications() {
 
   return (
     <MainLayout
-      title="Notificacoes"
-      subtitle="Consulta ao backend ao entrar na pagina e a cada 20 minutos."
+      title="Notificações"
+      subtitle="Consulta ao backend ao entrar na página e a cada 20 minutos."
     >
       <div className="space-y-4">
         <Card>
@@ -193,7 +194,7 @@ export default function Notifications() {
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-primary" />
               <span className="text-sm">
-                {unreadCount} nao visualizada{unreadCount === 1 ? "" : "s"}
+                {unreadCount} não visualizada{unreadCount === 1 ? "" : "s"}
               </span>
               {lastFetchAt ? (
                 <span className="text-xs text-muted-foreground">
@@ -224,14 +225,14 @@ export default function Notifications() {
 
         {error ? (
           <Alert variant="destructive">
-            <AlertTitle>Erro ao carregar notificacoes</AlertTitle>
+            <AlertTitle>Erro ao carregar notificações</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         ) : null}
 
         <Card>
           <CardHeader>
-            <CardTitle>Lista de notificacoes</CardTitle>
+            <CardTitle>Lista de notificações</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex flex-wrap gap-2">
@@ -250,14 +251,14 @@ export default function Notifications() {
             </div>
 
             {loading && !notifications.length ? (
-              <p className="text-sm text-muted-foreground">Carregando notificacoes...</p>
+              <p className="text-sm text-muted-foreground">Carregando notificações...</p>
             ) : !notifications.length ? (
               <PageEmptyState
-                title={hasActiveFilters ? "Nenhuma notificacao para estes filtros" : "Nenhuma notificacao encontrada"}
+                title={hasActiveFilters ? "Nenhuma notificação para estes filtros" : "Nenhuma notificação encontrada"}
                 description={
                   hasActiveFilters
                     ? "Os filtros atuais esconderam todos os resultados. Limpe os filtros para voltar a ver a fila completa."
-                    : "Quando o sistema gerar avisos, lembretes ou falhas de entrega, eles aparecerao aqui."
+                    : "Quando o sistema gerar avisos, lembretes ou falhas de entrega, eles aparecerão aqui."
                 }
                 action={
                   hasActiveFilters
@@ -298,7 +299,7 @@ export default function Notifications() {
                           size="icon"
                           variant="outline"
                           className="h-9 w-9 shrink-0 text-primary hover:bg-primary/10 hover:text-primary"
-                          aria-label="Ver detalhe da notificacao"
+                          aria-label="Ver detalhe da notificação"
                           onClick={() => void openDetails(item.id)}
                         >
                           <Eye className="h-4 w-4" />
@@ -316,27 +317,27 @@ export default function Notifications() {
                     </article>
                   ))}
                 </div>
-                <div className="hidden overflow-x-auto md:block">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-left text-muted-foreground">
-                        <th className="py-2">Data</th>
-                        <th className="py-2">Canal</th>
-                        <th className="py-2">Mensagem</th>
-                        <th className="py-2">Status</th>
-                        <th className="py-2">Destino</th>
-                        <th className="py-2 text-right">Detalhe</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="min-w-36 whitespace-nowrap">Data</TableHead>
+                        <TableHead>Canal</TableHead>
+                        <TableHead>Mensagem</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Destino</TableHead>
+                        <TableHead className="text-right">Detalhe</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                       {notifications.map((item) => (
-                        <tr
+                        <TableRow
                           key={item.id}
-                          className={`border-b hover:bg-muted/40 ${isUnread(item) ? "bg-primary/5" : ""}`}
+                          className={isUnread(item) ? "bg-primary/5" : undefined}
                         >
-                          <td className="py-2">{formatDate(item.sentAt || item.createdAt)}</td>
-                          <td className="py-2">{CHANNEL_LABELS[item.channel] ?? item.channel ?? "-"}</td>
-                          <td className="py-2 max-w-[360px]">
+                          <TableCell className="whitespace-nowrap">{formatDate(item.sentAt || item.createdAt)}</TableCell>
+                          <TableCell>{CHANNEL_LABELS[item.channel] ?? item.channel ?? "-"}</TableCell>
+                          <TableCell className="max-w-[360px]">
                             <div className="flex min-w-0 items-center gap-2">
                               {isUnread(item) ? <span className="h-2 w-2 rounded-full bg-primary inline-block" /> : null}
                               <span className="min-w-0 flex-1 truncate">{item.message}</span>
@@ -344,12 +345,12 @@ export default function Notifications() {
                                 <Badge className="bg-primary/10 text-primary border-primary/30">Nova</Badge>
                               ) : null}
                             </div>
-                          </td>
-                          <td className="py-2">
+                          </TableCell>
+                          <TableCell>
                             <Badge className={getStatusBadgeClass(item.status)}>{STATUS_LABELS[item.status] ?? item.status}</Badge>
-                          </td>
-                          <td className="py-2">{maskDestination(item.destination)}</td>
-                          <td className="py-2 text-right">
+                          </TableCell>
+                          <TableCell>{maskDestination(item.destination)}</TableCell>
+                          <TableCell className="text-right">
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -357,7 +358,7 @@ export default function Notifications() {
                                     size="icon"
                                     variant="outline"
                                     className="text-primary hover:bg-primary/10 hover:text-primary"
-                                    aria-label="Ver detalhe da notificacao"
+                                    aria-label="Ver detalhe da notificação"
                                     onClick={() => void openDetails(item.id)}
                                   >
                                     <Eye className="h-4 w-4" />
@@ -366,11 +367,11 @@ export default function Notifications() {
                                 <TooltipContent>Ver detalhe</TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
                 </div>
                 <Button variant="outline" onClick={() => void loadMore()} disabled={loading || !hasMore}>
                   {loading ? "Carregando..." : hasMore ? "Carregar mais" : "Sem mais resultados"}
@@ -384,17 +385,17 @@ export default function Notifications() {
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Detalhes da notificacao</DialogTitle>
-            <DialogDescription>Dados completos da notificacao selecionada.</DialogDescription>
+            <DialogTitle>Detalhes da notificação</DialogTitle>
+            <DialogDescription>Dados completos da notificação selecionada.</DialogDescription>
           </DialogHeader>
 
           {!selected ? (
-            <p className="text-sm text-muted-foreground">Selecione uma notificacao para visualizar os detalhes.</p>
+            <p className="text-sm text-muted-foreground">Selecione uma notificação para visualizar os detalhes.</p>
           ) : (
             <div className="space-y-3 text-sm">
               <div className="flex items-center gap-2">
                 <Badge className={getStatusBadgeClass(selected.status)}>{selected.status}</Badge>
-                <span className="text-xs text-muted-foreground">{selected.channel || "Notificacao"}</span>
+                <span className="text-xs text-muted-foreground">{selected.channel || "Notificação"}</span>
               </div>
               <p><span className="font-medium">Criada em:</span> {formatDate(selected.createdAt)}</p>
               <p><span className="font-medium">Enviada em:</span> {selected.sentAt ? formatDate(selected.sentAt) : "-"}</p>
@@ -417,7 +418,7 @@ export default function Notifications() {
                 disabled={loading}
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                Remover notificacao
+                Remover notificação
               </Button>
             </div>
           )}
@@ -427,8 +428,8 @@ export default function Notifications() {
       <DeleteConfirmationDialog
         open={!!notificationToDelete}
         isLoading={isDeletingNotification}
-        title="Remover notificacao?"
-        description="Tem certeza que deseja remover esta notificacao? Esta acao nao pode ser desfeita."
+        title="Remover notificação?"
+        description="Tem certeza que deseja remover esta notificação? Esta ação não pode ser desfeita."
         onOpenChange={(open) => {
           if (isDeletingNotification) return;
           if (!open) setNotificationToDelete(null);
@@ -439,8 +440,8 @@ export default function Notifications() {
       <DeleteConfirmationDialog
         open={isClearAllDialogOpen}
         isLoading={isClearingAll}
-        title="Limpar todas as notificacoes?"
-        description="Tem certeza que deseja limpar todas as notificacoes? Esta acao nao pode ser desfeita."
+        title="Limpar todas as notificações?"
+        description="Tem certeza que deseja limpar todas as notificações? Esta ação não pode ser desfeita."
         onOpenChange={(open) => {
           if (isClearingAll) return;
           setIsClearAllDialogOpen(open);

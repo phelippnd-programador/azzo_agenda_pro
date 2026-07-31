@@ -8,7 +8,7 @@ import type { NotificationStatus, NotificationsFilters as FiltersType } from "@/
 const CHANNEL_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "APPOINTMENT_CREATED", label: "Agendamento criado" },
   { value: "WHATSAPP_REMINDER", label: "Lembrete WhatsApp" },
-  { value: "WHATSAPP_CONFIG_ALERT", label: "Alerta configuracao WhatsApp" },
+  { value: "WHATSAPP_CONFIG_ALERT", label: "Alerta configuração WhatsApp" },
   { value: "WHATSAPP_DELIVERY_ERROR", label: "Falha de entrega WhatsApp" },
 ];
 
@@ -43,9 +43,9 @@ export function NotificationsFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="FAILED">FAILED</SelectItem>
-            <SelectItem value="SENT">SENT</SelectItem>
-            <SelectItem value="PENDING">PENDING</SelectItem>
+            <SelectItem value="FAILED">Falhou</SelectItem>
+            <SelectItem value="SENT">Enviado</SelectItem>
+            <SelectItem value="PENDING">Pendente</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -95,7 +95,7 @@ export function NotificationsFilters({
       </div>
 
       <div className="flex items-end">
-        <div className="flex items-center justify-between rounded-md border border-input h-10 px-3 w-full">
+        <div className="flex h-10 w-full items-center justify-between rounded-lg border border-border/70 bg-background/60 px-3">
           <Label htmlFor="notifications-failed-only" className="text-sm">
             Somente falhas
           </Label>
@@ -113,9 +113,9 @@ export function NotificationsFilters({
       </div>
 
       <div className="flex items-end">
-        <div className="flex items-center justify-between rounded-md border border-input h-10 px-3 w-full">
+        <div className="flex h-10 w-full items-center justify-between rounded-lg border border-border/70 bg-background/60 px-3">
           <Label htmlFor="notifications-unread-only" className="text-sm">
-            Nao visualizadas
+            Não visualizadas
           </Label>
           <Switch
             id="notifications-unread-only"
