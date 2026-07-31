@@ -11,9 +11,9 @@ const STATUS_LABEL: Record<AppointmentStatus, string> = {
   PENDING: "Pendente",
   CONFIRMED: "Confirmado",
   IN_PROGRESS: "Em andamento",
-  COMPLETED: "Concluido",
+  COMPLETED: "Concluído",
   CANCELLED: "Cancelado",
-  NO_SHOW: "Nao compareceu",
+  NO_SHOW: "Não compareceu",
 };
 
 const STATUS_VARIANT: Record<
@@ -80,19 +80,18 @@ export function ChatClientAppointments({ clientId, clientName }: ChatClientAppoi
   };
 
   return (
-    <div className="rounded-lg border bg-card text-card-foreground">
-      {/* Header colapsavel */}
+    <div className="rounded-lg border border-border/70 bg-background/65 text-card-foreground">
       <button
         type="button"
-        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left hover:bg-muted/40 transition-colors rounded-lg"
+        className="flex w-full items-center justify-between gap-2 rounded-lg px-4 py-3 text-left transition-colors hover:bg-muted/40"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
       >
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex min-w-0 items-center gap-2">
           <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
           <span className="text-sm font-semibold truncate">
-            Proximos agendamentos
-            {clientName ? ` — ${clientName.split(" ")[0]}` : ""}
+            Próximos agendamentos
+            {clientName ? ` - ${clientName.split(" ")[0]}` : ""}
           </span>
           {upcoming.length > 0 && (
             <Badge className="shrink-0 text-xs h-4 px-1.5 leading-none">
@@ -108,7 +107,7 @@ export function ChatClientAppointments({ clientId, clientName }: ChatClientAppoi
       </button>
 
       {open && (
-        <div className="border-t px-4 pb-3 pt-3 space-y-2">
+        <div className="space-y-2 border-t border-border/70 px-4 pb-3 pt-3">
           {isLoading ? (
             <div className="flex items-center justify-center py-4">
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -122,14 +121,14 @@ export function ChatClientAppointments({ clientId, clientName }: ChatClientAppoi
               {displayed.map((item) => {
                 const serviceName =
                   item.services?.[0]?.service?.name ??
-                  "Servico nao informado";
+                  "Serviço não informado";
 
-                const professionalName = item.professionalName ?? "Profissional nao informado";
+                const professionalName = item.professionalName ?? "Profissional não informado";
 
                 return (
                   <div
                     key={item.appointmentId}
-                    className="flex items-start justify-between gap-2 rounded-md border p-2.5 text-xs"
+                    className="flex items-start justify-between gap-2 rounded-md border border-border/70 bg-card/70 p-2.5 text-xs"
                   >
                     <div className="min-w-0 space-y-0.5">
                       <p className="font-medium truncate">{serviceName}</p>

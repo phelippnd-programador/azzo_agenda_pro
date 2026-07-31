@@ -86,7 +86,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     loadConversations().catch(() => {
-      setError("Nao foi possivel carregar o inbox do chat.");
+      setError("Não foi possível carregar o inbox do chat.");
     });
   }, [loadConversations]);
 
@@ -103,7 +103,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (!conversationId || !selectedConversation) return;
     loadMessages(conversationId).catch(() => {
-      setError("Nao foi possivel carregar a conversa selecionada.");
+      setError("Não foi possível carregar a conversa selecionada.");
     });
   }, [conversationId, loadMessages, selectedConversation]);
 
@@ -218,7 +218,7 @@ export default function ChatPage() {
       await sendMessage(selectedConversation.clientId, content);
       form.reset({ message: "" });
     } catch {
-      setError("Nao foi possivel enviar a mensagem.");
+      setError("Não foi possível enviar a mensagem.");
     }
   });
 
@@ -233,13 +233,13 @@ export default function ChatPage() {
   const handleReloadConversations = () => {
     setError(null);
     loadConversations().catch(() => {
-      setError("Nao foi possivel carregar o inbox do chat.");
+      setError("Não foi possível carregar o inbox do chat.");
     });
   };
 
   if (error) {
     return (
-      <MainLayout title="Chat" subtitle="Historico completo de conversas">
+      <MainLayout title="Chat" subtitle="Histórico completo de conversas">
         <PageErrorState
           title="Falha ao carregar chat"
           description={error}
@@ -252,18 +252,18 @@ export default function ChatPage() {
     );
   }
 
-  // No mobile: mostra sidebar quando nao ha conversa selecionada,
-  // ou mostra o chat quando ha conversa selecionada.
+  // No mobile: mostra sidebar quando não há conversa selecionada,
+  // ou mostra o chat quando há conversa selecionada.
   const showSidebar = !isMobile || !conversationId;
   const showChat = !isMobile || !!conversationId;
 
   const handleBackToList = () => navigate("/chat");
 
   return (
-    <MainLayout title="Chat" subtitle="Historico completo de mensagens por cliente">
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[340px_1fr]">
+    <MainLayout title="Chat" subtitle="Histórico completo de mensagens por cliente">
+      <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[minmax(320px,360px)_minmax(0,1fr)]">
         {showSidebar && (
-          <div className="order-2 lg:order-1">
+          <div className="order-2 min-w-0 lg:order-1">
             <ChatSidebar
               conversations={conversations}
               filteredConversations={filteredConversations}
@@ -284,12 +284,12 @@ export default function ChatPage() {
         )}
 
         {showChat && (
-          <Card className="order-1 flex h-[calc(100dvh-8rem)] flex-col lg:order-2 lg:h-[calc(100vh-13rem)]">
+          <Card className="order-1 flex h-[calc(100dvh-8rem)] min-w-0 flex-col overflow-hidden lg:order-2 lg:h-[calc(100vh-13rem)]">
             {!selectedConversation ? (
               <CardContent className="flex h-full items-center justify-center">
                 <PageEmptyState
                   title="Selecione uma conversa"
-                  description="Escolha um cliente no painel lateral para ver o historico completo e responder pelo inbox."
+                  description="Escolha um cliente no painel lateral para ver o histórico completo e responder pelo inbox."
                   action={
                     defaultConversation
                       ? {
@@ -302,7 +302,7 @@ export default function ChatPage() {
               </CardContent>
             ) : (
               <>
-                <CardHeader className="shrink-0 border-b">
+                <CardHeader className="shrink-0 border-b border-border/70 bg-card/80">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex min-w-0 items-center gap-2">
                       {isMobile && (
@@ -340,7 +340,7 @@ export default function ChatPage() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="flex flex-1 min-h-0 flex-col">
+                <CardContent className="flex min-h-0 flex-1 flex-col">
                   {selectedConversation.clientId && (
                     <div className="shrink-0 pb-2">
                       <ChatClientAppointments

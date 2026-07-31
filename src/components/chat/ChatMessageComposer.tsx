@@ -45,40 +45,43 @@ export function ChatMessageComposer({
   const watchedMessage = form.watch("message");
 
   return (
-    <form onSubmit={onSubmit} className="flex shrink-0 gap-2 border-t pt-3">
+    <form onSubmit={onSubmit} className="flex shrink-0 flex-col gap-2 border-t border-border/70 pt-3 sm:flex-row">
       <Input
         {...form.register("message")}
         placeholder="Digite a mensagem para o cliente..."
         maxLength={2000}
         disabled={isSending}
+        className="min-w-0 flex-1"
         aria-label="Mensagem para o cliente"
       />
-      <Popover open={isEmojiOpen} onOpenChange={onEmojiOpenChange}>
-        <PopoverTrigger asChild>
-          <Button type="button" size="icon" disabled={isSending} aria-label="Selecionar emoji">
-            <Smile className="h-4 w-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="end" className="w-56 p-2">
-          <div className="grid grid-cols-8 gap-1">
-            {EMOJI_OPTIONS.map((emoji) => (
-              <button
-                key={emoji}
-                type="button"
-                className="h-7 w-7 rounded text-base hover:bg-accent"
-                onClick={() => onAppendEmoji(emoji)}
-                aria-label={`Inserir ${emoji}`}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-        </PopoverContent>
-      </Popover>
-      <Button type="submit" disabled={isSending || !(watchedMessage || "").trim()}>
-        <SendHorizontal className="mr-2 h-4 w-4" />
-        Enviar
-      </Button>
+      <div className="flex shrink-0 gap-2">
+        <Popover open={isEmojiOpen} onOpenChange={onEmojiOpenChange}>
+          <PopoverTrigger asChild>
+            <Button type="button" size="icon" disabled={isSending} aria-label="Selecionar emoji">
+              <Smile className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-56 p-2">
+            <div className="grid grid-cols-8 gap-1">
+              {EMOJI_OPTIONS.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  className="h-7 w-7 rounded text-base hover:bg-accent"
+                  onClick={() => onAppendEmoji(emoji)}
+                  aria-label={`Inserir ${emoji}`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+        <Button className="flex-1 sm:flex-none" type="submit" disabled={isSending || !(watchedMessage || "").trim()}>
+          <SendHorizontal className="mr-2 h-4 w-4" />
+          Enviar
+        </Button>
+      </div>
     </form>
   );
 }

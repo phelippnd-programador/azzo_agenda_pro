@@ -24,7 +24,7 @@ export interface ChatConversation {
   clientAvatar?: string | null;
   clientProfileImageUrl?: string | null;
   clientPhoneMasked?: string | null;
-  channel: "WHATSAPP";
+  channel: "WHATSAPP" | "TELEGRAM";
   appointmentMarker: ChatAppointmentMarker;
   lastMessageAt?: string | null;
   lastMessagePreview?: string | null;
