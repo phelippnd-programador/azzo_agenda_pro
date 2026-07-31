@@ -31,7 +31,7 @@ export default function PosPage() {
     try {
       setComandas(await posApi.listar(s));
     } catch (error) {
-      toast.error(resolveUiError(error, 'Nao foi possivel carregar as comandas.').message);
+      toast.error(resolveUiError(error, 'Não foi possível carregar as comandas.').message);
     } finally {
       setIsLoading(false);
     }
@@ -47,14 +47,14 @@ export default function PosPage() {
       const comanda = await posApi.abrir({});
       navigate(`/pos/${comanda.id}`);
     } catch (error) {
-      toast.error(resolveUiError(error, 'Nao foi possivel abrir a comanda.').message);
+      toast.error(resolveUiError(error, 'Não foi possível abrir a comanda.').message);
     } finally {
       setIsCreating(false);
     }
   };
 
   return (
-    <MainLayout title="Comandas" subtitle="Fechamento de conta: servicos, produtos, desconto e pagamentos">
+    <MainLayout title="Comandas" subtitle="Fechamento de conta: serviços, produtos, desconto e pagamentos">
       <div className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Tabs value={status} onValueChange={(v) => setStatus(v as ComandaStatus)}>
@@ -73,7 +73,7 @@ export default function PosPage() {
         </div>
 
         {isLoading ? (
-          <PageListLoadingState metricCount={0} itemCount={6} itemHeightClassName="h-28" />
+          <PageListLoadingState metricCount={0} itemCount={6} itemHeightClassName="h-28" showHeader={false} />
         ) : comandas.length === 0 ? (
           <PageEmptyState
             title={`Nenhuma comanda ${STATUS_LABEL[status].toLowerCase()} no momento`}
@@ -85,31 +85,31 @@ export default function PosPage() {
             }}
           />
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             {comandas.map((comanda) => (
               <Card
                 key={comanda.id}
-                className="cursor-pointer transition-shadow hover:shadow-md"
+                className="cursor-pointer border-border/70 bg-card/90 shadow-none transition hover:-translate-y-0.5 hover:shadow-[0_12px_36px_-28px_rgba(15,23,42,0.18)]"
                 onClick={() => navigate(`/pos/${comanda.id}`)}
               >
                 <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center justify-between text-sm">
-                    <span>{comanda.appointmentId ? 'Atendimento' : 'Avulsa'}</span>
+                  <CardTitle className="flex items-center justify-between gap-2 text-sm">
+                    <span className="min-w-0 truncate">{comanda.appointmentId ? 'Atendimento' : 'Avulsa'}</span>
                     <Badge variant={comanda.status === 'ABERTA' ? 'default' : 'outline'}>
                       {comanda.status}
                     </Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-1 text-sm">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-4">
                     <span className="text-muted-foreground">Itens</span>
                     <span>{comanda.itens.length}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-4">
                     <span className="text-muted-foreground">Total</span>
                     <span className="font-semibold">{formatCurrency(comanda.total)}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-4">
                     <span className="text-muted-foreground">Pago</span>
                     <span>{formatCurrency(comanda.totalPago)}</span>
                   </div>
