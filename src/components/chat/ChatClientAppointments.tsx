@@ -80,10 +80,10 @@ export function ChatClientAppointments({ clientId, clientName }: ChatClientAppoi
   };
 
   return (
-    <div className="rounded-lg border border-border/70 bg-background/65 text-card-foreground">
+    <div className="rounded-xl border border-border/70 bg-background/65 text-card-foreground">
       <button
         type="button"
-        className="flex w-full items-center justify-between gap-2 rounded-lg px-4 py-3 text-left transition-colors hover:bg-muted/40"
+        className="flex w-full items-center justify-between gap-2 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/40"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
       >
@@ -128,7 +128,7 @@ export function ChatClientAppointments({ clientId, clientName }: ChatClientAppoi
                 return (
                   <div
                     key={item.appointmentId}
-                    className="flex items-start justify-between gap-2 rounded-md border border-border/70 bg-card/70 p-2.5 text-xs"
+                    className="flex items-start justify-between gap-2 rounded-lg border border-border/70 bg-card/70 p-2.5 text-xs"
                   >
                     <div className="min-w-0 space-y-0.5">
                       <p className="font-medium truncate">{serviceName}</p>

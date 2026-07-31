@@ -57,23 +57,23 @@ export function ChatConversationCard({ conversation, selected, onClick }: Props)
       aria-pressed={selected}
       aria-label={`Abrir conversa com ${conversation.clientName || "Cliente"}`}
       className={cn(
-        "w-full rounded-lg border p-2.5 text-left transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "w-full rounded-xl border p-3 text-left transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         selected
-          ? "border-primary/40 bg-primary/10 shadow-[0_14px_30px_-24px_rgba(15,23,42,0.24)]"
-          : "border-transparent bg-background/55 hover:border-border/70 hover:bg-muted/60"
+          ? "border-primary/35 bg-primary/10 shadow-[0_16px_34px_-26px_rgba(15,23,42,0.30)]"
+          : "border-border/40 bg-background/55 hover:border-border/80 hover:bg-muted/60"
       )}
     >
       <div className="flex min-w-0 items-start gap-2.5">
-        <Avatar className="h-9 w-9 flex-shrink-0">
+        <Avatar className="h-10 w-10 flex-shrink-0">
           <AvatarImage src={avatarSrc || undefined} />
-          <AvatarFallback className="bg-primary/10 text-xs text-primary">
+          <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
             {getInitials(conversation.clientName)}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-col gap-1">
             <div className="flex min-w-0 items-start gap-1.5">
-              <p className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+              <p className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
                 {conversation.clientName || "Cliente"}
               </p>
               {conversation.unreadCount > 0 ? (

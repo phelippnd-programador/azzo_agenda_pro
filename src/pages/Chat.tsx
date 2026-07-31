@@ -1,6 +1,6 @@
 import { useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MessageCircle, Send } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
@@ -17,6 +17,11 @@ import { ChatTimeline } from "@/components/chat/ChatTimeline";
 import { ChatMessageComposer } from "@/components/chat/ChatMessageComposer";
 import { ChatClientAppointments } from "@/components/chat/ChatClientAppointments";
 import { getEnv } from "@/config/env";
+
+const CHAT_CHANNEL_LABELS = {
+  WHATSAPP: "WhatsApp",
+  TELEGRAM: "Telegram",
+} as const;
 
 export default function ChatPage() {
   const navigate = useNavigate();
@@ -284,7 +289,7 @@ export default function ChatPage() {
         )}
 
         {showChat && (
-          <Card className="order-1 flex h-[calc(100dvh-8rem)] min-w-0 flex-col overflow-hidden border-border/70 bg-card/95 lg:order-2 lg:h-[calc(100vh-13rem)]">
+          <Card className="order-1 flex h-[calc(100dvh-8rem)] min-w-0 flex-col overflow-hidden border-border/70 bg-card/95 shadow-panel lg:order-2 lg:h-[calc(100vh-13rem)]">
             {!selectedConversation ? (
               <CardContent className="flex h-full items-center justify-center">
                 <PageEmptyState
@@ -326,6 +331,14 @@ export default function ChatPage() {
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2 sm:justify-end">
+                      <Badge variant="outline" className="shrink-0 gap-1">
+                        {selectedConversation.channel === "TELEGRAM" ? (
+                          <Send className="h-3 w-3" />
+                        ) : (
+                          <MessageCircle className="h-3 w-3" />
+                        )}
+                        {CHAT_CHANNEL_LABELS[selectedConversation.channel] ?? "Canal"}
+                      </Badge>
                       <Badge variant="outline" className="shrink-0">
                         {messages.length} mensagens
                       </Badge>

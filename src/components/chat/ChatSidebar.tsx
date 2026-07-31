@@ -37,10 +37,10 @@ export function ChatSidebar({
   onClearFilters,
 }: ChatSidebarProps) {
   const emptyStateClassName =
-    "flex min-h-[16rem] w-full max-w-full flex-col items-center justify-center rounded-lg border border-dashed border-border/70 bg-background/55 px-4 py-8 text-center shadow-none sm:min-h-[18rem] sm:px-5";
+    "flex min-h-[16rem] w-full max-w-full flex-col items-center justify-center rounded-xl border border-dashed border-border/70 bg-background/55 px-4 py-8 text-center shadow-none sm:min-h-[18rem] sm:px-5";
 
   return (
-    <Card className="flex h-[calc(100dvh-8rem)] min-w-0 flex-col overflow-hidden border-border/70 bg-card/95 shadow-none lg:h-[calc(100vh-13rem)]">
+    <Card className="flex h-[calc(100dvh-8rem)] min-w-0 flex-col overflow-hidden border-border/70 bg-card/95 shadow-panel lg:h-[calc(100vh-13rem)]">
       <CardHeader className="shrink-0 border-b border-border/70 bg-card/80 px-4 pb-3 backdrop-blur-sm sm:px-5">
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
