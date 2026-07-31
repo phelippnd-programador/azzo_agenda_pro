@@ -41,7 +41,7 @@ export const SidebarNavGroup = memo(function SidebarNavGroup({
   const isGroupActive = isParentActive || Boolean(activeChildPath);
   const parentIsAccessible = isSidebarGroupEntryAccessible(entry.path, allowedSet);
   const contentId = `sidebar-group-${entry.id}`;
-  const parentLinkLabel = entry.path === "/financeiro" ? "Resumo" : "Visao geral";
+  const parentLinkLabel = entry.path === "/financeiro" ? "Resumo" : "Visão geral";
 
   if (compact) {
     return (
@@ -61,7 +61,7 @@ export const SidebarNavGroup = memo(function SidebarNavGroup({
             <span className="sr-only">{entry.label}</span>
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent side="right" align="start" className="w-64">
+        <DropdownMenuContent side="right" align="start" className="w-72">
           <DropdownMenuLabel>{entry.label}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {parentIsAccessible ? (
@@ -121,7 +121,7 @@ export const SidebarNavGroup = memo(function SidebarNavGroup({
         >
           <ChevronDown
             className={cn(
-              "h-3.5 w-3.5 opacity-60 transition-transform duration-200",
+              "h-3.5 w-3.5 opacity-60 transition-transform duration-300 ease-out",
               isOpen ? "rotate-180" : "rotate-0"
             )}
           />
@@ -132,14 +132,14 @@ export const SidebarNavGroup = memo(function SidebarNavGroup({
         aria-hidden={!isOpen}
         inert={isOpen ? undefined : true}
         className={cn(
-          "grid transition-all duration-200 ease-out",
+          "grid overflow-hidden transition-[grid-template-rows,opacity,transform] duration-300 ease-out",
           isOpen
             ? "grid-rows-[1fr] opacity-100 translate-y-0"
             : "grid-rows-[0fr] -translate-y-1 opacity-0 pointer-events-none"
         )}
       >
         <div className="min-h-0 overflow-hidden">
-          <div className="ml-4 space-y-1 border-l border-border/80 py-1 pl-3">
+          <div className="ml-4 space-y-1 border-l border-sidebar-border/80 py-1 pl-3">
             {parentIsAccessible ? (
               <SidebarNavLink
                 path={entry.path}

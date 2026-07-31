@@ -153,7 +153,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
       <aside
         className={cn(
           "fixed left-0 top-0 z-50 h-full overflow-hidden border-r border-sidebar-border bg-sidebar/95 shadow-[0_10px_40px_-28px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-[width,transform] duration-300 ease-out",
-          isDesktopOpen ? "lg:w-72" : "lg:w-20",
+          isDesktopOpen ? "lg:w-80" : "lg:w-20",
           "w-72",
           isMobileOpen ? "translate-x-0" : "-translate-x-full",
           "lg:translate-x-0"
@@ -193,10 +193,8 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "hidden h-8 w-8 flex-shrink-0 rounded-xl text-sidebar-foreground/75 transition-[opacity,transform,background-color,color] duration-200 ease-out hover:bg-accent hover:text-accent-foreground focus-visible:opacity-100 lg:inline-flex",
-                    isCompactDesktop &&
-                      "absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover/sidebar-header:opacity-100",
-                    !isCompactDesktop && "hover:-translate-y-0.5"
+                    "hidden h-8 w-8 flex-shrink-0 rounded-xl text-sidebar-foreground/75 transition-[transform,background-color,color] duration-200 ease-out hover:-translate-y-0.5 hover:bg-accent hover:text-accent-foreground lg:inline-flex",
+                    isCompactDesktop && "absolute right-0 top-1/2 -translate-y-1/2"
                   )}
                   onClick={onToggleDesktop}
                   aria-label={isDesktopOpen ? "Recolher menu lateral" : "Expandir menu lateral"}
@@ -207,10 +205,10 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
               {!isCompactDesktop ? (
                 <div className="mt-4 hidden lg:block rounded-2xl border border-sidebar-border/70 bg-background/55 px-3 py-2.5">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/60">
-                    Navegacao
+                    Navegação
                   </p>
                   <p className="mt-1 text-xs text-sidebar-foreground/80">
-                    Operacao, cadastro e gestao no mesmo fluxo.
+                    Operação, cadastro e gestão no mesmo fluxo.
                   </p>
                 </div>
               ) : null}
@@ -297,7 +295,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
                     )}
                   >
                     <ExternalLink className="w-4 h-4 flex-shrink-0 opacity-50" />
-                    {isCompactDesktop ? <span className="sr-only">Site de agendamento indisponivel</span> : <span className="truncate">Site de agendamento indisponivel</span>}
+                    {isCompactDesktop ? <span className="sr-only">Site de agendamento indisponível</span> : <span className="truncate">Site de agendamento indisponível</span>}
                   </span>
                 )}
               </div>

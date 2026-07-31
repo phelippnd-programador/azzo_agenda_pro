@@ -136,6 +136,21 @@ describe("Sidebar", () => {
     expect(await screen.findByRole("link", { name: "Abrir site de agendamento" })).toBeInTheDocument();
   });
 
+  it("should expose submenu labels through the compact dropdown instead of inline icon-only children", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/financeiro"]}>
+        <Sidebar isMobileOpen={false} onToggleMobile={vi.fn()} isDesktopOpen={false} onToggleDesktop={vi.fn()} />
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole("button", { name: "Resumo Financeiro" }));
+
+    expect(await screen.findByText("Fechamento de Caixa")).toBeInTheDocument();
+    expect(screen.getByText("Financeiro Profissionais")).toBeInTheDocument();
+  });
+
   it("should trigger logout from the sidebar footer", async () => {
     const user = userEvent.setup();
 
