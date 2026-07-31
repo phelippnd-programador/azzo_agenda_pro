@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { CreditCard, Plus, Trash2 } from "lucide-react";
+import { CreditCard, Pencil, Plus, Trash2 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -148,9 +148,23 @@ export default function MembershipPlansPage() {
             {plans.map((plan) => (
               <Card key={plan.id} className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => openEdit(plan)}>
                 <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center justify-between gap-3 text-base">
-                    <span className="truncate">{plan.nome}</span>
-                    <Badge variant={plan.ativo ? "default" : "outline"}>{plan.ativo ? "Ativo" : "Inativo"}</Badge>
+                  <CardTitle className="flex items-center justify-between gap-2 text-base">
+                    <span className="min-w-0 truncate">{plan.nome}</span>
+                    <div className="flex flex-shrink-0 items-center gap-1">
+                      <Badge variant={plan.ativo ? "default" : "outline"}>{plan.ativo ? "Ativo" : "Inativo"}</Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        aria-label={`Editar plano ${plan.nome}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openEdit(plan);
+                        }}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">

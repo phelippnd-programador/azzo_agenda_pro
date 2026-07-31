@@ -314,8 +314,8 @@ export default function NfseInvoiceForm() {
       subtitle="Cadastro manual para emissao posterior."
     >
       {configMissing ? (
-        <div className="mb-4 flex items-start gap-3 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+        <div className="mb-4 flex items-start gap-3 rounded-md border border-warning/30 bg-warning/8 p-4 text-sm text-warning">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
           <div>
             <p className="font-medium">Configuracao NFS-e nao encontrada</p>
             <p className="mt-0.5">
@@ -546,10 +546,10 @@ export default function NfseInvoiceForm() {
 
           {emitPendencies.length > 0 ? (
             <div
-              className="flex items-start gap-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+              className="flex items-start gap-3 rounded-md border border-warning/30 bg-warning/8 p-3 text-sm text-warning"
               role="alert"
             >
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
               <div>
                 <p className="font-medium">Para emitir, complete:</p>
                 <ul className="mt-1 list-disc pl-4">

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { Label } from '@/components/ui/label';
 import {
@@ -68,6 +69,10 @@ export default function PosComandaPage() {
   const [pagamentoOpen, setPagamentoOpen] = useState(false);
   const [fidelidadeOpen, setFidelidadeOpen] = useState(false);
   const [resgatePontos, setResgatePontos] = useState('');
+  const [cancelarOpen, setCancelarOpen] = useState(false);
+  const [cancelarMotivo, setCancelarMotivo] = useState('');
+  const [estornoOpen, setEstornoOpen] = useState(false);
+  const [estornoMotivo, setEstornoMotivo] = useState('');
   const [busy, setBusy] = useState(false);
 
   // form: item
@@ -221,22 +226,15 @@ export default function PosComandaPage() {
     }
   };
 
-  const cancelar = async () => {
-    if (!id) return;
-    const motivo = window.prompt('Motivo do cancelamento:');
-    if (!motivo) return;
-    const okRun = await run(() => posApi.cancelar(id, motivo), 'Comanda cancelada.');
+  const confirmarCancelamento = async () => {
+    if (!id || !cancelarMotivo.trim()) return;
+    const okRun = await run(() => posApi.cancelar(id, cancelarMotivo.trim()), 'Comanda cancelada.');
     if (okRun) navigate('/pos');
   };
 
-  const estornar = async () => {
-    if (!id) return;
-    const motivo = window.prompt(
-      'Motivo do estorno (reverte pagamento, estoque, comissao e fidelidade - sem volta):'
-    );
-    if (!motivo) return;
-    if (!window.confirm('Confirma o estorno desta comanda? Essa acao nao pode ser desfeita.')) return;
-    const okRun = await run(() => posApi.estornar(id, motivo), 'Comanda estornada.');
+  const confirmarEstorno = async () => {
+    if (!id || !estornoMotivo.trim()) return;
+    const okRun = await run(() => posApi.estornar(id, estornoMotivo.trim()), 'Comanda estornada.');
     if (okRun) navigate('/pos');
   };
 
@@ -265,10 +263,10 @@ export default function PosComandaPage() {
         </div>
 
         {troco !== null && troco > 0 && (
-          <Card className="border-emerald-300 bg-emerald-50 dark:bg-emerald-950/30">
+          <Card className="border-success/30 bg-success/8">
             <CardContent className="py-4 text-center">
               <p className="text-sm text-muted-foreground">Troco do cliente</p>
-              <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
+              <p className="text-2xl font-bold text-success">
                 {formatCurrency(troco)}
               </p>
             </CardContent>
@@ -370,7 +368,7 @@ export default function PosComandaPage() {
                       <div>
                         <p className="font-medium">
                           {item.descricao}
-                          <Badge variant="outline" className="ml-2 text-[10px]">{item.tipo}</Badge>
+                          <Badge variant="outline" className="ml-2 text-xs">{item.tipo}</Badge>
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {item.quantidade}x {formatCurrency(item.precoUnitario)}
@@ -543,14 +541,14 @@ export default function PosComandaPage() {
                         <span>{MEIOS.find((m) => m.value === p.meio)?.label ?? p.meio}</span>
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">{formatCurrency(p.valor)}</span>
-                          <Badge variant={p.status === 'CONFIRMADO' ? 'default' : 'outline'} className="text-[10px]">
+                          <Badge variant={p.status === 'CONFIRMADO' ? 'default' : 'outline'} className="text-xs">
                             {p.status}
                           </Badge>
                         </div>
                       </div>
                       {p.status === 'PENDENTE' && p.pixPayload && (
                         <div className="mt-2 flex items-center gap-2">
-                          <code className="max-h-14 flex-1 overflow-y-auto break-all rounded border bg-muted/30 p-1 text-[10px]">
+                          <code className="max-h-14 flex-1 overflow-y-auto break-all rounded border bg-muted/30 p-1 text-xs">
                             {p.pixPayload}
                           </code>
                           <Button size="icon" variant="outline" aria-label="Copiar PIX" onClick={() => copiarPix(p.pixPayload!)}>
@@ -570,18 +568,84 @@ export default function PosComandaPage() {
                   {faltando > 0 ? `Faltam ${formatCurrency(faltando)}` : 'Fechar comanda'}
                 </Button>
                 {isOwner && (
-                  <Button variant="outline" className="text-destructive" onClick={cancelar} disabled={busy}>
-                    Cancelar comanda
-                  </Button>
+                  <Dialog open={cancelarOpen} onOpenChange={(open) => { setCancelarOpen(open); if (!open) setCancelarMotivo(''); }}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="text-destructive" disabled={busy}>
+                        Cancelar comanda
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Cancelar comanda</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-3">
+                        <p className="text-sm text-muted-foreground">
+                          Essa acao encerra a comanda sem gerar receita. Descreva o motivo do cancelamento.
+                        </p>
+                        <div className="space-y-1.5">
+                          <Label>Motivo*</Label>
+                          <Textarea
+                            value={cancelarMotivo}
+                            onChange={(e) => setCancelarMotivo(e.target.value)}
+                            placeholder="Ex.: cliente desistiu do atendimento"
+                            rows={3}
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          variant="destructive"
+                          onClick={confirmarCancelamento}
+                          disabled={busy || !cancelarMotivo.trim()}
+                          isLoading={busy}
+                        >
+                          Confirmar cancelamento
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 )}
               </div>
             )}
 
             {comanda.status === 'FECHADA' && isOwner && (
               <div className="flex flex-col gap-2">
-                <Button variant="outline" className="text-destructive" onClick={estornar} disabled={busy}>
-                  Estornar comanda
-                </Button>
+                <Dialog open={estornoOpen} onOpenChange={(open) => { setEstornoOpen(open); if (!open) setEstornoMotivo(''); }}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="text-destructive" disabled={busy}>
+                      Estornar comanda
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Estornar comanda</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-3">
+                      <p className="text-sm font-medium text-destructive">
+                        Reverte pagamento, estoque, comissao e fidelidade desta venda. Essa acao nao pode ser desfeita.
+                      </p>
+                      <div className="space-y-1.5">
+                        <Label>Motivo do estorno*</Label>
+                        <Textarea
+                          value={estornoMotivo}
+                          onChange={(e) => setEstornoMotivo(e.target.value)}
+                          placeholder="Ex.: pagamento duplicado, erro de lancamento"
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        variant="destructive"
+                        onClick={confirmarEstorno}
+                        disabled={busy || !estornoMotivo.trim()}
+                        isLoading={busy}
+                      >
+                        Confirmar estorno
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
                 <p className="text-xs text-muted-foreground">
                   Reverte pagamento, estoque, comissao e fidelidade desta venda. Nao pode ser desfeito.
                 </p>

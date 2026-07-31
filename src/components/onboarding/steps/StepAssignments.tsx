@@ -68,7 +68,7 @@ export function StepAssignments({
             Marque quais serviços cada profissional executa.
           </p>
         </div>
-        <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+        <div className="rounded-lg border border-dashed border-border/70 p-6 text-center text-sm text-muted-foreground">
           Adicione profissionais e serviços nas etapas anteriores para configurar as atribuições.
         </div>
       </div>
@@ -85,7 +85,7 @@ export function StepAssignments({
       </div>
 
       {servicesWithoutProfessional.length > 0 && (
-        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+        <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/8 p-3 text-sm text-warning">
           <AlertCircle className="h-4 w-4 mt-0.5 shrink-0 text-amber-600" />
           <span>
             {servicesWithoutProfessional.length === 1
@@ -164,7 +164,7 @@ export function StepAssignments({
             {services.map((s, si) => {
               const checked = (s.professionalIds ?? []).includes(selectedProfessional);
               return (
-                <div key={s.id} className="flex items-center justify-between rounded-lg border p-3">
+                <div key={s.id} className="flex items-center justify-between rounded-lg border border-border/70 p-3">
                   <span className="text-sm font-medium">{s.name}</span>
                   <Switch
                     checked={checked}

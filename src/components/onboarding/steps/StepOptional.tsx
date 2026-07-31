@@ -58,7 +58,7 @@ export function StepOptional() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm font-medium">{card.title}</p>
                       {card.recommended && (
-                        <Badge className="text-[10px] h-4 px-1.5 bg-primary/15 text-primary border-0 font-medium">
+                        <Badge className="text-xs h-4 px-1.5 bg-primary/15 text-primary border-0 font-medium">
                           Recomendado
                         </Badge>
                       )}

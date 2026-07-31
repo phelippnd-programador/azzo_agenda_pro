@@ -51,7 +51,10 @@ export function ConfirmationDialog({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isLoading}>{cancelLabel}</AlertDialogCancel>
           <AlertDialogAction
-            onClick={onConfirm}
+            onClick={(event) => {
+              event.preventDefault();
+              onConfirm();
+            }}
             disabled={isLoading || confirmDisabled}
             className={confirmClassName}
           >

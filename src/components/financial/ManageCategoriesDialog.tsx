@@ -153,7 +153,7 @@ export function ManageCategoriesDialog({
                       <>
                         <span className="flex-1 text-sm">{category.name}</span>
                         {category.transactionCount > 0 ? (
-                          <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
+                          <Badge variant="secondary" className="px-1.5 py-0 text-xs">
                             {category.transactionCount}
                           </Badge>
                         ) : null}

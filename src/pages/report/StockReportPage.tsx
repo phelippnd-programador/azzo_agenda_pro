@@ -224,11 +224,11 @@ export default function StockReportPage() {
         {data?.summary && (
           <div data-tour="stock-report-summary" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground flex items-center gap-1"><ArrowDown className="w-3 h-3 text-emerald-500" /> Entradas</CardTitle></CardHeader>
+              <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground flex items-center gap-1"><ArrowDown className="w-3 h-3 text-success" /> Entradas</CardTitle></CardHeader>
               <CardContent><p className="text-2xl font-semibold">{data.summary.totalEntradas}</p><p className="text-xs text-muted-foreground">{formatCurrency(data.summary.valorTotalEntradas)}</p></CardContent>
             </Card>
             <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground flex items-center gap-1"><ArrowUp className="w-3 h-3 text-red-500" /> Saidas</CardTitle></CardHeader>
+              <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground flex items-center gap-1"><ArrowUp className="w-3 h-3 text-destructive" /> Saidas</CardTitle></CardHeader>
               <CardContent><p className="text-2xl font-semibold">{data.summary.totalSaidas}</p><p className="text-xs text-muted-foreground">{formatCurrency(data.summary.valorTotalSaidas)}</p></CardContent>
             </Card>
             <Card>

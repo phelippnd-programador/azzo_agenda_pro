@@ -413,7 +413,7 @@ export function ServiceFormDialog({
                       />
                       <span>{professional.name}</span>
                       {professional.isActive === false ? (
-                        <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                        <Badge variant="outline" className="text-xs text-muted-foreground">
                           Inativo
                         </Badge>
                       ) : null}
@@ -430,7 +430,7 @@ export function ServiceFormDialog({
                     const professional = professionals.find((item) => item.id === id);
                     if (!professional) return null;
                     return (
-                      <Badge key={id} variant="secondary" className="text-[10px] sm:text-xs">
+                      <Badge key={id} variant="secondary" className="text-xs sm:text-xs">
                         {professional.name}
                       </Badge>
                     );

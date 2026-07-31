@@ -105,10 +105,10 @@ export const MESES_PT: Record<number, string> = {
 
 // Cores para status
 export const STATUS_COLORS: Record<StatusApuracao, { bg: string; text: string; border: string }> = {
-  [StatusApuracao.ABERTA]: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-  [StatusApuracao.PARCIAL]: { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200' },
-  [StatusApuracao.FECHADA]: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
-  [StatusApuracao.RETIFICADA]: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+  [StatusApuracao.ABERTA]: { bg: 'bg-primary/8', text: 'text-primary', border: 'border-primary/25' },
+  [StatusApuracao.PARCIAL]: { bg: 'bg-warning/8', text: 'text-warning', border: 'border-warning/25' },
+  [StatusApuracao.FECHADA]: { bg: 'bg-success/8', text: 'text-success', border: 'border-success/25' },
+  [StatusApuracao.RETIFICADA]: { bg: 'bg-muted/40', text: 'text-muted-foreground', border: 'border-border' },
 };
 
 // Labels para status

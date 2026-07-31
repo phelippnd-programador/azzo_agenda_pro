@@ -62,13 +62,13 @@ export default function LegalDocument({ documentType, fallbackTitle }: LegalDocu
 
         <Card>
           <CardHeader>
+            <CardTitle>{document?.title || fallbackTitle}</CardTitle>
             <div className="rounded-md border bg-muted/40 p-3">
               <p className="text-xs text-muted-foreground">Versao: {document?.version || "-"}</p>
               <p className="text-xs text-muted-foreground">
                 Publicado em: {document?.createdAt ? new Date(document.createdAt).toLocaleString("pt-BR") : "-"}
               </p>
             </div>
-            {/* <CardTitle>{document?.title || fallbackTitle}</CardTitle> */}
           </CardHeader>
           <CardContent className="space-y-3">
             {isLoading ? <p className="text-sm text-muted-foreground">Carregando documento...</p> : null}

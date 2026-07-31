@@ -130,24 +130,24 @@ export function TransactionList({
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-foreground">{transaction.description}</p>
                         <div className="mt-1 flex flex-wrap items-center gap-2">
-                          <Badge variant="outline" className="text-[10px] sm:text-xs">
+                          <Badge variant="outline" className="text-xs sm:text-xs">
                             {transaction.category}
                           </Badge>
                           {transaction.professionalId ? (
-                            <Badge variant="secondary" className="text-[10px] sm:text-xs">
+                            <Badge variant="secondary" className="text-xs sm:text-xs">
                               Comissao vinculada
                             </Badge>
                           ) : null}
                           {transaction.source === 'RECURRING' ? (
                             <Badge
                               variant="outline"
-                              className="gap-1 border-blue-300 text-[10px] text-blue-600 dark:border-blue-500/30 dark:text-blue-300 sm:text-xs"
+                              className="gap-1 border-blue-300 text-xs text-blue-600 dark:border-blue-500/30 dark:text-blue-300 sm:text-xs"
                             >
                               <RefreshCw className="h-2.5 w-2.5" />
                               Recorrente
                             </Badge>
                           ) : null}
-                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground sm:text-xs">
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground sm:text-xs">
                             <PaymentIcon className="h-3 w-3" />
                             {getPaymentLabel(transaction.paymentMethod)}
                           </span>
@@ -165,7 +165,7 @@ export function TransactionList({
                           {isIncome ? '+' : '-'}
                           {formatCurrency(transaction.amount)}
                         </p>
-                        <p className="text-[10px] text-muted-foreground sm:text-xs">{formatDateOnly(transaction.date)}</p>
+                        <p className="text-xs text-muted-foreground sm:text-xs">{formatDateOnly(transaction.date)}</p>
                       </div>
 
                       {!readOnly ? (

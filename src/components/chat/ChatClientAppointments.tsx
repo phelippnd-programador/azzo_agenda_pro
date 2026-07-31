@@ -95,7 +95,7 @@ export function ChatClientAppointments({ clientId, clientName }: ChatClientAppoi
             {clientName ? ` — ${clientName.split(" ")[0]}` : ""}
           </span>
           {upcoming.length > 0 && (
-            <Badge className="shrink-0 text-[10px] h-4 px-1.5 leading-none">
+            <Badge className="shrink-0 text-xs h-4 px-1.5 leading-none">
               {upcoming.length}
             </Badge>
           )}
@@ -138,7 +138,7 @@ export function ChatClientAppointments({ clientId, clientName }: ChatClientAppoi
                     </div>
                     <Badge
                       variant={STATUS_VARIANT[item.status]}
-                      className="shrink-0 text-[10px] whitespace-nowrap"
+                      className="shrink-0 text-xs whitespace-nowrap"
                     >
                       {STATUS_LABEL[item.status]}
                     </Badge>

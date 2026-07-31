@@ -81,7 +81,7 @@ export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingA
                       status={appointment.status}
                       labelMap={appointmentStatusLabelMap}
                       toneMap={appointmentStatusBadgeToneMap}
-                      className="text-[10px] sm:text-xs"
+                      className="text-xs sm:text-xs"
                     />
                   </div>
                   <p className="truncate text-xs text-muted-foreground sm:text-sm">

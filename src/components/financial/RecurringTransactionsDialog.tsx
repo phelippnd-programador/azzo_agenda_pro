@@ -240,7 +240,7 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
                           {scheduleLabel} · {formatCurrency(item.amount)}
                         </p>
                       </div>
-                      <Badge variant="outline" className="flex-shrink-0 text-[10px]">
+                      <Badge variant="outline" className="flex-shrink-0 text-xs">
                         {item.frequency === 'MONTHLY' ? 'Mensal' : 'Semanal'}
                       </Badge>
                       <Button

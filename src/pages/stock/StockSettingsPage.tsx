@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ModuleIntro } from "@/components/layout/module-surfaces";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -66,12 +67,16 @@ export default function StockSettingsPage() {
       title="Configuracoes de estoque"
       subtitle="Parametros de alerta e politicas operacionais do modulo de estoque."
     >
+      <div className="space-y-4">
+        <ModuleIntro
+          eyebrow="Configuracoes"
+          title="Defina alertas e travas operacionais do estoque"
+          description="Ajuste os parametros abaixo para manter a rotina de estoque consistente com a operacao do salao."
+        />
+
       <Card className="border-border/80">
         <CardHeader>
           <CardTitle>Configuracoes de estoque</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Defina alertas e travas operacionais para manter a rotina de estoque consistente.
-          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div data-tour="stock-settings-alerts" className="grid gap-3">
@@ -147,6 +152,7 @@ export default function StockSettingsPage() {
           </Button>
         </CardContent>
       </Card>
+      </div>
     </MainLayout>
   );
 }

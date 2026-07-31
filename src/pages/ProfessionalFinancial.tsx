@@ -476,18 +476,18 @@ export default function ProfessionalFinancial() {
             <CardContent className="flex items-start justify-between gap-3 p-4">
               <div>
                 <p className="text-sm text-muted-foreground">Servicos concluidos</p>
-                <p className="text-xl font-bold text-emerald-700 dark:text-emerald-400">{totals.services}</p>
+                <p className="text-xl font-bold text-success">{totals.services}</p>
               </div>
-              <Scissors className="h-5 w-5 text-emerald-700/70 dark:text-emerald-400/70" />
+              <Scissors className="h-5 w-5 text-success/70" />
             </CardContent>
           </Card>
           <Card>
             <CardContent className="flex items-start justify-between gap-3 p-4">
               <div>
                 <p className="text-sm text-muted-foreground">Clientes atendidos</p>
-                <p className="text-xl font-bold text-sky-700 dark:text-sky-400">{totals.clients}</p>
+                <p className="text-xl font-bold text-muted-foreground">{totals.clients}</p>
               </div>
-              <Users className="h-5 w-5 text-sky-700/70 dark:text-sky-400/70" />
+              <Users className="h-5 w-5 text-muted-foreground/70" />
             </CardContent>
           </Card>
         </div>
@@ -517,8 +517,8 @@ export default function ProfessionalFinancial() {
                         />
                         <Tooltip formatter={(value) => formatCurrency(Number(value))} />
                         <Legend />
-                        <Bar dataKey="revenue" fill="#7c3aed" name="Faturamento" radius={[6, 6, 0, 0]} />
-                        <Bar dataKey="commission" fill="#0ea5e9" name="Comissao" radius={[6, 6, 0, 0]} />
+                        <Bar dataKey="revenue" fill="hsl(var(--primary))" name="Faturamento" radius={[6, 6, 0, 0]} />
+                        <Bar dataKey="commission" fill="hsl(var(--success))" name="Comissao" radius={[6, 6, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -543,8 +543,8 @@ export default function ProfessionalFinancial() {
                       <YAxis allowDecimals={false} />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="servicesCount" fill="#16a34a" name="Servicos" radius={[6, 6, 0, 0]} />
-                      <Bar dataKey="clientsCount" fill="#f59e0b" name="Clientes" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="servicesCount" fill="hsl(var(--primary))" name="Servicos" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="clientsCount" fill="hsl(var(--muted-foreground))" name="Clientes" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -622,7 +622,7 @@ export default function ProfessionalFinancial() {
                       <Bar
                         dataKey="completedAppointments"
                         stackId="appointments"
-                        fill="#16a34a"
+                        fill="hsl(var(--success))"
                         name="Agendamentos concluidos"
                         radius={[0, 4, 4, 0]}
                         maxBarSize={22}
@@ -630,14 +630,14 @@ export default function ProfessionalFinancial() {
                       <Bar
                         dataKey="canceledAppointments"
                         stackId="appointments"
-                        fill="#ef4444"
+                        fill="hsl(var(--destructive))"
                         name="Agendamentos cancelados"
                         maxBarSize={22}
                       />
                       <Bar
                         dataKey="otherAppointments"
                         stackId="appointments"
-                        fill="#94a3b8"
+                        fill="hsl(var(--muted-foreground))"
                         name="Outros status"
                         maxBarSize={22}
                       />
@@ -665,14 +665,14 @@ export default function ProfessionalFinancial() {
                       <Legend />
                       <Bar
                         dataKey="completionRate"
-                        fill="#16a34a"
+                        fill="hsl(var(--success))"
                         name="% de conclusao"
                         radius={[0, 4, 4, 0]}
                         maxBarSize={18}
                       />
                       <Bar
                         dataKey="cancellationRate"
-                        fill="#ef4444"
+                        fill="hsl(var(--destructive))"
                         name="% de cancelamento"
                         radius={[0, 4, 4, 0]}
                         maxBarSize={18}

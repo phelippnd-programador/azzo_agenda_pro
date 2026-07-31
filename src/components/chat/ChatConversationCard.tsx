@@ -59,7 +59,7 @@ export function ChatConversationCard({ conversation, selected, onClick }: Props)
       <div className="flex items-start gap-2">
         <Avatar className="w-8 h-8 flex-shrink-0">
           <AvatarImage src={avatarSrc || undefined} />
-          <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
+          <AvatarFallback className="bg-primary/10 text-primary text-xs">
             {getInitials(conversation.clientName)}
           </AvatarFallback>
         </Avatar>
@@ -70,7 +70,7 @@ export function ChatConversationCard({ conversation, selected, onClick }: Props)
                 {conversation.clientName || "Cliente"}
               </p>
               {conversation.unreadCount > 0 ? (
-                <Badge className="flex h-4 min-w-4 shrink-0 items-center justify-center bg-emerald-600 px-1 text-[10px] text-white dark:bg-emerald-500">
+                <Badge className="flex h-4 min-w-4 shrink-0 items-center justify-center bg-emerald-600 px-1 text-xs text-white dark:bg-emerald-500">
                   {conversation.unreadCount}
                 </Badge>
               ) : null}
@@ -80,7 +80,7 @@ export function ChatConversationCard({ conversation, selected, onClick }: Props)
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
-              <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
+              <Badge variant="secondary" className="text-xs h-4 px-1.5 shrink-0">
                 {marker}
               </Badge>
             </div>

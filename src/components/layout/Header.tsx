@@ -101,7 +101,7 @@ export function Header({
             >
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 ? (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
+                  <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 ) : null}
@@ -125,7 +125,7 @@ export function Header({
                     {!(item.viewed ?? Boolean(item.viewedAt)) ? <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" /> : null}
                     {item.channel || "Notificacao"}
                     {!(item.viewed ?? Boolean(item.viewedAt)) ? (
-                      <Badge variant="outline" className="border-primary/30 bg-primary/5 px-1.5 py-0 text-[10px] text-primary">
+                      <Badge variant="outline" className="border-primary/30 bg-primary/5 px-1.5 py-0 text-xs text-primary">
                         Nova
                       </Badge>
                     ) : null}

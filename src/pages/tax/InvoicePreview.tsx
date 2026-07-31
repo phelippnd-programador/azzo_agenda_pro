@@ -16,7 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TaxRegime, TaxCalculation, CFOP_CODES, CST_CODES } from "@/types/fiscal";
-import { calculateTaxes, formatCurrency } from "@/lib/tax-calculator";
+import { calculateTaxes } from "@/lib/tax-calculator";
+import { formatCurrency } from "@/lib/format";
 import { Calculator, RefreshCw } from "lucide-react";
 import { fiscalApi } from "@/lib/api";
 

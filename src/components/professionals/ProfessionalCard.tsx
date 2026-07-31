@@ -57,11 +57,11 @@ export function ProfessionalCard({
               <div className="mt-1 flex flex-wrap gap-1">
                 <Badge
                   variant={professional.isActive ? "default" : "secondary"}
-                  className={`text-[10px] sm:text-xs ${professional.isActive ? "bg-green-100 text-green-700" : ""}`}
+                  className={`text-xs sm:text-xs ${professional.isActive ? "bg-green-100 text-green-700" : ""}`}
                 >
                   {professional.isActive ? "Ativo" : "Inativo"}
                 </Badge>
-                <Badge variant="outline" className="text-[10px] sm:text-xs">
+                <Badge variant="outline" className="text-xs sm:text-xs">
                   {professional.accessUserCreated ? "Acesso ativo" : "Sem acesso"}
                 </Badge>
               </div>
@@ -108,12 +108,12 @@ export function ProfessionalCard({
 
         <div className="flex flex-wrap gap-1 mb-4">
           {professional.specialties.slice(0, 3).map((specialty, index) => (
-            <Badge key={index} variant="outline" className="text-[10px] sm:text-xs">
+            <Badge key={index} variant="outline" className="text-xs sm:text-xs">
               {specialty}
             </Badge>
           ))}
           {professional.specialties.length > 3 && (
-            <Badge variant="outline" className="text-[10px] sm:text-xs">
+            <Badge variant="outline" className="text-xs sm:text-xs">
               +{professional.specialties.length - 3}
             </Badge>
           )}

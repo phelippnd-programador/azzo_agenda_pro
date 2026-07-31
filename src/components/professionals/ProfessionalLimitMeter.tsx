@@ -43,7 +43,7 @@ export function ProfessionalLimitMeter({
         limitReached
           ? "border-destructive/40 bg-destructive/5"
           : nearLimit
-            ? "border-amber-300 bg-amber-50/30"
+            ? "border-warning/40 bg-warning/8"
             : ""
       }
     >

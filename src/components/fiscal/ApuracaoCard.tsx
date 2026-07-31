@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ApuracaoMensal, MESES_PT, STATUS_COLORS, STATUS_LABELS } from '@/types/apuracao';
-import { formatCurrency } from '@/lib/tax-calculator';
+import { formatCurrency } from '@/lib/format';
 import { FileText, TrendingUp, Calculator, Calendar } from 'lucide-react';
 
 interface ApuracaoCardProps {
@@ -46,39 +46,39 @@ export function ApuracaoCard({ apuracao, showDetails = true }: ApuracaoCardProps
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Total de Servicos */}
-          <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-            <div className="p-2 bg-blue-100 rounded-full">
-              <TrendingUp className="h-5 w-5 text-blue-600" />
+          <div className="flex items-center gap-3 p-4 bg-primary/8 rounded-lg">
+            <div className="p-2 bg-primary/15 rounded-full">
+              <TrendingUp className="h-5 w-5 text-primary" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total de Servicos</p>
-              <p className="text-lg font-semibold text-blue-700">
+              <p className="text-lg font-semibold text-primary">
                 {formatCurrency(valorTotalServicos)}
               </p>
             </div>
           </div>
 
           {/* Total de Impostos */}
-          <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg">
-            <div className="p-2 bg-red-100 rounded-full">
-              <Calculator className="h-5 w-5 text-red-600" />
+          <div className="flex items-center gap-3 p-4 bg-destructive/8 rounded-lg">
+            <div className="p-2 bg-destructive/15 rounded-full">
+              <Calculator className="h-5 w-5 text-destructive" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total a Pagar</p>
-              <p className="text-lg font-semibold text-red-700">
+              <p className="text-lg font-semibold text-destructive">
                 {formatCurrency(valorTotalImpostos)}
               </p>
             </div>
           </div>
 
           {/* Quantidade de Documentos */}
-          <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
-            <div className="p-2 bg-green-100 rounded-full">
-              <FileText className="h-5 w-5 text-green-600" />
+          <div className="flex items-center gap-3 p-4 bg-success/8 rounded-lg">
+            <div className="p-2 bg-success/15 rounded-full">
+              <FileText className="h-5 w-5 text-success" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Notas Emitidas</p>
-              <p className="text-lg font-semibold text-green-700">
+              <p className="text-lg font-semibold text-success">
                 {quantidadeDocumentos}
               </p>
             </div>

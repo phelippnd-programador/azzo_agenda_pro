@@ -7,9 +7,9 @@ export default function CheckoutSuccess() {
   return (
     <div className="min-h-screen bg-background px-4 py-10">
       <div className="mx-auto max-w-xl">
-        <Card className="border-emerald-200 shadow-md">
+        <Card className="border-success/30 shadow-md">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-emerald-700">
+            <CardTitle className="flex items-center gap-2 text-success">
               <CheckCircle2 className="h-6 w-6" />
               Compra confirmada
             </CardTitle>

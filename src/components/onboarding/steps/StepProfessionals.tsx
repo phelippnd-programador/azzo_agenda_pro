@@ -90,7 +90,7 @@ export function StepProfessionals({
       </div>
 
       {limits && (
-        <div className="rounded-lg border bg-muted/30 p-3 text-sm">
+        <div className="rounded-lg border border-border/70 bg-muted/30 p-3 text-sm">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Profissionais do seu plano</span>
             <span className="font-medium">
@@ -111,7 +111,7 @@ export function StepProfessionals({
       )}
 
       {professionals.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed py-12 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border/70 py-12 text-center">
           <UserCircle2 className="h-10 w-10 text-muted-foreground/50" />
           <div>
             <p className="text-sm font-medium">Nenhum profissional adicionado</p>
@@ -121,7 +121,7 @@ export function StepProfessionals({
       ) : (
         <div className="space-y-2">
           {professionals.map((p, i) => (
-            <div key={p.id ?? i} className="flex items-center justify-between rounded-lg border p-3">
+            <div key={p.id ?? i} className="flex items-center justify-between rounded-lg border border-border/70 p-3">
               <div className="space-y-1">
                 <p className="text-sm font-medium">{p.name}</p>
                 <p className="text-xs text-muted-foreground">{p.email}</p>

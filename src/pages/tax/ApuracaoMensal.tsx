@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { fiscalApi } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
-import { formatCurrency } from '@/lib/tax-calculator';
+import { formatCurrency } from '@/lib/format';
 import { ApuracaoMensal as ApuracaoMensalType, ApuracaoResumo, MESES_PT } from '@/types/apuracao';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';

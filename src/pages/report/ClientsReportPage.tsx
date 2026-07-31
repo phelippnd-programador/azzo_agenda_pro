@@ -252,11 +252,11 @@ export default function ClientsReportPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <UserCheck className="w-4 h-4 text-emerald-500" /> Ativos
+                  <UserCheck className="w-4 h-4 text-success" /> Ativos
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-emerald-600">{data.summary.clientesAtivos}</p>
+                <p className="text-2xl font-bold text-success">{data.summary.clientesAtivos}</p>
               </CardContent>
             </Card>
             <Card>
@@ -276,7 +276,7 @@ export default function ClientsReportPage() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">Receita Total</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-emerald-600">{formatCurrency(data.summary.receitaTotal)}</p>
+                <p className="text-2xl font-bold text-success">{formatCurrency(data.summary.receitaTotal)}</p>
               </CardContent>
             </Card>
           </div>
@@ -319,7 +319,7 @@ export default function ClientsReportPage() {
                       <TableCell className="font-medium text-sm">{c.clienteNome}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{c.clientePhone ?? "-"}</TableCell>
                       <TableCell className="text-right text-sm">{c.totalVisitas}</TableCell>
-                      <TableCell className="text-right text-sm font-medium text-emerald-600">
+                      <TableCell className="text-right text-sm font-medium text-success">
                         {formatCurrency(c.receitaTotal)}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{c.ultimaVisita ?? "-"}</TableCell>

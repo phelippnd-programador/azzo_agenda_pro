@@ -134,7 +134,7 @@ export function WhatsAppSetupWizard({
                 </div>
                 {/* Rotulo da etapa visivel para deixar o progresso claro e testavel */}
                 <span
-                  className={`text-center text-[10px] leading-tight sm:text-xs ${
+                  className={`text-center text-xs leading-tight sm:text-xs ${
                     stepStatus === "current" ? "font-medium text-foreground" : "text-muted-foreground"
                   }`}
                 >
