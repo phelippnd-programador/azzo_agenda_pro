@@ -37,11 +37,11 @@ export function ChatSidebar({
   onClearFilters,
 }: ChatSidebarProps) {
   const emptyStateClassName =
-    "flex min-h-[18rem] w-full flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-background/55 px-4 py-8 text-center shadow-none sm:px-5";
+    "flex min-h-[16rem] w-full max-w-full flex-col items-center justify-center rounded-lg border border-dashed border-border/70 bg-muted/20 px-4 py-8 text-center shadow-none sm:min-h-[18rem] sm:px-5";
 
   return (
-    <Card className="flex h-[calc(100dvh-8rem)] min-w-0 flex-col overflow-hidden lg:h-[calc(100vh-13rem)]">
-      <CardHeader className="shrink-0 pb-2">
+    <Card className="flex h-[calc(100dvh-8rem)] min-w-0 flex-col overflow-hidden border-border/70 shadow-none lg:h-[calc(100vh-13rem)]">
+      <CardHeader className="shrink-0 px-4 pb-2 sm:px-6">
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -93,7 +93,7 @@ export function ChatSidebar({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 pb-4 pr-3" aria-label="Lista de conversas">
+      <CardContent className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 pb-3 sm:px-4 sm:pb-4 sm:pr-3" aria-label="Lista de conversas">
         {isLoading ? (
           <>
             <Skeleton className="h-20 w-full rounded-lg" />
@@ -101,7 +101,7 @@ export function ChatSidebar({
             <Skeleton className="h-20 w-full rounded-lg" />
           </>
         ) : conversations.length === 0 ? (
-          <div className="flex min-h-full items-center py-1">
+          <div className="flex min-h-full min-w-0 items-center py-2">
             <div className={emptyStateClassName}>
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/10">
                 <MessageCircleMore className="h-6 w-6 text-primary" />
@@ -116,7 +116,7 @@ export function ChatSidebar({
             </div>
           </div>
         ) : filteredConversations.length === 0 ? (
-          <div className="flex min-h-full items-center py-1">
+          <div className="flex min-h-full min-w-0 items-center py-2">
             <div className={emptyStateClassName}>
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/10">
                 <Search className="h-6 w-6 text-primary" />

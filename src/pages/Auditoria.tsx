@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { auditoriaApi } from "@/lib/api";
 import { useAuditEventDetail } from "@/hooks/useAuditEventDetail";
@@ -111,7 +112,7 @@ export default function Auditoria() {
   const aggregationCards = useMemo(
     () => [
       {
-        title: "Modulos mais frequentes",
+        title: "Módulos mais frequentes",
         items: aggregations.byModule.slice(0, 3),
         formatLabel: (key: string) => moduleLabel(key),
       },
@@ -121,7 +122,7 @@ export default function Auditoria() {
         formatLabel: (key: string) => statusLabel(key),
       },
       {
-        title: "Acoes mais executadas",
+        title: "Ações mais executadas",
         items: aggregations.byAction.slice(0, 3),
         formatLabel: (key: string) => actionMeta(key).label,
       },
@@ -195,7 +196,7 @@ export default function Auditoria() {
                 />
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Modulo</p>
+                <p className="text-xs text-muted-foreground">Módulo</p>
                 <Select
                   value={moduleInput || "all"}
                   onValueChange={(value) => setModuleInput(value === "all" || isAuditModule(value) ? (value === "all" ? "" : value) : "")}
@@ -233,7 +234,7 @@ export default function Auditoria() {
                 </Select>
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Acao</p>
+                <p className="text-xs text-muted-foreground">Ação</p>
                 <Select value={actionInput || "all"} onValueChange={(value) => setActionInput(value === "all" ? "" : value)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -333,7 +334,7 @@ export default function Auditoria() {
               </CardHeader>
               <CardContent className="space-y-2">
                 {!card.items.length ? (
-                  <p className="text-sm text-muted-foreground">Sem dados no periodo.</p>
+                  <p className="text-sm text-muted-foreground">Sem dados no período.</p>
                 ) : (
                   card.items.map((item) => (
                     <div key={item.key} className="flex items-center justify-between text-sm">
@@ -364,7 +365,7 @@ export default function Auditoria() {
               <p className="text-sm text-muted-foreground">Carregando eventos...</p>
             ) : !items.length ? (
               <p className="text-sm text-muted-foreground">
-                Nenhum evento encontrado no periodo informado.
+                Nenhum evento encontrado no período informado.
               </p>
             ) : (
               <TooltipProvider delayDuration={150}>
@@ -403,27 +404,27 @@ export default function Auditoria() {
                   ))}
                 </div>
 
-                <div className="hidden overflow-x-auto md:block">
-                  <table className="min-w-[1100px] w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-left text-muted-foreground">
-                        <th className="py-2">Data</th>
-                        <th className="py-2">Modulo</th>
-                        <th className="py-2">Acao</th>
-                        <th className="py-2">Registro afetado</th>
-                        <th className="py-2">Status</th>
-                        <th className="py-2">Ator</th>
-                        <th className="py-2">IP</th>
-                        <th className="py-2">Request ID</th>
-                        <th className="py-2 text-right">Detalhe</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                <div className="hidden md:block">
+                  <Table className="min-w-[1120px]">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="min-w-44 whitespace-nowrap">Data</TableHead>
+                        <TableHead>Módulo</TableHead>
+                        <TableHead>Ação</TableHead>
+                        <TableHead>Registro afetado</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Ator</TableHead>
+                        <TableHead>IP</TableHead>
+                        <TableHead>Request ID</TableHead>
+                        <TableHead className="text-right">Detalhe</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                       {items.map((item) => (
-                        <tr key={item.id} className="border-b hover:bg-muted/40">
-                          <td className="py-2">{formatDateTime(item.createdAt)}</td>
-                          <td className="py-2">{moduleLabel(item.module)}</td>
-                          <td className="py-2">
+                        <TableRow key={item.id}>
+                          <TableCell className="whitespace-nowrap">{formatDateTime(item.createdAt)}</TableCell>
+                          <TableCell>{moduleLabel(item.module)}</TableCell>
+                          <TableCell>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <span className="cursor-help underline decoration-dotted underline-offset-2">
@@ -432,8 +433,8 @@ export default function Auditoria() {
                               </TooltipTrigger>
                               <TooltipContent>{actionMeta(item.action).description}</TooltipContent>
                             </Tooltip>
-                          </td>
-                          <td className="py-2">
+                          </TableCell>
+                          <TableCell>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <span className="cursor-help underline decoration-dotted underline-offset-2">
@@ -442,18 +443,18 @@ export default function Auditoria() {
                               </TooltipTrigger>
                               <TooltipContent>{entityMeta(item.entityType).description}</TooltipContent>
                             </Tooltip>
-                          </td>
-                          <td className="py-2">
+                          </TableCell>
+                          <TableCell>
                             <Badge className={statusBadgeClass[item.status]}>
                               {statusLabel(item.status)}
                             </Badge>
-                          </td>
-                          <td className="py-2">{item.actorName || item.actorUserId || "-"}</td>
-                          <td className="py-2 font-mono text-xs text-muted-foreground">
+                          </TableCell>
+                          <TableCell>{item.actorName || item.actorUserId || "-"}</TableCell>
+                          <TableCell className="font-mono text-xs text-muted-foreground">
                             {maskIpAddress(item.ipAddress)}
-                          </td>
-                          <td className="py-2 font-mono text-xs">{item.requestId}</td>
-                          <td className="py-2 text-right">
+                          </TableCell>
+                          <TableCell className="max-w-44 truncate font-mono text-xs">{item.requestId}</TableCell>
+                          <TableCell className="text-right">
                             <Button
                               variant="outline"
                               size="icon"
@@ -463,16 +464,16 @@ export default function Auditoria() {
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
                 </div>
                 <div className="flex flex-col gap-3 border-t pt-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0 space-y-1">
                     <p className="text-xs text-muted-foreground">
-                      Paginacao por cursor: {hasNext ? "ha proxima pagina" : "fim da listagem"}
+                      Paginação por cursor: {hasNext ? "há próxima página" : "fim da listagem"}
                     </p>
                     <p className="break-all font-mono text-xs text-muted-foreground">
                       cursor: {nextCursor || "-"}
@@ -497,12 +498,12 @@ export default function Auditoria() {
         {/* Retention events */}
         <Card>
           <CardHeader>
-            <CardTitle>Eventos de retencao e expurgo</CardTitle>
+            <CardTitle>Eventos de retenção e expurgo</CardTitle>
           </CardHeader>
           <CardContent>
             {!retentionEvents.length ? (
               <p className="text-sm text-muted-foreground">
-                Nenhum evento de retencao no periodo.
+                Nenhum evento de retenção no período.
               </p>
             ) : (
               <div className="space-y-2">
