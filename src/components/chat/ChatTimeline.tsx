@@ -122,7 +122,7 @@ export function ChatTimeline({
             if (item.type === "day") {
               return (
                 <div key={item.key} className="flex justify-center py-1">
-                  <Badge variant="outline" className="bg-background/90">
+                  <Badge variant="outline" className="bg-background/90 backdrop-blur-sm">
                     {item.label}
                   </Badge>
                 </div>
@@ -136,10 +136,10 @@ export function ChatTimeline({
             return (
               <div
                 key={item.key}
-                className={`max-w-[88%] rounded-2xl border p-3 shadow-sm sm:max-w-[82%] ${
+                className={`max-w-[88%] rounded-2xl border p-3 shadow-[0_14px_30px_-26px_rgba(15,23,42,0.28)] sm:max-w-[82%] ${
                   isOutbound
                     ? "ml-auto border-primary/30 bg-primary text-primary-foreground dark:border-primary/40"
-                    : "border-border/80 bg-background/85"
+                    : "border-border/80 bg-background/85 dark:bg-card/80"
                 }`}
               >
                 <div className="mb-2 flex items-center justify-between gap-3">
@@ -161,9 +161,9 @@ export function ChatTimeline({
                 <p className="break-words whitespace-pre-wrap text-sm leading-6">
                   {message.content || "[Mensagem sem texto]"}
                 </p>
-                <div className="mt-2 flex items-center justify-between gap-2">
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                   <span
-                    className={`text-[11px] ${
+                    className={`min-w-0 truncate text-[11px] ${
                       isOutbound ? "text-primary-foreground/70" : "text-muted-foreground"
                     }`}
                   >

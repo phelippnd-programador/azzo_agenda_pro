@@ -284,7 +284,7 @@ export default function ChatPage() {
         )}
 
         {showChat && (
-          <Card className="order-1 flex h-[calc(100dvh-8rem)] min-w-0 flex-col overflow-hidden lg:order-2 lg:h-[calc(100vh-13rem)]">
+          <Card className="order-1 flex h-[calc(100dvh-8rem)] min-w-0 flex-col overflow-hidden border-border/70 bg-card/95 lg:order-2 lg:h-[calc(100vh-13rem)]">
             {!selectedConversation ? (
               <CardContent className="flex h-full items-center justify-center">
                 <PageEmptyState
@@ -302,7 +302,7 @@ export default function ChatPage() {
               </CardContent>
             ) : (
               <>
-                <CardHeader className="shrink-0 border-b border-border/70 bg-card/80">
+                <CardHeader className="shrink-0 border-b border-border/70 bg-card/80 backdrop-blur-sm">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex min-w-0 items-center gap-2">
                       {isMobile && (
@@ -340,7 +340,7 @@ export default function ChatPage() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="flex min-h-0 flex-1 flex-col">
+                <CardContent className="flex min-h-0 flex-1 flex-col px-3 pb-3 pt-0 sm:px-5 sm:pb-5">
                   {selectedConversation.clientId && (
                     <div className="shrink-0 pb-2">
                       <ChatClientAppointments

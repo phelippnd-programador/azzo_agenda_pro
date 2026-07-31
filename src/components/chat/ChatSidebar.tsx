@@ -37,11 +37,11 @@ export function ChatSidebar({
   onClearFilters,
 }: ChatSidebarProps) {
   const emptyStateClassName =
-    "flex min-h-[16rem] w-full max-w-full flex-col items-center justify-center rounded-lg border border-dashed border-border/70 bg-muted/20 px-4 py-8 text-center shadow-none sm:min-h-[18rem] sm:px-5";
+    "flex min-h-[16rem] w-full max-w-full flex-col items-center justify-center rounded-lg border border-dashed border-border/70 bg-background/55 px-4 py-8 text-center shadow-none sm:min-h-[18rem] sm:px-5";
 
   return (
-    <Card className="flex h-[calc(100dvh-8rem)] min-w-0 flex-col overflow-hidden border-border/70 shadow-none lg:h-[calc(100vh-13rem)]">
-      <CardHeader className="shrink-0 px-4 pb-2 sm:px-6">
+    <Card className="flex h-[calc(100dvh-8rem)] min-w-0 flex-col overflow-hidden border-border/70 bg-card/95 shadow-none lg:h-[calc(100vh-13rem)]">
+      <CardHeader className="shrink-0 border-b border-border/70 bg-card/80 px-4 pb-3 backdrop-blur-sm sm:px-5">
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -93,7 +93,7 @@ export function ChatSidebar({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 pb-3 sm:px-4 sm:pb-4 sm:pr-3" aria-label="Lista de conversas">
+      <CardContent className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 py-3 sm:px-4" aria-label="Lista de conversas">
         {isLoading ? (
           <>
             <Skeleton className="h-20 w-full rounded-lg" />

@@ -2,7 +2,7 @@ import type { FormEventHandler } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { SendHorizontal, Smile } from "lucide-react";
 import type { ChatMessageForm } from "@/schemas/chat";
 
@@ -45,19 +45,26 @@ export function ChatMessageComposer({
   const watchedMessage = form.watch("message");
 
   return (
-    <form onSubmit={onSubmit} className="flex shrink-0 flex-col gap-2 border-t border-border/70 pt-3 sm:flex-row">
-      <Input
+    <form onSubmit={onSubmit} className="flex shrink-0 flex-col gap-2 border-t border-border/70 bg-card/80 pt-3 sm:flex-row sm:items-end">
+      <Textarea
         {...form.register("message")}
         placeholder="Digite a mensagem para o cliente..."
         maxLength={2000}
         disabled={isSending}
-        className="min-w-0 flex-1"
+        className="max-h-28 min-h-10 min-w-0 flex-1 resize-none bg-background/80"
         aria-label="Mensagem para o cliente"
+        onKeyDown={(event) => {
+          if (event.key !== "Enter" || event.shiftKey) return;
+          event.preventDefault();
+          if (!isSending && (watchedMessage || "").trim()) {
+            event.currentTarget.form?.requestSubmit();
+          }
+        }}
       />
       <div className="flex shrink-0 gap-2">
         <Popover open={isEmojiOpen} onOpenChange={onEmojiOpenChange}>
           <PopoverTrigger asChild>
-            <Button type="button" size="icon" disabled={isSending} aria-label="Selecionar emoji">
+            <Button type="button" size="icon" className="h-10 w-10" disabled={isSending} aria-label="Selecionar emoji">
               <Smile className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
@@ -67,7 +74,7 @@ export function ChatMessageComposer({
                 <button
                   key={emoji}
                   type="button"
-                  className="h-7 w-7 rounded text-base hover:bg-accent"
+                  className="h-7 w-7 rounded-md text-base transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                   onClick={() => onAppendEmoji(emoji)}
                   aria-label={`Inserir ${emoji}`}
                 >

@@ -57,14 +57,14 @@ export function ChatConversationCard({ conversation, selected, onClick }: Props)
       aria-pressed={selected}
       aria-label={`Abrir conversa com ${conversation.clientName || "Cliente"}`}
       className={cn(
-        "w-full rounded-lg border p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "w-full rounded-lg border p-2.5 text-left transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         selected
-          ? "border-primary/35 bg-primary/10"
-          : "border-transparent bg-background/55 hover:bg-muted/60"
+          ? "border-primary/40 bg-primary/10 shadow-[0_14px_30px_-24px_rgba(15,23,42,0.24)]"
+          : "border-transparent bg-background/55 hover:border-border/70 hover:bg-muted/60"
       )}
     >
-      <div className="flex min-w-0 items-start gap-2">
-        <Avatar className="h-8 w-8 flex-shrink-0">
+      <div className="flex min-w-0 items-start gap-2.5">
+        <Avatar className="h-9 w-9 flex-shrink-0">
           <AvatarImage src={avatarSrc || undefined} />
           <AvatarFallback className="bg-primary/10 text-xs text-primary">
             {getInitials(conversation.clientName)}
@@ -87,10 +87,10 @@ export function ChatConversationCard({ conversation, selected, onClick }: Props)
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
-              <Badge variant="secondary" className="h-4 shrink-0 px-1.5 text-xs">
+              <Badge variant="secondary" className="h-5 shrink-0 px-1.5 text-xs">
                 {marker}
               </Badge>
-              <Badge variant="outline" className="h-4 shrink-0 gap-1 px-1.5 text-xs">
+              <Badge variant="outline" className="h-5 shrink-0 gap-1 px-1.5 text-xs">
                 <ChannelIcon className="h-3 w-3" />
                 {channelLabel}
               </Badge>
