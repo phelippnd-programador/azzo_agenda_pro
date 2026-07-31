@@ -21,7 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Plus, Clock, MoreVertical, Scissors, Package } from 'lucide-react';
+import { Plus, Clock, MoreVertical, Package } from 'lucide-react';
 import { useServices } from '@/hooks/useServices';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { useProfessionals } from '@/hooks/useProfessionals';
@@ -31,6 +31,8 @@ import { ServiceFormDialog } from '@/components/services/ServiceFormDialog';
 import type { Service } from '@/types';
 
 const categories = ['Todos', 'Cabelo', 'Barba', 'Unhas', 'Estetica', 'Maquiagem', 'Outros'];
+
+const formatCategoryLabel = (category: string) => (category === 'Estetica' ? 'Estética' : category);
 
 export default function ServicesOverviewPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -147,7 +149,7 @@ export default function ServicesOverviewPage() {
   if (error) {
     return (
       <PageErrorState
-        title="Nao foi possivel carregar os servicos"
+        title="Não foi possível carregar os serviços"
         description={error}
         action={{ label: 'Tentar novamente', onClick: refetch }}
       />
@@ -157,29 +159,29 @@ export default function ServicesOverviewPage() {
   return (
     <div className="space-y-4 sm:space-y-6">
       <ModuleIntro
-        eyebrow="Catalogo"
-        title="Estruture o portifolio de servicos com preco, duracao, categoria e disponibilidade por equipe."
-        description="Use a busca, os filtros e a alternancia entre cards e tabela para revisar o catalogo com menos atrito."
+        eyebrow="Catálogo"
+        title="Estruture o portfólio de serviços com preço, duração, categoria e disponibilidade por equipe."
+        description="Use a busca, os filtros e a alternância entre cards e tabela para revisar o catálogo com menos atrito."
         badges={[
-          { label: `${pagination.total} servico(s)` },
-          { label: selectedCategory },
+          { label: `${pagination.total} serviço(s)` },
+          { label: formatCategoryLabel(selectedCategory) },
           { label: viewMode === 'grid' ? 'Cards' : 'Lista' },
         ]}
         points={[
           {
-            eyebrow: 'Catalogo',
-            title: 'Preco, duracao e contexto',
-            description: 'Mantenha nome, tempo e valor claros para reduzir duvidas no agendamento e na operacao.',
+            eyebrow: 'Catálogo',
+            title: 'Preço, duração e contexto',
+            description: 'Mantenha nome, tempo e valor claros para reduzir dúvidas no agendamento e na operação.',
           },
           {
             eyebrow: 'Equipe',
             title: 'Disponibilidade por profissional',
-            description: 'Restrinja apenas quando o servico depender de pessoas especificas; no restante, mantenha amplo.',
+            description: 'Restrinja apenas quando o serviço depender de pessoas específicas; no restante, mantenha amplo.',
           },
           {
-            eyebrow: 'Navegacao',
-            title: 'Cards para leitura, lista para manutencao',
-            description: 'Troque de visualizacao conforme a tarefa: revisar rapido ou editar em sequencia.',
+            eyebrow: 'Navegação',
+            title: 'Cards para leitura, lista para manutenção',
+            description: 'Troque de visualização conforme a tarefa: revisar rápido ou editar em sequência.',
           },
         ]}
       />
@@ -188,22 +190,22 @@ export default function ServicesOverviewPage() {
         <Button variant="outline" size="sm" asChild>
           <Link to="/pacotes">
             <Package className="mr-2 h-4 w-4" />
-            Pacotes de servicos
+            Pacotes de serviços
           </Link>
         </Button>
       </div>
 
       <CrudListToolbar
-        searchPlaceholder="Buscar servicos..."
+        searchPlaceholder="Buscar serviços..."
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
-        gridAriaLabel="Visualizar servicos em cards"
-        tableAriaLabel="Visualizar servicos em lista"
-        actionLabel="Servico"
+        gridAriaLabel="Visualizar serviços em cards"
+        tableAriaLabel="Visualizar serviços em lista"
+        actionLabel="Serviço"
         actionLabelMobile="Novo"
-        actionLabelDesktop="Novo servico"
+        actionLabelDesktop="Novo serviço"
         actionIcon={Plus}
         onAction={() => {
           setEditingService(null);
@@ -224,7 +226,7 @@ export default function ServicesOverviewPage() {
         onUpdate={updateService}
       />
 
-        <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card/80 p-3 shadow-[0_14px_34px_-30px_rgba(15,23,42,0.28)] sm:flex-row sm:items-center sm:justify-between">
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
             <Checkbox
               checked={allFilteredSelected}
@@ -262,15 +264,15 @@ export default function ServicesOverviewPage() {
                 onClick={() => setSelectedCategory(category)}
                 className="whitespace-nowrap text-xs sm:text-sm"
               >
-                {category}
+                {formatCategoryLabel(category)}
               </Button>
             ))}
           </div>
         </div>
 
       <WorkspaceNotice
-        title="Area de trabalho de servicos"
-        description="Filtre por categoria, selecione itens em lote e abra o cadastro para ajustar preco, duracao e equipe."
+        title="Área de trabalho de serviços"
+        description="Filtre por categoria, selecione itens em lote e abra o cadastro para ajustar preço, duração e equipe."
         badge={
           selectedServiceIds.length
             ? `${selectedServiceIds.length} selecionado(s)`
@@ -282,16 +284,16 @@ export default function ServicesOverviewPage() {
         <PageEmptyState
           title={
             searchTerm || selectedCategory !== 'Todos'
-              ? 'Nenhum servico encontrado para os filtros atuais'
-              : 'Nenhum servico cadastrado'
+              ? 'Nenhum serviço encontrado para os filtros atuais'
+              : 'Nenhum serviço cadastrado'
           }
           description={
             searchTerm || selectedCategory !== 'Todos'
               ? 'A busca e os filtros atuais esconderam todos os resultados. Limpe os filtros para voltar a ver a lista completa.'
-              : 'Cadastre o primeiro servico para comecar a montar o catalogo operacional do salao.'
+              : 'Cadastre o primeiro serviço para começar a montar o catálogo operacional do salão.'
           }
           action={{
-            label: searchTerm || selectedCategory !== 'Todos' ? 'Limpar filtros' : 'Novo servico',
+            label: searchTerm || selectedCategory !== 'Todos' ? 'Limpar filtros' : 'Novo serviço',
             onClick: () => {
               if (searchTerm || selectedCategory !== 'Todos') {
                 setSearchTerm('');
@@ -309,7 +311,7 @@ export default function ServicesOverviewPage() {
           {filteredServices.map((service) => (
             <Card
               key={service.id}
-              className={`transition-shadow hover:shadow-md ${!service.isActive ? 'opacity-60' : ''}`}
+              className={`border-border/70 bg-card/95 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-panel ${!service.isActive ? 'opacity-60' : ''}`}
             >
               <CardContent className="p-4 sm:p-5">
                 <div className="mb-3 flex items-start justify-between gap-2">
@@ -317,7 +319,7 @@ export default function ServicesOverviewPage() {
                     <Checkbox
                       checked={selectedServiceIds.includes(service.id)}
                       onCheckedChange={() => toggleServiceSelection(service.id)}
-                      aria-label="Selecionar servico"
+                      aria-label="Selecionar serviço"
                       className="mt-1"
                     />
                     <div className="min-w-0 flex-1">
@@ -332,7 +334,7 @@ export default function ServicesOverviewPage() {
                         )}
                       </div>
                       <Badge variant="secondary" className="text-xs sm:text-xs">
-                        {service.category}
+                        {formatCategoryLabel(service.category)}
                       </Badge>
                     </div>
                   </div>
@@ -342,7 +344,7 @@ export default function ServicesOverviewPage() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 flex-shrink-0"
-                        aria-label={`Abrir acoes do servico ${service.name}`}
+                        aria-label={`Abrir ações do serviço ${service.name}`}
                       >
                         <MoreVertical className="w-4 h-4" />
                       </Button>
@@ -365,10 +367,10 @@ export default function ServicesOverviewPage() {
                 </div>
 
                 <p className="mb-4 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
-                  {service.description || 'Sem descricao'}
+                  {service.description || 'Sem descrição'}
                 </p>
 
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/70 pt-3">
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                     <span className="text-xs sm:text-sm">{service.duration} min</span>
@@ -382,7 +384,7 @@ export default function ServicesOverviewPage() {
           ))}
         </div>
       ) : (
-        <Card className="border-border/70 shadow-none">
+        <Card className="overflow-hidden border-border/70 bg-card/95 shadow-panel">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -391,13 +393,13 @@ export default function ServicesOverviewPage() {
                     <Checkbox
                       checked={allFilteredSelected}
                       onCheckedChange={(checked) => toggleSelectAllFiltered(checked === true)}
-                      aria-label="Selecionar todos os servicos filtrados"
+                      aria-label="Selecionar todos os serviços filtrados"
                     />
                   </TableHead>
-                  <TableHead>Servico</TableHead>
-                  <TableHead className="hidden md:table-cell">Descricao</TableHead>
-                  <TableHead className="text-center">Duracao</TableHead>
-                  <TableHead className="text-right">Preco</TableHead>
+                  <TableHead>Serviço</TableHead>
+                  <TableHead className="hidden md:table-cell">Descrição</TableHead>
+                  <TableHead className="text-center">Duração</TableHead>
+                  <TableHead className="text-right">Preço</TableHead>
                   <TableHead className="text-center">Status</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
@@ -412,7 +414,7 @@ export default function ServicesOverviewPage() {
                       <Checkbox
                         checked={selectedServiceIds.includes(service.id)}
                         onCheckedChange={() => toggleServiceSelection(service.id)}
-                        aria-label={`Selecionar servico ${service.name}`}
+                        aria-label={`Selecionar serviço ${service.name}`}
                       />
                     </TableCell>
                     <TableCell>
@@ -420,13 +422,13 @@ export default function ServicesOverviewPage() {
                         <div className="flex items-center gap-2">
                           <p className="truncate font-medium">{service.name}</p>
                           <Badge variant="secondary" className="text-xs sm:text-xs">
-                            {service.category}
+                            {formatCategoryLabel(service.category)}
                           </Badge>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="hidden max-w-[320px] truncate text-sm text-muted-foreground md:table-cell">
-                      {service.description || 'Sem descricao'}
+                      {service.description || 'Sem descrição'}
                     </TableCell>
                     <TableCell className="text-center text-sm">
                       {service.duration} min
@@ -446,7 +448,7 @@ export default function ServicesOverviewPage() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            aria-label={`Abrir acoes do servico ${service.name}`}
+                            aria-label={`Abrir ações do serviço ${service.name}`}
                           >
                             <MoreVertical className="w-4 h-4" />
                           </Button>
@@ -489,8 +491,8 @@ export default function ServicesOverviewPage() {
       <DeleteConfirmationDialog
         open={!!serviceToDelete}
         isLoading={isDeletingService}
-        title="Excluir servico?"
-        description="Tem certeza que deseja excluir este servico? Esta acao nao pode ser desfeita."
+        title="Excluir serviço?"
+        description="Tem certeza que deseja excluir este serviço? Esta ação não pode ser desfeita."
         onOpenChange={(open) => {
           if (isDeletingService) return;
           if (!open) setServiceToDelete(null);
@@ -501,8 +503,8 @@ export default function ServicesOverviewPage() {
       <DeleteConfirmationDialog
         open={isRemoveSelectedOpen}
         isLoading={isDeletingSelected}
-        title="Remover servicos selecionados?"
-        description={`Tem certeza que deseja remover ${selectedServiceIds.length} servico(s) selecionado(s)? Esta acao nao pode ser desfeita.`}
+        title="Remover serviços selecionados?"
+        description={`Tem certeza que deseja remover ${selectedServiceIds.length} serviço(s) selecionado(s)? Esta ação não pode ser desfeita.`}
         onOpenChange={(open) => {
           if (isDeletingSelected) return;
           setIsRemoveSelectedOpen(open);
@@ -513,8 +515,8 @@ export default function ServicesOverviewPage() {
       <DeleteConfirmationDialog
         open={isRemoveAllOpen}
         isLoading={isDeletingAll}
-        title="Remover todos os servicos?"
-        description="Tem certeza que deseja remover todos os servicos cadastrados? Esta acao nao pode ser desfeita."
+        title="Remover todos os serviços?"
+        description="Tem certeza que deseja remover todos os serviços cadastrados? Esta ação não pode ser desfeita."
         onOpenChange={(open) => {
           if (isDeletingAll) return;
           setIsRemoveAllOpen(open);

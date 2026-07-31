@@ -32,8 +32,10 @@ import { toast } from 'sonner';
 import { serviceFormSchema, type ServiceFormValues } from '@/schemas/service';
 import type { Service } from '@/types';
 
-/** Categorias do catalogo. Espelha a lista da pagina de servicos (sem "Todos", que e so filtro). */
+/** Categorias do catálogo. Espelha a lista da página de serviços (sem "Todos", que é só filtro). */
 export const SERVICE_CATEGORIES = ['Cabelo', 'Barba', 'Unhas', 'Estetica', 'Maquiagem', 'Outros'];
+
+const formatCategoryLabel = (category: string) => (category === 'Estetica' ? 'Estética' : category);
 
 export type ServiceFormPayload = {
   name: string;
@@ -57,20 +59,20 @@ type ProfessionalOption = {
 interface ServiceFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Servico em edicao, ou null para criacao. */
+  /** Serviço em edição, ou null para criação. */
   editingService: Service | null;
   professionals: ProfessionalOption[];
   isLoadingProfessionals: boolean;
   onCreate: (data: ServiceFormPayload) => Promise<unknown>;
   onUpdate: (id: string, data: Partial<ServiceFormPayload>) => Promise<unknown>;
   /**
-   * Agrupa sinal/PIX e "servico ativo" num bloco "Opcoes avancadas" recolhido.
-   * Usado pelo onboarding para nao competir com o essencial no primeiro uso —
+   * Agrupa sinal/PIX e "serviço ativo" num bloco "Opções avançadas" recolhido.
+   * Usado pelo onboarding para não competir com o essencial no primeiro uso.
    * os campos continuam existindo e funcionando igual. Default false mantem o
-   * layout da pagina consolidada intacto.
+   * layout da página consolidada intacto.
    */
   advancedCollapsed?: boolean;
-  /** Nome pre-preenchido ao abrir em modo criacao (sugestoes do onboarding). */
+  /** Nome pré-preenchido ao abrir em modo criação (sugestões do onboarding). */
   initialName?: string;
 }
 
@@ -187,7 +189,7 @@ export function ServiceFormDialog({
   };
 
   const onInvalid = () => {
-    toast.error('Preencha todos os campos obrigatorios');
+    toast.error('Preencha todos os campos obrigatórios');
   };
 
   const depositAndActiveFields = (
@@ -197,7 +199,7 @@ export function ServiceFormDialog({
           <div>
             <Label>Exigir sinal no agendamento online</Label>
             <p className="text-xs text-muted-foreground">
-              Cliente paga um PIX antecipado para confirmar o horario (anti no-show).
+              Cliente paga um PIX antecipado para confirmar o horário (anti no-show).
             </p>
           </div>
           <Controller
@@ -221,7 +223,7 @@ export function ServiceFormDialog({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="PERCENTUAL">Percentual do preco (%)</SelectItem>
+                      <SelectItem value="PERCENTUAL">Percentual do preço (%)</SelectItem>
                       <SelectItem value="FIXO">Valor fixo (R$)</SelectItem>
                     </SelectContent>
                   </Select>
@@ -249,8 +251,8 @@ export function ServiceFormDialog({
 
       <DialogSection className="flex flex-col gap-3 bg-transparent sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Label>Servico ativo</Label>
-          <p className="text-xs text-muted-foreground">Disponivel para agendamento</p>
+          <Label>Serviço ativo</Label>
+          <p className="text-xs text-muted-foreground">Disponível para agendamento</p>
         </div>
         <Controller
           control={control}
@@ -272,16 +274,16 @@ export function ServiceFormDialog({
       }}
     >
       {/*
-        O scroll fica no DialogBody, nao no DialogContent: o DialogStickyFooter
+        O scroll fica no DialogBody, não no DialogContent: o DialogStickyFooter
         usa position:sticky e, com o DialogContent em `grid` + overflow, o bloco
-        conteiner do rodape vira a propria celula do grid (altura exata dele),
-        sem espaco para grudar — o rodape acabava rolando no meio do conteudo.
+        contêiner do rodapé vira a própria célula do grid (altura exata dele),
+        sem espaço para grudar. O rodapé acabava rolando no meio do conteúdo.
       */}
       <DialogContent className="mx-4 flex max-h-[85vh] max-w-md flex-col overflow-hidden sm:mx-auto sm:max-w-2xl">
         <DialogHeader className="shrink-0 border-b border-border/70 pb-4 pr-10">
-          <DialogTitle>{editingService ? 'Editar servico' : 'Novo servico'}</DialogTitle>
+          <DialogTitle>{editingService ? 'Editar serviço' : 'Novo serviço'}</DialogTitle>
           <DialogDescription>
-            {editingService ? 'Atualize os dados do servico' : 'Preencha os dados do novo servico'}
+            {editingService ? 'Atualize os dados do serviço' : 'Preencha os dados do novo serviço'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="contents">
@@ -289,24 +291,24 @@ export function ServiceFormDialog({
           <DialogSection>
             <p className="text-sm font-medium text-foreground">
               {editingService
-                ? 'Revise nome, duracao, preco e disponibilidade antes de salvar.'
-                : 'Cadastre o servico com nome claro, preco e duracao para manter o catalogo consistente.'}
+                ? 'Revise nome, duração, preço e disponibilidade antes de salvar.'
+                : 'Cadastre o serviço com nome claro, preço e duração para manter o catálogo consistente.'}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Se nenhum profissional for marcado, o servico continua disponivel para toda a equipe.
+              Se nenhum profissional for marcado, o serviço continua disponível para toda a equipe.
             </p>
           </DialogSection>
 
           <DialogSection className="bg-transparent">
             <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">Estrutura do servico</p>
+              <p className="text-sm font-medium text-foreground">Estrutura do serviço</p>
               <p className="text-sm text-muted-foreground">
-                Defina nome, categoria, duracao e preco com o minimo de ambiguidade operacional.
+                Defina nome, categoria, duração e preço com o mínimo de ambiguidade operacional.
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label>Nome do servico *</Label>
+              <Label>Nome do serviço *</Label>
               <Input
                 placeholder="Ex: Corte Feminino"
                 aria-invalid={Boolean(errors.name)}
@@ -316,9 +318,9 @@ export function ServiceFormDialog({
             </div>
 
             <div className="space-y-2">
-              <Label>Descricao</Label>
+              <Label>Descrição</Label>
               <Textarea
-                placeholder="Descreva o servico..."
+                placeholder="Descreva o serviço..."
                 rows={3}
                 {...register('description')}
               />
@@ -326,7 +328,7 @@ export function ServiceFormDialog({
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Duracao (min) *</Label>
+                <Label>Duração (min) *</Label>
                 <Input
                   type="number"
                   placeholder="60"
@@ -369,7 +371,7 @@ export function ServiceFormDialog({
                     <SelectContent>
                       {SERVICE_CATEGORIES.map((cat) => (
                         <SelectItem key={cat} value={cat}>
-                          {cat}
+                          {formatCategoryLabel(cat)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -381,9 +383,9 @@ export function ServiceFormDialog({
 
           <DialogSection className="bg-transparent">
             <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">Equipe elegivel</p>
+              <p className="text-sm font-medium text-foreground">Equipe elegível</p>
               <p className="text-sm text-muted-foreground">
-                Restrinja quando o servico depender de pessoas especificas. Caso contrario, mantenha o
+                Restrinja quando o serviço depender de pessoas específicas. Caso contrário, mantenha o
                 atendimento aberto para todos.
               </p>
             </div>
@@ -416,7 +418,7 @@ export function ServiceFormDialog({
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                Servicos sem profissional vinculado nao aparecem no agendamento.
+                Serviços sem profissional vinculado não aparecem no agendamento.
               </p>
               {professionalIds.length > 0 ? (
                 <div className="flex flex-wrap gap-1">
@@ -442,7 +444,7 @@ export function ServiceFormDialog({
                   variant="ghost"
                   className="flex w-full items-center justify-between px-4 text-sm font-medium"
                 >
-                  Opcoes avancadas
+                  Opções avançadas
                   <ChevronDown
                     className={`h-4 w-4 transition-transform ${advancedOpen ? 'rotate-180' : ''}`}
                   />
@@ -465,9 +467,9 @@ export function ServiceFormDialog({
                 {editingService ? 'Salvando...' : 'Criando...'}
               </>
             ) : editingService ? (
-              'Salvar servico'
+              'Salvar serviço'
             ) : (
-              'Criar servico'
+              'Criar serviço'
             )}
           </Button>
         </DialogStickyFooter>

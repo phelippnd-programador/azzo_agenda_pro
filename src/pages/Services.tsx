@@ -7,18 +7,18 @@ import { RouteContentLoader } from "@/components/ui/route-content-loader";
 export default function Services() {
   const location = useLocation();
   const tabs = [
-    { to: "/servicos", label: "Visao geral", isActive: location.pathname === "/servicos" },
+    { to: "/servicos", label: "Visão geral", isActive: location.pathname === "/servicos" },
     {
       to: "/servicos/importacoes",
-      label: "Importacoes",
+      label: "Importações",
       isActive: location.pathname.startsWith("/servicos/importacoes"),
     },
   ];
 
   return (
     <MainLayout
-      title="Servicos"
-      subtitle="Organize o catalogo de servicos e acompanhe importacoes sem perder consistencia operacional."
+      title="Serviços"
+      subtitle="Organize o catálogo de serviços e acompanhe importações sem perder consistência operacional."
     >
       <div className="space-y-4 sm:space-y-6">
         <ModuleTabs items={tabs} pathname={location.pathname} />

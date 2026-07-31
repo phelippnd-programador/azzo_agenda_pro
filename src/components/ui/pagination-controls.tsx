@@ -22,7 +22,7 @@ export function PaginationControls({
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-border/70 bg-muted/15 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
       <p className="text-sm text-muted-foreground">
-        Pagina {page} de {totalPages}
+        Página {page} de {totalPages}
       </p>
       <div className="flex items-center gap-2 self-end sm:self-auto">
         <Button variant="outline" size="sm" className="min-w-24" onClick={onPrevious} disabled={page <= 1 || isLoading}>
@@ -35,7 +35,7 @@ export function PaginationControls({
           onClick={onNext}
           disabled={page >= totalPages || isLoading || !hasNextPage}
         >
-          Proxima
+          Próxima
         </Button>
       </div>
     </div>

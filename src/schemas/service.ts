@@ -3,16 +3,16 @@ import { parseDecimalInput } from "@/lib/format";
 
 export const serviceFormSchema = z
   .object({
-    name: z.string().trim().min(1, "Informe o nome do servico."),
+    name: z.string().trim().min(1, "Informe o nome do serviço."),
     description: z.string(),
     duration: z
       .string()
       .refine((value) => {
         const parsed = Number.parseInt(value, 10);
         return value.trim() !== "" && Number.isFinite(parsed) && parsed > 0;
-      }, "Informe uma duracao valida em minutos."),
+      }, "Informe uma duração válida em minutos."),
     price: z.number().refine((value) => Number.isFinite(value) && value > 0, {
-      message: "Informe um preco maior que zero.",
+      message: "Informe um preço maior que zero.",
     }),
     category: z.string(),
     professionalIds: z.array(z.string()),
@@ -36,7 +36,7 @@ export const serviceFormSchema = z
       ctx.addIssue({
         path: ["sinalValor"],
         code: z.ZodIssueCode.custom,
-        message: "O sinal percentual nao pode exceder 100%.",
+        message: "O sinal percentual não pode exceder 100%.",
       });
     }
   });

@@ -73,7 +73,7 @@ describe("Clients", () => {
     expect(screen.getByText("Ativos nesta pagina")).toBeInTheDocument();
     expect(screen.getAllByText("Maria Silva").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: /Novo Cliente/i })).toBeInTheDocument();
-    expect(screen.getByText("Pagina 1 de 3")).toBeInTheDocument();
+    expect(screen.getByText("Página 1 de 3")).toBeInTheDocument();
   }, 10000);
 
   it("should open the client create dialog from the shared crud toolbar", async () => {

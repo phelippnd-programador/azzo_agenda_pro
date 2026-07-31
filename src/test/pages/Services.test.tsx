@@ -14,7 +14,7 @@ vi.mock("@/hooks/useServices", () => ({
       {
         id: "svc-1",
         name: "Corte Feminino",
-        description: "Corte com finalizacao",
+        description: "Corte com finalização",
         duration: 60,
         price: 80,
         category: "Cabelo",
@@ -89,7 +89,7 @@ describe("Services", () => {
     expect(await screen.findByText("Corte Feminino")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Novo Servi/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Cabelo" })).toBeInTheDocument();
-    expect(screen.getByText("Pagina 1 de 3")).toBeInTheDocument();
+    expect(screen.getByText("Página 1 de 3")).toBeInTheDocument();
     expect(screen.getAllByRole("button").length).toBeGreaterThan(2);
   }, 10000);
 
@@ -106,10 +106,10 @@ describe("Services", () => {
       </MemoryRouter>
     );
 
-    await user.click(await screen.findByRole("button", { name: /Novo servico/i }));
+    await user.click(await screen.findByRole("button", { name: /Novo serviço/i }));
 
-    expect(screen.getAllByText("Novo servico").length).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: /Criar servico/i })).toBeInTheDocument();
+    expect(screen.getAllByText("Novo serviço").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: /Criar serviço/i })).toBeInTheDocument();
   }, 10000);
 
   it("should preserve Brazilian thousands and decimal separators when creating a service", async () => {
@@ -125,13 +125,13 @@ describe("Services", () => {
       </MemoryRouter>
     );
 
-    await user.click(await screen.findByRole("button", { name: /Novo servico/i }));
+    await user.click(await screen.findByRole("button", { name: /Novo serviço/i }));
     await user.type(screen.getByPlaceholderText("Ex: Corte Feminino"), "Escova Premium");
     await user.clear(screen.getByPlaceholderText("60"));
     await user.type(screen.getByPlaceholderText("60"), "90");
     await user.clear(screen.getByPlaceholderText("0,00"));
     await user.type(screen.getByPlaceholderText("0,00"), "1.000,00");
-    await user.click(screen.getByRole("button", { name: /Criar servico/i }));
+    await user.click(screen.getByRole("button", { name: /Criar serviço/i }));
 
     expect(createServiceMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -155,14 +155,14 @@ describe("Services", () => {
       </MemoryRouter>
     );
 
-    await user.click(await screen.findByRole("button", { name: /Novo servico/i }));
+    await user.click(await screen.findByRole("button", { name: /Novo serviço/i }));
     await user.clear(screen.getByPlaceholderText("60"));
     await user.clear(screen.getByPlaceholderText("0,00"));
-    await user.click(screen.getByRole("button", { name: /Criar servico/i }));
+    await user.click(screen.getByRole("button", { name: /Criar serviço/i }));
 
-    expect(screen.getByText("Informe o nome do servico.")).toBeInTheDocument();
-    expect(screen.getByText("Informe uma duracao valida em minutos.")).toBeInTheDocument();
-    expect(screen.getByText("Informe um preco maior que zero.")).toBeInTheDocument();
+    expect(screen.getByText("Informe o nome do serviço.")).toBeInTheDocument();
+    expect(screen.getByText("Informe uma duração válida em minutos.")).toBeInTheDocument();
+    expect(screen.getByText("Informe um preço maior que zero.")).toBeInTheDocument();
     expect(createServiceMock).not.toHaveBeenCalled();
   });
 });

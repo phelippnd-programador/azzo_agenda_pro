@@ -93,7 +93,7 @@ describe("Professionals", () => {
     expect(screen.getByText(/Financeiro > Comissoes/i)).toBeInTheDocument();
     expect(screen.getAllByText("Ana Costa").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: /Novo Profissional/i })).toBeInTheDocument();
-    expect(screen.getByText("Pagina 1 de 3")).toBeInTheDocument();
+    expect(screen.getByText("Página 1 de 3")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Visualizar profissionais em cards" })
     ).toBeInTheDocument();
