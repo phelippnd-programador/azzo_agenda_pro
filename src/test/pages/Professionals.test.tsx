@@ -89,8 +89,8 @@ describe("Professionals", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("Comissao por profissional")).toBeInTheDocument();
-    expect(screen.getByText(/Financeiro > Comissoes/i)).toBeInTheDocument();
+    expect(await screen.findByText("Comissão por profissional")).toBeInTheDocument();
+    expect(screen.getByText(/Financeiro > Comissões/i)).toBeInTheDocument();
     expect(screen.getAllByText("Ana Costa").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: /Novo Profissional/i })).toBeInTheDocument();
     expect(screen.getByText("Página 1 de 3")).toBeInTheDocument();
@@ -111,8 +111,8 @@ describe("Professionals", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("Comissao por profissional")).toBeInTheDocument();
-    expect(screen.queryByText(/Financeiro > Comissoes/i)).not.toBeInTheDocument();
+    expect(await screen.findByText("Comissão por profissional")).toBeInTheDocument();
+    expect(screen.queryByText(/Financeiro > Comissões/i)).not.toBeInTheDocument();
     expect(screen.getByText(/Use o perfil do profissional/i)).toBeInTheDocument();
   });
 
@@ -127,7 +127,7 @@ describe("Professionals", () => {
 
     await user.click(await screen.findByRole("button", { name: /Novo Profissional/i }));
 
-    expect(screen.getByText("Novo Profissional")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: /Novo profissional/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Criar profissional/i })).toBeInTheDocument();
     expect(
       screen.getByText(/o sistema cria o acesso do profissional automaticamente/i)

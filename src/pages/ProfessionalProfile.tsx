@@ -24,7 +24,7 @@ export default function ProfessionalProfile() {
     let mounted = true;
     const load = async () => {
       if (!id) {
-        setError("Profissional nao informado.");
+        setError("Profissional não informado.");
         setIsLoading(false);
         return;
       }
@@ -33,14 +33,14 @@ export default function ProfessionalProfile() {
         const data = await professionalsApi.getById(id);
         if (!mounted) return;
         if (!data) {
-          setError("Profissional nao encontrado.");
+          setError("Profissional não encontrado.");
           return;
         }
         setProfessional(data);
         setError(null);
       } catch (err) {
         if (!mounted) return;
-        setError(resolveUiError(err, "Nao foi possivel carregar o perfil do profissional.").message);
+        setError(resolveUiError(err, "Não foi possível carregar o perfil do profissional.").message);
       } finally {
         if (mounted) setIsLoading(false);
       }
@@ -66,8 +66,8 @@ export default function ProfessionalProfile() {
     return (
       <MainLayout title="Perfil do Profissional" subtitle="Detalhes do profissional">
         <PageErrorState
-          title="Nao foi possivel carregar o profissional"
-          description={error || "Profissional nao encontrado."}
+          title="Não foi possível carregar o profissional"
+          description={error || "Profissional não encontrado."}
           action={{ label: "Voltar para profissionais", onClick: () => navigate("/profissionais") }}
         />
       </MainLayout>
@@ -85,7 +85,7 @@ export default function ProfessionalProfile() {
           {canAccess(`/profissionais/${professional.id}/comissao`) ? (
             <Button onClick={() => navigate(`/profissionais/${professional.id}/comissao`)} className="gap-2">
               <Coins className="w-4 h-4" />
-              Configurar comissao
+              Configurar comissão
             </Button>
           ) : null}
         </div>
@@ -101,10 +101,10 @@ export default function ProfessionalProfile() {
             <div className="sm:col-span-2">
               <Alert>
                 <Info className="h-4 w-4" />
-                <AlertTitle>Comissao do profissional</AlertTitle>
+                <AlertTitle>Comissão do profissional</AlertTitle>
                 <AlertDescription>
-                  A apuracao principal de comissao e feita pelo modulo novo. Use o botao
-                  <strong> Configurar comissao</strong> para definir regras e acompanhar os lancamentos.
+                  A apuração principal de comissão é feita pelo módulo novo. Use o botão
+                  <strong> Configurar comissão</strong> para definir regras e acompanhar os lançamentos.
                 </AlertDescription>
               </Alert>
             </div>

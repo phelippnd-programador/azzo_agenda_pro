@@ -36,8 +36,8 @@ const defaultWorkingHours: WorkingHours[] = [
 ];
 
 const weekdayLabels: Record<number, string> = {
-  0: 'Domingo', 1: 'Segunda', 2: 'Terca', 3: 'Quarta',
-  4: 'Quinta', 5: 'Sexta', 6: 'Sabado',
+  0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta',
+  4: 'Quinta', 5: 'Sexta', 6: 'Sábado',
 };
 
 type ProfessionalData = {
@@ -73,18 +73,18 @@ interface ProfessionalFormDialogProps {
   refetchSpecialties: () => void;
   onCreate: (data: FormPayload) => Promise<unknown>;
   onUpdate: (id: string, data: Partial<FormPayload>) => Promise<unknown>;
-  /** Limite de profissionais do plano ja atingido — bloqueia apenas a criacao (edicao continua liberada). */
+  /** Limite de profissionais do plano já atingido — bloqueia apenas a criação (edição continua liberada). */
   creationLimitReached?: boolean;
   /**
-   * Habilita criar especialidade sem sair do dialogo. Quando ausente (padrao da
-   * pagina consolidada), a caixa segue sendo apenas selecao do catalogo
-   * existente. O onboarding fornece porque um tenant novo comeca com zero
-   * especialidades e ficaria sem saida dentro do assistente.
+   * Habilita criar especialidade sem sair do diálogo. Quando ausente (padrão da
+   * página consolidada), a caixa segue sendo apenas seleção do catálogo
+   * existente. O onboarding fornece porque um tenant novo começa com zero
+   * especialidades e ficaria sem saída dentro do assistente.
    */
   onCreateSpecialty?: (name: string) => Promise<unknown>;
   /**
-   * Agrupa "profissional ativo" num bloco "Opcoes avancadas" recolhido. Default
-   * false mantem o layout da pagina consolidada intacto.
+   * Agrupa "profissional ativo" num bloco "Opções avançadas" recolhido. Default
+   * false mantém o layout da página consolidada intacto.
    */
   advancedCollapsed?: boolean;
 }
@@ -193,7 +193,7 @@ export function ProfessionalFormDialog({
       (item) => item.name.trim().toLowerCase() === name.toLowerCase()
     );
     if (alreadyExists) {
-      // Evita duplicar o catalogo so por diferenca de caixa/espaco: apenas marca a existente.
+      // Evita duplicar o catálogo só por diferença de caixa/espaço: apenas marca a existente.
       const existing = specialties.find(
         (item) => item.name.trim().toLowerCase() === name.toLowerCase()
       );
@@ -225,11 +225,11 @@ export function ProfessionalFormDialog({
 
   const onSubmit = async (values: ProfessionalFormValues) => {
     if (!editingProfessional && creationLimitReached) {
-      toast.error('Limite de profissionais do seu plano atingido. Faca upgrade para adicionar mais.');
+      toast.error('Limite de profissionais do seu plano atingido. Faça upgrade para adicionar mais.');
       return;
     }
     if (linkCurrentUser && hasLinkedCurrentUserProfessional) {
-      toast.error('Seu usuario ja esta vinculado a um profissional.');
+      toast.error('Seu usuário já está vinculado a um profissional.');
       return;
     }
     setIsSubmitting(true);
@@ -258,15 +258,15 @@ export function ProfessionalFormDialog({
       return;
     }
     if (formErrors.workingHours) {
-      toast.error('Revise os horarios: o inicio deve ser menor que o fim.');
+      toast.error('Revise os horários: o início deve ser menor que o fim.');
     }
   };
 
   const activeToggleSection = (
     <DialogSection className="flex flex-col gap-3 bg-transparent sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <Label>Profissional Ativo</Label>
-        <p className="text-xs text-muted-foreground">Disponivel para agendamentos</p>
+        <Label>Profissional ativo</Label>
+        <p className="text-xs text-muted-foreground">Disponível para agendamentos</p>
       </div>
       <Switch checked={formIsActive} onCheckedChange={(checked) => setValue('isActive', checked, { shouldDirty: true })} />
     </DialogSection>
@@ -275,32 +275,32 @@ export function ProfessionalFormDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/*
-        O scroll fica no DialogBody, nao no DialogContent: o DialogStickyFooter
+        O scroll fica no DialogBody, não no DialogContent: o DialogStickyFooter
         usa position:sticky e, com o DialogContent em `grid` + overflow, o bloco
-        conteiner do rodape vira a propria celula do grid (altura exata dele),
-        sem espaco para grudar — o rodape acabava rolando no meio do conteudo.
+        conteiner do rodapé vira a própria célula do grid (altura exata dele),
+        sem espaço para grudar — o rodapé acabava rolando no meio do conteúdo.
       */}
       <DialogContent className="mx-4 flex max-h-[85vh] max-w-md flex-col overflow-hidden sm:mx-auto sm:max-w-2xl">
         <DialogHeader className="shrink-0 border-b border-border/70 pb-4 pr-10">
-          <DialogTitle>{editingProfessional ? 'Editar Profissional' : 'Novo Profissional'}</DialogTitle>
+          <DialogTitle>{editingProfessional ? 'Editar profissional' : 'Novo profissional'}</DialogTitle>
           <DialogDescription>
-            {editingProfessional ? 'Atualize os dados do profissional' : 'Adicione um novo membro a equipe'}
+            {editingProfessional ? 'Atualize os dados do profissional' : 'Adicione um novo membro à equipe'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="contents">
         <DialogBody className="min-h-0 flex-1 overflow-y-auto">
           <DialogSection>
             <p className="text-sm font-medium text-foreground">
-              {editingProfessional ? 'Ajuste dados operacionais, especialidades e disponibilidade.' : 'Cadastre o profissional com os dados minimos para liberar agenda, especialidades e horarios.'}
+              {editingProfessional ? 'Ajuste dados operacionais, especialidades e disponibilidade.' : 'Cadastre o profissional com os dados mínimos para liberar agenda, especialidades e horários.'}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              E-mail, telefone e horario de trabalho ajudam a deixar o perfil pronto para operacao desde o primeiro acesso.
+              E-mail, telefone e horário de trabalho ajudam a deixar o perfil pronto para operação desde o primeiro acesso.
             </p>
             {!editingProfessional ? (
               <div className="mt-3 rounded-xl border border-emerald-200/70 bg-emerald-50/80 p-3 text-sm text-emerald-900 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-100">
                 {linkCurrentUser
-                  ? 'Este profissional vai usar o mesmo login da sua conta atual, mantendo as permissoes administrativas.'
-                  : 'Ao salvar, o sistema cria o acesso do profissional automaticamente e envia uma senha temporaria para o e-mail informado.'}
+                  ? 'Este profissional vai usar o mesmo login da sua conta atual, mantendo as permissões administrativas.'
+                  : 'Ao salvar, o sistema cria o acesso do profissional automaticamente e envia uma senha temporária para o e-mail informado.'}
               </div>
             ) : null}
           </DialogSection>
@@ -308,7 +308,7 @@ export function ProfessionalFormDialog({
           <DialogSection className="bg-transparent">
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">Dados principais</p>
-              <p className="text-sm text-muted-foreground">Identificacao e contato para liberar uso operacional e acesso do profissional.</p>
+              <p className="text-sm text-muted-foreground">Identificação e contato para liberar uso operacional e acesso do profissional.</p>
             </div>
 
             {canLinkCurrentUser ? (
@@ -316,10 +316,10 @@ export function ProfessionalFormDialog({
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-foreground">
-                      Este usuario tambem atende clientes?
+                      Este usuário também atende clientes?
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Ative para vincular este profissional ao seu login atual sem perder as permissoes administrativas.
+                      Ative para vincular este profissional ao seu login atual sem perder as permissões administrativas.
                     </p>
                   </div>
                   <Switch
@@ -330,18 +330,18 @@ export function ProfessionalFormDialog({
                 </div>
                 {hasLinkedCurrentUserProfessional ? (
                   <p className="mt-3 text-xs text-amber-700">
-                    Seu usuario atual ja esta vinculado a um profissional.
+                    Seu usuário atual já está vinculado a um profissional.
                   </p>
                 ) : linkCurrentUser ? (
                   <p className="mt-3 text-xs text-muted-foreground">
-                    O profissional usara o mesmo e-mail e o mesmo login da sua conta atual.
+                    O profissional usará o mesmo e-mail e o mesmo login da sua conta atual.
                   </p>
                 ) : null}
               </div>
             ) : null}
 
             <div className="space-y-2">
-              <Label>Nome Completo *</Label>
+              <Label>Nome completo *</Label>
               <Input
                 placeholder="Nome do profissional"
                 {...register('name')}
@@ -371,23 +371,23 @@ export function ProfessionalFormDialog({
             </div>
             {editingProfessional ? (
               <p className="text-xs text-muted-foreground">
-                E-mail e telefone nao podem ser alterados na edicao do profissional.
+                E-mail e telefone não podem ser alterados na edição do profissional.
               </p>
             ) : linkCurrentUser ? (
               <p className="text-xs text-muted-foreground">
-                O e-mail fica travado porque sera compartilhado com o seu usuario atual.
+                O e-mail fica travado porque será compartilhado com o seu usuário atual.
               </p>
             ) : (
               <p className="text-xs text-muted-foreground">
-                Use um e-mail valido. Ele recebera a senha temporaria do primeiro acesso.
+                Use um e-mail válido. Ele receberá a senha temporária do primeiro acesso.
               </p>
             )}
           </DialogSection>
 
           <DialogSection className="bg-transparent">
             <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">Escopo de atuacao</p>
-              <p className="text-sm text-muted-foreground">Defina onde esse profissional atua e quais servicos ele pode assumir.</p>
+              <p className="text-sm font-medium text-foreground">Escopo de atuação</p>
+              <p className="text-sm text-muted-foreground">Defina onde esse profissional atua e quais serviços ele pode assumir.</p>
             </div>
 
             <div className="space-y-2">
@@ -396,7 +396,7 @@ export function ProfessionalFormDialog({
                 <div className="flex gap-2">
                   <Input
                     aria-label="Nova especialidade"
-                    placeholder="Ex: Corte, Coloracao"
+                    placeholder="Ex: Corte, Coloração"
                     value={newSpecialty}
                     onChange={(e) => setNewSpecialty(e.target.value)}
                     onKeyDown={(e) => {
@@ -486,7 +486,7 @@ export function ProfessionalFormDialog({
             </div>
               {isWorkingHoursDisabled ? (
                 <p className="text-xs text-amber-700">
-                  Horarios de trabalho nao informados pelo backend. Edicao desativada.
+                  Horários de trabalho não informados pelo backend. Edição desativada.
                 </p>
               ) : null}
             </div>
@@ -500,7 +500,7 @@ export function ProfessionalFormDialog({
                   variant="ghost"
                   className="flex w-full items-center justify-between px-4 text-sm font-medium"
                 >
-                  Opcoes avancadas
+                  Opções avançadas
                   <ChevronDown
                     className={`h-4 w-4 transition-transform ${advancedOpen ? 'rotate-180' : ''}`}
                   />
