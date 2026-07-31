@@ -33,8 +33,8 @@ export const SidebarNavLink = memo(function SidebarNavLink({
       aria-label={compact ? label : undefined}
       className={cn(
         compact
-          ? "flex h-10 w-10 items-center justify-center rounded-xl text-sm select-none transition-colors"
-          : "relative flex items-center gap-2.5 h-10 px-3.5 rounded-xl text-sm select-none transition-colors",
+          ? "flex h-10 w-10 items-center justify-center rounded-xl text-sm select-none transition-[background-color,color,box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0"
+          : "relative flex items-center gap-2.5 h-10 px-3.5 rounded-xl text-sm select-none transition-[background-color,color,box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0",
         isActive
           ? "bg-primary/10 text-primary font-medium shadow-soft ring-1 ring-primary/10"
           : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground",

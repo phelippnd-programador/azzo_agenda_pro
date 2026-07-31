@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { DateInput } from '@/components/ui/date-input';
 import {
   Dialog,
   DialogContent,
@@ -88,9 +89,8 @@ export function EditAppointmentDialog({
         <div data-tour="apt-edit-fields" className="space-y-4 py-2">
           <div className="space-y-2">
             <Label htmlFor="edit-date">Data</Label>
-            <Input
+            <DateInput
               id="edit-date"
-              type="date"
               value={date}
               onChange={(event) => setDate(event.target.value)}
               disabled={isSaving}

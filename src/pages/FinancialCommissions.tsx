@@ -8,6 +8,7 @@ import { CommissionAdjustmentsTab } from "@/components/commissions/CommissionAdj
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateInput } from "@/components/ui/date-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageErrorState } from "@/components/ui/page-states";
@@ -201,11 +202,11 @@ export default function FinancialCommissions() {
           <CardContent className="grid gap-4 p-4 md:grid-cols-3 lg:grid-cols-4">
             <div className="space-y-2">
               <Label>Data inicial</Label>
-              <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+              <DateInput value={from} onChange={(e) => setFrom(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Data final</Label>
-              <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+              <DateInput value={to} onChange={(e) => setTo(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Status</Label>

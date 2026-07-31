@@ -40,7 +40,7 @@ export function ModuleIntro({
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               {eyebrow}
             </p>
-            <p className="text-base font-semibold tracking-tight text-foreground sm:text-lg">{title}</p>
+            <h2 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">{title}</h2>
             <p className="max-w-3xl text-sm text-muted-foreground">{description}</p>
           </div>
           {badges.length > 0 ? (
@@ -66,7 +66,7 @@ export function ModuleIntro({
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   {point.eyebrow}
                 </p>
-                <p className="mt-2 text-sm font-medium text-foreground">{point.title}</p>
+                <h3 className="mt-2 text-sm font-medium text-foreground">{point.title}</h3>
                 <p className="mt-1 text-xs text-muted-foreground">{point.description}</p>
               </div>
             ))}

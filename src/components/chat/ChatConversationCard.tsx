@@ -85,7 +85,7 @@ export function ChatConversationCard({ conversation, selected, onClick }: Props)
               </Badge>
             </div>
           </div>
-          <p className="mt-0.5 truncate text-[12px] text-muted-foreground">
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
             {preview}
           </p>
         </div>

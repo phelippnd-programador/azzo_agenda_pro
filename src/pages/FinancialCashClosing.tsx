@@ -25,6 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { DateInput } from "@/components/ui/date-input";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
@@ -217,6 +218,12 @@ export default function FinancialCashClosing() {
 
   const handleCloseCashClosing = async () => {
     if (!selectedClosing) return;
+    if (!isSelectedCashOpen) {
+      toast.error("Este caixa ja foi fechado.");
+      setIsConfirmCloseOpen(false);
+      setIsCloseDialogVisible(false);
+      return;
+    }
     setIsSubmittingClose(true);
     try {
       const payload = PAYMENT_METHODS.reduce<Partial<Record<CashClosingPaymentMethod, number>>>((acc, method) => {
@@ -451,7 +458,7 @@ export default function FinancialCashClosing() {
                       <div className="flex flex-wrap gap-2">
                         <Button
                           variant="outline"
-                          className="border-green-300 text-green-700 hover:bg-green-50"
+                          className="border-success/40 text-success hover:bg-success/8"
                           onClick={() => openNewTransaction("INCOME")}
                           disabled={!isSelectedCashOpen}
                         >
@@ -460,7 +467,7 @@ export default function FinancialCashClosing() {
                         </Button>
                         <Button
                           variant="outline"
-                          className="border-red-300 text-red-700 hover:bg-red-50"
+                          className="border-destructive/40 text-destructive hover:bg-destructive/8"
                           onClick={() => openNewTransaction("EXPENSE")}
                           disabled={!isSelectedCashOpen}
                         >
@@ -472,13 +479,13 @@ export default function FinancialCashClosing() {
                     <div className="mt-4 grid gap-3 sm:grid-cols-3">
                       <div className="rounded-2xl border bg-background p-3">
                         <div className="text-xs uppercase tracking-wide text-muted-foreground">Entradas do dia</div>
-                        <div className="mt-1 text-lg font-semibold text-green-700">
+                        <div className="mt-1 text-lg font-semibold text-success">
                           {formatCurrency(summary.totalIncome)}
                         </div>
                       </div>
                       <div className="rounded-2xl border bg-background p-3">
                         <div className="text-xs uppercase tracking-wide text-muted-foreground">Saídas do dia</div>
-                        <div className="mt-1 text-lg font-semibold text-red-700">
+                        <div className="mt-1 text-lg font-semibold text-destructive">
                           {formatCurrency(summary.totalExpenses)}
                         </div>
                       </div>
@@ -528,7 +535,7 @@ export default function FinancialCashClosing() {
                         {isSelectedCashOpen && selectedClosing.businessDate > todayDateKey() ? (
                           <Button
                             variant="outline"
-                            className="border-red-200 text-red-600 hover:bg-red-50"
+                            className="border-destructive/30 text-destructive hover:bg-destructive/8"
                             onClick={() => setClosingToRemove(selectedClosing.id)}
                           >
                             Remover caixa
@@ -599,9 +606,8 @@ export default function FinancialCashClosing() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="cash-opening-date">Data do caixa</Label>
-              <Input
+              <DateInput
                 id="cash-opening-date"
-                type="date"
                 max={todayDateKey()}
                 value={openingDate}
                 onChange={(event) => setOpeningDate(event.target.value)}

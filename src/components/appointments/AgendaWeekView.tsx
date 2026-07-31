@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar as CalendarIcon } from 'lucide-react';
@@ -183,7 +183,7 @@ export function AgendaWeekView({
                           <WeekAppointmentCard
                             key={apt.id}
                             appointment={apt}
-                            onClick={() => onAppointmentClick(apt)}
+                            onAppointmentClick={onAppointmentClick}
                           />
                         ))}
                         <button
@@ -206,12 +206,12 @@ export function AgendaWeekView({
   );
 }
 
-function WeekAppointmentCard({
+const WeekAppointmentCard = memo(function WeekAppointmentCard({
   appointment,
-  onClick,
+  onAppointmentClick,
 }: {
   appointment: Appointment;
-  onClick: () => void;
+  onAppointmentClick: (appointment: Appointment) => void;
 }) {
   const clientName = appointment.client?.name ?? 'Cliente';
   const startTime = normalizeTime(appointment.startTime);
@@ -223,7 +223,7 @@ function WeekAppointmentCard({
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={() => onAppointmentClick(appointment)}
       className={[
         'w-full rounded-lg p-2 text-left transition-all duration-150 hover:shadow-md hover:-translate-y-px',
         getStatusColor(appointment.status),
@@ -242,4 +242,4 @@ function WeekAppointmentCard({
       <p className="text-[11px] leading-tight truncate opacity-70 mt-0.5">{serviceName}</p>
     </button>
   );
-}
+});

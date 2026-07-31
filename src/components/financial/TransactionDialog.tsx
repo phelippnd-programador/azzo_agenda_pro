@@ -3,6 +3,7 @@ import { Loader2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { stockApi, type Professional, type TransactionMutationInput } from '@/lib/api';
 import { Button } from '@/components/ui/button';
+import { DateInput } from '@/components/ui/date-input';
 import {
   Dialog,
   DialogBody,
@@ -258,8 +259,7 @@ export function TransactionDialog({
               </div>
               <div className="space-y-2">
                 <Label>Data</Label>
-                <Input
-                  type="date"
+                <DateInput
                   value={formDate}
                   onChange={(e) => setFormDate(e.target.value)}
                 />

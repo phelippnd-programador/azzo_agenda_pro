@@ -125,7 +125,7 @@ export function buildAgendaTimeSlots(appointments: Appointment[], professionals:
 
 // Paleta de cores para identificação visual de profissionais nas colunas
 const PROFESSIONAL_COLORS = [
-  { bg: 'bg-violet-50 dark:bg-violet-950/30', border: 'border-violet-200 dark:border-violet-800/50', dot: 'bg-violet-500', header: 'bg-violet-100/70 dark:bg-violet-900/40' },
+  { bg: 'bg-primary/5', border: 'border-primary/20', dot: 'bg-primary', header: 'bg-primary/10' },
   { bg: 'bg-sky-50 dark:bg-sky-950/30', border: 'border-sky-200 dark:border-sky-800/50', dot: 'bg-sky-500', header: 'bg-sky-100/70 dark:bg-sky-900/40' },
   { bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-800/50', dot: 'bg-emerald-500', header: 'bg-emerald-100/70 dark:bg-emerald-900/40' },
   { bg: 'bg-rose-50 dark:bg-rose-950/30', border: 'border-rose-200 dark:border-rose-800/50', dot: 'bg-rose-500', header: 'bg-rose-100/70 dark:bg-rose-900/40' },
@@ -222,7 +222,7 @@ export function AgendaDayView({
         variant="ghost"
         size="icon"
         aria-label="Ver detalhes do agendamento"
-        className={options?.compact ? 'h-8 w-8' : 'h-7 w-7 sm:h-8 sm:w-8'}
+        className="h-10 w-10"
         onClick={(event) => {
           event.stopPropagation();
           onAppointmentClick(appointment);
@@ -237,7 +237,7 @@ export function AgendaDayView({
             variant="ghost"
             size="icon"
             aria-label="Mais ações do agendamento"
-            className={options?.compact ? 'h-8 w-8' : 'h-7 w-7 sm:h-8 sm:w-8'}
+            className="h-10 w-10"
             onClick={(event) => event.stopPropagation()}
           >
             <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4" />

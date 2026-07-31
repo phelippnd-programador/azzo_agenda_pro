@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, Plus, Pencil, Trash2, AlertTriangle } from 'lucide-react';
+import { DateInput } from "@/components/ui/date-input";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -256,9 +257,8 @@ function ClosureFormModal({
             {/* Data */}
             <div className="space-y-2">
               <Label htmlFor="closureDate">Data *</Label>
-              <Input
+              <DateInput
                 id="closureDate"
-                type="date"
                 value={form.closureDate}
                 onChange={(e) => set('closureDate', e.target.value)}
                 required

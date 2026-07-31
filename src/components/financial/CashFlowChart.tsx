@@ -82,8 +82,8 @@ export function CashFlowChart({ dateFilter }: CashFlowChartProps) {
                     value === 'income' ? 'Entradas' : value === 'expenses' ? 'Saídas' : 'Saldo'
                   }
                 />
-                <Bar dataKey="income" fill="#22c55e" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="expenses" fill="#ef4444" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="income" fill="hsl(var(--chart-positive))" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="expenses" fill="hsl(var(--chart-negative))" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

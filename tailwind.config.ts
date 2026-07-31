@@ -17,8 +17,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-        display: ["Manrope", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["Aptos", "Segoe UI", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["Manrope", "Aptos", "Segoe UI", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       fontSize: {
         xs: ["12px", { lineHeight: "16px", fontWeight: "400" }],

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ReceiptText } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PageEmptyState, PageListLoadingState } from '@/components/ui/page-states';
 import { toast } from 'sonner';
 import { posApi, type Comanda, type ComandaStatus } from '@/lib/api/pos';
 import { resolveUiError } from '@/lib/error-utils';
@@ -72,19 +73,17 @@ export default function PosPage() {
         </div>
 
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Carregando...</p>
+          <PageListLoadingState metricCount={0} itemCount={6} itemHeightClassName="h-28" />
         ) : comandas.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
-              <ReceiptText className="h-8 w-8 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                Nenhuma comanda {STATUS_LABEL[status].toLowerCase()} no momento.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Abra uma comanda avulsa ou a partir de um agendamento na Agenda.
-              </p>
-            </CardContent>
-          </Card>
+          <PageEmptyState
+            title={`Nenhuma comanda ${STATUS_LABEL[status].toLowerCase()} no momento`}
+            description="Abra uma comanda avulsa ou a partir de um agendamento na Agenda."
+            action={{
+              label: 'Nova comanda avulsa',
+              onClick: () => void novaComandaAvulsa(),
+              disabled: isCreating,
+            }}
+          />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {comandas.map((comanda) => (

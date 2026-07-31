@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateInput } from "@/components/ui/date-input";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { nfseApi, type NfseAccountingExportFormat, type NfseInvoice } from "@/lib/api";
@@ -111,13 +112,11 @@ export function NfseInvoicesEmbed({ onNewNfse }: NfseInvoicesEmbedProps) {
         <div className="rounded-md border p-3">
           <p className="mb-2 text-sm font-medium">Exportacao contabil</p>
           <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-5">
-            <Input
-              type="date"
+            <DateInput
               value={exportFrom}
               onChange={(e) => setExportFrom(e.target.value)}
             />
-            <Input
-              type="date"
+            <DateInput
               value={exportTo}
               onChange={(e) => setExportTo(e.target.value)}
             />

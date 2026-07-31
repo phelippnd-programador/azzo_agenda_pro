@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, CircleDot, ExternalLink, LogOut, Menu, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink, LogOut, Menu, X } from "lucide-react";
 import { BrandLockup } from "@/components/common/BrandLockup";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -152,7 +152,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 h-full border-r border-sidebar-border bg-sidebar/95 shadow-[0_10px_40px_-28px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-[width,transform] duration-300",
+          "fixed left-0 top-0 z-50 h-full overflow-hidden border-r border-sidebar-border bg-sidebar/95 shadow-[0_10px_40px_-28px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-[width,transform] duration-300 ease-out",
           isDesktopOpen ? "lg:w-72" : "lg:w-20",
           "w-72",
           isMobileOpen ? "translate-x-0" : "-translate-x-full",
@@ -161,11 +161,14 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
       >
         <TooltipProvider delayDuration={120}>
           <div className="flex h-full flex-col">
-            <div className={cn("border-b border-sidebar-border/80 py-4", isCompactDesktop ? "px-3" : "px-4")}>
-              <div className={cn("flex items-center gap-3", isCompactDesktop ? "justify-center" : "justify-between")}>
+            <div className={cn("group/sidebar-header border-b border-sidebar-border/80 py-4", isCompactDesktop ? "px-3" : "px-4")}>
+              <div className={cn("relative flex items-center gap-3", isCompactDesktop ? "justify-center" : "justify-between")}>
                 <Link
                   to={appRouteManifest.shell.dashboard}
-                  className={cn("min-w-0", isCompactDesktop && "flex justify-center")}
+                  className={cn(
+                    "min-w-0 transition-transform duration-200 ease-out hover:-translate-y-0.5",
+                    isCompactDesktop && "flex justify-center"
+                  )}
                   aria-label="Ir para o dashboard"
                 >
                   <BrandLockup
@@ -189,20 +192,19 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="hidden h-8 w-8 flex-shrink-0 rounded-xl text-sidebar-foreground/75 hover:bg-accent hover:text-accent-foreground lg:inline-flex"
+                  className={cn(
+                    "hidden h-8 w-8 flex-shrink-0 rounded-xl text-sidebar-foreground/75 transition-[opacity,transform,background-color,color] duration-200 ease-out hover:bg-accent hover:text-accent-foreground focus-visible:opacity-100 lg:inline-flex",
+                    isCompactDesktop &&
+                      "absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover/sidebar-header:opacity-100",
+                    !isCompactDesktop && "hover:-translate-y-0.5"
+                  )}
                   onClick={onToggleDesktop}
                   aria-label={isDesktopOpen ? "Recolher menu lateral" : "Expandir menu lateral"}
                 >
                   {isDesktopOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 </Button>
               </div>
-              {isCompactDesktop ? (
-                <div className="mt-4 hidden lg:flex justify-center">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-sidebar-border/70 bg-background/70 text-sidebar-foreground/70">
-                    <CircleDot className="h-4 w-4" />
-                  </div>
-                </div>
-              ) : (
+              {!isCompactDesktop ? (
                 <div className="mt-4 hidden lg:block rounded-2xl border border-sidebar-border/70 bg-background/55 px-3 py-2.5">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/60">
                     Navegacao
@@ -211,7 +213,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
                     Operacao, cadastro e gestao no mesmo fluxo.
                   </p>
                 </div>
-              )}
+              ) : null}
             </div>
 
             <div
@@ -228,7 +230,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
                       </div>
                     ) : (
                       <div className="px-3 pb-2 pt-1">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/65">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/65">
                           {section.label}
                         </p>
                       </div>
@@ -275,7 +277,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
                     to={`/agendar/${salonSlug}`}
                     aria-label="Abrir site de agendamento"
                     className={cn(
-                      "text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                      "text-muted-foreground transition-[background-color,color,transform] duration-200 ease-out hover:-translate-y-0.5 hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                       isCompactDesktop
                         ? "flex h-10 w-10 items-center justify-center rounded-xl"
                         : "flex items-center gap-2.5 h-10 px-3.5 rounded-xl text-sm"

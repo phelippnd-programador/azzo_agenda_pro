@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { CreditCard, Pencil, Plus, Trash2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageEmptyState, PageListLoadingState } from "@/components/ui/page-states";
 import {
   Dialog,
   DialogContent,
@@ -18,17 +21,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { membershipApi, type MembershipBenefit, type MembershipPlan } from "@/lib/api/membership";
+import { membershipApi, type MembershipPlan } from "@/lib/api/membership";
 import { servicesApi, type Service } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import { formatCurrency } from "@/lib/format";
+import { membershipPlanFormSchema, type MembershipPlanFormValues } from "@/schemas/membershipPlan";
 
-const EMPTY_FORM = {
+const EMPTY_FORM: MembershipPlanFormValues = {
   nome: "",
   descricao: "",
   precoMensal: 0,
   cumulativo: false,
   ativo: true,
+  beneficios: [],
 };
 
 function unwrapList<T>(data: T[] | { items: T[] }): T[] {
@@ -42,8 +47,11 @@ export default function MembershipPlansPage() {
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<MembershipPlan | null>(null);
-  const [form, setForm] = useState(EMPTY_FORM);
-  const [benefits, setBenefits] = useState<MembershipBenefit[]>([]);
+
+  const { register, handleSubmit, watch, setValue, reset } = useForm<MembershipPlanFormValues>({
+    resolver: zodResolver(membershipPlanFormSchema),
+    defaultValues: EMPTY_FORM,
+  });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -63,44 +71,45 @@ export default function MembershipPlansPage() {
 
   const openNew = () => {
     setEditing(null);
-    setForm(EMPTY_FORM);
-    setBenefits([]);
+    reset(EMPTY_FORM);
     setOpen(true);
   };
 
   const openEdit = (plan: MembershipPlan) => {
     setEditing(plan);
-    setForm({
+    reset({
       nome: plan.nome,
       descricao: plan.descricao || "",
       precoMensal: plan.precoMensal,
       cumulativo: plan.cumulativo,
       ativo: plan.ativo,
+      beneficios: plan.beneficios || [],
     });
-    setBenefits(plan.beneficios || []);
     setOpen(true);
   };
+
+  const benefits = watch("beneficios");
 
   const addBenefit = () => {
     const service = services.find((item) => !benefits.some((benefit) => benefit.serviceId === item.id));
     if (!service) return;
-    setBenefits((current) => [...current, { serviceId: service.id, quantidadeMensal: 1 }]);
+    setValue("beneficios", [...benefits, { serviceId: service.id, quantidadeMensal: 1 }], { shouldDirty: true });
   };
 
-  const save = async () => {
-    if (!form.nome.trim() || !(form.precoMensal > 0) || benefits.length === 0) {
-      toast.error("Informe nome, valor mensal e ao menos um beneficio.");
-      return;
-    }
+  const onInvalidForm = () => {
+    toast.error("Informe nome, valor mensal e ao menos um beneficio.");
+  };
+
+  const save = async (values: MembershipPlanFormValues) => {
     setSaving(true);
     try {
       const payload = {
-        nome: form.nome.trim(),
-        descricao: form.descricao.trim() || undefined,
-        precoMensal: form.precoMensal,
-        cumulativo: form.cumulativo,
-        ativo: form.ativo,
-        beneficios: benefits,
+        nome: values.nome.trim(),
+        descricao: values.descricao.trim() || undefined,
+        precoMensal: values.precoMensal,
+        cumulativo: values.cumulativo,
+        ativo: values.ativo,
+        beneficios: values.beneficios,
       };
       if (editing) {
         await membershipApi.atualizarPlano(editing.id, payload);
@@ -132,17 +141,13 @@ export default function MembershipPlansPage() {
         </div>
 
         {loading ? (
-          <p className="text-sm text-muted-foreground">Carregando planos...</p>
+          <PageListLoadingState metricCount={0} itemCount={6} itemHeightClassName="h-36" />
         ) : plans.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-              <CreditCard className="h-9 w-9 text-muted-foreground" />
-              <div>
-                <p className="font-medium">Nenhum plano cadastrado</p>
-                <p className="text-sm text-muted-foreground">Crie o primeiro clube recorrente para seus clientes.</p>
-              </div>
-            </CardContent>
-          </Card>
+          <PageEmptyState
+            title="Nenhum plano cadastrado"
+            description="Crie o primeiro clube recorrente com benefícios mensais para seus clientes."
+            action={{ label: "Novo plano", onClick: openNew }}
+          />
         ) : (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {plans.map((plan) => (
@@ -155,7 +160,6 @@ export default function MembershipPlansPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7"
                         aria-label={`Editar plano ${plan.nome}`}
                         onClick={(event) => {
                           event.stopPropagation();
@@ -197,28 +201,28 @@ export default function MembershipPlansPage() {
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Nome*</Label>
-                <Input value={form.nome} onChange={(event) => setForm((current) => ({ ...current, nome: event.target.value }))} />
+                <Input {...register("nome")} />
               </div>
               <div className="space-y-1.5">
                 <Label>Mensalidade (R$)*</Label>
                 <CurrencyInput
-                  value={form.precoMensal}
-                  onChange={(value) => setForm((current) => ({ ...current, precoMensal: value }))}
+                  value={watch("precoMensal")}
+                  onChange={(value) => setValue("precoMensal", value)}
                 />
               </div>
             </div>
             <div className="space-y-1.5">
               <Label>Descricao</Label>
-              <Textarea value={form.descricao} onChange={(event) => setForm((current) => ({ ...current, descricao: event.target.value }))} />
+              <Textarea {...register("descricao")} />
             </div>
             <div className="grid gap-3 md:grid-cols-2">
               <div className="flex items-center justify-between rounded-md border p-3">
                 <Label>Ativo</Label>
-                <Switch checked={form.ativo} onCheckedChange={(value) => setForm((current) => ({ ...current, ativo: value }))} />
+                <Switch checked={watch("ativo")} onCheckedChange={(value) => setValue("ativo", value)} />
               </div>
               <div className="flex items-center justify-between rounded-md border p-3">
                 <Label>Saldo cumulativo</Label>
-                <Switch checked={form.cumulativo} onCheckedChange={(value) => setForm((current) => ({ ...current, cumulativo: value }))} />
+                <Switch checked={watch("cumulativo")} onCheckedChange={(value) => setValue("cumulativo", value)} />
               </div>
             </div>
 
@@ -235,8 +239,9 @@ export default function MembershipPlansPage() {
                   <Select
                     value={benefit.serviceId}
                     onValueChange={(value) =>
-                      setBenefits((current) =>
-                        current.map((item, itemIndex) => itemIndex === index ? { ...item, serviceId: value } : item)
+                      setValue(
+                        "beneficios",
+                        benefits.map((item, itemIndex) => itemIndex === index ? { ...item, serviceId: value } : item)
                       )
                     }
                   >
@@ -255,14 +260,21 @@ export default function MembershipPlansPage() {
                     className="w-28"
                     value={benefit.quantidadeMensal}
                     onChange={(event) =>
-                      setBenefits((current) =>
-                        current.map((item, itemIndex) =>
+                      setValue(
+                        "beneficios",
+                        benefits.map((item, itemIndex) =>
                           itemIndex === index ? { ...item, quantidadeMensal: Number(event.target.value) || 1 } : item
                         )
                       )
                     }
                   />
-                  <Button type="button" variant="ghost" size="icon" onClick={() => setBenefits((current) => current.filter((_, itemIndex) => itemIndex !== index))}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Remover beneficio do plano"
+                    onClick={() => setValue("beneficios", benefits.filter((_, itemIndex) => itemIndex !== index))}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -274,7 +286,13 @@ export default function MembershipPlansPage() {
           </div>
 
           <DialogFooter>
-            <Button onClick={save} disabled={saving}>{saving ? "Salvando..." : "Salvar plano"}</Button>
+            <Button
+              onClick={() => void handleSubmit(save, onInvalidForm)()}
+              isLoading={saving}
+              loadingText="Salvando..."
+            >
+              Salvar plano
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

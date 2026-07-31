@@ -169,7 +169,8 @@ describe("Dashboard", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("Visão executiva")).toBeInTheDocument();
+    expect(await screen.findByText("Agora no salão")).toBeInTheDocument();
+    expect(screen.getByText("Comece pelas pendências do dia.")).toBeInTheDocument();
     expect(screen.getByText("Agendamentos Hoje")).toBeInTheDocument();
     expect(screen.getByText("Faturamento Hoje")).toBeInTheDocument();
     expect(screen.getByText("O que exige atenção hoje")).toBeInTheDocument();
@@ -190,13 +191,13 @@ describe("Dashboard", () => {
       )
     ).toBeInTheDocument();
     expect(screen.getByText("WhatsAppReactivationChartMock")).toBeInTheDocument();
-    expect(screen.getByText("No-show no periodo")).toBeInTheDocument();
+    expect(screen.getByText("No-show no período")).toBeInTheDocument();
 
     // Conteudo analitico fica na aba "Desempenho do mês"
     const user = userEvent.setup();
     await user.click(screen.getByRole("tab", { name: "Desempenho do mês" }));
     expect(await screen.findByText("Receita e desempenho do mês")).toBeInTheDocument();
-    expect(screen.getByText("Top profissionais no dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Profissionais por atendimento concluído")).toBeInTheDocument();
     expect(screen.getByText("RevenueChartMock")).toBeInTheDocument();
   });
 
@@ -224,9 +225,9 @@ describe("Dashboard", () => {
     expect(screen.getByText("Clientes atendidos")).toBeInTheDocument();
     expect(screen.getByText("Comissão no período")).toBeInTheDocument();
     expect(screen.getByText("R$ 18,00")).toBeInTheDocument();
-    expect(screen.getByText("R$ 5,40")).toBeInTheDocument();
+    expect(screen.getAllByText("R$ 5,40").length).toBeGreaterThan(0);
     expect(screen.queryByText("WhatsAppReactivationChartMock")).not.toBeInTheDocument();
-    expect(screen.queryByText("No-show no periodo")).not.toBeInTheDocument();
+    expect(screen.queryByText("No-show no período")).not.toBeInTheDocument();
     expect(getProfessionalMetricsMock).toHaveBeenCalledWith(
       expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
       expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
@@ -251,9 +252,10 @@ describe("Dashboard", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("1 agendamento(s) no dia")).toBeInTheDocument();
+    expect(await screen.findByText("Agora no salão")).toBeInTheDocument();
+    expect(screen.getByText("Comece pelas pendências do dia.")).toBeInTheDocument();
     expect(screen.getByText("Agendamentos Hoje")).toBeInTheDocument();
-    expect(screen.getByText("Pendentes")).toBeInTheDocument();
+    expect(screen.getAllByText("Pendentes").length).toBeGreaterThan(0);
   });
 });
 

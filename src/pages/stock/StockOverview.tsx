@@ -228,7 +228,7 @@ export default function StockOverview() {
                     <XAxis dataKey="nome" tick={{ fontSize: 11 }} interval={0} angle={-15} textAnchor="end" height={60} />
                     <YAxis tick={{ fontSize: 11 }} />
                     <Tooltip />
-                    <Bar dataKey="saldo" fill="#0ea5e9" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="saldo" fill="hsl(var(--chart-neutral))" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

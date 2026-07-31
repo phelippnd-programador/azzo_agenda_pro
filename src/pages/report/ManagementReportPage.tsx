@@ -13,6 +13,7 @@ import {
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateInput } from "@/components/ui/date-input";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -35,7 +36,14 @@ const getMonthRange = () => {
   return { from: toInputDate(new Date(d.getFullYear(), d.getMonth(), 1)), to: toInputDate(d) };
 };
 
-const CHART_COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#f97316"];
+const CHART_COLORS = [
+  "hsl(var(--chart-positive))",
+  "hsl(var(--chart-info))",
+  "hsl(var(--chart-warning))",
+  "hsl(var(--chart-negative))",
+  "hsl(var(--primary))",
+  "hsl(var(--chart-neutral))",
+];
 
 function handlePrintReport(from: string, to: string, title: string) {
   const printHeader = document.getElementById("print-report-header");
@@ -115,16 +123,22 @@ export default function ManagementReportPage() {
     { value: "CUSTOM", label: "Customizado" },
   ];
 
-  const serieChartData = (data?.serieDiaria ?? []).map((d) => ({
-    date: d.date,
-    Receita: Number(d.receita),
-    Despesa: Number(d.despesa),
-  }));
+  const serieChartData = useMemo(
+    () => (data?.serieDiaria ?? []).map((d) => ({
+      date: d.date,
+      Receita: Number(d.receita),
+      Despesa: Number(d.despesa),
+    })),
+    [data?.serieDiaria],
+  );
 
-  const topServicosChart = (data?.topServicos ?? []).slice(0, 8).map((s) => ({
-    name: s.servicoNome.length > 20 ? `${s.servicoNome.substring(0, 18)}...` : s.servicoNome,
-    Receita: Number(s.receitaTotal),
-  }));
+  const topServicosChart = useMemo(
+    () => (data?.topServicos ?? []).slice(0, 8).map((s) => ({
+      name: s.servicoNome.length > 20 ? `${s.servicoNome.substring(0, 18)}...` : s.servicoNome,
+      Receita: Number(s.receitaTotal),
+    })),
+    [data?.topServicos],
+  );
 
   return (
     <MainLayout
@@ -182,16 +196,14 @@ export default function ManagementReportPage() {
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Data inicial</p>
-                <Input
-                  type="date" aria-label="Data inicial"
+                <DateInput aria-label="Data inicial"
                   value={fromInput}
                   onChange={(e) => { setFromInput(e.target.value); setPresetInput("CUSTOM"); }}
                 />
               </div>
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Data final</p>
-                <Input
-                  type="date" aria-label="Data final"
+                <DateInput aria-label="Data final"
                   value={toInput}
                   onChange={(e) => { setToInput(e.target.value); setPresetInput("CUSTOM"); }}
                 />
@@ -252,7 +264,7 @@ export default function ManagementReportPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Wallet className="w-4 h-4 text-sky-500" /> Saldo
+                  <Wallet className="w-4 h-4 text-primary" /> Saldo
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -286,14 +298,14 @@ export default function ManagementReportPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <BarChart2 className="w-4 h-4 text-violet-500" /> Taxa de Ocupacao
+                  <BarChart2 className="w-4 h-4 text-primary" /> Taxa de Ocupacao
                 </CardTitle>
                 <CardDescription className="text-xs">
                   Percentual de slots disponiveis que foram preenchidos com agendamentos concluidos no periodo
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-violet-600">
+                <p className="text-2xl font-bold text-primary">
                   {data.occupancyRate != null ? `${data.occupancyRate.toFixed(1)}%` : "N/A"}
                 </p>
               </CardContent>

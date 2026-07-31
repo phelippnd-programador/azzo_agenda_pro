@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Package, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageEmptyState, PageListLoadingState } from '@/components/ui/page-states';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { CurrencyInput } from '@/components/ui/currency-input';
@@ -188,7 +189,13 @@ export default function PackagesPage() {
                           )
                         }
                       />
-                      <Button type="button" size="icon" variant="ghost" onClick={() => setItens((prev) => prev.filter((_, i) => i !== idx))}>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        aria-label="Remover servico do pacote"
+                        onClick={() => setItens((prev) => prev.filter((_, i) => i !== idx))}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -199,21 +206,22 @@ export default function PackagesPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={salvar} disabled={busy}>Salvar</Button>
+                <Button onClick={salvar} isLoading={busy} loadingText="Salvando...">
+                  Salvar
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
 
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Carregando...</p>
+          <PageListLoadingState metricCount={0} itemCount={6} itemHeightClassName="h-36" />
         ) : packages.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
-              <Package className="h-8 w-8 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Nenhum pacote cadastrado ainda.</p>
-            </CardContent>
-          </Card>
+          <PageEmptyState
+            title="Nenhum pacote cadastrado"
+            description="Crie pacotes para vender sessões antecipadas com validade e serviços definidos."
+            action={{ label: "Novo pacote", onClick: abrirNovo }}
+          />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {packages.map((pacote) => (
@@ -226,7 +234,6 @@ export default function PackagesPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7"
                         aria-label={`Editar pacote ${pacote.nome}`}
                         onClick={(event) => {
                           event.stopPropagation();

@@ -248,7 +248,10 @@ describe("OnboardingPage", () => {
     await user.click(nextButton);
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith(expect.stringMatching(/CPF ou CNPJ do salão não encontrado/));
+      expect(toast.error).toHaveBeenCalledWith(
+        expect.stringMatching(/CPF ou CNPJ do salão não encontrado/),
+        expect.anything()
+      );
     });
     expect(mocks.updateSalonProfile).not.toHaveBeenCalled();
     expect(screen.getByText("Conte-nos sobre o seu salão")).toBeInTheDocument();

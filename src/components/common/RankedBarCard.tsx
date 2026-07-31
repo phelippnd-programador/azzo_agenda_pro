@@ -25,8 +25,8 @@ type RankedBarCardProps = {
   valueFormatter?: (value: number) => string;
 };
 
-// Ranks se diferenciam por intensidade da cor primaria (Regra da Voz Unica),
-// nao por matizes distintos — a ultima posicao usa neutro (muted), nao cinza cru.
+// Ranks se diferenciam por intensidade da cor primária (Regra da Voz Única),
+// não por matizes distintos. A última posição usa neutro, não cinza cru.
 const rankTiers = [
   {
     label: "Diamante",
@@ -57,7 +57,7 @@ const rankTiers = [
     tagClass: "bg-primary/10 text-primary/70",
   },
   {
-    label: "Lata",
+    label: "Base",
     Icon: Circle,
     accentClass: "bg-muted text-muted-foreground border-border/60",
     iconClass: "text-muted-foreground",
@@ -83,10 +83,10 @@ export function RankedBarCard({
     label.length > 22 ? `${label.slice(0, 22).trimEnd()}...` : label;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Icon className="w-5 h-5 text-primary" />
+    <Card className="border-border/70 bg-background/95 shadow-none">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <Icon className="h-5 w-5 text-primary" />
           {title}
         </CardTitle>
         {subtitle ? <div className="text-sm text-muted-foreground">{subtitle}</div> : null}
@@ -98,7 +98,7 @@ export function RankedBarCard({
               shouldSplitLayout ? 'min-[1650px]:grid-cols-[minmax(0,1.7fr)_minmax(360px,1fr)]' : ''
             }`}
           >
-            <div className="rounded-xl border bg-muted/20 p-4">
+            <div className="rounded-xl border border-border/70 bg-muted/15 p-4">
               <div style={{ height: chartHeight }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
@@ -131,7 +131,7 @@ export function RankedBarCard({
               </div>
             </div>
 
-            <div className="rounded-xl border bg-muted/20 p-3">
+            <div className="rounded-xl border border-border/70 bg-muted/15 p-3">
               <div className="space-y-2">
                 {visibleItems.map((item, index) => {
                   const rank = rankTiers[index] ?? rankTiers[rankTiers.length - 1];
@@ -140,7 +140,7 @@ export function RankedBarCard({
                   return (
                     <div
                       key={item.id}
-                      className="grid grid-cols-[36px_minmax(0,1fr)] gap-3 rounded-xl border border-border/60 bg-background/90 px-3 py-3"
+                      className="grid grid-cols-[36px_minmax(0,1fr)] gap-3 rounded-xl border border-border/70 bg-background/90 px-3 py-3 transition-colors hover:bg-muted/15"
                     >
                       <div className={`flex h-9 w-9 flex-col items-center justify-center rounded-full border ${rank.accentClass}`}>
                         <RankIcon className={`h-3.5 w-3.5 ${rank.iconClass}`} />
@@ -178,7 +178,13 @@ export function RankedBarCard({
             </div>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+          <div className="flex min-h-40 flex-col items-center justify-center rounded-2xl border border-dashed border-border/70 bg-background/80 px-4 py-8 text-center">
+            <Icon className="mb-3 h-7 w-7 text-primary" />
+            <p className="text-sm font-medium text-foreground">{emptyMessage}</p>
+            <p className="mt-1 max-w-md text-xs text-muted-foreground">
+              Assim que houver dados no período, o ranking aparecerá aqui.
+            </p>
+          </div>
         )}
       </CardContent>
     </Card>

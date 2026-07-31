@@ -4,6 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DateInput } from "@/components/ui/date-input";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
@@ -409,8 +410,7 @@ export function NewAppointmentDialogFlow({
                 : "A data so fica disponivel depois da escolha do profissional."}
             </p>
           </div>
-          <Input
-            type="date"
+          <DateInput
             value={newDate}
             min={new Date().toISOString().slice(0, 10)}
             disabled={!canChooseDate}

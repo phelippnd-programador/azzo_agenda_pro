@@ -4,6 +4,7 @@ import { ArrowLeft, Settings2 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateInput } from "@/components/ui/date-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageErrorState } from "@/components/ui/page-states";
@@ -118,11 +119,11 @@ export default function ProfessionalCommissionReport() {
           <CardContent className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-5">
             <div className="space-y-2">
               <Label>Data inicial</Label>
-              <Input type="date" aria-label="Data inicial" value={from} onChange={(event) => setFrom(event.target.value)} />
+              <DateInput aria-label="Data inicial" value={from} onChange={(event) => setFrom(event.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Data final</Label>
-              <Input type="date" aria-label="Data final" value={to} onChange={(event) => setTo(event.target.value)} />
+              <DateInput aria-label="Data final" value={to} onChange={(event) => setTo(event.target.value)} />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total</p>

@@ -61,7 +61,7 @@ export function Header({
             <Button
               variant="ghost"
               size="icon"
-              className="hidden h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground lg:flex"
+              className="hidden shrink-0 text-muted-foreground hover:text-foreground lg:flex"
               onClick={onToggleDesktopSidebar}
               aria-label={isDesktopSidebarOpen ? "Recolher menu lateral" : "Expandir menu lateral"}
             >
@@ -70,7 +70,7 @@ export function Header({
           ) : null}
           <div className="min-w-0 space-y-1">
             <div className="flex min-w-0 items-center gap-3">
-              <h1 className="truncate font-display text-base font-semibold tracking-tight text-foreground sm:text-[1.1rem]">
+              <h1 className="truncate font-display text-base font-semibold tracking-tight text-foreground sm:text-lg">
                 {title}
               </h1>
             </div>
@@ -83,7 +83,7 @@ export function Header({
         </div>
 
         <div className="flex flex-shrink-0 items-center gap-2">
-          <ThemeToggle className="theme-toggle-shell h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground" />
+          <ThemeToggle className="theme-toggle-shell h-10 w-10 text-muted-foreground hover:bg-accent hover:text-foreground" />
 
           <DropdownMenu
             onOpenChange={(open) => {
@@ -96,7 +96,7 @@ export function Header({
               <Button
                 variant="ghost"
                 size="icon"
-              className="relative h-9 w-9 rounded-xl border border-transparent text-muted-foreground hover:border-border/70 hover:bg-card/80 hover:text-foreground"
+              className="relative rounded-xl border border-transparent text-muted-foreground hover:border-border/70 hover:bg-card/80 hover:text-foreground"
               aria-label="Abrir notificacoes"
             >
                 <Bell className="h-4 w-4" />

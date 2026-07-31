@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
   DialogBody,
@@ -27,17 +29,11 @@ import {
 } from '@/components/ui/select';
 import { ChevronDown, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { parseDecimalInput } from '@/lib/format';
+import { serviceFormSchema, type ServiceFormValues } from '@/schemas/service';
 import type { Service } from '@/types';
 
 /** Categorias do catalogo. Espelha a lista da pagina de servicos (sem "Todos", que e so filtro). */
 export const SERVICE_CATEGORIES = ['Cabelo', 'Barba', 'Unhas', 'Estetica', 'Maquiagem', 'Outros'];
-
-type ServiceFormErrors = {
-  name?: string;
-  duration?: string;
-  price?: string;
-};
 
 export type ServiceFormPayload = {
   name: string;
@@ -78,6 +74,19 @@ interface ServiceFormDialogProps {
   initialName?: string;
 }
 
+const emptyDefaults: ServiceFormValues = {
+  name: '',
+  description: '',
+  duration: '60',
+  price: 0,
+  category: 'Cabelo',
+  professionalIds: [],
+  isActive: true,
+  sinalObrigatorio: false,
+  sinalTipo: 'PERCENTUAL',
+  sinalValor: '',
+};
+
 export function ServiceFormDialog({
   open,
   onOpenChange,
@@ -89,111 +98,79 @@ export function ServiceFormDialog({
   advancedCollapsed = false,
   initialName,
 }: ServiceFormDialogProps) {
-  const [formName, setFormName] = useState('');
-  const [formDescription, setFormDescription] = useState('');
-  const [formDuration, setFormDuration] = useState('60');
-  const [formPrice, setFormPrice] = useState(0);
-  const [formCategory, setFormCategory] = useState('Cabelo');
-  const [formProfessionalIds, setFormProfessionalIds] = useState<string[]>([]);
-  const [formIsActive, setFormIsActive] = useState(true);
-  // F02 — sinal de reserva (anti no-show) no agendamento publico
-  const [formSinalObrigatorio, setFormSinalObrigatorio] = useState(false);
-  const [formSinalTipo, setFormSinalTipo] = useState<'PERCENTUAL' | 'FIXO'>('PERCENTUAL');
-  const [formSinalValor, setFormSinalValor] = useState('');
-  const [formErrors, setFormErrors] = useState<ServiceFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(!advancedCollapsed);
 
-  const resetForm = () => {
-    setFormName('');
-    setFormDescription('');
-    setFormDuration('60');
-    setFormPrice(0);
-    setFormCategory('Cabelo');
-    setFormProfessionalIds([]);
-    setFormIsActive(true);
-    setFormSinalObrigatorio(false);
-    setFormSinalTipo('PERCENTUAL');
-    setFormSinalValor('');
-    setFormErrors({});
-    setAdvancedOpen(!advancedCollapsed);
-  };
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<ServiceFormValues>({
+    resolver: zodResolver(serviceFormSchema),
+    defaultValues: emptyDefaults,
+  });
 
   useEffect(() => {
     if (!open) return;
     if (!editingService) {
-      resetForm();
-      setFormName(initialName ?? '');
+      reset({ ...emptyDefaults, name: initialName ?? '' });
+      setAdvancedOpen(!advancedCollapsed);
       return;
     }
     const service = editingService;
-    setFormName(service.name);
-    setFormDescription(service.description);
-    setFormDuration(String(service.duration));
-    setFormPrice(service.price);
-    setFormCategory(service.category);
-    setFormProfessionalIds(Array.isArray(service.professionalIds) ? service.professionalIds : []);
-    setFormIsActive(service.isActive);
-    setFormSinalObrigatorio(Boolean(service.sinalObrigatorio));
-    setFormSinalTipo(service.sinalTipo === 'FIXO' ? 'FIXO' : 'PERCENTUAL');
-    setFormSinalValor(service.sinalValor != null ? String(service.sinalValor) : '');
-    setFormErrors({});
+    reset({
+      name: service.name,
+      description: service.description,
+      duration: String(service.duration),
+      price: service.price,
+      category: service.category,
+      professionalIds: Array.isArray(service.professionalIds) ? service.professionalIds : [],
+      isActive: service.isActive,
+      sinalObrigatorio: Boolean(service.sinalObrigatorio),
+      sinalTipo: service.sinalTipo === 'FIXO' ? 'FIXO' : 'PERCENTUAL',
+      sinalValor: service.sinalValor != null ? String(service.sinalValor) : '',
+    });
     setAdvancedOpen(!advancedCollapsed);
-  }, [open, editingService, initialName]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editingService, initialName]);
+
+  const professionalIds = watch('professionalIds');
+  const sinalObrigatorio = watch('sinalObrigatorio');
+  const sinalTipo = watch('sinalTipo');
 
   const toggleProfessional = (professionalId: string) => {
-    setFormProfessionalIds((prev) =>
-      prev.includes(professionalId)
-        ? prev.filter((id) => id !== professionalId)
-        : [...prev, professionalId]
-    );
+    const next = professionalIds.includes(professionalId)
+      ? professionalIds.filter((id) => id !== professionalId)
+      : [...professionalIds, professionalId];
+    setValue('professionalIds', next, { shouldDirty: true });
   };
 
-  const handleSubmit = async () => {
-    const nextErrors: ServiceFormErrors = {};
-    const durationValue = Number.parseInt(formDuration, 10);
+  const closeAndReset = () => {
+    onOpenChange(false);
+    reset(emptyDefaults);
+  };
 
-    if (!formName.trim()) {
-      nextErrors.name = 'Informe o nome do servico.';
-    }
-    if (!formDuration.trim() || !Number.isFinite(durationValue) || durationValue <= 0) {
-      nextErrors.duration = 'Informe uma duracao valida em minutos.';
-    }
-    if (!Number.isFinite(formPrice) || formPrice <= 0) {
-      nextErrors.price = 'Informe um preco maior que zero.';
-    }
-    const sinalValorNumber = parseDecimalInput(formSinalValor);
-    if (formSinalObrigatorio) {
-      if (!formSinalValor.trim() || !Number.isFinite(sinalValorNumber) || sinalValorNumber <= 0) {
-        toast.error('Informe o valor do sinal (maior que zero).');
-        return;
-      }
-      if (formSinalTipo === 'PERCENTUAL' && sinalValorNumber > 100) {
-        toast.error('O sinal percentual nao pode exceder 100%.');
-        return;
-      }
-    }
-
-    if (Object.keys(nextErrors).length > 0) {
-      setFormErrors(nextErrors);
-      toast.error('Preencha todos os campos obrigatorios');
-      return;
-    }
-
-    setFormErrors({});
+  const onSubmit = async (values: ServiceFormValues) => {
     setIsSubmitting(true);
     try {
+      const sinalValorNumber = values.sinalObrigatorio
+        ? Number(values.sinalValor.replace(',', '.'))
+        : null;
       const serviceData: ServiceFormPayload = {
-        name: formName.trim(),
-        description: formDescription,
-        duration: durationValue,
-        price: formPrice,
-        category: formCategory,
-        professionalIds: formProfessionalIds,
-        isActive: formIsActive,
-        sinalObrigatorio: formSinalObrigatorio,
-        sinalTipo: formSinalObrigatorio ? formSinalTipo : null,
-        sinalValor: formSinalObrigatorio ? sinalValorNumber : null,
+        name: values.name.trim(),
+        description: values.description,
+        duration: Number.parseInt(values.duration, 10),
+        price: values.price,
+        category: values.category,
+        professionalIds: values.professionalIds,
+        isActive: values.isActive,
+        sinalObrigatorio: values.sinalObrigatorio,
+        sinalTipo: values.sinalObrigatorio ? values.sinalTipo : null,
+        sinalValor: sinalValorNumber,
       };
 
       if (editingService) {
@@ -203,10 +180,14 @@ export function ServiceFormDialog({
       }
 
       onOpenChange(false);
-      resetForm();
+      reset(emptyDefaults);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const onInvalid = () => {
+    toast.error('Preencha todos os campos obrigatorios');
   };
 
   const depositAndActiveFields = (
@@ -219,36 +200,48 @@ export function ServiceFormDialog({
               Cliente paga um PIX antecipado para confirmar o horario (anti no-show).
             </p>
           </div>
-          <Switch checked={formSinalObrigatorio} onCheckedChange={setFormSinalObrigatorio} />
+          <Controller
+            control={control}
+            name="sinalObrigatorio"
+            render={({ field }) => (
+              <Switch checked={field.value} onCheckedChange={field.onChange} />
+            )}
+          />
         </div>
-        {formSinalObrigatorio && (
+        {sinalObrigatorio && (
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="sinal-tipo">Tipo do sinal</Label>
-              <Select
-                value={formSinalTipo}
-                onValueChange={(value) => setFormSinalTipo(value as 'PERCENTUAL' | 'FIXO')}
-              >
-                <SelectTrigger id="sinal-tipo">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PERCENTUAL">Percentual do preco (%)</SelectItem>
-                  <SelectItem value="FIXO">Valor fixo (R$)</SelectItem>
-                </SelectContent>
-              </Select>
+              <Controller
+                control={control}
+                name="sinalTipo"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="sinal-tipo">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PERCENTUAL">Percentual do preco (%)</SelectItem>
+                      <SelectItem value="FIXO">Valor fixo (R$)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="sinal-valor">
-                {formSinalTipo === 'PERCENTUAL' ? 'Percentual (1 a 100)' : 'Valor (R$)'}
+                {sinalTipo === 'PERCENTUAL' ? 'Percentual (1 a 100)' : 'Valor (R$)'}
               </Label>
               <Input
                 id="sinal-valor"
                 inputMode="decimal"
-                placeholder={formSinalTipo === 'PERCENTUAL' ? '30' : '20,00'}
-                value={formSinalValor}
-                onChange={(e) => setFormSinalValor(e.target.value)}
+                placeholder={sinalTipo === 'PERCENTUAL' ? '30' : '20,00'}
+                aria-invalid={Boolean(errors.sinalValor)}
+                {...register('sinalValor')}
               />
+              {errors.sinalValor ? (
+                <p className="text-xs text-destructive">{errors.sinalValor.message}</p>
+              ) : null}
             </div>
           </div>
         )}
@@ -259,7 +252,13 @@ export function ServiceFormDialog({
           <Label>Servico ativo</Label>
           <p className="text-xs text-muted-foreground">Disponivel para agendamento</p>
         </div>
-        <Switch checked={formIsActive} onCheckedChange={setFormIsActive} />
+        <Controller
+          control={control}
+          name="isActive"
+          render={({ field }) => (
+            <Switch checked={field.value} onCheckedChange={field.onChange} />
+          )}
+        />
       </DialogSection>
     </>
   );
@@ -269,7 +268,7 @@ export function ServiceFormDialog({
       open={open}
       onOpenChange={(nextOpen) => {
         onOpenChange(nextOpen);
-        if (!nextOpen) resetForm();
+        if (!nextOpen) reset(emptyDefaults);
       }}
     >
       {/*
@@ -285,6 +284,7 @@ export function ServiceFormDialog({
             {editingService ? 'Atualize os dados do servico' : 'Preencha os dados do novo servico'}
           </DialogDescription>
         </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="contents">
         <DialogBody className="min-h-0 flex-1 overflow-y-auto">
           <DialogSection>
             <p className="text-sm font-medium text-foreground">
@@ -309,25 +309,18 @@ export function ServiceFormDialog({
               <Label>Nome do servico *</Label>
               <Input
                 placeholder="Ex: Corte Feminino"
-                value={formName}
-                onChange={(e) => {
-                  setFormName(e.target.value);
-                  if (formErrors.name) {
-                    setFormErrors((current) => ({ ...current, name: undefined }));
-                  }
-                }}
-                aria-invalid={Boolean(formErrors.name)}
+                aria-invalid={Boolean(errors.name)}
+                {...register('name')}
               />
-              {formErrors.name ? <p className="text-xs text-destructive">{formErrors.name}</p> : null}
+              {errors.name ? <p className="text-xs text-destructive">{errors.name.message}</p> : null}
             </div>
 
             <div className="space-y-2">
               <Label>Descricao</Label>
               <Textarea
                 placeholder="Descreva o servico..."
-                value={formDescription}
-                onChange={(e) => setFormDescription(e.target.value)}
                 rows={3}
+                {...register('description')}
               />
             </div>
 
@@ -337,51 +330,52 @@ export function ServiceFormDialog({
                 <Input
                   type="number"
                   placeholder="60"
-                  value={formDuration}
-                  onChange={(e) => {
-                    setFormDuration(e.target.value);
-                    if (formErrors.duration) {
-                      setFormErrors((current) => ({ ...current, duration: undefined }));
-                    }
-                  }}
-                  aria-invalid={Boolean(formErrors.duration)}
+                  aria-invalid={Boolean(errors.duration)}
+                  {...register('duration')}
                 />
-                {formErrors.duration ? (
-                  <p className="text-xs text-destructive">{formErrors.duration}</p>
+                {errors.duration ? (
+                  <p className="text-xs text-destructive">{errors.duration.message}</p>
                 ) : null}
               </div>
               <div className="space-y-2">
                 <Label>Preco (R$) *</Label>
-                <CurrencyInput
-                  value={formPrice}
-                  onChange={(val) => {
-                    setFormPrice(val);
-                    if (formErrors.price) {
-                      setFormErrors((current) => ({ ...current, price: undefined }));
-                    }
-                  }}
-                  aria-invalid={Boolean(formErrors.price)}
+                <Controller
+                  control={control}
+                  name="price"
+                  render={({ field }) => (
+                    <CurrencyInput
+                      value={field.value}
+                      onChange={field.onChange}
+                      aria-invalid={Boolean(errors.price)}
+                    />
+                  )}
                 />
-                {formErrors.price ? (
-                  <p className="text-xs text-destructive">{formErrors.price}</p>
+                {errors.price ? (
+                  <p className="text-xs text-destructive">{errors.price.message}</p>
                 ) : null}
               </div>
             </div>
 
             <div className="space-y-2">
               <Label>Categoria</Label>
-              <Select value={formCategory} onValueChange={setFormCategory}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SERVICE_CATEGORIES.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                control={control}
+                name="category"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SERVICE_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
           </DialogSection>
 
@@ -408,7 +402,7 @@ export function ServiceFormDialog({
                       className="flex items-center gap-2 text-sm cursor-pointer"
                     >
                       <Checkbox
-                        checked={formProfessionalIds.includes(professional.id)}
+                        checked={professionalIds.includes(professional.id)}
                         onCheckedChange={() => toggleProfessional(professional.id)}
                       />
                       <span>{professional.name}</span>
@@ -424,9 +418,9 @@ export function ServiceFormDialog({
               <p className="text-xs text-muted-foreground">
                 Servicos sem profissional vinculado nao aparecem no agendamento.
               </p>
-              {formProfessionalIds.length > 0 ? (
+              {professionalIds.length > 0 ? (
                 <div className="flex flex-wrap gap-1">
-                  {formProfessionalIds.map((id) => {
+                  {professionalIds.map((id) => {
                     const professional = professionals.find((item) => item.id === id);
                     if (!professional) return null;
                     return (
@@ -461,16 +455,10 @@ export function ServiceFormDialog({
           )}
         </DialogBody>
         <DialogStickyFooter>
-          <Button
-            variant="outline"
-            onClick={() => {
-              onOpenChange(false);
-              resetForm();
-            }}
-          >
+          <Button type="button" variant="outline" onClick={closeAndReset}>
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -483,6 +471,7 @@ export function ServiceFormDialog({
             )}
           </Button>
         </DialogStickyFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

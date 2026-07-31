@@ -175,19 +175,21 @@ export default function Auditoria() {
             <CardTitle>Filtros de consulta</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
-              <div className="space-y-1">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-8">
+              <div className="space-y-1 xl:col-span-2">
                 <p className="text-xs text-muted-foreground">Periodo inicial</p>
                 <Input
                   type="datetime-local"
+                  className="min-w-0"
                   value={fromInput}
                   onChange={(e) => setFromInput(e.target.value)}
                 />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 xl:col-span-2">
                 <p className="text-xs text-muted-foreground">Periodo final</p>
                 <Input
                   type="datetime-local"
+                  className="min-w-0"
                   value={toInput}
                   onChange={(e) => setToInput(e.target.value)}
                 />

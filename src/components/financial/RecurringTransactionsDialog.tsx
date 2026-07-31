@@ -247,7 +247,8 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 flex-shrink-0 text-red-500 hover:text-red-600"
+                        className="flex-shrink-0 text-destructive hover:text-destructive/90"
+                        aria-label="Excluir recorrencia"
                         disabled={deletingId === item.id}
                         onClick={() => void handleDelete(item.id)}
                         title="Desativar recorrência"

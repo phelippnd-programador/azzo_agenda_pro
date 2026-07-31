@@ -33,7 +33,7 @@ export function BrandLockup({
       <div className="min-w-0">
         <div
           className={cn(
-            "font-display text-[1.35rem] font-semibold leading-none tracking-tight text-foreground sm:text-[1.55rem]",
+            "font-display text-2xl font-semibold leading-none tracking-tight text-foreground",
             compact && "text-sm sm:text-sm",
             nameClassName
           )}
@@ -42,7 +42,7 @@ export function BrandLockup({
         </div>
         <div
           className={cn(
-            "mt-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground sm:text-xs",
+            "mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground",
             compact && "mt-0.5 text-[11px] tracking-[0.18em] text-muted-foreground",
             subtitleClassName
           )}

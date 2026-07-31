@@ -128,8 +128,9 @@ export default function Login() {
           if (!onboardingStatus.onboardingComplete && !onboardingStatus.onboardingSkipped) {
             return "/onboarding";
           }
-        } catch {
+        } catch (onboardingError) {
           // Se o status nao puder ser consultado, segue para o dashboard normalmente.
+          console.warn('Nao foi possivel consultar o status do onboarding.', onboardingError);
         }
       }
       return '/dashboard';
@@ -242,7 +243,7 @@ export default function Login() {
 
         <Card className="auth-panel border-border/80">
           <CardHeader className="text-center pb-2 sm:pb-4">
-            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-[2rem]">
+            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-3xl">
               Entre na sua conta
             </CardTitle>
             <CardDescription className="text-sm leading-6">

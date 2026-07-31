@@ -237,7 +237,12 @@ export default function OnboardingPage() {
         // que mudou, senao o resto do perfil e apagado.
         const currentProfile = salonProfile ?? (await salonApi.getProfile());
         if (!currentProfile.salonCpfCnpj) {
-          toast.error("CPF ou CNPJ do salão não encontrado. Cadastre em Perfil do Salão antes de continuar.");
+          toast.error("CPF ou CNPJ do salão não encontrado. Cadastre em Perfil do Salão antes de continuar.", {
+            action: {
+              label: "Abrir Perfil do Salão",
+              onClick: () => navigate("/perfil-salao"),
+            },
+          });
           return;
         }
         await salonApi.updateProfile({

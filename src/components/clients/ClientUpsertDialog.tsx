@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Loader2, MessageCircle } from 'lucide-react';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogHeader, DialogSection, DialogStickyFooter, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +12,9 @@ import { maskPhoneBr } from '@/lib/input-masks';
 import { utilsApi } from '@/lib/api';
 import { resolveUiError } from '@/lib/error-utils';
 import { toast } from 'sonner';
+import { clientFormSchema, type ClientFormValues } from '@/schemas/client';
 import type { Client } from '@/types';
+import { DateInput } from "@/components/ui/date-input";
 
 type ClientUpsertPayload = {
   name: string;
@@ -48,6 +52,24 @@ const formatCep = (value: string) => {
   return `${cep.slice(0, 5)}-${cep.slice(5)}`;
 };
 
+const emptyDefaults: ClientFormValues = {
+  name: '',
+  email: '',
+  phone: '',
+  birthDate: '',
+  whatsAppOptIn: false,
+  notes: '',
+  cpfCnpj: '',
+  clientType: 'PF',
+  zipCode: '',
+  street: '',
+  number: '',
+  complement: '',
+  neighborhood: '',
+  city: '',
+  state: '',
+};
+
 export function ClientUpsertDialog({
   open,
   onOpenChange,
@@ -58,64 +80,47 @@ export function ClientUpsertDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAddressLoading, setIsAddressLoading] = useState(false);
   const [lastResolvedCep, setLastResolvedCep] = useState('');
-  const [formName, setFormName] = useState('');
-  const [formEmail, setFormEmail] = useState('');
-  const [formPhone, setFormPhone] = useState('');
-  const [formBirthDate, setFormBirthDate] = useState('');
-  const [formWhatsAppOptIn, setFormWhatsAppOptIn] = useState(false);
-  const [formNotes, setFormNotes] = useState('');
-  const [formCpfCnpj, setFormCpfCnpj] = useState('');
-  const [formClientType, setFormClientType] = useState<'PF' | 'PJ'>('PF');
-  const [formZipCode, setFormZipCode] = useState('');
-  const [formStreet, setFormStreet] = useState('');
-  const [formNumber, setFormNumber] = useState('');
-  const [formComplement, setFormComplement] = useState('');
-  const [formNeighborhood, setFormNeighborhood] = useState('');
-  const [formCity, setFormCity] = useState('');
-  const [formState, setFormState] = useState('');
 
-  const resetForm = () => {
-    setFormName('');
-    setFormEmail('');
-    setFormPhone('');
-    setFormBirthDate('');
-    setFormWhatsAppOptIn(false);
-    setFormNotes('');
-    setFormCpfCnpj('');
-    setFormClientType('PF');
-    setFormZipCode('');
-    setFormStreet('');
-    setFormNumber('');
-    setFormComplement('');
-    setFormNeighborhood('');
-    setFormCity('');
-    setFormState('');
-    setLastResolvedCep('');
-  };
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    reset,
+  } = useForm<ClientFormValues>({
+    resolver: zodResolver(clientFormSchema),
+    defaultValues: emptyDefaults,
+  });
 
   useEffect(() => {
     if (!open) {
-      resetForm();
+      reset(emptyDefaults);
+      setLastResolvedCep('');
       return;
     }
 
-    setFormName(initialClient?.name || '');
-    setFormEmail(initialClient?.email || '');
-    setFormPhone(initialClient?.phone || '');
-    setFormBirthDate((initialClient?.birthDate as string) || '');
-    setFormWhatsAppOptIn(initialClient?.whatsAppOptIn ?? false);
-    setFormNotes(initialClient?.notes || '');
-    setFormCpfCnpj(initialClient?.cpfCnpj || '');
-    setFormClientType(initialClient?.clientType || 'PF');
-    setFormZipCode(initialClient?.address?.zipCode || '');
-    setFormStreet(initialClient?.address?.street || '');
-    setFormNumber(initialClient?.address?.number || '');
-    setFormComplement(initialClient?.address?.complement || '');
-    setFormNeighborhood(initialClient?.address?.neighborhood || '');
-    setFormCity(initialClient?.address?.city || '');
-    setFormState(initialClient?.address?.state || '');
+    reset({
+      name: initialClient?.name || '',
+      email: initialClient?.email || '',
+      phone: initialClient?.phone || '',
+      birthDate: (initialClient?.birthDate as string) || '',
+      whatsAppOptIn: initialClient?.whatsAppOptIn ?? false,
+      notes: initialClient?.notes || '',
+      cpfCnpj: initialClient?.cpfCnpj || '',
+      clientType: initialClient?.clientType || 'PF',
+      zipCode: initialClient?.address?.zipCode || '',
+      street: initialClient?.address?.street || '',
+      number: initialClient?.address?.number || '',
+      complement: initialClient?.address?.complement || '',
+      neighborhood: initialClient?.address?.neighborhood || '',
+      city: initialClient?.address?.city || '',
+      state: initialClient?.address?.state || '',
+    });
     setLastResolvedCep(normalizeCep(initialClient?.address?.zipCode || ''));
-  }, [initialClient, open]);
+  }, [initialClient, open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const formZipCode = watch('zipCode');
 
   useEffect(() => {
     const cep = normalizeCep(formZipCode);
@@ -131,11 +136,11 @@ export function ClientUpsertDialog({
       try {
         setIsAddressLoading(true);
         const data = await utilsApi.getAddressByCep(cep);
-        setFormStreet((data.street || '').trim());
-        setFormComplement((data.complement || '').trim());
-        setFormNeighborhood((data.neighborhood || '').trim());
-        setFormCity((data.city || '').trim());
-        setFormState((data.state || '').trim().toUpperCase());
+        setValue('street', (data.street || '').trim());
+        setValue('complement', (data.complement || '').trim());
+        setValue('neighborhood', (data.neighborhood || '').trim());
+        setValue('city', (data.city || '').trim());
+        setValue('state', (data.state || '').trim().toUpperCase());
         setLastResolvedCep(cep);
       } catch (err) {
         toast.error(resolveUiError(err, 'Nao foi possivel buscar o endereco pelo CEP').message);
@@ -145,34 +150,29 @@ export function ClientUpsertDialog({
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [formZipCode, lastResolvedCep]);
+  }, [formZipCode, lastResolvedCep]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleSubmit = async () => {
-    if (!formName || !formPhone) {
-      toast.error('Nome e telefone sao obrigatorios');
-      return;
-    }
-
+  const onSubmitForm = async (values: ClientFormValues) => {
     setIsSubmitting(true);
     try {
       const result = await onSubmit(
         {
-          name: formName,
-          email: formEmail || undefined,
-          phone: formPhone,
-          birthDate: formBirthDate || undefined,
-          whatsAppOptIn: formWhatsAppOptIn,
-          notes: formNotes || undefined,
-          cpfCnpj: formCpfCnpj || undefined,
-          clientType: formClientType,
+          name: values.name,
+          email: values.email || undefined,
+          phone: values.phone,
+          birthDate: values.birthDate || undefined,
+          whatsAppOptIn: values.whatsAppOptIn,
+          notes: values.notes || undefined,
+          cpfCnpj: values.cpfCnpj || undefined,
+          clientType: values.clientType,
           address: {
-            zipCode: formZipCode || undefined,
-            street: formStreet || undefined,
-            number: formNumber || undefined,
-            complement: formComplement || undefined,
-            neighborhood: formNeighborhood || undefined,
-            city: formCity || undefined,
-            state: formState || undefined,
+            zipCode: values.zipCode || undefined,
+            street: values.street || undefined,
+            number: values.number || undefined,
+            complement: values.complement || undefined,
+            neighborhood: values.neighborhood || undefined,
+            city: values.city || undefined,
+            state: values.state || undefined,
           },
         },
         initialClient?.id
@@ -184,6 +184,10 @@ export function ClientUpsertDialog({
     }
   };
 
+  const onInvalid = () => {
+    toast.error('Nome e telefone sao obrigatorios');
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="mx-4 max-h-[85vh] max-w-md overflow-y-auto sm:mx-auto sm:max-w-2xl">
@@ -193,6 +197,7 @@ export function ClientUpsertDialog({
             {initialClient ? 'Atualize os dados do cliente' : 'Cadastre um novo cliente'}
           </DialogDescription>
         </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmitForm, onInvalid)}>
         <DialogBody>
           <DialogSection>
             <p className="text-sm font-medium text-foreground">
@@ -213,8 +218,7 @@ export function ClientUpsertDialog({
               <Label>Nome Completo *</Label>
               <Input
                 placeholder="Nome do cliente"
-                value={formName}
-                onChange={(e) => setFormName(e.target.value)}
+                {...register('name')}
               />
             </div>
 
@@ -223,8 +227,9 @@ export function ClientUpsertDialog({
                 <Label>Telefone *</Label>
                 <Input
                   placeholder="(11) 99999-0000"
-                  value={formPhone}
-                  onChange={(e) => setFormPhone(maskPhoneBr(e.target.value))}
+                  {...register('phone', {
+                    onChange: (e) => setValue('phone', maskPhoneBr(e.target.value)),
+                  })}
                 />
               </div>
               <div className="space-y-2">
@@ -232,18 +237,15 @@ export function ClientUpsertDialog({
                 <Input
                   type="email"
                   placeholder="email@exemplo.com"
-                  value={formEmail}
-                  onChange={(e) => setFormEmail(e.target.value)}
+                  {...register('email')}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
               <Label>Data de Nascimento</Label>
-              <Input
-                type="date"
-                value={formBirthDate}
-                onChange={(e) => setFormBirthDate(e.target.value)}
+              <DateInput
+                {...register('birthDate')}
               />
               <p className="text-xs text-muted-foreground">Necessario para verificacoes de privacidade.</p>
             </div>
@@ -254,8 +256,7 @@ export function ClientUpsertDialog({
                   id="whatsapp-opt-in"
                   type="checkbox"
                   className="mt-0.5 h-4 w-4 cursor-pointer rounded border-input accent-primary"
-                  checked={formWhatsAppOptIn}
-                  onChange={(e) => setFormWhatsAppOptIn(e.target.checked)}
+                  {...register('whatsAppOptIn')}
                 />
                 <div className="space-y-1">
                   <label
@@ -277,21 +278,28 @@ export function ClientUpsertDialog({
                 <Label>CPF / CNPJ</Label>
                 <Input
                   placeholder="000.000.000-00"
-                  value={formCpfCnpj}
-                  onChange={(e) => setFormCpfCnpj(e.target.value.replace(/\D/g, '').slice(0, 14))}
+                  {...register('cpfCnpj', {
+                    onChange: (e) => setValue('cpfCnpj', e.target.value.replace(/\D/g, '').slice(0, 14)),
+                  })}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Tipo de pessoa</Label>
-                <Select value={formClientType} onValueChange={(value) => setFormClientType(value as 'PF' | 'PJ')}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="PF">Pessoa Fisica (PF)</SelectItem>
-                    <SelectItem value="PJ">Pessoa Juridica (PJ)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Controller
+                  control={control}
+                  name="clientType"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="PF">Pessoa Fisica (PF)</SelectItem>
+                        <SelectItem value="PJ">Pessoa Juridica (PJ)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
             </div>
 
@@ -299,9 +307,8 @@ export function ClientUpsertDialog({
               <Label>Observacoes</Label>
               <Textarea
                 placeholder="Preferencias, alergias, etc."
-                value={formNotes}
-                onChange={(e) => setFormNotes(e.target.value)}
                 rows={3}
+                {...register('notes')}
               />
             </div>
           </DialogSection>
@@ -316,8 +323,9 @@ export function ClientUpsertDialog({
               <Label>CEP</Label>
               <Input
                 placeholder="00000-000"
-                value={formZipCode}
-                onChange={(e) => setFormZipCode(formatCep(e.target.value))}
+                {...register('zipCode', {
+                  onChange: (e) => setValue('zipCode', formatCep(e.target.value)),
+                })}
               />
               <p className="text-xs text-muted-foreground">
                 {isAddressLoading ? 'Buscando endereco pelo CEP...' : 'Ao informar um CEP valido, o endereco sera sugerido automaticamente.'}
@@ -328,8 +336,7 @@ export function ClientUpsertDialog({
               <Label>Logradouro</Label>
               <Input
                 placeholder="Rua, avenida..."
-                value={formStreet}
-                onChange={(e) => setFormStreet(e.target.value)}
+                {...register('street')}
               />
             </div>
 
@@ -338,16 +345,14 @@ export function ClientUpsertDialog({
                 <Label>Numero</Label>
                 <Input
                   placeholder="123"
-                  value={formNumber}
-                  onChange={(e) => setFormNumber(e.target.value)}
+                  {...register('number')}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Complemento</Label>
                 <Input
                   placeholder="Apto, sala..."
-                  value={formComplement}
-                  onChange={(e) => setFormComplement(e.target.value)}
+                  {...register('complement')}
                 />
               </div>
             </div>
@@ -356,8 +361,7 @@ export function ClientUpsertDialog({
               <Label>Bairro</Label>
               <Input
                 placeholder="Bairro"
-                value={formNeighborhood}
-                onChange={(e) => setFormNeighborhood(e.target.value)}
+                {...register('neighborhood')}
               />
             </div>
 
@@ -366,27 +370,27 @@ export function ClientUpsertDialog({
                 <Label>Cidade</Label>
                 <Input
                   placeholder="Cidade"
-                  value={formCity}
-                  onChange={(e) => setFormCity(e.target.value)}
+                  {...register('city')}
                 />
               </div>
               <div className="space-y-2">
                 <Label>UF</Label>
                 <Input
                   placeholder="SP"
-                  value={formState}
-                  onChange={(e) => setFormState(e.target.value.toUpperCase())}
                   maxLength={2}
+                  {...register('state', {
+                    onChange: (e) => setValue('state', e.target.value.toUpperCase()),
+                  })}
                 />
               </div>
             </div>
           </DialogSection>
         </DialogBody>
         <DialogStickyFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -397,6 +401,7 @@ export function ClientUpsertDialog({
             )}
           </Button>
         </DialogStickyFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

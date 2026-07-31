@@ -352,7 +352,7 @@ export default function SalePage() {
                 </span>
                 <h1
                   id="sale-hero-title"
-                  className="mt-6 font-display text-[2rem] font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl lg:text-6xl"
+                  className="mt-6 font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl lg:text-6xl"
                 >
                   Pare de perder agendamentos e organize seu salao em um unico sistema
                 </h1>

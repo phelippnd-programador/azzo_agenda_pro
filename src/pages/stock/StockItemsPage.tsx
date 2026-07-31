@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { CrudListToolbar } from "@/components/crud/CrudListToolbar";
 import { ModuleIntro } from "@/components/layout/module-surfaces";
 import { Badge } from "@/components/ui/badge";
@@ -22,13 +24,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
-import type { CreateStockItemRequest, StockItem } from "@/types/stock";
+import { stockItemFormSchema, type StockItemFormValues } from "@/schemas/stockItem";
+import type { StockItem } from "@/types/stock";
 import { Edit, Power } from "lucide-react";
 import { Link, useMatch, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { getListItems } from "./utils";
 
-const initialForm: CreateStockItemRequest = {
+const initialForm: StockItemFormValues = {
   nome: "",
   sku: "",
   unidadeMedida: "UN",
@@ -50,7 +53,10 @@ export default function StockItemsPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [page, setPage] = useState(1);
   const pageSize = 12;
-  const [form, setForm] = useState<CreateStockItemRequest>(initialForm);
+  const { register, handleSubmit, watch, setValue, reset } = useForm<StockItemFormValues>({
+    resolver: zodResolver(stockItemFormSchema),
+    defaultValues: initialForm,
+  });
 
   const load = async () => {
     try {
@@ -105,7 +111,7 @@ export default function StockItemsPage() {
   }, [filteredItems, page]);
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
 
-  const resetForm = () => setForm(initialForm);
+  const resetForm = () => reset(initialForm);
 
   useEffect(() => {
     setPage(1);
@@ -121,14 +127,14 @@ export default function StockItemsPage() {
     }
   };
 
-  const handleCreate = async () => {
-    if (!form.nome.trim() || !form.unidadeMedida.trim()) {
-      toast.error("Nome e unidade sao obrigatorios.");
-      return;
-    }
+  const onInvalidForm = () => {
+    toast.error("Nome e unidade sao obrigatorios.");
+  };
+
+  const handleCreate = async (values: StockItemFormValues) => {
     setIsSaving(true);
     try {
-      await stockApi.createItem({ ...form, estoqueMinimo: Number(form.estoqueMinimo || 0) });
+      await stockApi.createItem({ ...values, estoqueMinimo: Number(values.estoqueMinimo || 0) });
       toast.success("Item criado com sucesso.");
       setIsCreateOpen(false);
       resetForm();
@@ -140,17 +146,13 @@ export default function StockItemsPage() {
     }
   };
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (values: StockItemFormValues) => {
     if (!editingItem) return;
-    if (!form.nome.trim() || !form.unidadeMedida.trim()) {
-      toast.error("Nome e unidade sao obrigatorios.");
-      return;
-    }
     setIsSaving(true);
     try {
       await stockApi.updateItem(editingItem.id, {
-        ...form,
-        estoqueMinimo: Number(form.estoqueMinimo || 0),
+        ...values,
+        estoqueMinimo: Number(values.estoqueMinimo || 0),
       });
       toast.success("Item atualizado com sucesso.");
       setEditingItem(null);
@@ -165,7 +167,7 @@ export default function StockItemsPage() {
 
   const openEdit = (item: StockItem) => {
     setEditingItem(item);
-    setForm({
+    reset({
       nome: item.nome,
       sku: item.sku || "",
       unidadeMedida: item.unidadeMedida,
@@ -174,25 +176,33 @@ export default function StockItemsPage() {
     });
   };
 
+  const formEstoqueMinimo = watch("estoqueMinimo");
+
   const FormFields = (
     <div data-tour="stock-items-form" className="space-y-3">
       <div className="space-y-1">
         <Label htmlFor="item-nome">Nome</Label>
-        <Input id="item-nome" value={form.nome} onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))} />
+        <Input id="item-nome" {...register("nome")} />
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1">
           <Label htmlFor="item-sku">SKU</Label>
-          <Input id="item-sku" value={form.sku || ""} onChange={(e) => setForm((prev) => ({ ...prev, sku: e.target.value }))} />
+          <Input id="item-sku" {...register("sku")} />
         </div>
         <div className="space-y-1">
           <Label htmlFor="item-unidade">Unidade</Label>
-          <Input id="item-unidade" value={form.unidadeMedida} onChange={(e) => setForm((prev) => ({ ...prev, unidadeMedida: e.target.value }))} />
+          <Input id="item-unidade" {...register("unidadeMedida")} />
         </div>
       </div>
       <div className="space-y-1">
         <Label htmlFor="item-estoque-minimo">Estoque minimo</Label>
-        <Input id="item-estoque-minimo" type="number" min="0" value={form.estoqueMinimo} onChange={(e) => setForm((prev) => ({ ...prev, estoqueMinimo: Number(e.target.value || 0) }))} />
+        <Input
+          id="item-estoque-minimo"
+          type="number"
+          min="0"
+          value={formEstoqueMinimo}
+          onChange={(e) => setValue("estoqueMinimo", Number(e.target.value || 0))}
+        />
       </div>
     </div>
   );
@@ -261,7 +271,7 @@ export default function StockItemsPage() {
             >
               Cancelar
             </Button>
-            <Button data-tour="stock-items-dialog-submit" onClick={() => void handleCreate()} isLoading={isSaving} loadingText="Salvando...">
+            <Button data-tour="stock-items-dialog-submit" onClick={() => void handleSubmit(handleCreate, onInvalidForm)()} isLoading={isSaving} loadingText="Salvando...">
               Salvar
             </Button>
           </DialogStickyFooter>
@@ -358,7 +368,7 @@ export default function StockItemsPage() {
             >
               Cancelar
             </Button>
-            <Button onClick={() => void handleUpdate()} isLoading={isSaving} loadingText="Salvando...">
+            <Button onClick={() => void handleSubmit(handleUpdate, onInvalidForm)()} isLoading={isSaving} loadingText="Salvando...">
               Salvar alteracoes
             </Button>
           </DialogStickyFooter>

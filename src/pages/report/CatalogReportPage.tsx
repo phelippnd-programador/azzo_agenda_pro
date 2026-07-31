@@ -5,6 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateInput } from "@/components/ui/date-input";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -281,8 +282,7 @@ export default function CatalogReportPage() {
               </div>
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Data inicial</p>
-                <Input
-                  type="date"
+                <DateInput
                   value={fromInput}
                   onChange={(event) => {
                     setPeriodPresetInput("CUSTOM");
@@ -292,8 +292,7 @@ export default function CatalogReportPage() {
               </div>
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Data final</p>
-                <Input
-                  type="date"
+                <DateInput
                   value={toInput}
                   onChange={(event) => {
                     setPeriodPresetInput("CUSTOM");

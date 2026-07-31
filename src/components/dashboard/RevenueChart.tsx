@@ -1,24 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/format';
 import { dashboardApi } from '@/lib/api';
 
-const fallbackWeeklyData = [
-  { day: 'Seg', value: 1250 },
-  { day: 'Ter', value: 980 },
-  { day: 'Qua', value: 1450 },
-  { day: 'Qui', value: 1120 },
-  { day: 'Sex', value: 1680 },
-  { day: 'Sab', value: 890 },
-  { day: 'Dom', value: 0 },
-];
+const emptyWeeklyData = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'].map((day) => ({ day, value: 0 }));
 
 export function RevenueChart() {
-  const [weeklyData, setWeeklyData] = useState(fallbackWeeklyData);
+  const [weeklyData, setWeeklyData] = useState(emptyWeeklyData);
   const [rangeLabel, setRangeLabel] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     const now = new Date();
     const day = now.getDay() || 7;
     const monday = new Date(now);
@@ -28,16 +24,56 @@ export function RevenueChart() {
     const start = monday.toISOString().split('T')[0];
     const end = sunday.toISOString().split('T')[0];
     setRangeLabel(`${start} a ${end}`);
+    setIsLoading(true);
+    setHasError(false);
 
     dashboardApi
       .getWeeklyRevenue(start, end)
       .then((data) => {
-        if (data.points?.length) {
-          setWeeklyData(data.points.map((p) => ({ day: p.day, value: p.value })));
-        }
+        setWeeklyData(data.points?.length ? data.points.map((p) => ({ day: p.day, value: p.value })) : emptyWeeklyData);
       })
-      .catch(() => undefined);
+      .catch(() => {
+        setWeeklyData(emptyWeeklyData);
+        setHasError(true);
+      })
+      .finally(() => setIsLoading(false));
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const hasData = weeklyData.some((item) => item.value > 0);
+
+  const renderChartState = () => {
+    if (isLoading) {
+      return <Skeleton className="h-40 w-full rounded-2xl sm:h-48" />;
+    }
+
+    if (hasError) {
+      return (
+        <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-center sm:min-h-48">
+          <div>
+            <p className="text-sm font-medium text-foreground">Não foi possível carregar a receita semanal.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Os dados não foram substituídos por valores fictícios.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={load}>
+            Atualizar
+          </Button>
+        </div>
+      );
+    }
+
+    if (!hasData) {
+      return (
+        <div className="flex min-h-40 items-center justify-center rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-center sm:min-h-48">
+          <p className="text-sm text-muted-foreground">Sem faturamento registrado nesta semana.</p>
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   const maxValue = useMemo(() => Math.max(...weeklyData.map((d) => d.value), 0), [weeklyData]);
 
@@ -51,7 +87,7 @@ export function RevenueChart() {
             </p>
             <CardTitle className="text-base sm:text-lg">Faturamento da Semana</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Leitura rapida da semana atual com destaque para o dia em andamento.
+              Leitura rápida da semana atual com destaque para o dia em andamento.
             </p>
           </div>
           {rangeLabel ? <Badge variant="outline">{rangeLabel}</Badge> : null}
@@ -59,6 +95,7 @@ export function RevenueChart() {
       </CardHeader>
       <CardContent>
         <div className="rounded-2xl border border-border/70 bg-muted/15 p-4">
+          {renderChartState() ?? (
           <div className="flex h-40 items-end justify-between gap-1 sm:h-48 sm:gap-2">
             {weeklyData.map((item, index) => {
               const height = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
@@ -91,6 +128,7 @@ export function RevenueChart() {
               );
             })}
           </div>
+          )}
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -101,7 +139,7 @@ export function RevenueChart() {
             </p>
           </div>
           <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:text-right">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Media diaria</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Média diária</p>
             <p className="mt-1 text-lg font-bold text-primary sm:text-xl">
               {formatCurrency(weeklyData.reduce((acc, d) => acc + d.value, 0) / weeklyData.length)}
             </p>

@@ -11,6 +11,7 @@ import { formatCurrency } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { DateInput } from "@/components/ui/date-input";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -408,8 +409,7 @@ export default function ProfessionalFinancial() {
 
             <div className="space-y-2">
               <Label>Data inicial</Label>
-              <Input
-                type="date"
+              <DateInput
                 value={preset === "range" ? customStart : start}
                 onChange={(event) => setCustomStart(event.target.value)}
                 disabled={preset !== "range"}
@@ -418,8 +418,7 @@ export default function ProfessionalFinancial() {
 
             <div className="space-y-2">
               <Label>Data final</Label>
-              <Input
-                type="date"
+              <DateInput
                 value={preset === "range" ? customEnd : end}
                 onChange={(event) => setCustomEnd(event.target.value)}
                 disabled={preset !== "range"}

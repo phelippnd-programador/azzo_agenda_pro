@@ -159,7 +159,7 @@ export function TransactionList({
                       <div className="text-left sm:text-right">
                         <p
                           className={`text-sm font-semibold sm:text-base ${
-                            isIncome ? 'text-green-600 dark:text-green-300' : 'text-red-600 dark:text-red-300'
+                            isIncome ? 'text-success' : 'text-destructive'
                           }`}
                         >
                           {isIncome ? '+' : '-'}
@@ -173,12 +173,12 @@ export function TransactionList({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 flex-shrink-0"
-                            title={transaction.reconciled ? 'Conciliado - clique para desmarcar' : 'Marcar como conciliado'}
+                            className="flex-shrink-0"
+                            aria-label={transaction.reconciled ? 'Desmarcar transacao conciliada' : 'Marcar transacao como conciliada'}
                             onClick={() => onReconcile(transaction.id)}
                           >
                             {transaction.reconciled ? (
-                              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-300" />
+                              <CheckCircle2 className="h-4 w-4 text-success" />
                             ) : (
                               <Circle className="h-4 w-4 text-muted-foreground" />
                             )}
@@ -186,7 +186,7 @@ export function TransactionList({
 
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                              <Button variant="ghost" size="icon" className="flex-shrink-0" aria-label="Abrir acoes da transacao">
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -195,7 +195,7 @@ export function TransactionList({
                                 <Pencil className="mr-2 h-4 w-4" />
                                 Editar
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600" onClick={() => onDelete(transaction.id)}>
+                              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDelete(transaction.id)}>
                                 Excluir
                               </DropdownMenuItem>
                             </DropdownMenuContent>

@@ -161,6 +161,15 @@ export function resolveUiError(error: unknown, fallbackMessage: string): UiError
   }
 
   if (error instanceof Error) {
+    // Mensagens de rede do proprio navegador (ex.: "Failed to fetch", "NetworkError
+    // when attempting to fetch resource", "Load failed") sao tecnicas demais para o
+    // usuario final — troca por uma mensagem amigavel de conectividade.
+    const looksLikeNetworkError = /failed to fetch|networkerror|load failed|network request failed/i.test(
+      error.message
+    );
+    if (looksLikeNetworkError) {
+      return { message: "Nao foi possivel conectar ao servidor. Verifique sua conexao e tente novamente." };
+    }
     return { message: error.message || fallbackMessage };
   }
 

@@ -4,6 +4,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateInput } from "@/components/ui/date-input";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -181,8 +182,7 @@ export default function StockReportPage() {
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Data inicial</p>
-                <Input
-                  type="date" aria-label="Data inicial"
+                <DateInput aria-label="Data inicial"
                   value={fromInput}
                   onChange={(e) => {
                     setFromInput(e.target.value);
@@ -192,8 +192,7 @@ export default function StockReportPage() {
               </div>
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Data final</p>
-                <Input
-                  type="date" aria-label="Data final"
+                <DateInput aria-label="Data final"
                   value={toInput}
                   onChange={(e) => {
                     setToInput(e.target.value);

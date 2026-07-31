@@ -27,3 +27,4 @@ dist-ssr
 *.sw?
 playwright-report/
 test-results/
+.claude/worktrees/
