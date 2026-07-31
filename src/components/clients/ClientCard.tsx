@@ -30,7 +30,7 @@ export function ClientCard({ client, onOpenProfile, onEdit, onDelete, canDelete 
     <Card
       role="button"
       tabIndex={0}
-      className="cursor-pointer border-border/70 bg-card/95 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_14px_30px_-24px_rgba(15,23,42,0.18)]"
+      className="cursor-pointer border-border/70 bg-card/95 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-panel"
       onClick={() => onOpenProfile(client.id)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -62,7 +62,7 @@ export function ClientCard({ client, onOpenProfile, onEdit, onDelete, canDelete 
                 size="icon"
                 className="h-8 w-8 flex-shrink-0"
                 onClick={(event) => event.stopPropagation()}
-                aria-label={`Abrir acoes de ${client.name}`}
+                aria-label={`Abrir ações de ${client.name}`}
               >
                 <MoreVertical className="w-4 h-4" />
               </Button>
@@ -71,7 +71,7 @@ export function ClientCard({ client, onOpenProfile, onEdit, onDelete, canDelete 
               <DropdownMenuItem onClick={() => onEdit(client)}>Editar</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onOpenProfile(client.id)}>Ver perfil</DropdownMenuItem>
               {canDelete && (
-                <DropdownMenuItem className="text-red-600" onClick={() => onDelete(client.id)}>
+                <DropdownMenuItem className="text-destructive" onClick={() => onDelete(client.id)}>
                   Excluir
                 </DropdownMenuItem>
               )}
@@ -92,16 +92,16 @@ export function ClientCard({ client, onOpenProfile, onEdit, onDelete, canDelete 
               </div>
             )}
             {!hasContact ? (
-              <p className="text-xs text-muted-foreground">Contato ainda nao informado.</p>
+              <p className="text-xs text-muted-foreground">Contato ainda não informado.</p>
             ) : null}
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border">
+        <div className="grid grid-cols-2 gap-3 border-t border-border/70 pt-3">
           <div>
             <div className="flex items-center gap-1 text-muted-foreground mb-1">
               <Calendar className="w-3 h-3" />
-              <span className="text-xs sm:text-xs">Ultima visita</span>
+              <span className="text-xs sm:text-xs">Última visita</span>
             </div>
             <p className="text-xs sm:text-sm font-medium">
               {client.lastVisit ? new Date(client.lastVisit).toLocaleDateString("pt-BR") : "Nunca"}

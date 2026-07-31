@@ -7,16 +7,16 @@ import { RouteContentLoader } from '@/components/ui/route-content-loader';
 export default function Clients() {
   const location = useLocation();
   const tabs = [
-    { to: '/clientes', label: 'Visao geral', isActive: location.pathname === '/clientes' },
+    { to: '/clientes', label: 'Visão geral', isActive: location.pathname === '/clientes' },
     {
       to: '/clientes/importacoes',
-      label: 'Importacoes',
+      label: 'Importações',
       isActive: location.pathname.startsWith('/clientes/importacoes'),
     },
   ];
 
   return (
-    <MainLayout title="Clientes" subtitle="Gerencie sua base de clientes e importacoes">
+    <MainLayout title="Clientes" subtitle="Gerencie sua base de clientes e importações">
       <div className="space-y-4 sm:space-y-6">
         <ModuleTabs items={tabs} pathname={location.pathname} />
         <Suspense fallback={<RouteContentLoader />}>

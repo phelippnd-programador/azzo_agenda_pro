@@ -143,7 +143,7 @@ export function ClientUpsertDialog({
         setValue('state', (data.state || '').trim().toUpperCase());
         setLastResolvedCep(cep);
       } catch (err) {
-        toast.error(resolveUiError(err, 'Nao foi possivel buscar o endereco pelo CEP').message);
+        toast.error(resolveUiError(err, 'Não foi possível buscar o endereço pelo CEP').message);
       } finally {
         setIsAddressLoading(false);
       }
@@ -185,37 +185,37 @@ export function ClientUpsertDialog({
   };
 
   const onInvalid = () => {
-    toast.error('Nome e telefone sao obrigatorios');
+    toast.error('Nome e telefone são obrigatórios');
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="mx-4 max-h-[85vh] max-w-md overflow-y-auto sm:mx-auto sm:max-w-2xl">
-        <DialogHeader className="border-b border-border/70 pb-4 pr-10">
-          <DialogTitle>{initialClient ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
+      <DialogContent className="mx-4 flex max-h-[85vh] max-w-md flex-col overflow-hidden sm:mx-auto sm:max-w-2xl">
+        <DialogHeader className="shrink-0 border-b border-border/70 pb-4 pr-10">
+          <DialogTitle>{initialClient ? 'Editar cliente' : 'Novo cliente'}</DialogTitle>
           <DialogDescription>
             {initialClient ? 'Atualize os dados do cliente' : 'Cadastre um novo cliente'}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmitForm, onInvalid)}>
-        <DialogBody>
+        <form onSubmit={handleSubmit(onSubmitForm, onInvalid)} className="contents">
+        <DialogBody className="min-h-0 flex-1 overflow-y-auto">
           <DialogSection>
             <p className="text-sm font-medium text-foreground">
-              {initialClient ? 'Revise os dados principais e mantenha o cadastro atualizado.' : 'Comece com os dados essenciais e complemente o endereco se fizer sentido para a operacao.'}
+              {initialClient ? 'Revise os dados principais e mantenha o cadastro atualizado.' : 'Comece com os dados essenciais e complemente o endereço se fizer sentido para a operação.'}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Nome e telefone sao os campos minimos para criar o cadastro e seguir com o historico do cliente.
+              Nome e telefone são os campos mínimos para criar o cadastro e seguir com o histórico do cliente.
             </p>
           </DialogSection>
 
           <DialogSection className="bg-transparent">
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">Dados principais</p>
-              <p className="text-sm text-muted-foreground">Informacoes basicas para identificar o cliente e manter o relacionamento organizado.</p>
+              <p className="text-sm text-muted-foreground">Informações básicas para identificar o cliente e manter o relacionamento organizado.</p>
             </div>
 
             <div className="space-y-2">
-              <Label>Nome Completo *</Label>
+              <Label>Nome completo *</Label>
               <Input
                 placeholder="Nome do cliente"
                 {...register('name')}
@@ -243,11 +243,11 @@ export function ClientUpsertDialog({
             </div>
 
             <div className="space-y-2">
-              <Label>Data de Nascimento</Label>
+              <Label>Data de nascimento</Label>
               <DateInput
                 {...register('birthDate')}
               />
-              <p className="text-xs text-muted-foreground">Necessario para verificacoes de privacidade.</p>
+              <p className="text-xs text-muted-foreground">Necessário para verificações de privacidade.</p>
             </div>
 
             <div className="rounded-xl border border-border/70 bg-muted/20 p-4 space-y-2">
@@ -264,10 +264,10 @@ export function ClientUpsertDialog({
                     className="flex cursor-pointer items-center gap-2 text-sm font-medium text-foreground"
                   >
                     <MessageCircle className="h-4 w-4 text-emerald-600" />
-                    Aceito receber mensagens automaticas de lembrete de agendamento via WhatsApp
+                    Aceito receber mensagens automáticas de lembrete de agendamento via WhatsApp
                   </label>
                   <p className="text-xs text-muted-foreground">
-                    Voce pode cancelar a qualquer momento respondendo PARE no WhatsApp.
+                    Você pode cancelar a qualquer momento respondendo PARE no WhatsApp.
                   </p>
                 </div>
               </div>
@@ -294,8 +294,8 @@ export function ClientUpsertDialog({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="PF">Pessoa Fisica (PF)</SelectItem>
-                        <SelectItem value="PJ">Pessoa Juridica (PJ)</SelectItem>
+                        <SelectItem value="PF">Pessoa física (PF)</SelectItem>
+                        <SelectItem value="PJ">Pessoa jurídica (PJ)</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -304,9 +304,9 @@ export function ClientUpsertDialog({
             </div>
 
             <div className="space-y-2">
-              <Label>Observacoes</Label>
+              <Label>Observações</Label>
               <Textarea
-                placeholder="Preferencias, alergias, etc."
+                placeholder="Preferências, alergias, etc."
                 rows={3}
                 {...register('notes')}
               />
@@ -315,8 +315,8 @@ export function ClientUpsertDialog({
 
           <DialogSection className="bg-transparent">
             <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">Endereco</p>
-              <p className="text-sm text-muted-foreground">Opcional, mas util para operacao, segmentacao e contexto de atendimento.</p>
+              <p className="text-sm font-medium text-foreground">Endereço</p>
+              <p className="text-sm text-muted-foreground">Opcional, mas útil para operação, segmentação e contexto de atendimento.</p>
             </div>
 
             <div className="space-y-2">
@@ -328,7 +328,7 @@ export function ClientUpsertDialog({
                 })}
               />
               <p className="text-xs text-muted-foreground">
-                {isAddressLoading ? 'Buscando endereco pelo CEP...' : 'Ao informar um CEP valido, o endereco sera sugerido automaticamente.'}
+                {isAddressLoading ? 'Buscando endereço pelo CEP...' : 'Ao informar um CEP válido, o endereço será sugerido automaticamente.'}
               </p>
             </div>
 
@@ -342,7 +342,7 @@ export function ClientUpsertDialog({
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Numero</Label>
+                <Label>Número</Label>
                 <Input
                   placeholder="123"
                   {...register('number')}
