@@ -329,9 +329,9 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-background via-background to-muted/30">
       {/* Cabeçalho */}
-      <header className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
+      <header className="flex items-center justify-between border-b border-border/70 bg-background/95 px-4 py-3 backdrop-blur-sm sm:px-6">
         <BrandLockup compact />
         <AlertDialog>
           <AlertDialogTrigger asChild>
@@ -365,7 +365,7 @@ export default function OnboardingPage() {
       {/* Corpo */}
       <div className="flex flex-1 overflow-hidden">
         {/* Stepper lateral — desktop */}
-        <aside className="hidden w-64 shrink-0 border-r bg-muted/20 p-6 md:flex md:flex-col">
+        <aside className="hidden w-64 shrink-0 border-r border-border/70 bg-card/85 p-6 backdrop-blur-sm md:flex md:flex-col">
           <p className="mb-6 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Configuração inicial
           </p>
@@ -409,6 +409,7 @@ export default function OnboardingPage() {
         {/* Conteúdo central */}
         <main className="flex flex-1 flex-col overflow-auto">
           <div className="flex-1 px-4 py-8 sm:px-8 md:px-12 max-w-2xl mx-auto w-full">
+          <div className="surface-panel rounded-2xl p-5 sm:p-7">
             {currentStep === 0 && (
               <StepTerms
                 termsRead={termsRead}
@@ -461,10 +462,11 @@ export default function OnboardingPage() {
               />
             )}
           </div>
+          </div>
 
           {/* Rodapé fixo */}
           {currentStep < lastStepIndex && (
-            <footer className="border-t bg-background px-4 py-4 sm:px-8">
+            <footer className="border-t border-border/70 bg-background/95 px-4 py-4 backdrop-blur-sm sm:px-8">
               <div className="max-w-2xl mx-auto w-full flex items-center gap-4">
                 <Button
                   variant="outline"

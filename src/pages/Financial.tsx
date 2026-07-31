@@ -278,35 +278,31 @@ export default function Financial() {
             title="Entradas"
             value={formatCurrency(summary.totalIncome)}
             icon={TrendingUp}
-            className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 dark:border-green-500/20 dark:from-green-500/10 dark:to-emerald-500/5"
-            titleClassName="text-green-700 dark:text-green-300"
-            valueClassName="text-green-800 dark:text-green-100"
-            iconContainerClassName="bg-green-100 dark:bg-green-500/15"
-            iconClassName="text-green-600 dark:text-green-300"
+            className="border-success/25 bg-success/8"
+            titleClassName="text-success"
+            valueClassName="text-success"
+            iconContainerClassName="bg-success/15"
+            iconClassName="text-success"
           />
           <HighlightMetricCard
             title="Saidas"
             value={formatCurrency(summary.totalExpenses)}
             icon={TrendingDown}
-            className="border-red-200 bg-gradient-to-br from-red-50 to-rose-50 dark:border-red-500/20 dark:from-red-500/10 dark:to-rose-500/5"
-            titleClassName="text-red-700 dark:text-red-300"
-            valueClassName="text-red-800 dark:text-red-100"
-            iconContainerClassName="bg-red-100 dark:bg-red-500/15"
-            iconClassName="text-red-600 dark:text-red-300"
+            className="border-destructive/25 bg-destructive/8"
+            titleClassName="text-destructive"
+            valueClassName="text-destructive"
+            iconContainerClassName="bg-destructive/15"
+            iconClassName="text-destructive"
           />
           <HighlightMetricCard
             title="Saldo"
             value={formatCurrency(summary.balance)}
             icon={Wallet}
-            className={
-              summary.balance >= 0
-                ? 'border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5'
-                : 'border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 dark:border-orange-500/20 dark:from-orange-500/10 dark:to-amber-500/5'
-            }
-            titleClassName={summary.balance >= 0 ? 'text-primary' : 'text-orange-700 dark:text-orange-300'}
-            valueClassName={summary.balance >= 0 ? 'text-primary' : 'text-orange-800 dark:text-orange-100'}
-            iconContainerClassName={summary.balance >= 0 ? 'bg-primary/15' : 'bg-orange-100 dark:bg-orange-500/15'}
-            iconClassName={summary.balance >= 0 ? 'text-primary' : 'text-orange-600 dark:text-orange-300'}
+            className={summary.balance >= 0 ? 'border-primary/20 bg-primary/8' : 'border-warning/25 bg-warning/8'}
+            titleClassName={summary.balance >= 0 ? 'text-primary' : 'text-warning'}
+            valueClassName={summary.balance >= 0 ? 'text-primary' : 'text-warning'}
+            iconContainerClassName={summary.balance >= 0 ? 'bg-primary/15' : 'bg-warning/15'}
+            iconClassName={summary.balance >= 0 ? 'text-primary' : 'text-warning'}
           />
         </div>
 
@@ -343,7 +339,7 @@ export default function Financial() {
                   <Filter className="h-3.5 w-3.5" />
                   Filtros
                   {activeFilterCount > 0 ? (
-                    <Badge variant="secondary" className="ml-0.5 px-1.5 py-0 text-[10px]">
+                    <Badge variant="secondary" className="ml-0.5 px-1.5 py-0 text-xs">
                       {activeFilterCount}
                     </Badge>
                   ) : null}
@@ -393,7 +389,7 @@ export default function Financial() {
             <div className="mt-3 grid grid-cols-1 gap-2 sm:flex sm:justify-end">
               <Button
                 variant="outline"
-                className="gap-2 whitespace-nowrap border-green-300 text-green-700 hover:bg-green-50 dark:border-green-500/30 dark:text-green-300 dark:hover:bg-green-500/10"
+                className="gap-2 whitespace-nowrap border-success/40 text-success hover:bg-success/8"
                 onClick={() => openNewTransaction('INCOME')}
               >
                 <ArrowUpCircle className="h-4 w-4" />
@@ -402,7 +398,7 @@ export default function Financial() {
               </Button>
               <Button
                 variant="outline"
-                className="gap-2 whitespace-nowrap border-red-300 text-red-700 hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10"
+                className="gap-2 whitespace-nowrap border-destructive/40 text-destructive hover:bg-destructive/8"
                 onClick={() => openNewTransaction('EXPENSE')}
               >
                 <ArrowDownCircle className="h-4 w-4" />

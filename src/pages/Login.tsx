@@ -218,27 +218,34 @@ export default function Login() {
         <ThemeToggle className="theme-toggle-shell h-8 w-8" />
       </div>
       <div className="relative z-10 w-full max-w-md">
-        <div className="mb-3 space-y-1.5 text-center">
+        <div className="mb-6 space-y-3 text-center sm:mb-8">
+          <div className="flex justify-center">
+            <span className="brand-orbit-badge">
+              <span className="brand-orbit-dot" />
+              Acesso a operação em andamento
+            </span>
+          </div>
+          <p className="section-eyebrow">Bem-vindo de volta</p>
           <BrandLockup className="justify-center" caption="Operating System" />
-          <div className="flex flex-wrap items-center justify-center gap-1.5">
-            <span className="rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-medium tracking-wide text-primary">
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+            <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[11px] font-medium tracking-wide text-primary">
               Acesso único
             </span>
-            <span className="rounded-full border border-border/70 bg-background/80 px-2.5 py-0.5 text-[10px] font-medium tracking-wide text-muted-foreground">
+            <span className="rounded-full border border-border/70 bg-background/80 px-3 py-1 text-[11px] font-medium tracking-wide text-muted-foreground">
               Sessão protegida
             </span>
-            <span className="rounded-full border border-border/70 bg-background/80 px-2.5 py-0.5 text-[10px] font-medium tracking-wide text-muted-foreground">
+            <span className="rounded-full border border-border/70 bg-background/80 px-3 py-1 text-[11px] font-medium tracking-wide text-muted-foreground">
               Retomada rápida
             </span>
           </div>
         </div>
 
         <Card className="auth-panel border-border/80">
-          <CardHeader className="text-center pb-1 pt-4">
-            <CardTitle className="text-xl font-semibold tracking-tight">
-              Bem-vindo de volta!
+          <CardHeader className="text-center pb-2 sm:pb-4">
+            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-[2rem]">
+              Entre na sua conta
             </CardTitle>
-            <CardDescription className="text-xs leading-5">
+            <CardDescription className="text-sm leading-6">
               Acesse sua operação sem perder contexto e retome de onde parou.
             </CardDescription>
           </CardHeader>

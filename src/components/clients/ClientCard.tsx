@@ -101,7 +101,7 @@ export function ClientCard({ client, onOpenProfile, onEdit, onDelete, canDelete 
           <div>
             <div className="flex items-center gap-1 text-muted-foreground mb-1">
               <Calendar className="w-3 h-3" />
-              <span className="text-[10px] sm:text-xs">Ultima visita</span>
+              <span className="text-xs sm:text-xs">Ultima visita</span>
             </div>
             <p className="text-xs sm:text-sm font-medium">
               {client.lastVisit ? new Date(client.lastVisit).toLocaleDateString("pt-BR") : "Nunca"}
@@ -110,7 +110,7 @@ export function ClientCard({ client, onOpenProfile, onEdit, onDelete, canDelete 
           <div>
             <div className="flex items-center gap-1 text-muted-foreground mb-1">
               <DollarSign className="w-3 h-3" />
-              <span className="text-[10px] sm:text-xs">Total gasto</span>
+              <span className="text-xs sm:text-xs">Total gasto</span>
             </div>
             <p className="text-xs sm:text-sm font-medium text-primary">{formatCurrency(client.totalSpent)}</p>
           </div>

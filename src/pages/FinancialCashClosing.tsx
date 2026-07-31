@@ -10,6 +10,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ConfirmationDialog } from "@/components/common/ConfirmationDialog";
 import { DeleteConfirmationDialog } from "@/components/common/DeleteConfirmationDialog";
 import { TransactionDialog } from "@/components/financial/TransactionDialog";
 import { TransactionList } from "@/components/financial/TransactionList";
@@ -86,6 +87,7 @@ export default function FinancialCashClosing() {
     OTHER: 0,
   });
   const [isSubmittingClose, setIsSubmittingClose] = useState(false);
+  const [isConfirmCloseOpen, setIsConfirmCloseOpen] = useState(false);
 
   const [isTransactionOpen, setIsTransactionOpen] = useState(false);
   const [transactionDefaultType, setTransactionDefaultType] = useState<"INCOME" | "EXPENSE">("INCOME");
@@ -228,6 +230,7 @@ export default function FinancialCashClosing() {
       });
       await loadClosings(true);
       setSelectedId(closed.id);
+      setIsConfirmCloseOpen(false);
       setIsCloseDialogVisible(false);
       toast.success("Fechamento de caixa concluído");
     } catch (err) {
@@ -397,7 +400,7 @@ export default function FinancialCashClosing() {
                               </Badge>
                             </TableCell>
                             <TableCell>{formatCurrency(closing.totalExpected)}</TableCell>
-                            <TableCell className={closing.totalDifference === 0 ? "" : "text-orange-700"}>
+                            <TableCell className={closing.totalDifference === 0 ? "" : "text-warning"}>
                               {formatCurrency(closing.totalDifference)}
                             </TableCell>
                           </TableRow>
@@ -553,7 +556,7 @@ export default function FinancialCashClosing() {
                               <TableCell>{formatCurrency(selectedClosing.expectedTotals[method.key] ?? 0)}</TableCell>
                               <TableCell>{formatCurrency(selectedClosing.countedTotals[method.key] ?? 0)}</TableCell>
                               <TableCell
-                                className={(selectedClosing.differenceTotals[method.key] ?? 0) === 0 ? "" : "text-orange-700"}
+                                className={(selectedClosing.differenceTotals[method.key] ?? 0) === 0 ? "" : "text-warning"}
                               >
                                 {formatCurrency(selectedClosing.differenceTotals[method.key] ?? 0)}
                               </TableCell>
@@ -662,13 +665,23 @@ export default function FinancialCashClosing() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCloseDialogVisible(false)}>Cancelar</Button>
-            <Button onClick={handleCloseCashClosing} disabled={isSubmittingClose}>
-              {isSubmittingClose ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            <Button onClick={() => setIsConfirmCloseOpen(true)} disabled={isSubmittingClose}>
               Encerrar caixa
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmationDialog
+        open={isConfirmCloseOpen}
+        onOpenChange={setIsConfirmCloseOpen}
+        title="Confirmar fechamento do caixa?"
+        description="Depois de fechado, os lançamentos deste caixa ficam somente leitura e a diferença apurada não pode mais ser ajustada. Confira os valores contados antes de confirmar."
+        isLoading={isSubmittingClose}
+        confirmLabel="Confirmar fechamento"
+        loadingLabel="Fechando..."
+        onConfirm={handleCloseCashClosing}
+      />
 
       <TransactionDialog
         open={isTransactionOpen}

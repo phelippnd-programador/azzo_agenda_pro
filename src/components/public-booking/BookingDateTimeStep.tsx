@@ -120,7 +120,7 @@ export function BookingDateTimeStep({
             {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, i) => (
               <span
                 key={i}
-                className="py-1 text-[10px] font-medium text-muted-foreground sm:text-xs"
+                className="py-1 text-xs font-medium text-muted-foreground sm:text-xs"
               >
                 {day}
               </span>

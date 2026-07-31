@@ -1,15 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useMatch, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { ModuleIntro } from "@/components/layout/module-surfaces";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogSection,
+  DialogStickyFooter,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -295,6 +299,12 @@ export default function StockInventoriesPage() {
 
   return (
     <div className="space-y-4">
+      <ModuleIntro
+        eyebrow="Inventarios"
+        title="Acompanhe contagens ciclicas e feche com confianca"
+        description="Registre divergencias por item e feche o inventario quando o ciclo de contagem terminar."
+      />
+
       {/* Lista principal */}
       <Card className="border-border/80">
         <CardHeader>
@@ -476,7 +486,7 @@ export default function StockInventoriesPage() {
                         </Select>
                       )}
                       {countForm.itemEstoqueId && counts.some((c) => c.itemEstoqueId === countForm.itemEstoqueId) && (
-                        <p className="text-xs text-amber-600">Este item ja foi contado. Use o botao Editar na tabela abaixo.</p>
+                        <p className="text-xs text-warning">Este item ja foi contado. Use o botao Editar na tabela abaixo.</p>
                       )}
                     </div>
                     <div className="space-y-1">
@@ -551,7 +561,7 @@ export default function StockInventoriesPage() {
                               </td>
                               <td className="py-2 pr-4 text-right tabular-nums">{Number(count.quantidadeEsperada).toFixed(2)}</td>
                               <td className="py-2 pr-4 text-right tabular-nums">{Number(count.quantidadeContada).toFixed(2)}</td>
-                              <td className={`py-2 pr-4 text-right tabular-nums font-medium ${diff > 0 ? "text-green-600" : diff < 0 ? "text-red-600" : "text-muted-foreground"}`}>
+                              <td className={`py-2 pr-4 text-right tabular-nums font-medium ${diff > 0 ? "text-success" : diff < 0 ? "text-destructive" : "text-muted-foreground"}`}>
                                 {diff > 0 ? "+" : ""}{Number(diff).toFixed(2)}
                               </td>
                               <td className="py-2 pr-4 text-muted-foreground max-w-[140px] truncate">{count.observacao || "—"}</td>
@@ -580,13 +590,15 @@ export default function StockInventoriesPage() {
               </div>
 
               {/* Ações de ciclo de vida */}
-              <DialogFooter data-tour="stock-inventory-lifecycle-actions" className="flex-wrap gap-2 sm:justify-start">
+              <DialogStickyFooter data-tour="stock-inventory-lifecycle-actions" className="flex-wrap gap-2 sm:justify-start">
                 <Button
                   variant="outline"
                   onClick={() => void handleCloseInventory()}
-                  disabled={isClosing || inventarioFinalizado}
+                  disabled={inventarioFinalizado}
+                  isLoading={isClosing}
+                  loadingText="Fechando..."
                 >
-                  {isClosing ? "Fechando..." : "Fechar inventario"}
+                  Fechar inventario
                 </Button>
                 <Button
                   variant="outline"
@@ -596,7 +608,7 @@ export default function StockInventoriesPage() {
                 >
                   Cancelar inventario
                 </Button>
-              </DialogFooter>
+              </DialogStickyFooter>
             </>
           )}
         </DialogContent>
@@ -605,76 +617,80 @@ export default function StockInventoriesPage() {
       {/* Modal editar contagem */}
       <Dialog open={!!editingCount} onOpenChange={(open) => { if (!open) setEditingCount(null); }}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+          <DialogHeader className="border-b border-border/70 pb-4 pr-10">
             <DialogTitle>Editar contagem</DialogTitle>
             <DialogDescription>
               {editingCount?.itemNome ?? "Item"} — ajuste a quantidade contada.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <Label>Quantidade contada</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.0001"
-                value={editForm.quantidadeContada === 0 ? "" : editForm.quantidadeContada}
-                onChange={(e) => setEditForm((prev) => ({ ...prev, quantidadeContada: e.target.value === "" ? 0 : Number(e.target.value) }))}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label>Observacao (opcional)</Label>
-              <Input
-                value={editForm.observacao || ""}
-                onChange={(e) => setEditForm((prev) => ({ ...prev, observacao: e.target.value }))}
-              />
-            </div>
-          </div>
-          <DialogFooter>
+          <DialogBody>
+            <DialogSection className="bg-transparent">
+              <div className="space-y-1">
+                <Label>Quantidade contada</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.0001"
+                  value={editForm.quantidadeContada === 0 ? "" : editForm.quantidadeContada}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, quantidadeContada: e.target.value === "" ? 0 : Number(e.target.value) }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Observacao (opcional)</Label>
+                <Input
+                  value={editForm.observacao || ""}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, observacao: e.target.value }))}
+                />
+              </div>
+            </DialogSection>
+          </DialogBody>
+          <DialogStickyFooter>
             <Button variant="outline" onClick={() => setEditingCount(null)}>Cancelar</Button>
-            <Button onClick={() => void handleUpdateCount()} disabled={isSavingEdit}>
-              {isSavingEdit ? "Salvando..." : "Salvar"}
+            <Button onClick={() => void handleUpdateCount()} isLoading={isSavingEdit} loadingText="Salvando...">
+              Salvar
             </Button>
-          </DialogFooter>
+          </DialogStickyFooter>
         </DialogContent>
       </Dialog>
 
       {/* Modal cancelar inventário */}
       <Dialog open={isCancelOpen} onOpenChange={(open) => { setIsCancelOpen(open); if (!open) setCancelForm({ senha: "", motivo: "" }); }}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+          <DialogHeader className="border-b border-border/70 pb-4 pr-10">
             <DialogTitle className="text-destructive">Cancelar inventario</DialogTitle>
             <DialogDescription>
               Esta acao e irreversivel. O inventario sera marcado como cancelado e nao podera ser reaberto. Confirme com sua senha.
             </DialogDescription>
           </DialogHeader>
-          <div data-tour="stock-inventory-cancel-form" className="space-y-3">
-            <div className="space-y-1">
-              <Label>Motivo do cancelamento (opcional)</Label>
-              <Input
-                value={cancelForm.motivo || ""}
-                onChange={(e) => setCancelForm((prev) => ({ ...prev, motivo: e.target.value }))}
-                placeholder="Ex.: Inventario criado por engano"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label>Sua senha</Label>
-              <Input
-                type="password"
-                value={cancelForm.senha}
-                onChange={(e) => setCancelForm((prev) => ({ ...prev, senha: e.target.value }))}
-                onKeyDown={(e) => { if (e.key === "Enter") void handleCancelInventory(); }}
-                placeholder="Digite sua senha para confirmar"
-                autoComplete="current-password"
-              />
-            </div>
-          </div>
-          <DialogFooter>
+          <DialogBody>
+            <DialogSection data-tour="stock-inventory-cancel-form" className="bg-transparent">
+              <div className="space-y-1">
+                <Label>Motivo do cancelamento (opcional)</Label>
+                <Input
+                  value={cancelForm.motivo || ""}
+                  onChange={(e) => setCancelForm((prev) => ({ ...prev, motivo: e.target.value }))}
+                  placeholder="Ex.: Inventario criado por engano"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Sua senha</Label>
+                <Input
+                  type="password"
+                  value={cancelForm.senha}
+                  onChange={(e) => setCancelForm((prev) => ({ ...prev, senha: e.target.value }))}
+                  onKeyDown={(e) => { if (e.key === "Enter") void handleCancelInventory(); }}
+                  placeholder="Digite sua senha para confirmar"
+                  autoComplete="current-password"
+                />
+              </div>
+            </DialogSection>
+          </DialogBody>
+          <DialogStickyFooter>
             <Button variant="outline" onClick={() => setIsCancelOpen(false)}>Voltar</Button>
-            <Button variant="destructive" onClick={() => void handleCancelInventory()} disabled={isCancelling || !cancelForm.senha.trim()}>
-              {isCancelling ? "Cancelando..." : "Confirmar cancelamento"}
+            <Button variant="destructive" onClick={() => void handleCancelInventory()} disabled={!cancelForm.senha.trim()} isLoading={isCancelling} loadingText="Cancelando...">
+              Confirmar cancelamento
             </Button>
-          </DialogFooter>
+          </DialogStickyFooter>
         </DialogContent>
       </Dialog>
 
@@ -687,31 +703,33 @@ export default function StockInventoriesPage() {
         }}
       >
         <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
+          <DialogHeader className="border-b border-border/70 pb-4 pr-10">
             <DialogTitle>Novo inventario</DialogTitle>
             <DialogDescription>Cadastre um inventario para iniciar a contagem.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <Label htmlFor="inventory-nome">Nome</Label>
-              <Input
-                id="inventory-nome"
-                value={inventoryForm.nome}
-                onChange={(e) => setInventoryForm((prev) => ({ ...prev, nome: e.target.value }))}
-                onKeyDown={(e) => { if (e.key === "Enter") void handleCreate(); }}
-                placeholder="Ex.: Inventario mensal - Marco/2026"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="inventory-observacao">Observacao (opcional)</Label>
-              <Input
-                id="inventory-observacao"
-                value={inventoryForm.observacao || ""}
-                onChange={(e) => setInventoryForm((prev) => ({ ...prev, observacao: e.target.value }))}
-              />
-            </div>
-          </div>
-          <DialogFooter>
+          <DialogBody>
+            <DialogSection className="bg-transparent">
+              <div className="space-y-1">
+                <Label htmlFor="inventory-nome">Nome</Label>
+                <Input
+                  id="inventory-nome"
+                  value={inventoryForm.nome}
+                  onChange={(e) => setInventoryForm((prev) => ({ ...prev, nome: e.target.value }))}
+                  onKeyDown={(e) => { if (e.key === "Enter") void handleCreate(); }}
+                  placeholder="Ex.: Inventario mensal - Marco/2026"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="inventory-observacao">Observacao (opcional)</Label>
+                <Input
+                  id="inventory-observacao"
+                  value={inventoryForm.observacao || ""}
+                  onChange={(e) => setInventoryForm((prev) => ({ ...prev, observacao: e.target.value }))}
+                />
+              </div>
+            </DialogSection>
+          </DialogBody>
+          <DialogStickyFooter>
             <Button
               variant="outline"
               onClick={() => {
@@ -721,10 +739,10 @@ export default function StockInventoriesPage() {
             >
               Cancelar
             </Button>
-            <Button onClick={() => void handleCreate()} disabled={isCreating}>
-              {isCreating ? "Salvando..." : "Criar inventario"}
+            <Button onClick={() => void handleCreate()} isLoading={isCreating} loadingText="Salvando...">
+              Criar inventario
             </Button>
-          </DialogFooter>
+          </DialogStickyFooter>
         </DialogContent>
       </Dialog>
     </div>

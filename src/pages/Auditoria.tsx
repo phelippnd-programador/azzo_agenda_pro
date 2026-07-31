@@ -366,7 +366,42 @@ export default function Auditoria() {
               </p>
             ) : (
               <TooltipProvider delayDuration={150}>
-                <div className="overflow-x-auto">
+                <div className="space-y-2 md:hidden">
+                  {items.map((item) => (
+                    <div key={item.id} className="rounded-xl border border-border/70 bg-card p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 space-y-0.5">
+                          <p className="text-sm font-medium text-foreground">
+                            {actionMeta(item.action).label}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {moduleLabel(item.module)} • {formatDateTime(item.createdAt)}
+                          </p>
+                        </div>
+                        <Badge className={statusBadgeClass[item.status]}>
+                          {statusLabel(item.status)}
+                        </Badge>
+                      </div>
+                      <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                        <p className="truncate">Registro: {entityMeta(item.entityType).label}</p>
+                        <p className="truncate">Ator: {item.actorName || item.actorUserId || "-"}</p>
+                        <p className="truncate font-mono">IP: {maskIpAddress(item.ipAddress)}</p>
+                        <p className="truncate font-mono">Req: {item.requestId}</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 gap-1.5"
+                        onClick={() => openEventDetail(item.id)}
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        Ver detalhe
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="hidden overflow-x-auto md:block">
                   <table className="min-w-[1100px] w-full text-sm">
                     <thead>
                       <tr className="border-b text-left text-muted-foreground">
@@ -420,7 +455,7 @@ export default function Auditoria() {
                             <Button
                               variant="outline"
                               size="icon"
-                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              className="text-primary hover:bg-primary/8"
                               onClick={() => openEventDetail(item.id)}
                               aria-label="Ver detalhe do evento"
                             >

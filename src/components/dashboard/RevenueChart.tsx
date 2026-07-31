@@ -67,7 +67,7 @@ export function RevenueChart() {
 
               return (
                 <div key={item.day} className="flex min-w-0 flex-1 flex-col items-center gap-2">
-                  <span className="w-full truncate text-center text-[9px] text-muted-foreground sm:text-xs">
+                  <span className="w-full truncate text-center text-xs text-muted-foreground sm:text-xs">
                     {item.value > 0 ? (
                       <span className="hidden sm:inline">{formatCurrency(item.value)}</span>
                     ) : (
@@ -84,7 +84,7 @@ export function RevenueChart() {
                       style={{ height: `${height}%` }}
                     />
                   </div>
-                  <span className={`text-[10px] font-medium sm:text-sm ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <span className={`text-xs font-medium sm:text-sm ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
                     {item.day}
                   </span>
                 </div>

@@ -25,41 +25,43 @@ type RankedBarCardProps = {
   valueFormatter?: (value: number) => string;
 };
 
+// Ranks se diferenciam por intensidade da cor primaria (Regra da Voz Unica),
+// nao por matizes distintos — a ultima posicao usa neutro (muted), nao cinza cru.
 const rankTiers = [
   {
     label: "Diamante",
     Icon: Gem,
-    accentClass: "bg-cyan-50 text-cyan-700 border-cyan-200",
-    iconClass: "text-cyan-600",
-    tagClass: "bg-cyan-100 text-cyan-700",
+    accentClass: "bg-primary/12 text-primary border-primary/30",
+    iconClass: "text-primary",
+    tagClass: "bg-primary/16 text-primary",
   },
   {
     label: "Ouro",
     Icon: Trophy,
-    accentClass: "bg-amber-50 text-amber-700 border-amber-200",
-    iconClass: "text-amber-600",
-    tagClass: "bg-amber-100 text-amber-700",
+    accentClass: "bg-primary/10 text-primary/90 border-primary/25",
+    iconClass: "text-primary/90",
+    tagClass: "bg-primary/14 text-primary/90",
   },
   {
     label: "Prata",
     Icon: Medal,
-    accentClass: "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700",
-    iconClass: "text-slate-500 dark:text-slate-300",
-    tagClass: "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-100",
+    accentClass: "bg-primary/8 text-primary/80 border-primary/20",
+    iconClass: "text-primary/70",
+    tagClass: "bg-primary/12 text-primary/80",
   },
   {
     label: "Bronze",
     Icon: Shield,
-    accentClass: "bg-orange-50 text-orange-700 border-orange-200",
-    iconClass: "text-orange-600",
-    tagClass: "bg-orange-100 text-orange-700",
+    accentClass: "bg-primary/6 text-primary/70 border-primary/15",
+    iconClass: "text-primary/60",
+    tagClass: "bg-primary/10 text-primary/70",
   },
   {
     label: "Lata",
     Icon: Circle,
-    accentClass: "bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700",
-    iconClass: "text-zinc-500 dark:text-zinc-300",
-    tagClass: "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-100",
+    accentClass: "bg-muted text-muted-foreground border-border/60",
+    iconClass: "text-muted-foreground",
+    tagClass: "bg-muted text-muted-foreground",
   },
 ] as const;
 
@@ -142,7 +144,7 @@ export function RankedBarCard({
                     >
                       <div className={`flex h-9 w-9 flex-col items-center justify-center rounded-full border ${rank.accentClass}`}>
                         <RankIcon className={`h-3.5 w-3.5 ${rank.iconClass}`} />
-                        <span className="text-[10px] font-semibold leading-none">{index + 1}</span>
+                        <span className="text-xs font-semibold leading-none">{index + 1}</span>
                       </div>
                       <div className="min-w-0 space-y-2">
                         <div className="flex flex-wrap items-start justify-between gap-2">
@@ -153,7 +155,7 @@ export function RankedBarCard({
                             ) : null}
                           </div>
                           <span
-                            className={`inline-flex flex-shrink-0 rounded-full px-2 py-1 text-[10px] font-medium ${rank.tagClass}`}
+                            className={`inline-flex flex-shrink-0 rounded-full px-2 py-1 text-xs font-medium ${rank.tagClass}`}
                           >
                             {rank.label}
                           </span>

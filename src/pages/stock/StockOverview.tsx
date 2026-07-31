@@ -79,7 +79,7 @@ export default function StockOverview() {
     name: tipo,
     value: movements.filter((movement) => movement.tipo === tipo).length,
   }));
-  const pieColors = ["#22c55e", "#ef4444", "#6366f1"];
+  const pieColors = ["hsl(var(--success))", "hsl(var(--destructive))", "hsl(var(--primary))"];
 
   return (
     <div className="space-y-4">
@@ -98,51 +98,51 @@ export default function StockOverview() {
           title="Abaixo do minimo"
           value={String(summary.itensAbaixoMinimo)}
           icon={ArrowDownCircle}
-          className="border-red-200 bg-gradient-to-br from-red-50 to-rose-50 dark:border-red-500/20 dark:from-red-500/10 dark:to-rose-500/5"
-          titleClassName="text-red-700 dark:text-red-300"
-          valueClassName="text-red-800 dark:text-red-100"
-          iconContainerClassName="bg-red-100 dark:bg-red-500/15"
-          iconClassName="text-red-600 dark:text-red-300"
+          className="border-warning/25 bg-warning/8"
+          titleClassName="text-warning"
+          valueClassName="text-warning"
+          iconContainerClassName="bg-warning/15"
+          iconClassName="text-warning"
         />
         <HighlightMetricCard
           title="Itens zerados"
           value={String(summary.itensZerados)}
           icon={ArrowDownCircle}
-          className="border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 dark:border-orange-500/20 dark:from-orange-500/10 dark:to-amber-500/5"
-          titleClassName="text-orange-700 dark:text-orange-300"
-          valueClassName="text-orange-800 dark:text-orange-100"
-          iconContainerClassName="bg-orange-100 dark:bg-orange-500/15"
-          iconClassName="text-orange-600 dark:text-orange-300"
+          className="border-destructive/25 bg-destructive/8"
+          titleClassName="text-destructive"
+          valueClassName="text-destructive"
+          iconContainerClassName="bg-destructive/15"
+          iconClassName="text-destructive"
         />
         <HighlightMetricCard
           title="Movimentacoes"
           value={String(summary.totalMovimentacoes)}
           icon={ArrowUpCircle}
-          className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50 dark:border-indigo-500/20 dark:from-indigo-500/10 dark:to-blue-500/5"
-          titleClassName="text-indigo-700 dark:text-indigo-300"
-          valueClassName="text-indigo-800 dark:text-indigo-100"
-          iconContainerClassName="bg-indigo-100 dark:bg-indigo-500/15"
-          iconClassName="text-indigo-600 dark:text-indigo-300"
+          className="border-border/70 bg-muted/25"
+          titleClassName="text-muted-foreground"
+          valueClassName="text-foreground"
+          iconContainerClassName="bg-muted"
+          iconClassName="text-muted-foreground"
         />
         <HighlightMetricCard
           title="Valor em estoque"
           value={formatCurrency(dashboard?.valorEstoqueCustoMedio ?? summary.valorEstoque)}
           icon={Scale}
-          className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 dark:border-emerald-500/20 dark:from-emerald-500/10 dark:to-green-500/5"
-          titleClassName="text-emerald-700 dark:text-emerald-300"
-          valueClassName="text-emerald-800 dark:text-emerald-100"
-          iconContainerClassName="bg-emerald-100 dark:bg-emerald-500/15"
-          iconClassName="text-emerald-600 dark:text-emerald-300"
+          className="border-success/25 bg-success/8"
+          titleClassName="text-success"
+          valueClassName="text-success"
+          iconContainerClassName="bg-success/15"
+          iconClassName="text-success"
         />
         <HighlightMetricCard
           title="Ruptura"
           value={`${Math.round(Number(dashboard?.rupturaTaxa || 0) * 100)}%`}
           icon={ArrowDownCircle}
-          className="border-slate-200 bg-gradient-to-br from-slate-50 to-gray-50 dark:border-slate-700 dark:from-slate-900 dark:to-slate-800/70"
-          titleClassName="text-slate-700 dark:text-slate-300"
-          valueClassName="text-slate-800 dark:text-slate-100"
-          iconContainerClassName="bg-slate-100 dark:bg-slate-800"
-          iconClassName="text-slate-600 dark:text-slate-300"
+          className="border-border/70 bg-muted/25"
+          titleClassName="text-muted-foreground"
+          valueClassName="text-foreground"
+          iconContainerClassName="bg-muted"
+          iconClassName="text-muted-foreground"
         />
       </div>
 
@@ -171,12 +171,12 @@ export default function StockOverview() {
                 >
                   <div
                     className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      isEntrada ? "bg-green-100 dark:bg-green-500/15" : isSaida ? "bg-red-100 dark:bg-red-500/15" : "bg-indigo-100 dark:bg-indigo-500/15"
+                      isEntrada ? "bg-success/15" : isSaida ? "bg-destructive/15" : "bg-muted"
                     }`}
                   >
                     <Icon
                       className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                        isEntrada ? "text-green-600 dark:text-green-300" : isSaida ? "text-red-600 dark:text-red-300" : "text-indigo-600 dark:text-indigo-300"
+                        isEntrada ? "text-success" : isSaida ? "text-destructive" : "text-muted-foreground"
                       }`}
                     />
                   </div>
@@ -184,10 +184,10 @@ export default function StockOverview() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground text-sm truncate">{movement.motivo}</p>
                     <div className="flex flex-wrap items-center gap-2 mt-1">
-                      <Badge variant="outline" className="text-[10px] sm:text-xs">
+                      <Badge variant="outline" className="text-xs">
                         {movement.tipo}
                       </Badge>
-                      <span className="text-[10px] sm:text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         Saldo: {movement.saldoAnterior} {"->"} {movement.saldoPosterior}
                       </span>
                     </div>
@@ -196,12 +196,12 @@ export default function StockOverview() {
                   <div className="w-full flex-shrink-0 text-left sm:w-auto sm:text-right">
                     <p
                       className={`font-semibold text-sm sm:text-base ${
-                        isEntrada ? "text-green-600 dark:text-green-300" : isSaida ? "text-red-600 dark:text-red-300" : "text-indigo-600 dark:text-indigo-300"
+                        isEntrada ? "text-success" : isSaida ? "text-destructive" : "text-muted-foreground"
                       }`}
                     >
                       {isEntrada ? "+" : isSaida ? "-" : ""}{movement.quantidade}
                     </p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       {formatDateTime(movement.createdAt)}
                     </p>
                   </div>

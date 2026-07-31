@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Package, Plus, Trash2 } from 'lucide-react';
+import { Package, Pencil, Plus, Trash2 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -219,9 +219,23 @@ export default function PackagesPage() {
             {packages.map((pacote) => (
               <Card key={pacote.id} className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => abrirEdicao(pacote)}>
                 <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center justify-between text-sm">
-                    <span>{pacote.nome}</span>
-                    <Badge variant={pacote.ativo ? 'default' : 'outline'}>{pacote.ativo ? 'Ativo' : 'Inativo'}</Badge>
+                  <CardTitle className="flex items-center justify-between gap-2 text-sm">
+                    <span className="min-w-0 truncate">{pacote.nome}</span>
+                    <div className="flex flex-shrink-0 items-center gap-1">
+                      <Badge variant={pacote.ativo ? 'default' : 'outline'}>{pacote.ativo ? 'Ativo' : 'Inativo'}</Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        aria-label={`Editar pacote ${pacote.nome}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          abrirEdicao(pacote);
+                        }}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-1 text-sm">

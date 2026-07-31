@@ -665,7 +665,7 @@ export function WhatsAppIntegrationCard() {
             <div className="divide-y text-sm max-h-72 overflow-y-auto">
               {messageLog.map((item) => (
                 <div key={item.id} className="py-2 flex gap-3 items-start">
-                  <span className={`shrink-0 mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium ${item.status === "SENT" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                  <span className={`shrink-0 mt-0.5 px-1.5 py-0.5 rounded text-xs font-medium ${item.status === "SENT" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                     {item.status}
                   </span>
                   <div className="min-w-0 flex-1">
@@ -673,7 +673,7 @@ export function WhatsAppIntegrationCard() {
                     <p className="truncate text-xs mt-0.5">{item.messageText}</p>
                     {item.errorMessage && <p className="text-xs text-destructive mt-0.5">{item.errorMessage}</p>}
                   </div>
-                  <span className="text-[10px] text-muted-foreground shrink-0">{new Date(item.sentAt).toLocaleString("pt-BR")}</span>
+                  <span className="text-xs text-muted-foreground shrink-0">{new Date(item.sentAt).toLocaleString("pt-BR")}</span>
                 </div>
               ))}
             </div>

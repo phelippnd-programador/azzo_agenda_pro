@@ -110,7 +110,7 @@ export function BookingServiceStep({
                             {service.duration} min
                           </span>
                           {service.category ? (
-                            <Badge variant="outline" className="text-[10px] sm:text-xs">
+                            <Badge variant="outline" className="text-xs sm:text-xs">
                               {service.category}
                             </Badge>
                           ) : null}

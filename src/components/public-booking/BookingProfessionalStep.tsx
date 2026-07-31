@@ -71,7 +71,7 @@ export function BookingProfessionalStep({
                     {(Array.isArray(professional.specialties) ? professional.specialties : [])
                       .slice(0, 3)
                       .map((spec, index) => (
-                        <Badge key={index} variant="outline" className="text-[10px] sm:text-xs">
+                        <Badge key={index} variant="outline" className="text-xs sm:text-xs">
                           {spec}
                         </Badge>
                       ))}

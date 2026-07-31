@@ -270,7 +270,7 @@ export default function SalesReportPage() {
         {data?.summary && (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total atendimentos</CardTitle></CardHeader><CardContent><p className="text-2xl font-semibold">{data.summary.totalAgendamentos}</p></CardContent></Card>
-            <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Receita total</CardTitle></CardHeader><CardContent><p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(data.summary.receitaTotal)}</p></CardContent></Card>
+            <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Receita total</CardTitle></CardHeader><CardContent><p className="text-2xl font-semibold text-success">{formatCurrency(data.summary.receitaTotal)}</p></CardContent></Card>
             <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Ticket medio</CardTitle></CardHeader><CardContent><p className="text-2xl font-semibold">{formatCurrency(data.summary.ticketMedio)}</p></CardContent></Card>
           </div>
         )}
@@ -315,7 +315,7 @@ export default function SalesReportPage() {
                           <TableCell className="w-8 text-sm text-muted-foreground">{i + 1}</TableCell>
                           <TableCell className="text-sm font-medium">{s.servicoNome}</TableCell>
                           <TableCell className="text-right text-sm">{s.totalAgendamentos}</TableCell>
-                          <TableCell className="text-right text-sm font-medium text-emerald-600 dark:text-emerald-400">{formatCurrency(s.receitaTotal)}</TableCell>
+                          <TableCell className="text-right text-sm font-medium text-success">{formatCurrency(s.receitaTotal)}</TableCell>
                           <TableCell className="text-right text-sm">{formatCurrency(s.ticketMedio)}</TableCell>
                         </TableRow>
                       ))}
@@ -343,7 +343,7 @@ export default function SalesReportPage() {
                           <TableCell className="w-8 text-sm text-muted-foreground">{i + 1}</TableCell>
                           <TableCell className="text-sm font-medium">{p.profissionalNome}</TableCell>
                           <TableCell className="text-right text-sm">{p.totalAgendamentos}</TableCell>
-                          <TableCell className="text-right text-sm font-medium text-emerald-600 dark:text-emerald-400">{formatCurrency(p.receitaTotal)}</TableCell>
+                          <TableCell className="text-right text-sm font-medium text-success">{formatCurrency(p.receitaTotal)}</TableCell>
                           <TableCell className="text-right text-sm">{formatCurrency(p.ticketMedio)}</TableCell>
                         </TableRow>
                       ))}

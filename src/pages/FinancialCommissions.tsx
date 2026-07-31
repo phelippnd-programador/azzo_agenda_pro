@@ -242,7 +242,7 @@ export default function FinancialCommissions() {
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Total em aberto</p>
-              <p className="text-xl font-bold text-amber-700">
+              <p className="text-xl font-bold text-warning">
                 {formatCurrency(report?.totalOpenAmount || 0)}
               </p>
             </CardContent>
@@ -250,7 +250,7 @@ export default function FinancialCommissions() {
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Total pago</p>
-              <p className="text-xl font-bold text-emerald-700">
+              <p className="text-xl font-bold text-success">
                 {formatCurrency(report?.totalPaidAmount || 0)}
               </p>
             </CardContent>

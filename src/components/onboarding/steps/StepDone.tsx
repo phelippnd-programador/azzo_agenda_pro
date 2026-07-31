@@ -13,8 +13,8 @@ type StepDoneProps = {
 export function StepDone({ professionalsCount, servicesCount, onComplete, isCompleting }: StepDoneProps) {
   return (
     <div className="flex flex-col items-center gap-6 py-8 text-center">
-      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-        <CheckCircle2 className="h-10 w-10 text-green-600" />
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-success/15">
+        <CheckCircle2 className="h-10 w-10 text-success" />
       </div>
 
       <div className="space-y-2">
@@ -24,7 +24,7 @@ export function StepDone({ professionalsCount, servicesCount, onComplete, isComp
         </p>
       </div>
 
-      <div className="flex gap-6 rounded-xl border bg-muted/30 px-8 py-4">
+      <div className="flex gap-6 rounded-xl border border-border/70 bg-muted/30 px-8 py-4">
         <div className="text-center">
           <p className="text-2xl font-bold text-primary">{professionalsCount}</p>
           <p className="text-xs text-muted-foreground mt-0.5">

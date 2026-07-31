@@ -43,7 +43,7 @@ export function BrandLockup({
         <div
           className={cn(
             "mt-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground sm:text-xs",
-            compact && "mt-0.5 text-[10px] tracking-[0.14em] text-muted-foreground",
+            compact && "mt-0.5 text-[11px] tracking-[0.18em] text-muted-foreground",
             subtitleClassName
           )}
         >

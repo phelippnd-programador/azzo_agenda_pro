@@ -232,21 +232,21 @@ export default function ManagementReportPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-emerald-500" /> Receita Total
+                  <TrendingUp className="w-4 h-4 text-success" /> Receita Total
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-emerald-600">{formatCurrency(data.financeiro.receitaTotal)}</p>
+                <p className="text-2xl font-bold text-success">{formatCurrency(data.financeiro.receitaTotal)}</p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <TrendingDown className="w-4 h-4 text-red-500" /> Despesa Total
+                  <TrendingDown className="w-4 h-4 text-destructive" /> Despesa Total
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-red-600">{formatCurrency(data.financeiro.despesaTotal)}</p>
+                <p className="text-2xl font-bold text-destructive">{formatCurrency(data.financeiro.despesaTotal)}</p>
               </CardContent>
             </Card>
             <Card>
@@ -256,7 +256,7 @@ export default function ManagementReportPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className={`text-2xl font-bold ${Number(data.financeiro.saldo) >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                <p className={`text-2xl font-bold ${Number(data.financeiro.saldo) >= 0 ? "text-success" : "text-destructive"}`}>
                   {formatCurrency(data.financeiro.saldo)}
                 </p>
               </CardContent>
@@ -273,11 +273,11 @@ export default function ManagementReportPage() {
             </Card>
             <Card>
               <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Concluidos</CardTitle></CardHeader>
-              <CardContent><p className="text-2xl font-bold text-emerald-600">{data.agendamentos.agendamentosConcluidos}</p></CardContent>
+              <CardContent><p className="text-2xl font-bold text-success">{data.agendamentos.agendamentosConcluidos}</p></CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Cancelados</CardTitle></CardHeader>
-              <CardContent><p className={`text-2xl font-bold ${data.agendamentos.agendamentosCancelados > 0 ? "text-red-600" : ""}`}>{data.agendamentos.agendamentosCancelados}</p></CardContent>
+              <CardContent><p className={`text-2xl font-bold ${data.agendamentos.agendamentosCancelados > 0 ? "text-destructive" : ""}`}>{data.agendamentos.agendamentosCancelados}</p></CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Ticket Medio</CardTitle></CardHeader>
@@ -312,8 +312,8 @@ export default function ManagementReportPage() {
                   <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `R$${v.toFixed(0)}`} />
                   <Tooltip formatter={(v: number, name: string) => [formatCurrency(v), name]} />
-                  <Bar dataKey="Receita" fill="#10b981" radius={[3, 3, 0, 0]} />
-                  <Bar dataKey="Despesa" fill="#ef4444" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="Receita" fill="hsl(var(--success))" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="Despesa" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -360,7 +360,7 @@ export default function ManagementReportPage() {
                         <TableCell className="text-sm text-muted-foreground w-8">{i + 1}</TableCell>
                         <TableCell className="text-sm font-medium">{p.profissionalNome}</TableCell>
                         <TableCell className="text-right text-sm">{p.totalAgendamentos}</TableCell>
-                        <TableCell className="text-right text-sm font-medium text-emerald-600">
+                        <TableCell className="text-right text-sm font-medium text-success">
                           {formatCurrency(p.receitaTotal)}
                         </TableCell>
                       </TableRow>

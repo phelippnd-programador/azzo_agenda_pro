@@ -648,7 +648,7 @@ export default function Dashboard() {
                         </div>
                         <Badge
                           variant="outline"
-                          className={`w-fit shrink-0 text-[10px] sm:text-xs ${currentAppointment
+                          className={`w-fit shrink-0 text-xs sm:text-xs ${currentAppointment
                             ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-300'
                               : nextAppointment
                                 ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-500/20 dark:bg-green-500/10 dark:text-green-300'

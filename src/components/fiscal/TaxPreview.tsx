@@ -1,7 +1,7 @@
 'use client';
 
 import { TaxCalculation } from '@/types/fiscal';
-import { formatCurrency } from '@/lib/tax-calculator';
+import { formatCurrency } from '@/lib/format';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
@@ -47,17 +47,17 @@ export function TaxPreview({ calculation, regime }: TaxPreviewProps) {
 
             <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground">ICMS ({regime})</span>
-              <span className="text-blue-600 font-medium">{formatCurrency(calc.icmsValue)}</span>
+              <span className="text-primary font-medium">{formatCurrency(calc.icmsValue)}</span>
             </div>
 
             <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground">PIS</span>
-              <span className="text-blue-600 font-medium">{formatCurrency(calc.pisValue)}</span>
+              <span className="text-primary font-medium">{formatCurrency(calc.pisValue)}</span>
             </div>
 
             <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground">COFINS</span>
-              <span className="text-blue-600 font-medium">{formatCurrency(calc.cofinsValue)}</span>
+              <span className="text-primary font-medium">{formatCurrency(calc.cofinsValue)}</span>
             </div>
           </div>
 
@@ -65,17 +65,17 @@ export function TaxPreview({ calculation, regime }: TaxPreviewProps) {
 
           <div className="flex justify-between items-center">
             <span className="font-semibold text-foreground">Total de Impostos</span>
-            <span className="font-bold text-red-600">{formatCurrency(calc.totalTaxes)}</span>
+            <span className="font-bold text-destructive">{formatCurrency(calc.totalTaxes)}</span>
           </div>
 
           <div className="flex justify-between items-center">
             <span className="font-semibold text-foreground">Valor Liquido</span>
-            <span className="font-bold text-green-600 text-lg">{formatCurrency(calc.netValue)}</span>
+            <span className="font-bold text-success text-lg">{formatCurrency(calc.netValue)}</span>
           </div>
         </div>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-          <p className="text-xs text-amber-800">
+        <div className="bg-warning/8 border border-warning/25 rounded-lg p-3">
+          <p className="text-xs text-warning">
             <strong>Nota:</strong> Este e um pre-calculo para referencia. Os valores finais podem variar conforme
             legislacao vigente e configuracoes especificas da empresa.
           </p>

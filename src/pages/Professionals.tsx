@@ -205,18 +205,18 @@ export default function Professionals() {
               <p className="text-xs text-muted-foreground">Total carregado na página atual.</p>
             </div>
           </Card>
-          <Card className="border-green-200/70 bg-green-50/70 shadow-none dark:border-green-500/20 dark:bg-green-500/10">
+          <Card className="border-success/25 bg-success/8 shadow-none">
             <div className="space-y-1 p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-green-700 dark:text-green-300">Ativos</p>
-              <p className="text-2xl font-semibold text-green-800 dark:text-green-50">{activeProfessionalsCount}</p>
-              <p className="text-xs text-green-700/80 dark:text-green-200/80">Disponíveis para a operação do dia.</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-success">Ativos</p>
+              <p className="text-2xl font-semibold text-success">{activeProfessionalsCount}</p>
+              <p className="text-xs text-success/80">Disponíveis para a operação do dia.</p>
             </div>
           </Card>
-          <Card className="border-slate-200/70 bg-slate-50/70 shadow-none dark:border-slate-700 dark:bg-slate-900/40">
+          <Card className="border-border/70 bg-muted/30 shadow-none">
             <div className="space-y-1 p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700 dark:text-slate-300">Inativos</p>
-              <p className="text-2xl font-semibold text-slate-800 dark:text-slate-50">{inactiveProfessionalsCount}</p>
-              <p className="text-xs text-slate-700/80 dark:text-slate-200/80">Fora da operação ativa ou aguardando uso.</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Inativos</p>
+              <p className="text-2xl font-semibold text-foreground">{inactiveProfessionalsCount}</p>
+              <p className="text-xs text-muted-foreground/80">Fora da operação ativa ou aguardando uso.</p>
             </div>
           </Card>
         </div>
@@ -227,7 +227,7 @@ export default function Professionals() {
           badge={`${activeProfessionalsCount} ativo(s) no momento`}
         />
 
-        <Alert className="border-emerald-200/70 bg-emerald-50/70 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+        <Alert className="border-primary/25 bg-primary/8">
           <Info className="h-4 w-4" />
           <AlertTitle>Acesso do profissional</AlertTitle>
           <AlertDescription>
@@ -350,7 +350,7 @@ export default function Professionals() {
                         <TableCell className="text-center">
                           <Badge
                             variant={professional.isActive ? 'default' : 'outline'}
-                            className={professional.isActive ? 'bg-green-100 text-green-700' : undefined}
+                            className={professional.isActive ? 'bg-success/12 text-success' : undefined}
                           >
                             {professional.isActive ? 'Ativo' : 'Inativo'}
                           </Badge>
@@ -393,7 +393,7 @@ export default function Professionals() {
                                 Resetar senha
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="text-red-600"
+                                className="text-destructive"
                                 onClick={() => setProfessionalToDelete(professional.id)}
                               >
                                 Remover

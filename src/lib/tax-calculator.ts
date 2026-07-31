@@ -82,16 +82,6 @@ export function calculateServiceTotal(items: ServiceItem[]): number {
 }
 
 /**
- * Formats currency to BRL
- */
-export function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-}
-
-/**
  * Validates CFOP format (X.XXX)
  */
 export function validateCFOP(cfop: string): boolean {

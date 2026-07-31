@@ -326,12 +326,12 @@ export default function ServicesOverviewPage() {
                           {service.name}
                         </h3>
                         {!service.isActive && (
-                          <Badge variant="outline" className="text-[10px] sm:text-xs text-muted-foreground">
+                          <Badge variant="outline" className="text-xs sm:text-xs text-muted-foreground">
                             Inativo
                           </Badge>
                         )}
                       </div>
-                      <Badge variant="secondary" className="text-[10px] sm:text-xs">
+                      <Badge variant="secondary" className="text-xs sm:text-xs">
                         {service.category}
                       </Badge>
                     </div>
@@ -419,7 +419,7 @@ export default function ServicesOverviewPage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="truncate font-medium">{service.name}</p>
-                          <Badge variant="secondary" className="text-[10px] sm:text-xs">
+                          <Badge variant="secondary" className="text-xs sm:text-xs">
                             {service.category}
                           </Badge>
                         </div>
@@ -435,7 +435,7 @@ export default function ServicesOverviewPage() {
                       {formatCurrency(service.price)}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant={service.isActive ? 'default' : 'outline'} className="text-[10px] sm:text-xs">
+                      <Badge variant={service.isActive ? 'default' : 'outline'} className="text-xs sm:text-xs">
                         {service.isActive ? 'Ativo' : 'Inativo'}
                       </Badge>
                     </TableCell>

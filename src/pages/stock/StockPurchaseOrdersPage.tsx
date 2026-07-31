@@ -1,10 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useMatch, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { CrudListToolbar } from "@/components/crud/CrudListToolbar";
+import { ModuleIntro } from "@/components/layout/module-surfaces";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogSection,
+  DialogStickyFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/ui/pagination-controls";
@@ -44,6 +55,7 @@ export default function StockPurchaseOrdersPage() {
   const [isSavingReceive, setIsSavingReceive] = useState(false);
   const [orders, setOrders] = useState<StockPurchaseOrder[]>([]);
   const [suppliers, setSuppliers] = useState<StockSupplier[]>([]);
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 8;
   const [createForm, setCreateForm] = useState<CreateStockPurchaseOrderRequest>(initialCreateForm);
@@ -73,15 +85,26 @@ export default function StockPurchaseOrdersPage() {
     () => orders.find((order) => order.id === orderId) || null,
     [orders, orderId]
   );
-  const totalPages = Math.max(1, Math.ceil(orders.length / pageSize));
+
+  const filteredOrders = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return orders;
+    return orders.filter((order) => order.fornecedorNome.toLowerCase().includes(term));
+  }, [orders, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize));
   const pagedOrders = useMemo(() => {
     const start = (page - 1) * pageSize;
-    return orders.slice(start, start + pageSize);
-  }, [orders, page]);
+    return filteredOrders.slice(start, start + pageSize);
+  }, [filteredOrders, page]);
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   useEffect(() => {
     if (!orderId || isLoading) return;
@@ -156,18 +179,25 @@ export default function StockPurchaseOrdersPage() {
 
   return (
     <div className="space-y-4">
+      <ModuleIntro
+        eyebrow="Pedidos de compra"
+        title="Controle reposicoes e pendencias de recebimento"
+        description="Mantenha cada pedido visivel do envio ao fechamento, com o historico de recebimento em um so lugar."
+      />
+
+      <CrudListToolbar
+        searchPlaceholder="Buscar por fornecedor"
+        searchValue={search}
+        onSearchChange={setSearch}
+        actionLabel="Pedido"
+        actionLabelMobile="Novo"
+        actionLabelDesktop="Novo pedido"
+        onAction={() => setIsCreateOpen(true)}
+      />
+
       <Card className="border-border/80">
-        <CardHeader>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <CardTitle>Pedidos de compra</CardTitle>
-            <Button onClick={() => setIsCreateOpen(true)}>Novo pedido</Button>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Controle reposicoes, acompanhe pendencias de recebimento e mantenha cada pedido visivel ate o fechamento.
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {!orders.length ? (
+        <CardContent className="space-y-2 pt-6">
+          {!filteredOrders.length ? (
             <PageEmptyState
               title="Nenhum pedido cadastrado"
               description="Crie pedidos para controlar reposicoes e recebimentos."
@@ -269,11 +299,12 @@ export default function StockPurchaseOrdersPage() {
 
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
+          <DialogHeader className="border-b border-border/70 pb-4 pr-10">
             <DialogTitle>Novo pedido de compra</DialogTitle>
             <DialogDescription>Crie um pedido para acompanhar o recebimento.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
+          <DialogBody>
+          <DialogSection className="bg-transparent">
             <div className="space-y-1">
               <Label>Fornecedor</Label>
               <Select
@@ -323,15 +354,16 @@ export default function StockPurchaseOrdersPage() {
                 onChange={(e) => setCreateForm((prev) => ({ ...prev, observacao: e.target.value }))}
               />
             </div>
-          </div>
-          <DialogFooter>
+          </DialogSection>
+          </DialogBody>
+          <DialogStickyFooter>
             <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={() => void handleCreate()} disabled={isSavingCreate}>
-              {isSavingCreate ? "Salvando..." : "Criar pedido"}
+            <Button onClick={() => void handleCreate()} isLoading={isSavingCreate} loadingText="Salvando...">
+              Criar pedido
             </Button>
-          </DialogFooter>
+          </DialogStickyFooter>
         </DialogContent>
       </Dialog>
     </div>

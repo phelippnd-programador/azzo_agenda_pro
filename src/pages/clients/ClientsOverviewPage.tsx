@@ -166,21 +166,21 @@ export default function ClientsOverviewPage() {
           title="Ativos nesta pagina"
           value={String(activeClientsOnPage)}
           icon={Calendar}
-          className="border-green-200/70 bg-green-50/70 dark:border-green-500/20 dark:bg-green-500/10"
-          titleClassName="text-green-700 dark:text-green-300"
-          valueClassName="text-green-800 dark:text-green-50"
-          iconContainerClassName="bg-green-100 dark:bg-green-500/15"
-          iconClassName="text-green-600 dark:text-green-300"
+          className="border-success/25 bg-success/8"
+          titleClassName="text-success"
+          valueClassName="text-success"
+          iconContainerClassName="bg-success/15"
+          iconClassName="text-success"
         />
         <HighlightMetricCard
           title="Recorrentes na pagina"
           value={String(recurringClientsOnPage)}
           icon={DollarSign}
-          className="border-indigo-200/70 bg-indigo-50/70 dark:border-indigo-500/20 dark:bg-indigo-500/10"
-          titleClassName="text-indigo-700 dark:text-indigo-300"
-          valueClassName="text-indigo-800 dark:text-indigo-50"
-          iconContainerClassName="bg-indigo-100 dark:bg-indigo-500/15"
-          iconClassName="text-indigo-600 dark:text-indigo-300"
+          className="border-border/70 bg-muted/25"
+          titleClassName="text-muted-foreground"
+          valueClassName="text-foreground"
+          iconContainerClassName="bg-muted"
+          iconClassName="text-muted-foreground"
         />
       </div>
 

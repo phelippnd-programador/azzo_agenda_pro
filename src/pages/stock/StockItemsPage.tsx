@@ -1,8 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
+import { CrudListToolbar } from "@/components/crud/CrudListToolbar";
+import { ModuleIntro } from "@/components/layout/module-surfaces";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogSection,
+  DialogStickyFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/ui/pagination-controls";
@@ -12,7 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
 import type { CreateStockItemRequest, StockItem } from "@/types/stock";
-import { Edit, Plus, Power } from "lucide-react";
+import { Edit, Power } from "lucide-react";
 import { Link, useMatch, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { getListItems } from "./utils";
@@ -191,66 +202,74 @@ export default function StockItemsPage() {
   }
 
   return (
-    <Card className="border-border/80">
-      <CardHeader className="gap-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle>Itens de estoque</CardTitle>
-          <Dialog
-            open={isCreateOpen}
-            onOpenChange={(open) => {
-              setIsCreateOpen(open);
-              if (!open && isCreateRoute) {
-                navigate("/estoque/itens", { replace: true });
-              }
-            }}
-          >
-            <Button data-tour="stock-items-new-button" className="gap-2 sm:self-auto" asChild>
-              <Link to="/estoque/itens/novo"><Plus className="h-4 w-4" />Novo item</Link>
+    <div className="space-y-4">
+      <ModuleIntro
+        eyebrow="Itens de estoque"
+        title="Cadastre itens e acompanhe o saldo minimo"
+        description="Controle rapidamente o status operacional de cada item usado nos atendimentos."
+      />
+
+      <CrudListToolbar
+        searchPlaceholder="Buscar por nome ou SKU"
+        searchValue={search}
+        onSearchChange={setSearch}
+        actionLabel="Item"
+        actionLabelMobile="Novo"
+        actionLabelDesktop="Novo item"
+        onAction={() => navigate("/estoque/itens/novo")}
+        searchDataTour="stock-items-search"
+        actionDataTour="stock-items-new-button"
+      />
+
+      <div className="max-w-xs">
+        <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}>
+          <SelectTrigger data-tour="stock-items-status-filter">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="active">Ativos</SelectItem>
+            <SelectItem value="inactive">Inativos</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Dialog
+        open={isCreateOpen}
+        onOpenChange={(open) => {
+          setIsCreateOpen(open);
+          if (!open && isCreateRoute) {
+            navigate("/estoque/itens", { replace: true });
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader className="border-b border-border/70 pb-4 pr-10">
+            <DialogTitle>Novo item</DialogTitle>
+            <DialogDescription>Cadastre um item para controle de estoque.</DialogDescription>
+          </DialogHeader>
+          <DialogBody>
+            <DialogSection className="bg-transparent">{FormFields}</DialogSection>
+          </DialogBody>
+          <DialogStickyFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsCreateOpen(false);
+                if (isCreateRoute) navigate("/estoque/itens", { replace: true });
+              }}
+            >
+              Cancelar
             </Button>
-            <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Novo item</DialogTitle>
-                <DialogDescription>Cadastre um item para controle de estoque.</DialogDescription>
-              </DialogHeader>
-              {FormFields}
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsCreateOpen(false);
-                    if (isCreateRoute) navigate("/estoque/itens", { replace: true });
-                  }}
-                >
-                  Cancelar
-                </Button>
-                <Button data-tour="stock-items-dialog-submit" onClick={() => void handleCreate()} disabled={isSaving}>{isSaving ? "Salvando..." : "Salvar"}</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Cadastre itens, acompanhe saldo minimo e controle rapidamente o status operacional.
-        </p>
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-          <Input
-            data-tour="stock-items-search"
-            placeholder="Buscar por nome ou SKU"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}>
-            <SelectTrigger data-tour="stock-items-status-filter">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os status</SelectItem>
-              <SelectItem value="active">Ativos</SelectItem>
-              <SelectItem value="inactive">Inativos</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-2">
+            <Button data-tour="stock-items-dialog-submit" onClick={() => void handleCreate()} isLoading={isSaving} loadingText="Salvando...">
+              Salvar
+            </Button>
+          </DialogStickyFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Card className="border-border/80">
+      <CardContent className="space-y-2 pt-6">
         {!filteredItems.length ? (
           <PageEmptyState
             title="Nenhum item encontrado"
@@ -322,12 +341,14 @@ export default function StockItemsPage() {
         }}
       >
         <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
+          <DialogHeader className="border-b border-border/70 pb-4 pr-10">
             <DialogTitle>Editar item</DialogTitle>
             <DialogDescription>Atualize dados do item selecionado.</DialogDescription>
           </DialogHeader>
-          {FormFields}
-          <DialogFooter>
+          <DialogBody>
+            <DialogSection className="bg-transparent">{FormFields}</DialogSection>
+          </DialogBody>
+          <DialogStickyFooter>
             <Button
               variant="outline"
               onClick={() => {
@@ -337,10 +358,13 @@ export default function StockItemsPage() {
             >
               Cancelar
             </Button>
-            <Button onClick={() => void handleUpdate()} disabled={isSaving}>{isSaving ? "Salvando..." : "Salvar alteracoes"}</Button>
-          </DialogFooter>
+            <Button onClick={() => void handleUpdate()} isLoading={isSaving} loadingText="Salvando...">
+              Salvar alteracoes
+            </Button>
+          </DialogStickyFooter>
         </DialogContent>
       </Dialog>
-    </Card>
+      </Card>
+    </div>
   );
 }

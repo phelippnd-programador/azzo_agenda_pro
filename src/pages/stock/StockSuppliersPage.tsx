@@ -1,9 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { CrudListToolbar } from "@/components/crud/CrudListToolbar";
+import { ModuleIntro } from "@/components/layout/module-surfaces";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogSection,
+  DialogStickyFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/ui/pagination-controls";
@@ -116,22 +127,25 @@ export default function StockSuppliersPage() {
   }
 
   return (
-    <Card className="border-border/80">
-      <CardHeader className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle>Fornecedores</CardTitle>
-          <Button onClick={openCreate}>Novo fornecedor</Button>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Centralize contatos, documentos e status dos parceiros usados em compras e reposicao.
-        </p>
-        <Input
-          placeholder="Buscar por nome, documento ou email"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </CardHeader>
-      <CardContent className="space-y-2">
+    <div className="space-y-4">
+      <ModuleIntro
+        eyebrow="Fornecedores"
+        title="Centralize contatos e documentos dos parceiros de compra"
+        description="Mantenha dados de contato e status atualizados para apoiar compras e reposicao de estoque."
+      />
+
+      <CrudListToolbar
+        searchPlaceholder="Buscar por nome, documento ou email"
+        searchValue={search}
+        onSearchChange={setSearch}
+        actionLabel="Fornecedor"
+        actionLabelMobile="Novo"
+        actionLabelDesktop="Novo fornecedor"
+        onAction={openCreate}
+      />
+
+      <Card className="border-border/80">
+      <CardContent className="space-y-2 pt-6">
         {!filteredSuppliers.length ? (
           <PageEmptyState
             title="Nenhum fornecedor encontrado"
@@ -180,72 +194,75 @@ export default function StockSuppliersPage() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
+          <DialogHeader className="border-b border-border/70 pb-4 pr-10">
             <DialogTitle>{editingSupplier ? "Editar fornecedor" : "Novo fornecedor"}</DialogTitle>
             <DialogDescription>
               Dados de contato e identificacao para compras e relacionamento.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <Label htmlFor="supplier-nome">Nome</Label>
-              <Input
-                id="supplier-nome"
-                value={form.nome}
-                onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))}
-              />
-            </div>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <DialogBody>
+            <DialogSection className="bg-transparent">
               <div className="space-y-1">
-                <Label htmlFor="supplier-documento">Documento</Label>
+                <Label htmlFor="supplier-nome">Nome</Label>
                 <Input
-                  id="supplier-documento"
-                  value={form.documento || ""}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, documento: maskCpfCnpj(e.target.value) }))
-                  }
+                  id="supplier-nome"
+                  value={form.nome}
+                  onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))}
                 />
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="supplier-contato">Contato</Label>
-                <Input
-                  id="supplier-contato"
-                  value={form.contato || ""}
-                  onChange={(e) => setForm((prev) => ({ ...prev, contato: e.target.value }))}
-                />
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div className="space-y-1">
+                  <Label htmlFor="supplier-documento">Documento</Label>
+                  <Input
+                    id="supplier-documento"
+                    value={form.documento || ""}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, documento: maskCpfCnpj(e.target.value) }))
+                    }
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="supplier-contato">Contato</Label>
+                  <Input
+                    id="supplier-contato"
+                    value={form.contato || ""}
+                    onChange={(e) => setForm((prev) => ({ ...prev, contato: e.target.value }))}
+                  />
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <div className="space-y-1">
-                <Label htmlFor="supplier-email">Email</Label>
-                <Input
-                  id="supplier-email"
-                  value={form.email || ""}
-                  onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-                />
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div className="space-y-1">
+                  <Label htmlFor="supplier-email">Email</Label>
+                  <Input
+                    id="supplier-email"
+                    value={form.email || ""}
+                    onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="supplier-telefone">Telefone</Label>
+                  <Input
+                    id="supplier-telefone"
+                    value={form.telefone || ""}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, telefone: maskPhoneBr(e.target.value) }))
+                    }
+                  />
+                </div>
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="supplier-telefone">Telefone</Label>
-                <Input
-                  id="supplier-telefone"
-                  value={form.telefone || ""}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, telefone: maskPhoneBr(e.target.value) }))
-                  }
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
+            </DialogSection>
+          </DialogBody>
+          <DialogStickyFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={() => void handleSave()} disabled={isSaving}>
-              {isSaving ? "Salvando..." : "Salvar"}
+            <Button onClick={() => void handleSave()} isLoading={isSaving} loadingText="Salvando...">
+              Salvar
             </Button>
-          </DialogFooter>
+          </DialogStickyFooter>
         </DialogContent>
       </Dialog>
-    </Card>
+      </Card>
+    </div>
   );
 }

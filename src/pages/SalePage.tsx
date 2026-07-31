@@ -111,11 +111,11 @@ const dailyFlowSteps = [
   },
 ];
 
-const socialStats = [
-  { stat: '200+', label: 'Salões ativos' },
-  { stat: '15 mil+', label: 'Agendamentos por mês' },
-  { stat: '98%', label: 'Taxa média de satisfação' },
-  { stat: '< 5 min', label: 'Tempo para começar' },
+const productStats = [
+  { stat: 'Agenda + PDV + Financeiro', label: 'Tudo em um só lugar' },
+  { stat: 'NFS-e nativa', label: 'Sem planilha nem ferramenta externa' },
+  { stat: 'WhatsApp com IA', label: 'Agendamento por conversa' },
+  { stat: 'PWA instalável', label: 'Funciona no celular do dia a dia' },
 ];
 
 const faqItems = [
@@ -399,11 +399,11 @@ export default function SalePage() {
             </div>
           </section>
 
-          <section aria-label="Indicadores de uso da plataforma" className="bg-muted/40">
+          <section aria-label="O que o Azzo entrega" className="bg-muted/40">
             <ul className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-4 px-4 py-7 md:grid-cols-4 md:gap-6 md:px-6 md:py-8">
-              {socialStats.map((item) => (
+              {productStats.map((item) => (
                 <li key={item.label} className="text-center">
-                  <p className="font-display text-3xl font-bold text-primary">{item.stat}</p>
+                  <p className="font-display text-lg font-bold text-primary sm:text-xl">{item.stat}</p>
                   <p className="mt-1 text-sm text-muted-foreground">{item.label}</p>
                 </li>
               ))}
