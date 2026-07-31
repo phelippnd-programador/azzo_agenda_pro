@@ -58,7 +58,7 @@ export default function MembershipPlansPage() {
     try {
       setPlans(await membershipApi.listarPlanos());
     } catch (error) {
-      toast.error(resolveUiError(error, "Nao foi possivel carregar os planos.").message);
+      toast.error(resolveUiError(error, "Não foi possível carregar os planos.").message);
     } finally {
       setLoading(false);
     }
@@ -97,7 +97,7 @@ export default function MembershipPlansPage() {
   };
 
   const onInvalidForm = () => {
-    toast.error("Informe nome, valor mensal e ao menos um beneficio.");
+    toast.error("Informe nome, valor mensal e ao menos um benefício.");
   };
 
   const save = async (values: MembershipPlanFormValues) => {
@@ -121,7 +121,7 @@ export default function MembershipPlansPage() {
       setOpen(false);
       await load();
     } catch (error) {
-      toast.error(resolveUiError(error, "Nao foi possivel salvar o plano.").message);
+      toast.error(resolveUiError(error, "Não foi possível salvar o plano.").message);
     } finally {
       setSaving(false);
     }
@@ -130,7 +130,7 @@ export default function MembershipPlansPage() {
   return (
     <MainLayout
       title="Clube de Assinaturas"
-      subtitle="Planos recorrentes para clientes com franquia mensal de servicos"
+      subtitle="Planos recorrentes para clientes com franquia mensal de serviços"
     >
       <div className="space-y-4">
         <div className="flex justify-end">
@@ -141,7 +141,7 @@ export default function MembershipPlansPage() {
         </div>
 
         {loading ? (
-          <PageListLoadingState metricCount={0} itemCount={6} itemHeightClassName="h-36" />
+          <PageListLoadingState metricCount={0} itemCount={6} itemHeightClassName="h-36" showHeader={false} showToolbar={false} />
         ) : plans.length === 0 ? (
           <PageEmptyState
             title="Nenhum plano cadastrado"
@@ -149,9 +149,9 @@ export default function MembershipPlansPage() {
             action={{ label: "Novo plano", onClick: openNew }}
           />
         ) : (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
             {plans.map((plan) => (
-              <Card key={plan.id} className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => openEdit(plan)}>
+              <Card key={plan.id} className="cursor-pointer border-border/70 bg-card/90 shadow-none transition hover:-translate-y-0.5 hover:shadow-[0_12px_36px_-28px_rgba(15,23,42,0.18)]" onClick={() => openEdit(plan)}>
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center justify-between gap-2 text-base">
                     <span className="min-w-0 truncate">{plan.nome}</span>
@@ -172,17 +172,17 @@ export default function MembershipPlansPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-4">
                     <span className="text-muted-foreground">Mensalidade</span>
                     <span className="font-semibold">{formatCurrency(plan.precoMensal)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Beneficios</span>
+                  <div className="flex justify-between gap-4">
+                    <span className="text-muted-foreground">Benefícios</span>
                     <span>{plan.beneficios?.length || 0}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-4">
                     <span className="text-muted-foreground">Acumula saldo</span>
-                    <span>{plan.cumulativo ? "Sim" : "Nao"}</span>
+                    <span>{plan.cumulativo ? "Sim" : "Não"}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -212,30 +212,30 @@ export default function MembershipPlansPage() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Descricao</Label>
+              <Label>Descrição</Label>
               <Textarea {...register("descricao")} />
             </div>
             <div className="grid gap-3 md:grid-cols-2">
-              <div className="flex items-center justify-between rounded-md border p-3">
+              <div className="flex items-center justify-between rounded-lg border border-border/70 bg-background/60 p-3">
                 <Label>Ativo</Label>
                 <Switch checked={watch("ativo")} onCheckedChange={(value) => setValue("ativo", value)} />
               </div>
-              <div className="flex items-center justify-between rounded-md border p-3">
+              <div className="flex items-center justify-between rounded-lg border border-border/70 bg-background/60 p-3">
                 <Label>Saldo cumulativo</Label>
                 <Switch checked={watch("cumulativo")} onCheckedChange={(value) => setValue("cumulativo", value)} />
               </div>
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Beneficios mensais*</Label>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <Label>Benefícios mensais*</Label>
                 <Button type="button" variant="outline" size="sm" onClick={addBenefit}>
                   <Plus className="mr-1 h-3 w-3" />
-                  Adicionar servico
+                  Adicionar serviço
                 </Button>
               </div>
               {benefits.map((benefit, index) => (
-                <div key={`${benefit.serviceId}-${index}`} className="flex items-center gap-2">
+                <div key={`${benefit.serviceId}-${index}`} className="flex flex-col gap-2 rounded-lg border border-border/70 bg-background/50 p-2 sm:flex-row sm:items-center">
                   <Select
                     value={benefit.serviceId}
                     onValueChange={(value) =>
@@ -246,7 +246,7 @@ export default function MembershipPlansPage() {
                     }
                   >
                     <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Servico" />
+                      <SelectValue placeholder="Serviço" />
                     </SelectTrigger>
                     <SelectContent>
                       {services.map((service) => (
@@ -257,7 +257,7 @@ export default function MembershipPlansPage() {
                   <Input
                     type="number"
                     min={1}
-                    className="w-28"
+                    className="w-full sm:w-28"
                     value={benefit.quantidadeMensal}
                     onChange={(event) =>
                       setValue(
@@ -272,7 +272,7 @@ export default function MembershipPlansPage() {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    aria-label="Remover beneficio do plano"
+                    aria-label="Remover benefício do plano"
                     onClick={() => setValue("beneficios", benefits.filter((_, itemIndex) => itemIndex !== index))}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -280,7 +280,7 @@ export default function MembershipPlansPage() {
                 </div>
               ))}
               {benefits.length === 0 && (
-                <p className="text-xs text-muted-foreground">Nenhum beneficio configurado.</p>
+                <p className="text-xs text-muted-foreground">Nenhum benefício configurado.</p>
               )}
             </div>
           </div>

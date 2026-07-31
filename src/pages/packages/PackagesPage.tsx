@@ -47,7 +47,7 @@ export default function PackagesPage() {
     try {
       setPackages(await packagesApi.listar());
     } catch (error) {
-      toast.error(resolveUiError(error, 'Nao foi possivel carregar os pacotes.').message);
+      toast.error(resolveUiError(error, 'Não foi possível carregar os pacotes.').message);
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +87,7 @@ export default function PackagesPage() {
 
   const salvar = async () => {
     if (!form.nome.trim() || !(form.preco > 0) || !form.validadeDias || itens.length === 0) {
-      toast.error('Preencha nome, preco, validade e ao menos um servico.');
+      toast.error('Preencha nome, preço, validade e ao menos um serviço.');
       return;
     }
     setBusy(true);
@@ -110,14 +110,14 @@ export default function PackagesPage() {
       setDialogOpen(false);
       await load();
     } catch (error) {
-      toast.error(resolveUiError(error, 'Nao foi possivel salvar o pacote.').message);
+      toast.error(resolveUiError(error, 'Não foi possível salvar o pacote.').message);
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <MainLayout title="Pacotes de servicos" subtitle="Venda antecipada de sessoes com validade">
+    <MainLayout title="Pacotes de serviços" subtitle="Venda antecipada de sessões com validade">
       <div className="space-y-4">
         <div className="flex justify-end">
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -137,12 +137,12 @@ export default function PackagesPage() {
                   <Input value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Descricao</Label>
+                  <Label>Descrição</Label>
                   <Textarea value={form.descricao} onChange={(e) => setForm((f) => ({ ...f, descricao: e.target.value }))} />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label>Preco (R$)*</Label>
+                    <Label>Preço (R$)*</Label>
                     <CurrencyInput value={form.preco} onChange={(value) => setForm((f) => ({ ...f, preco: value }))} />
                   </div>
                   <div className="space-y-1.5">
@@ -150,28 +150,28 @@ export default function PackagesPage() {
                     <Input type="number" min={1} value={form.validadeDias} onChange={(e) => setForm((f) => ({ ...f, validadeDias: e.target.value }))} />
                   </div>
                 </div>
-                <div className="flex items-center justify-between rounded-md border p-3">
+                <div className="flex items-center justify-between rounded-lg border border-border/70 bg-background/60 p-3">
                   <Label htmlFor="pacote-ativo">Ativo</Label>
                   <Switch id="pacote-ativo" checked={form.ativo} onCheckedChange={(v) => setForm((f) => ({ ...f, ativo: v }))} />
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Servicos do pacote*</Label>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <Label>Serviços do pacote*</Label>
                     <Button type="button" size="sm" variant="outline" onClick={adicionarItem}>
                       <Plus className="mr-1 h-3 w-3" />
-                      Adicionar servico
+                      Adicionar serviço
                     </Button>
                   </div>
                   {itens.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
+                    <div key={idx} className="flex flex-col gap-2 rounded-lg border border-border/70 bg-background/50 p-2 sm:flex-row sm:items-center">
                       <Select
                         value={item.serviceId}
                         onValueChange={(v) =>
                           setItens((prev) => prev.map((it, i) => (i === idx ? { ...it, serviceId: v } : it)))
                         }
                       >
-                        <SelectTrigger className="flex-1"><SelectValue placeholder="Servico..." /></SelectTrigger>
+                        <SelectTrigger className="flex-1"><SelectValue placeholder="Serviço..." /></SelectTrigger>
                         <SelectContent>
                           {services.map((s) => (
                             <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
@@ -181,7 +181,7 @@ export default function PackagesPage() {
                       <Input
                         type="number"
                         min={1}
-                        className="w-24"
+                        className="w-full sm:w-24"
                         value={item.sessoes}
                         onChange={(e) =>
                           setItens((prev) =>
@@ -193,7 +193,7 @@ export default function PackagesPage() {
                         type="button"
                         size="icon"
                         variant="ghost"
-                        aria-label="Remover servico do pacote"
+                        aria-label="Remover serviço do pacote"
                         onClick={() => setItens((prev) => prev.filter((_, i) => i !== idx))}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -201,7 +201,7 @@ export default function PackagesPage() {
                     </div>
                   ))}
                   {itens.length === 0 && (
-                    <p className="text-xs text-muted-foreground">Nenhum servico adicionado ainda.</p>
+                    <p className="text-xs text-muted-foreground">Nenhum serviço adicionado ainda.</p>
                   )}
                 </div>
               </div>
@@ -215,7 +215,7 @@ export default function PackagesPage() {
         </div>
 
         {isLoading ? (
-          <PageListLoadingState metricCount={0} itemCount={6} itemHeightClassName="h-36" />
+          <PageListLoadingState metricCount={0} itemCount={6} itemHeightClassName="h-36" showHeader={false} showToolbar={false} />
         ) : packages.length === 0 ? (
           <PageEmptyState
             title="Nenhum pacote cadastrado"
@@ -223,9 +223,9 @@ export default function PackagesPage() {
             action={{ label: "Novo pacote", onClick: abrirNovo }}
           />
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             {packages.map((pacote) => (
-              <Card key={pacote.id} className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => abrirEdicao(pacote)}>
+              <Card key={pacote.id} className="cursor-pointer border-border/70 bg-card/90 shadow-none transition hover:-translate-y-0.5 hover:shadow-[0_12px_36px_-28px_rgba(15,23,42,0.18)]" onClick={() => abrirEdicao(pacote)}>
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center justify-between gap-2 text-sm">
                     <span className="min-w-0 truncate">{pacote.nome}</span>
@@ -246,16 +246,16 @@ export default function PackagesPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Preco</span>
+                  <div className="flex justify-between gap-4">
+                    <span className="text-muted-foreground">Preço</span>
                     <span className="font-semibold">{formatCurrency(pacote.preco)}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-4">
                     <span className="text-muted-foreground">Validade</span>
                     <span>{pacote.validadeDias} dias</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Servicos</span>
+                  <div className="flex justify-between gap-4">
+                    <span className="text-muted-foreground">Serviços</span>
                     <span>{pacote.itens.length}</span>
                   </div>
                 </CardContent>
