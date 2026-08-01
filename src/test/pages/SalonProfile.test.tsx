@@ -113,7 +113,7 @@ describe("SalonProfile", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("Link de Agendamento Publico")).toBeInTheDocument();
+    expect(await screen.findByText("Link de Agendamento Público")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Salao QA")).toBeInTheDocument();
   });
 
@@ -124,11 +124,11 @@ describe("SalonProfile", () => {
       </MemoryRouter>
     );
 
-    await screen.findByText("Link de Agendamento Publico");
+    await screen.findByText("Link de Agendamento Público");
 
     [
-      "Nome do Salao *",
-      "Descricao",
+      "Nome do Salão *",
+      "Descrição",
       "Telefone",
       "WhatsApp",
       "E-mail",
@@ -137,7 +137,7 @@ describe("SalonProfile", () => {
       "Instagram",
       "Facebook",
       "Rua",
-      "Numero",
+      "Número",
       "Complemento",
       "Bairro",
       "Cidade",
@@ -159,7 +159,8 @@ describe("SalonProfile", () => {
       </MemoryRouter>
     );
 
-    await user.click(await screen.findByRole("button", { name: /Salvar Alteracoes/i }));
+    await screen.findByText("Link de Agendamento Público");
+    await user.click(await screen.findByRole("button", { name: /Salvar Alterações/i }));
 
     await waitFor(() => {
       expect(updateProfileMock).toHaveBeenCalled();

@@ -20,6 +20,7 @@ import {
   Copy,
   ExternalLink,
   ArrowRight,
+  AlertCircle,
 } from 'lucide-react';
 import { SalonAddressCard, type AddressValues, type LockedAddressFields } from '@/components/salon/SalonAddressCard';
 import { SalonBusinessHoursCard, type BusinessHours } from '@/components/salon/SalonBusinessHoursCard';
@@ -69,6 +70,8 @@ export default function SalonProfile() {
   const [isAddressLoading, setIsAddressLoading] = useState(false);
   const [isLogoUploading, setIsLogoUploading] = useState(false);
   const [isLogoRemoving, setIsLogoRemoving] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
+  const [profileLoadError, setProfileLoadError] = useState('');
   const [lastResolvedCep, setLastResolvedCep] = useState('');
   const [lockedAddressFields, setLockedAddressFields] = useState<LockedAddressFields>(emptyLockedFields);
 
@@ -128,15 +131,25 @@ export default function SalonProfile() {
     }
   };
 
+  const loadSalonProfile = async () => {
+    setIsProfileLoading(true);
+    setProfileLoadError('');
+    try {
+      const data = await salonApi.getProfile();
+      applyProfileData(data);
+    } catch (error) {
+      setProfileLoadError(resolveUiError(error, 'Não foi possível carregar o perfil do salão').message);
+    } finally {
+      setIsProfileLoading(false);
+    }
+  };
+
   useEffect(() => {
     setSalonName(user?.salonName || '');
     setSalonEmail(user?.email || '');
     setSalonPhone(user?.phone || '');
 
-    salonApi
-      .getProfile()
-      .then((data) => applyProfileData(data))
-      .catch(() => undefined);
+    void loadSalonProfile();
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -188,7 +201,7 @@ export default function SalonProfile() {
         setLastResolvedCep(cep);
       } catch (error) {
         unlockAddressFields();
-        toast.error(resolveUiError(error, 'Nao foi possivel buscar o endereco pelo CEP').message);
+        toast.error(resolveUiError(error, 'Não foi possível buscar o endereço pelo CEP').message);
       } finally {
         setIsAddressLoading(false);
       }
@@ -237,7 +250,7 @@ export default function SalonProfile() {
       const updatedProfile = await salonApi.updateProfile(profileData);
       persistSalonSlug(salonSlug);
       setPublicBookingUrl(updatedProfile.publicBookingUrl || '');
-      toast.success('Perfil do salao atualizado com sucesso');
+      toast.success('Perfil do salão atualizado com sucesso');
     } catch (error) {
       toast.error(resolveUiError(error, 'Erro ao salvar perfil').message);
     } finally {
@@ -253,7 +266,7 @@ export default function SalonProfile() {
       applyProfileData(updatedProfile);
       toast.success('Imagem do estabelecimento atualizada com sucesso');
     } catch (error) {
-      toast.error(resolveUiError(error, 'Nao foi possivel enviar a imagem do estabelecimento').message);
+      toast.error(resolveUiError(error, 'Não foi possível enviar a imagem do estabelecimento').message);
     } finally {
       setIsLogoUploading(false);
     }
@@ -266,7 +279,7 @@ export default function SalonProfile() {
       applyProfileData(updatedProfile);
       toast.success('Imagem do estabelecimento removida com sucesso');
     } catch (error) {
-      toast.error(resolveUiError(error, 'Nao foi possivel remover a imagem do estabelecimento').message);
+      toast.error(resolveUiError(error, 'Não foi possível remover a imagem do estabelecimento').message);
     } finally {
       setIsLogoRemoving(false);
     }
@@ -282,20 +295,56 @@ export default function SalonProfile() {
     setBusinessHours(updated);
   };
 
-  const copyBookingLink = () => {
+  const copyBookingLink = async () => {
     const link = buildPublicBookingUrl(salonSlug, publicBookingUrl || undefined);
-    void navigator.clipboard.writeText(link);
-    toast.success('Link copiado para a area de transferencia');
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.success('Link copiado para a área de transferência');
+    } catch (error) {
+      toast.error(resolveUiError(error, 'Não foi possível copiar o link').message);
+    }
   };
 
   const bookingAbsoluteUrl = buildPublicBookingUrl(salonSlug, publicBookingUrl || undefined);
 
   return (
     <MainLayout
-      title="Perfil do Salao"
-      subtitle="Gerencie as informacoes do seu estabelecimento"
+      title="Perfil do Salão"
+      subtitle="Gerencie as informações do seu estabelecimento"
     >
       <div className="max-w-4xl space-y-4 sm:space-y-6">
+        {isProfileLoading ? (
+          <Card className="border-border/70 bg-card/95 shadow-panel">
+            <CardContent className="flex items-center gap-3 p-4 text-sm text-muted-foreground sm:p-5">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              Carregando dados do salão...
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {profileLoadError ? (
+          <Card className="border-destructive/30 bg-destructive/5 shadow-panel">
+            <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">Não foi possível carregar todos os dados</p>
+                  <p className="text-sm text-muted-foreground">{profileLoadError}</p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void loadSalonProfile()}
+                className="w-full sm:w-auto"
+              >
+                Tentar novamente
+              </Button>
+            </CardContent>
+          </Card>
+        ) : null}
+
         {/* Avatar / header card */}
         <Card>
           <CardContent className="p-4 sm:p-6">
@@ -321,12 +370,12 @@ export default function SalonProfile() {
                 />
                 <div className="min-w-0 flex-1">
                   <h2 className="text-xl font-bold text-foreground sm:text-2xl">
-                    {salonName || 'Nome do Salao'}
+                    {salonName || 'Nome do Salão'}
                   </h2>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {address.city && address.state
                       ? `${address.city}, ${address.state}`
-                      : 'Localizacao nao definida'}
+                      : 'Localização não definida'}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Badge variant="secondary" className="max-w-full gap-1">
@@ -341,15 +390,18 @@ export default function SalonProfile() {
         </Card>
 
         {/* Booking URL card */}
-        <Card className="bg-gradient-to-br from-primary/10 to-accent border-primary/20">
+        <Card className="border-border/70 bg-card/95 shadow-panel">
           <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
               <div className="min-w-0">
-                <h3 className="font-semibold text-foreground">Link de Agendamento Publico</h3>
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <h3 className="font-semibold text-foreground">Link de Agendamento Público</h3>
+                  <Badge variant="outline">Visível para clientes</Badge>
+                </div>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Compartilhe este link com seus clientes para agendamento online
                 </p>
-                <code className="mt-2 inline-block break-all rounded bg-background/70 px-2 py-1 text-xs text-primary sm:text-sm">
+                <code className="mt-2 inline-block break-all rounded bg-background/80 px-2 py-1 text-xs text-primary sm:text-sm">
                   {bookingAbsoluteUrl}
                 </code>
               </div>
@@ -357,7 +409,7 @@ export default function SalonProfile() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={copyBookingLink}
+                  onClick={() => void copyBookingLink()}
                   className="w-full gap-2 sm:w-auto"
                 >
                   <Copy className="w-4 h-4" />
@@ -379,14 +431,14 @@ export default function SalonProfile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Building2 className="w-5 h-5 text-primary" />
-              Informacoes Basicas
+              Informações Básicas
             </CardTitle>
-            <CardDescription>Dados principais do seu salao</CardDescription>
+            <CardDescription>Dados principais do seu salão</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="salon-name">Nome do Salao *</Label>
+                <Label htmlFor="salon-name">Nome do Salão *</Label>
                 <Input
                   id="salon-name"
                   placeholder="Ex: Bella Studio"
@@ -413,10 +465,10 @@ export default function SalonProfile() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="salon-description">Descricao</Label>
+              <Label htmlFor="salon-description">Descrição</Label>
               <Textarea
                 id="salon-description"
-                placeholder="Descreva seu salao, especialidades, diferenciais..."
+                placeholder="Descreva seu salão, especialidades, diferenciais..."
                 value={salonDescription}
                 onChange={(e) => setSalonDescription(e.target.value)}
                 rows={3}
@@ -432,7 +484,7 @@ export default function SalonProfile() {
               <Phone className="w-5 h-5 text-primary" />
               Contato
             </CardTitle>
-            <CardDescription>Informacoes de contato do salao</CardDescription>
+            <CardDescription>Informações de contato do salão</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
@@ -481,6 +533,7 @@ export default function SalonProfile() {
                 <CnpjAutoFillField
                   id="salon-cpf-cnpj"
                   label="CPF/CNPJ"
+                  helperText="Informe CPF ou CNPJ. A consulta automática de dados está disponível para CNPJ."
                   value={salonCpfCnpj}
                   onChange={(v) => {
                     // Mantém máscara de CPF quando tiver 11 dígitos ou menos
@@ -502,7 +555,7 @@ export default function SalonProfile() {
                       }));
                       setLastResolvedCep(normalizeCep(data.endereco.cep));
                     }
-                    // emailSugestao e telefoneSugestao nao sao preenchidos automaticamente (LGPD)
+                    // emailSugestao e telefoneSugestao não são preenchidos automaticamente (LGPD).
                   }}
                 />
               </div>
@@ -557,14 +610,14 @@ export default function SalonProfile() {
               Fechamentos Especiais
             </CardTitle>
             <CardDescription>
-              Gerencie feriados, ferias e datas excepcionais em que o salao nao ira funcionar.
-              O gerenciamento centralizado de fechamentos foi movido para as Configuracoes.
+              Gerencie feriados, férias e datas excepcionais em que o salão não irá funcionar.
+              O gerenciamento centralizado de fechamentos foi movido para as Configurações.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-lg border bg-muted/20 p-4 text-sm text-muted-foreground">
-              Cadastre e edite fechamentos especiais, com suporte a tipo (feriado, ferias, recesso),
-              horario parcial e vinculo por profissional.
+              Cadastre e edite fechamentos especiais, com suporte a tipo (feriado, férias, recesso),
+              horário parcial e vínculo por profissional.
             </div>
             <Button asChild variant="outline" className="gap-2">
               <Link to="/configuracoes?tab=closures">
@@ -576,10 +629,10 @@ export default function SalonProfile() {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end pb-6">
+        <div className="sticky bottom-3 z-10 flex justify-end rounded-2xl border border-border/70 bg-card/90 p-3 shadow-panel backdrop-blur sm:bottom-4">
           <Button
             onClick={() => void handleSave()}
-            disabled={isLoading}
+            disabled={isLoading || isProfileLoading}
             className="w-full gap-2 sm:w-auto"
             size="lg"
           >
@@ -591,7 +644,7 @@ export default function SalonProfile() {
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                Salvar Alteracoes
+                Salvar Alterações
               </>
             )}
           </Button>

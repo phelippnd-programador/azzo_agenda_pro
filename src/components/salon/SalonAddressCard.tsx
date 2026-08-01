@@ -47,9 +47,9 @@ export function SalonAddressCard({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
           <MapPin className="w-5 h-5 text-primary" />
-          Endereco
+          Endereço
         </CardTitle>
-        <CardDescription>Localizacao do seu estabelecimento</CardDescription>
+        <CardDescription>Localização do seu estabelecimento</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid sm:grid-cols-3 gap-4">
@@ -64,7 +64,7 @@ export function SalonAddressCard({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="salon-address-number">Numero</Label>
+            <Label htmlFor="salon-address-number">Número</Label>
             <Input
               id="salon-address-number"
               placeholder="1000"
@@ -102,7 +102,7 @@ export function SalonAddressCard({
             <Label htmlFor="salon-address-city">Cidade</Label>
             <Input
               id="salon-address-city"
-              placeholder="Sao Paulo"
+              placeholder="São Paulo"
               value={values.city}
               onChange={(e) => onChange('city', e.target.value)}
               disabled={lockedFields.city}
@@ -129,7 +129,7 @@ export function SalonAddressCard({
               maxLength={9}
             />
             {isAddressLoading ? (
-              <p className="text-xs text-muted-foreground">Buscando endereco pelo CEP...</p>
+              <p className="text-xs text-muted-foreground">Buscando endereço pelo CEP...</p>
             ) : null}
           </div>
         </div>
