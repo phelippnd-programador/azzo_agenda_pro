@@ -41,9 +41,24 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
   const { allowedRoutes, menuItems } = useMenuPermissions();
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const allowedSet = useMemo(() => new Set(allowedRoutes ?? []), [allowedRoutes]);
+  const menuItemByRoute = useMemo(
+    () => new Map((menuItems ?? []).map((item) => [item.route, item])),
+    [menuItems]
+  );
   const visibleMenuEntries = useMemo(
     () => getVisibleSidebarEntries(menuItems, allowedSet),
     [allowedSet, menuItems]
+  );
+  const visibleBottomItems = useMemo(
+    () =>
+      SIDEBAR_BOTTOM_ITEMS.filter((item) => {
+        if (!item.isVisible(user?.role, allowedSet)) {
+          return false;
+        }
+        const configuredItem = menuItemByRoute.get(item.path);
+        return !configuredItem || configuredItem.sidebarVisible !== false;
+      }),
+    [allowedSet, menuItemByRoute, user?.role]
   );
   const sectionedEntries = useMemo(() => {
     const mapped = SIDEBAR_SECTIONS.map((section) => ({
@@ -307,19 +322,17 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
                 isCompactDesktop ? "px-2 space-y-1 lg:flex lg:flex-col lg:items-center" : "px-2 space-y-0.5"
               )}
             >
-              {SIDEBAR_BOTTOM_ITEMS.filter((item) => item.isVisible(user?.role, allowedSet)).map(
-                (item) => (
-                  <SidebarNavLink
-                    key={item.path}
-                    path={item.path}
-                    label={item.label}
-                    icon={item.icon}
-                    compact={isCompactDesktop}
-                    isActive={location.pathname === item.path}
-                    onNavigate={handleNavigate}
-                  />
-                )
-              )}
+              {visibleBottomItems.map((item) => (
+                <SidebarNavLink
+                  key={item.path}
+                  path={item.path}
+                  label={item.label}
+                  icon={item.icon}
+                  compact={isCompactDesktop}
+                  isActive={location.pathname === item.path}
+                  onNavigate={handleNavigate}
+                />
+              ))}
               <button
                 type="button"
                 className={cn(
