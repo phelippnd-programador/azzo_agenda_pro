@@ -571,7 +571,7 @@ export default function Agenda() {
       <div className="space-y-4 sm:space-y-6">
         <Card
           data-tour="agenda-summary"
-          className="border-border/70 bg-card/90 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.16)]"
+          className="border-border/70 bg-card/95 shadow-panel"
         >
           <CardContent className="space-y-4 p-4 sm:p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -916,7 +916,7 @@ export default function Agenda() {
               </DialogDescription>
             </DialogHeader>
             {completionAppointment ? (
-              <div className="rounded-lg border border-border/70 bg-muted/30 p-3">
+              <div className="rounded-lg border border-border/70 bg-background/80 p-3">
                 <p className="text-sm font-semibold text-foreground">
                   {completionAppointment.client?.name || 'Cliente'}
                 </p>
@@ -949,7 +949,7 @@ export default function Agenda() {
                   className={`flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-colors ${
                     completionAction === 'ADD_TO_COMANDA'
                       ? 'border-primary bg-primary/5'
-                      : 'border-border hover:bg-accent'
+                      : 'border-border/70 hover:bg-accent'
                   }`}
                 >
                   <span className="flex items-center gap-2 text-sm font-medium">
@@ -967,7 +967,7 @@ export default function Agenda() {
                   className={`flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-colors ${
                     completionAction === 'PAY_NOW'
                       ? 'border-primary bg-primary/5'
-                      : 'border-border hover:bg-accent'
+                      : 'border-border/70 hover:bg-accent'
                   }`}
                 >
                   <span className="flex items-center gap-2 text-sm font-medium">

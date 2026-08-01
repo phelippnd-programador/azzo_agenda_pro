@@ -99,7 +99,7 @@ export function AgendaWeekView({
   }, [weekDays]);
 
   return (
-    <Card className="border-border/70 bg-card/96 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.14)]">
+    <Card className="border-border/70 bg-card/95 shadow-panel">
       <CardContent className="p-0">
         {/* Cabeçalho da semana */}
         <div className="flex items-center gap-2 border-b border-border/60 bg-muted/25 px-4 py-3">

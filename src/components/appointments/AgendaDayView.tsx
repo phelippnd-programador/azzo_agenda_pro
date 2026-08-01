@@ -512,7 +512,7 @@ export function AgendaDayView({
     const showNowLine = showColumnNowLine;
 
     return (
-      <Card data-tour="agenda-day-grid" className="border-border/70 bg-card/96 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.14)]">
+      <Card data-tour="agenda-day-grid" className="border-border/70 bg-card/95 shadow-panel">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <div style={{ minWidth: `${68 + colCount * 180}px` }}>
@@ -735,7 +735,7 @@ export function AgendaDayView({
 
   return (
     <>
-      <Card data-tour="agenda-day-grid" className="border-border/70 bg-card/96 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.14)]">
+      <Card data-tour="agenda-day-grid" className="border-border/70 bg-card/95 shadow-panel">
         <CardContent className="p-0">
           {appointments.length === 0 && (
             <div className="flex items-center gap-2 border-b border-border/50 bg-muted/20 px-4 py-3 text-xs text-muted-foreground">

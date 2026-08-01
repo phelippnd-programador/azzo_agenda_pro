@@ -32,7 +32,7 @@ export function AgendaMonthView({
   const averageByActiveDay = activeDays > 0 ? (totalAppointmentsInMonth / activeDays).toFixed(1) : '0.0';
 
   return (
-    <Card className="border-border/70 bg-card/96 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.14)]">
+    <Card className="border-border/70 bg-card/95 shadow-panel">
       <CardContent className="space-y-5 p-4 sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
