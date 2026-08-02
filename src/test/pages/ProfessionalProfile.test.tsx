@@ -57,7 +57,7 @@ describe("ProfessionalProfile", () => {
 
     expect(await screen.findByRole("heading", { name: "Perfil do Profissional" })).toBeInTheDocument();
     expect(screen.getAllByText("Ana Profissional").length).toBeGreaterThan(0);
-    expect(screen.getByText("Comissao do profissional")).toBeInTheDocument();
+    expect(screen.getByText("Comissão do profissional")).toBeInTheDocument();
     expect(screen.getByText("Corte, Coloracao")).toBeInTheDocument();
     expect(screen.getByText("Ativo")).toBeInTheDocument();
   });
@@ -71,6 +71,6 @@ describe("ProfessionalProfile", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByRole("button", { name: /Configurar comissao/i })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Configurar comissão/i })).toBeInTheDocument();
   });
 });

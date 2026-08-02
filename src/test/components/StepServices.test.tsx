@@ -25,12 +25,12 @@ describe("StepServices", () => {
     await user.click(screen.getByRole("button", { name: /Adicionar serviço/ }));
 
     // Campos do cadastro consolidado (nao mais o form simplificado do wizard).
-    expect(await screen.findByText("Novo servico")).toBeInTheDocument();
+    expect(await screen.findByText("Novo serviço")).toBeInTheDocument();
     const duracao = screen.getByPlaceholderText("60");
     expect(duracao).toHaveAttribute("type", "number");
 
     // Sinal/PIX e "ativo" existem, porem dentro do bloco recolhido.
-    expect(screen.getByRole("button", { name: /Opcoes avancadas/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Opções avançadas/ })).toBeInTheDocument();
     expect(screen.queryByText(/Exigir sinal no agendamento online/)).not.toBeInTheDocument();
   });
 
@@ -58,7 +58,7 @@ describe("StepServices", () => {
     await user.clear(screen.getByPlaceholderText("0,00"));
     await user.type(screen.getByPlaceholderText("0,00"), "150,00");
 
-    await user.click(screen.getByRole("button", { name: /Criar servico/ }));
+    await user.click(screen.getByRole("button", { name: /Criar serviço/ }));
 
     await waitFor(() => {
       expect(onAdd).toHaveBeenCalledWith(
