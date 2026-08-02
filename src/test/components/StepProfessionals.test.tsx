@@ -49,11 +49,11 @@ describe("StepProfessionals", () => {
     expect(await screen.findByText(/1 de 3 usados/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Adicionar profissional/ }));
 
-    expect(await screen.findByText("Novo Profissional")).toBeInTheDocument();
+    expect(await screen.findByText("Novo profissional")).toBeInTheDocument();
     // Toggle do cadastro real que faltava no wizard.
-    expect(screen.getByText(/Este usuario tambem atende clientes\?/)).toBeInTheDocument();
+    expect(screen.getByText(/Este usuário também atende clientes\?/)).toBeInTheDocument();
     // "Profissional Ativo" existe, porem recolhido.
-    expect(screen.getByRole("button", { name: /Opcoes avancadas/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Opções avançadas/ })).toBeInTheDocument();
     expect(screen.queryByText("Profissional Ativo")).not.toBeInTheDocument();
   });
 
