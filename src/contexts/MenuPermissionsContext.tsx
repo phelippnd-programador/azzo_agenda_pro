@@ -158,6 +158,29 @@ export function MenuPermissionsProvider({ children }: { children: ReactNode }) {
     refreshPermissions();
   }, [refreshPermissions]);
 
+  // O catalogo de menus/permissoes e editado em outra aplicacao (gerenciamento)
+  // e so era buscado uma vez, no mount. Uma sessao ja aberta neste app nunca via
+  // a mudanca ate um F5 ou novo login. Reforca com: (1) refetch ao voltar o foco
+  // para a aba, que cobre o caso comum de editar em outra aba/app e alternar de
+  // volta; e (2) um poll de fallback para sessoes longas sem troca de aba.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        refreshPermissions();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    const intervalId = window.setInterval(refreshPermissions, 5 * 60 * 1000);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.clearInterval(intervalId);
+    };
+  }, [isAuthenticated, refreshPermissions]);
+
   const canAccess = useCallback(
     (path: string) => {
       const normalizedPath = normalizeRoute(path);
