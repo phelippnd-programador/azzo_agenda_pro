@@ -133,6 +133,65 @@ describe("SystemAdminPage", () => {
   );
 
   it(
+    "should save global menu permission by owner role",
+    async () => {
+      const user = userEvent.setup();
+      getMenuCatalogMock.mockResolvedValue({
+        items: [
+          {
+            id: "stock-root",
+            route: "/estoque",
+            label: "Estoque",
+            parentId: null,
+            parentRoute: null,
+            parentLabel: null,
+            displayOrder: 100,
+            iconKey: "Boxes",
+            active: true,
+            sidebarVisible: true,
+            childrenCount: 0,
+            roleVisibilities: [
+              { role: "ADMIN", enabled: false },
+              { role: "OWNER", enabled: true },
+              { role: "PROFESSIONAL", enabled: false },
+            ],
+          },
+        ],
+      });
+      getRoleRoutesMock.mockResolvedValue({
+        scope: "GLOBAL",
+        role: "OWNER",
+        items: [{ route: "/estoque", enabled: false, overridden: false, reason: null }],
+      });
+
+      render(
+        <MemoryRouter initialEntries={["/configuracoes/admin-sistema"]}>
+          <SystemAdminPage />
+        </MemoryRouter>
+      );
+
+      await user.click(await screen.findByRole("tab", { name: "Menus" }));
+      const stockPermission = await screen.findByRole("checkbox", {
+        name: "Permitir Estoque para OWNER no padrao",
+      });
+
+      await waitFor(() => expect(stockPermission).toBeEnabled());
+      await user.click(stockPermission);
+      await user.click(screen.getByRole("button", { name: "Salvar permissoes" }));
+
+      expect(applyMenuOverridesBulkMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tenantId: undefined,
+          scope: "GLOBAL",
+          role: "OWNER",
+          items: [{ route: "/estoque", enabled: true }],
+        })
+      );
+    },
+    10000
+  );
+
+  it(
     "should save effective tenant menu permission for owner",
     async () => {
       const user = userEvent.setup();
@@ -175,13 +234,16 @@ describe("SystemAdminPage", () => {
       );
 
       await user.click(await screen.findByRole("tab", { name: "Menus" }));
+      const scopeSelect = screen.getAllByRole("combobox")[1];
+      await user.click(scopeSelect);
+      await user.click(await screen.findByRole("option", { name: "Tenant selecionado" }));
       const stockPermission = await screen.findByRole("checkbox", {
         name: "Permitir Estoque para OWNER no tenant",
       });
 
       await waitFor(() => expect(stockPermission).toBeEnabled());
       await user.click(stockPermission);
-      await user.click(screen.getByRole("button", { name: "Salvar permissoes do tenant" }));
+      await user.click(screen.getByRole("button", { name: "Salvar permissoes" }));
 
       expect(applyMenuOverridesBulkMock).toHaveBeenCalledWith(
         expect.objectContaining({

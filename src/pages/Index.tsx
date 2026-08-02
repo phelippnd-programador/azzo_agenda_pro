@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
 import { appRouteManifest } from '@/app/route-manifest';
 import { RankedBarCard } from '@/components/common/RankedBarCard';
 import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
@@ -27,6 +27,7 @@ import { shouldForceLogoutOnDashboardRetry } from '@/lib/dashboard-auth-retry';
 import type { DashboardCustomerRankingResponse } from '@/types';
 import type { DashboardProfessionalMetricsResponse } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
 const normalizeDateToIso = (value: unknown) => {
   if (!value) return '';
@@ -106,32 +107,32 @@ function QuickSignalCard({
   tone,
 }: {
   label: string;
-  value: number;
+  value: ReactNode;
   icon: typeof Clock;
   tone: 'amber' | 'emerald' | 'slate' | 'blue';
 }) {
   const toneMap = {
     amber: {
-      wrapper: 'border-warning/25 bg-warning/8',
-      icon: 'bg-warning/15 text-warning',
+      wrapper: 'border-warning/20 bg-warning/8',
+      icon: 'bg-warning/12 text-warning',
       label: 'text-warning',
       value: 'text-foreground',
     },
     emerald: {
-      wrapper: 'border-success/25 bg-success/8',
-      icon: 'bg-success/15 text-success',
+      wrapper: 'border-success/20 bg-success/8',
+      icon: 'bg-success/12 text-success',
       label: 'text-success',
       value: 'text-foreground',
     },
     slate: {
-      wrapper: 'border-border/70 bg-muted/25',
-      icon: 'bg-muted text-muted-foreground',
+      wrapper: 'border-border/70 bg-background/70',
+      icon: 'bg-muted/80 text-muted-foreground',
       label: 'text-muted-foreground',
       value: 'text-foreground',
     },
     blue: {
       wrapper: 'border-primary/20 bg-primary/8',
-      icon: 'bg-primary/15 text-primary',
+      icon: 'bg-primary/12 text-primary',
       label: 'text-primary',
       value: 'text-foreground',
     },
@@ -140,14 +141,14 @@ function QuickSignalCard({
   const styles = toneMap[tone];
 
   return (
-    <div className={`rounded-2xl border p-3 ${styles.wrapper}`}>
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className={`text-[11px] font-medium uppercase tracking-[0.14em] ${styles.label}`}>{label}</p>
-          <p className={`mt-1 text-2xl font-bold ${styles.value}`}>{value}</p>
+    <div className={cn('rounded-xl border px-3.5 py-3 backdrop-blur-sm transition-colors', styles.wrapper)}>
+      <div className="flex min-h-16 items-center justify-between gap-3">
+        <div className="min-w-0 space-y-1">
+          <p className={cn('text-[10px] font-semibold uppercase tracking-[0.16em]', styles.label)}>{label}</p>
+          <p className={cn('truncate text-2xl font-bold tracking-tight', styles.value)}>{value}</p>
         </div>
-        <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${styles.icon}`}>
-          <Icon className="h-5 w-5" />
+        <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', styles.icon)}>
+          <Icon className="h-4 w-4" />
         </div>
       </div>
     </div>
@@ -174,54 +175,81 @@ function DashboardCommandPanel({
   const hasRisk = riskCount > 0 || pendingAppointments > 0;
 
   return (
-    <Card className="border-border/70 bg-card/95 shadow-panel">
-      <CardContent className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)] lg:items-center">
-        <div className="space-y-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-1.5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Agora no salão
-              </p>
-              <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-                {hasRisk ? 'Comece pelas pendências do dia.' : 'Operação do dia sob controle.'}
-              </h2>
-              <p className="max-w-2xl text-sm text-muted-foreground">
-                {isProfessionalUser
-                  ? 'Sua agenda, entregas e comissão ficam no topo para reduzir troca de tela entre atendimentos.'
-                  : 'Agenda, caixa e risco aparecem antes dos blocos analíticos para acelerar a primeira decisão.'}
-              </p>
+    <Card className="overflow-hidden border-border/70 bg-card/95 shadow-panel backdrop-blur-sm">
+      <CardContent className="p-0">
+        <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="space-y-5 p-4 sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="max-w-3xl space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Agora no salão
+                  </p>
+                  <Badge
+                    variant={hasRisk ? 'default' : 'outline'}
+                    className={cn(
+                      'rounded-full px-2.5 py-0.5 text-[11px]',
+                      !hasRisk && 'border-success/25 bg-success/8 text-success',
+                    )}
+                  >
+                    {hasRisk ? 'Atenção agora' : 'Fluxo estável'}
+                  </Badge>
+                </div>
+                <div className="space-y-1">
+                  <h2 className="max-w-2xl text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+                    {hasRisk ? 'Priorize as pendências antes do próximo atendimento.' : 'Operação do dia sob controle.'}
+                  </h2>
+                  <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+                    {isProfessionalUser
+                      ? 'Sua agenda, entregas e comissão ficam reunidas para reduzir troca de tela entre atendimentos.'
+                      : 'Veja o que exige ação agora e abra a agenda sem precisar descer pelos blocos analíticos.'}
+                  </p>
+                </div>
+              </div>
+              <Button className="h-11 w-full gap-2 rounded-xl px-5 shadow-soft sm:w-auto" onClick={onOpenAgenda}>
+                Abrir agenda
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             </div>
-            <Button className="w-full sm:w-auto" onClick={onOpenAgenda}>
-              Abrir agenda
-              <ArrowRight className="h-4 w-4" />
-            </Button>
+
+            <div className="grid gap-3 min-[520px]:grid-cols-2 min-[1500px]:grid-cols-4">
+              <QuickSignalCard label="Pendentes" value={pendingAppointments} icon={Clock} tone={hasRisk ? 'amber' : 'slate'} />
+              <QuickSignalCard label="Concluídos" value={completedToday} icon={CheckCircle} tone="emerald" />
+              <QuickSignalCard label={isProfessionalUser ? 'Comissão' : 'Receita hoje'} value={formatCurrency(todayRevenue)} icon={DollarSign} tone="blue" />
+              <QuickSignalCard label="Risco" value={riskCount} icon={Route} tone={riskCount > 0 ? 'amber' : 'slate'} />
+            </div>
           </div>
 
-          <div className="grid gap-3 min-[520px]:grid-cols-2 min-[1700px]:grid-cols-4">
-            <QuickSignalCard label="Pendentes" value={pendingAppointments} icon={Clock} tone={hasRisk ? 'amber' : 'slate'} />
-            <QuickSignalCard label="Concluídos" value={completedToday} icon={CheckCircle} tone="emerald" />
-            <QuickSignalCard label={isProfessionalUser ? 'Comissão' : 'Receita hoje'} value={formatCurrency(todayRevenue)} icon={DollarSign} tone="blue" />
-            <QuickSignalCard label="Risco" value={riskCount} icon={Route} tone={riskCount > 0 ? 'amber' : 'slate'} />
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border/70 bg-background/85 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                Próxima ação
-              </p>
-              <p className="mt-2 text-sm font-medium text-foreground">{nextAppointmentLabel}</p>
+          <aside className="border-t border-border/70 bg-background/70 p-4 backdrop-blur-sm sm:p-6 lg:border-l lg:border-t-0">
+            <div className="flex h-full flex-col justify-between gap-5">
+              <div className="space-y-3">
+                <div
+                  className={cn(
+                    'flex h-11 w-11 items-center justify-center rounded-2xl',
+                    hasRisk ? 'bg-warning/12 text-warning' : 'bg-success/12 text-success',
+                  )}
+                >
+                  {hasRisk ? <Clock className="h-5 w-5" /> : <CheckCircle className="h-5 w-5" />}
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Próxima ação
+                  </p>
+                  <p className="text-base font-semibold leading-6 text-foreground">{nextAppointmentLabel}</p>
+                </div>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  {hasRisk
+                    ? 'Resolva os pontos abertos primeiro. Depois acompanhe tendência e performance com mais contexto.'
+                    : 'Sem bloqueio imediato. Use os blocos abaixo para acompanhar tendência e oportunidades.'}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border/70 bg-card/75 px-3.5 py-3 text-xs text-muted-foreground">
+                {hasRisk
+                  ? `${pendingAppointments} pendente(s) e ${riskCount} ponto(s) de risco no radar.`
+                  : 'Agenda, caixa e risco seguem sem urgência operacional.'}
+              </div>
             </div>
-            <Badge variant={hasRisk ? 'default' : 'outline'} className="shrink-0">
-              {hasRisk ? 'Atenção' : 'Ok'}
-            </Badge>
-          </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            {hasRisk
-              ? 'Resolva pendências e conversas abertas antes de analisar performance.'
-              : 'Use os blocos abaixo apenas para acompanhamento e tendência.'}
-          </p>
+          </aside>
         </div>
       </CardContent>
     </Card>

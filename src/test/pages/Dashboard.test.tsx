@@ -170,7 +170,8 @@ describe("Dashboard", () => {
     );
 
     expect(await screen.findByText("Agora no salão")).toBeInTheDocument();
-    expect(screen.getByText("Comece pelas pendências do dia.")).toBeInTheDocument();
+    expect(screen.getByText("Priorize as pendências antes do próximo atendimento.")).toBeInTheDocument();
+    expect(screen.getByText("Atenção agora")).toBeInTheDocument();
     expect(screen.getByText("Agendamentos Hoje")).toBeInTheDocument();
     expect(screen.getByText("Faturamento Hoje")).toBeInTheDocument();
     expect(screen.getByText("O que exige atenção hoje")).toBeInTheDocument();
@@ -253,7 +254,8 @@ describe("Dashboard", () => {
     );
 
     expect(await screen.findByText("Agora no salão")).toBeInTheDocument();
-    expect(screen.getByText("Comece pelas pendências do dia.")).toBeInTheDocument();
+    expect(screen.getByText("Priorize as pendências antes do próximo atendimento.")).toBeInTheDocument();
+    expect(screen.getByText("Atenção agora")).toBeInTheDocument();
     expect(screen.getByText("Agendamentos Hoje")).toBeInTheDocument();
     expect(screen.getAllByText("Pendentes").length).toBeGreaterThan(0);
   });

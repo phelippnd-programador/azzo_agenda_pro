@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { configApi } from '@/lib/api';
 import { toast } from 'sonner';
-import type { MenuCatalogItem, MenuCatalogItemRequest, SystemAdminRole } from '@/types/system-admin';
+import type { MenuCatalogItem, MenuCatalogItemRequest, MenuConfigScope, SystemAdminRole } from '@/types/system-admin';
 
 const ROLES: SystemAdminRole[] = ['ADMIN', 'OWNER', 'PROFESSIONAL'];
 
@@ -44,10 +44,11 @@ export function AdminMenusTab({ selectedTenantId }: AdminMenusTabProps) {
   const [items, setItems] = useState<MenuCatalogItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<SystemAdminRole>('OWNER');
-  const [tenantRouteState, setTenantRouteState] = useState<Record<string, boolean>>({});
-  const [pendingTenantRouteState, setPendingTenantRouteState] = useState<Record<string, boolean>>({});
-  const [isLoadingTenantRoutes, setIsLoadingTenantRoutes] = useState(false);
-  const [isSavingTenantRoutes, setIsSavingTenantRoutes] = useState(false);
+  const [selectedScope, setSelectedScope] = useState<MenuConfigScope>('GLOBAL');
+  const [routeState, setRouteState] = useState<Record<string, boolean>>({});
+  const [pendingRouteState, setPendingRouteState] = useState<Record<string, boolean>>({});
+  const [isLoadingRoutes, setIsLoadingRoutes] = useState(false);
+  const [isSavingRoutes, setIsSavingRoutes] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState<MenuCatalogFormState>(createEmptyForm);
@@ -71,36 +72,40 @@ export function AdminMenusTab({ selectedTenantId }: AdminMenusTabProps) {
     loadMenuCatalog();
   }, []);
 
-  const loadTenantRoutes = useCallback(async () => {
-    if (!selectedTenantId) {
-      setTenantRouteState({});
-      setPendingTenantRouteState({});
+  const loadRoleRoutes = useCallback(async () => {
+    if (selectedScope === 'TENANT' && !selectedTenantId) {
+      setRouteState({});
+      setPendingRouteState({});
       return;
     }
 
-    setIsLoadingTenantRoutes(true);
+    setIsLoadingRoutes(true);
     try {
-      const response = await configApi.getRoleRoutes(selectedRole, 'TENANT', selectedTenantId);
+      const response = await configApi.getRoleRoutes(
+        selectedRole,
+        selectedScope,
+        selectedScope === 'TENANT' ? selectedTenantId : undefined
+      );
       const nextState = (response.items || []).reduce((acc, item) => {
         if (item.route) {
           acc[item.route] = item.enabled;
         }
         return acc;
       }, {} as Record<string, boolean>);
-      setTenantRouteState(nextState);
-      setPendingTenantRouteState(nextState);
+      setRouteState(nextState);
+      setPendingRouteState(nextState);
     } catch {
-      toast.error('Nao foi possivel carregar as permissoes efetivas do tenant.');
-      setTenantRouteState({});
-      setPendingTenantRouteState({});
+      toast.error('Nao foi possivel carregar as permissoes de menu.');
+      setRouteState({});
+      setPendingRouteState({});
     } finally {
-      setIsLoadingTenantRoutes(false);
+      setIsLoadingRoutes(false);
     }
-  }, [selectedRole, selectedTenantId]);
+  }, [selectedRole, selectedScope, selectedTenantId]);
 
   useEffect(() => {
-    loadTenantRoutes();
-  }, [loadTenantRoutes]);
+    loadRoleRoutes();
+  }, [loadRoleRoutes]);
 
   const openCreate = () => {
     setForm(createEmptyForm());
@@ -130,8 +135,8 @@ export function AdminMenusTab({ selectedTenantId }: AdminMenusTabProps) {
     setForm((prev) => ({ ...prev, roleVisibilities: { ...prev.roleVisibilities, [role]: enabled } }));
   };
 
-  const setTenantRouteVisibility = (route: string, enabled: boolean) => {
-    setPendingTenantRouteState((prev) => ({ ...prev, [route]: enabled }));
+  const setRouteVisibility = (route: string, enabled: boolean) => {
+    setPendingRouteState((prev) => ({ ...prev, [route]: enabled }));
   };
 
   const buildPayload = (): MenuCatalogItemRequest => ({
@@ -170,36 +175,40 @@ export function AdminMenusTab({ selectedTenantId }: AdminMenusTabProps) {
     }
   };
 
-  const saveTenantRoutes = async () => {
-    if (!selectedTenantId) {
+  const saveRoleRoutes = async () => {
+    if (selectedScope === 'TENANT' && !selectedTenantId) {
       toast.error('Selecione um tenant na aba Contexto antes de aplicar permissoes.');
       return;
     }
 
-    const changedItems = Object.entries(pendingTenantRouteState)
-      .filter(([route, enabled]) => tenantRouteState[route] !== enabled)
+    const changedItems = Object.entries(pendingRouteState)
+      .filter(([route, enabled]) => routeState[route] !== enabled)
       .map(([route, enabled]) => ({ route, enabled }));
 
     if (changedItems.length === 0) {
-      toast.success('Nenhuma permissao do tenant foi alterada.');
+      toast.success('Nenhuma permissao foi alterada.');
       return;
     }
 
-    setIsSavingTenantRoutes(true);
+    setIsSavingRoutes(true);
     try {
       await configApi.applyMenuOverridesBulk({
-        tenantId: selectedTenantId,
-        scope: 'TENANT',
+        tenantId: selectedScope === 'TENANT' ? selectedTenantId : undefined,
+        scope: selectedScope,
         role: selectedRole,
         items: changedItems,
         reason: 'Ajuste pelo gerenciamento de menus',
       });
-      toast.success('Permissoes do tenant atualizadas.');
-      await loadTenantRoutes();
+      toast.success(
+        selectedScope === 'GLOBAL'
+          ? 'Permissoes por role atualizadas.'
+          : 'Permissoes do tenant atualizadas.'
+      );
+      await loadRoleRoutes();
     } catch {
-      toast.error('Falha ao salvar permissoes do tenant.');
+      toast.error('Falha ao salvar permissoes de menu.');
     } finally {
-      setIsSavingTenantRoutes(false);
+      setIsSavingRoutes(false);
     }
   };
 
@@ -219,7 +228,7 @@ export function AdminMenusTab({ selectedTenantId }: AdminMenusTabProps) {
               Atualizar catalogo
             </Button>
             <div className="min-w-40 space-y-1">
-              <Label className="text-xs">Role no tenant</Label>
+              <Label className="text-xs">Role</Label>
               <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as SystemAdminRole)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -233,19 +242,35 @@ export function AdminMenusTab({ selectedTenantId }: AdminMenusTabProps) {
                 </SelectContent>
               </Select>
             </div>
-            <Button variant="outline" onClick={loadTenantRoutes} disabled={!selectedTenantId || isLoadingTenantRoutes}>
+            <div className="min-w-48 space-y-1">
+              <Label className="text-xs">Escopo</Label>
+              <Select value={selectedScope} onValueChange={(value) => setSelectedScope(value as MenuConfigScope)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="GLOBAL">Padrao por role</SelectItem>
+                  <SelectItem value="TENANT">Tenant selecionado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              variant="outline"
+              onClick={loadRoleRoutes}
+              disabled={(selectedScope === 'TENANT' && !selectedTenantId) || isLoadingRoutes}
+            >
               Atualizar permissoes
             </Button>
             <Button
-              onClick={saveTenantRoutes}
-              disabled={!selectedTenantId || isLoadingTenantRoutes || isSavingTenantRoutes}
+              onClick={saveRoleRoutes}
+              disabled={(selectedScope === 'TENANT' && !selectedTenantId) || isLoadingRoutes || isSavingRoutes}
             >
-              {isSavingTenantRoutes ? 'Salvando permissoes...' : 'Salvar permissoes do tenant'}
+              {isSavingRoutes ? 'Salvando permissoes...' : 'Salvar permissoes'}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            As roles exibem o padrao global do catalogo. A coluna "{selectedRole} no tenant" controla o que vale de
-            fato para o tenant selecionado na aba Contexto.
+            "Padrao global" mostra as roles do catalogo. A coluna "{selectedRole} / {selectedScope === 'GLOBAL' ? 'padrao' : 'tenant'}"
+            controla as permissoes de rota por role no escopo selecionado.
           </p>
 
           <div className="rounded-md border">
@@ -259,7 +284,9 @@ export function AdminMenusTab({ selectedTenantId }: AdminMenusTabProps) {
                     <th className="px-3 py-2 text-left">Ordem</th>
                     <th className="px-3 py-2 text-left">Icone</th>
                     <th className="px-3 py-2 text-left">Padrao global</th>
-                    <th className="px-3 py-2 text-left">{selectedRole} no tenant</th>
+                    <th className="px-3 py-2 text-left">
+                      {selectedRole} / {selectedScope === 'GLOBAL' ? 'padrao' : 'tenant'}
+                    </th>
                     <th className="px-3 py-2 text-left">Menu lateral</th>
                     <th className="px-3 py-2 text-left">Status</th>
                     <th className="px-3 py-2 text-left">Acao</th>
@@ -296,10 +323,10 @@ export function AdminMenusTab({ selectedTenantId }: AdminMenusTabProps) {
                       </td>
                       <td className="px-3 py-2">
                         <Checkbox
-                          aria-label={`Permitir ${item.label} para ${selectedRole} no tenant`}
-                          checked={Boolean(pendingTenantRouteState[item.route])}
-                          disabled={!selectedTenantId || isLoadingTenantRoutes || isSavingTenantRoutes}
-                          onCheckedChange={(checked) => setTenantRouteVisibility(item.route, Boolean(checked))}
+                          aria-label={`Permitir ${item.label} para ${selectedRole} no ${selectedScope === 'GLOBAL' ? 'padrao' : 'tenant'}`}
+                          checked={Boolean(pendingRouteState[item.route])}
+                          disabled={(selectedScope === 'TENANT' && !selectedTenantId) || isLoadingRoutes || isSavingRoutes}
+                          onCheckedChange={(checked) => setRouteVisibility(item.route, Boolean(checked))}
                         />
                       </td>
                       <td className="px-3 py-2">
