@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Download, RefreshCw, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ReportTabs } from "@/pages/report/components/ReportTabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -193,6 +194,8 @@ export default function FinancialReportPage() {
       title="Relatorio financeiro"
       subtitle="Leitura consolidada de receitas, despesas, saldo e movimentacoes do periodo."
     >
+      <ReportTabs />
+
       <div className="space-y-6">
         <Card>
           <CardHeader>

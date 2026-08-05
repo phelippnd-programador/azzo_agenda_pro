@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ReportTabs } from "@/pages/report/components/ReportTabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateInput } from "@/components/ui/date-input";
@@ -145,6 +146,8 @@ export default function ManagementReportPage() {
       title="Relatorio gerencial"
       subtitle="Visao consolidada de financeiro, agendamentos, servicos e profissionais."
     >
+      <ReportTabs />
+
       <div className="print-region space-y-6">
         {/* Cabecalho visivel apenas na impressao */}
         <div id="print-report-header" className="print-header hidden" />

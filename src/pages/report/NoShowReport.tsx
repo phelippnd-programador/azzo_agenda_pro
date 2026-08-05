@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Download, Filter, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ReportTabs } from "@/pages/report/components/ReportTabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -217,6 +218,8 @@ export default function NoShowReport() {
       title="Relatorio de no-show"
       subtitle="Visao quantitativa com totais do periodo e agrupamento por dia, profissional ou cliente."
     >
+      <ReportTabs />
+
       <div className="space-y-6">
         <Card>
           <CardHeader>

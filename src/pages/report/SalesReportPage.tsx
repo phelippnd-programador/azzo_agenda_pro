@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Download, Printer, RefreshCw } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ReportTabs } from "@/pages/report/components/ReportTabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateInput } from "@/components/ui/date-input";
@@ -171,6 +172,8 @@ export default function SalesReportPage() {
       title="Relatorio de vendas"
       subtitle="Leitura consolidada de servicos, receita e desempenho por profissional."
     >
+      <ReportTabs />
+
       <div className="print-region space-y-6">
         <div id="print-report-header" className="print-header hidden" />
         <Card className="print-hide">

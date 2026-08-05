@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Download, Printer, RefreshCw, UserCheck, UserX, Users } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ReportTabs } from "@/pages/report/components/ReportTabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -141,6 +142,8 @@ export default function ClientsReportPage() {
       title="Relatorio de clientes"
       subtitle="Frequencia de visitas, receita gerada e identificacao de clientes inativos."
     >
+      <ReportTabs />
+
       <div className="print-region space-y-6">
         <div id="print-report-header" className="print-header hidden" />
 
