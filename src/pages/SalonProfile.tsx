@@ -514,9 +514,9 @@ export default function SalonProfile() {
           </div>
 
           <TabsContent value="identidade" className="space-y-5">
-            <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
+            <div className="flex flex-col gap-5">
         {/* Avatar / header card */}
-        <Card className="lg:col-start-2 lg:row-start-1">
+        <Card className="order-2">
           <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
@@ -560,7 +560,7 @@ export default function SalonProfile() {
         </Card>
 
         {/* Booking URL card */}
-        <Card className="border-border/70 bg-card/95 shadow-panel lg:col-start-2 lg:row-start-2">
+        <Card className="order-3 border-border/70 bg-card/95 shadow-panel">
           <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
               <div className="min-w-0">
@@ -597,7 +597,7 @@ export default function SalonProfile() {
         </Card>
 
         {/* Basic info card */}
-        <Card className="lg:col-start-1 lg:row-start-1">
+        <Card className="order-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Building2 className="w-5 h-5 text-primary" />
