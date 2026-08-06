@@ -13,6 +13,7 @@ export interface BusinessHours {
 interface SalonBusinessHoursCardProps {
   businessHours: BusinessHours[];
   onUpdate: (index: number, field: keyof BusinessHours, value: string | boolean) => void;
+  invalidIndexes?: number[];
 }
 
 const dayLabelMap: Record<string, string> = {
@@ -22,7 +23,7 @@ const dayLabelMap: Record<string, string> = {
 
 const getDayLabel = (day: string) => dayLabelMap[day] ?? day;
 
-export function SalonBusinessHoursCard({ businessHours, onUpdate }: SalonBusinessHoursCardProps) {
+export function SalonBusinessHoursCard({ businessHours, onUpdate, invalidIndexes = [] }: SalonBusinessHoursCardProps) {
   return (
     <Card>
       <CardHeader>
@@ -36,12 +37,13 @@ export function SalonBusinessHoursCard({ businessHours, onUpdate }: SalonBusines
         <div className="space-y-3">
           {businessHours.map((hours, index) => {
             const dayLabel = getDayLabel(hours.day);
+            const isInvalid = invalidIndexes.includes(index);
 
             return (
               <div
                 key={hours.day}
                 className={`flex flex-col gap-3 rounded-lg p-3 sm:flex-row sm:items-center ${
-                  hours.enabled ? 'bg-muted/50' : 'bg-muted/30 opacity-60'
+                  isInvalid ? 'border border-destructive/40 bg-destructive/5' : hours.enabled ? 'bg-muted/50' : 'bg-muted/30 opacity-60'
                 }`}
               >
                 <div className="flex min-w-[140px] items-center gap-3">
@@ -60,6 +62,7 @@ export function SalonBusinessHoursCard({ businessHours, onUpdate }: SalonBusines
                       value={hours.open}
                       onChange={(e) => onUpdate(index, 'open', e.target.value)}
                       className="w-28"
+                      aria-invalid={isInvalid}
                     />
                     <span className="text-muted-foreground">até</span>
                     <Input
@@ -68,6 +71,7 @@ export function SalonBusinessHoursCard({ businessHours, onUpdate }: SalonBusines
                       value={hours.close}
                       onChange={(e) => onUpdate(index, 'close', e.target.value)}
                       className="w-28"
+                      aria-invalid={isInvalid}
                     />
                   </div>
                 ) : null}

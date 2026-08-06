@@ -125,7 +125,6 @@ describe("SalonProfile", () => {
     );
 
     await screen.findByText("Link de Agendamento Público");
-
     [
       "Nome do Salão *",
       "Descrição",
@@ -160,6 +159,8 @@ describe("SalonProfile", () => {
     );
 
     await screen.findByText("Link de Agendamento Público");
+    await user.clear(screen.getByLabelText("Nome do Salão *"));
+    await user.type(screen.getByLabelText("Nome do Salão *"), "Salao QA Premium");
     await user.click(await screen.findByRole("button", { name: /Salvar Alterações/i }));
 
     await waitFor(() => {

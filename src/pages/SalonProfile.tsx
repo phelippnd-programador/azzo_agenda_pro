@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +33,7 @@ import { buildPublicBookingUrl } from '@/lib/public-booking-url';
 import { maskCpfCnpj, onlyDigits } from '@/lib/input-masks';
 import { CnpjAutoFillField } from '@/components/shared/CnpjAutoFillField';
 import type { CnpjConsultaResponse } from '@/lib/api/cnpj';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const defaultBusinessHours: BusinessHours[] = [
   { day: 'Segunda-feira', enabled: true, open: '09:00', close: '19:00' },
@@ -64,6 +65,49 @@ const emptyLockedFields: LockedAddressFields = {
 
 const normalizeCep = (value: string) => value.replace(/\D/g, '').slice(0, 8);
 
+const sanitizeSalonSlug = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+
+const buildProfileSnapshot = (value: {
+  salonName: string;
+  salonSlug: string;
+  salonDescription: string;
+  salonPhone: string;
+  salonWhatsapp: string;
+  salonCpfCnpj: string;
+  salonEmail: string;
+  salonWebsite: string;
+  salonInstagram: string;
+  salonFacebook: string;
+  address: AddressValues;
+  businessHours: BusinessHours[];
+}) =>
+  JSON.stringify({
+    salonName: value.salonName,
+    salonSlug: sanitizeSalonSlug(value.salonSlug),
+    salonDescription: value.salonDescription,
+    salonPhone: value.salonPhone,
+    salonWhatsapp: value.salonWhatsapp,
+    salonCpfCnpj: onlyDigits(value.salonCpfCnpj),
+    salonEmail: value.salonEmail,
+    salonWebsite: value.salonWebsite,
+    salonInstagram: value.salonInstagram,
+    salonFacebook: value.salonFacebook,
+    address: value.address,
+    businessHours: value.businessHours,
+  });
+
+const findInvalidBusinessHours = (businessHours: BusinessHours[]) =>
+  businessHours
+    .map((hours, index) => (hours.enabled && hours.open >= hours.close ? index : -1))
+    .filter((index) => index >= 0);
+
 export default function SalonProfile() {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -89,6 +133,7 @@ export default function SalonProfile() {
   const [salonLogoUrl, setSalonLogoUrl] = useState('');
   const [address, setAddress] = useState<AddressValues>(emptyAddress);
   const [businessHours, setBusinessHours] = useState<BusinessHours[]>(defaultBusinessHours);
+  const [profileSnapshot, setProfileSnapshot] = useState('');
 
   const persistSalonSlug = (value: string) => {
     if (!value?.trim()) return;
@@ -100,7 +145,7 @@ export default function SalonProfile() {
 
   const applyProfileData = (data: Partial<SalonProfileData>) => {
     setSalonName(data.salonName || '');
-    const resolvedSlug = data.salonSlug || 'meu-salao';
+    const resolvedSlug = sanitizeSalonSlug(data.salonSlug || 'meu-salao') || 'meu-salao';
     setSalonSlug(resolvedSlug);
     persistSalonSlug(resolvedSlug);
     setPublicBookingUrl(data.publicBookingUrl || '');
@@ -114,7 +159,7 @@ export default function SalonProfile() {
     setSalonInstagram(data.salonInstagram || '');
     setSalonFacebook(data.salonFacebook || '');
     const loadedZip = data.zipCode || '';
-    setAddress({
+    const nextAddress = {
       street: data.street || '',
       number: data.number || '',
       complement: data.complement || '',
@@ -122,13 +167,25 @@ export default function SalonProfile() {
       city: data.city || '',
       state: data.state || '',
       zipCode: loadedZip,
-    });
+    };
+    const nextBusinessHours = data.businessHours?.length ? data.businessHours : defaultBusinessHours;
+    setAddress(nextAddress);
     setLastResolvedCep(normalizeCep(loadedZip));
-    if (data.businessHours?.length) {
-      setBusinessHours(data.businessHours);
-    } else {
-      setBusinessHours(defaultBusinessHours);
-    }
+    setBusinessHours(nextBusinessHours);
+    setProfileSnapshot(buildProfileSnapshot({
+      salonName: data.salonName || '',
+      salonSlug: resolvedSlug,
+      salonDescription: data.salonDescription || '',
+      salonPhone: data.salonPhone || '',
+      salonWhatsapp: data.salonWhatsapp || '',
+      salonCpfCnpj: data.salonCpfCnpj || '',
+      salonEmail: data.salonEmail || '',
+      salonWebsite: data.salonWebsite || '',
+      salonInstagram: data.salonInstagram || '',
+      salonFacebook: data.salonFacebook || '',
+      address: nextAddress,
+      businessHours: nextBusinessHours,
+    }));
   };
 
   const loadSalonProfile = async () => {
@@ -150,7 +207,7 @@ export default function SalonProfile() {
     setSalonPhone(user?.phone || '');
 
     void loadSalonProfile();
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user?.email, user?.phone, user?.salonName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const cep = normalizeCep(address.zipCode);
@@ -216,6 +273,8 @@ export default function SalonProfile() {
 
   const handleSave = async () => {
     const digits = onlyDigits(salonCpfCnpj);
+    const normalizedSlug = sanitizeSalonSlug(salonSlug);
+    const invalidBusinessHours = findInvalidBusinessHours(businessHours);
     if (!digits) {
       toast.error("CPF ou CNPJ do salão é obrigatório");
       return;
@@ -224,11 +283,19 @@ export default function SalonProfile() {
       toast.error("CPF deve ter 11 dígitos ou CNPJ deve ter 14 dígitos");
       return;
     }
+    if (!normalizedSlug) {
+      toast.error("Informe uma URL de agendamento válida");
+      return;
+    }
+    if (invalidBusinessHours.length > 0) {
+      toast.error("Corrija os horários de funcionamento. A abertura deve ser menor que o fechamento.");
+      return;
+    }
     setIsLoading(true);
     try {
       const profileData: Partial<SalonProfileData> = {
         salonName,
-        salonSlug,
+        salonSlug: normalizedSlug,
         salonDescription,
         salonPhone,
         salonWhatsapp,
@@ -248,8 +315,23 @@ export default function SalonProfile() {
       };
 
       const updatedProfile = await salonApi.updateProfile(profileData);
-      persistSalonSlug(salonSlug);
+      setSalonSlug(normalizedSlug);
+      persistSalonSlug(normalizedSlug);
       setPublicBookingUrl(updatedProfile.publicBookingUrl || '');
+      setProfileSnapshot(buildProfileSnapshot({
+        salonName,
+        salonSlug: normalizedSlug,
+        salonDescription,
+        salonPhone,
+        salonWhatsapp,
+        salonCpfCnpj,
+        salonEmail,
+        salonWebsite,
+        salonInstagram,
+        salonFacebook,
+        address,
+        businessHours,
+      }));
       toast.success('Perfil do salão atualizado com sucesso');
     } catch (error) {
       toast.error(resolveUiError(error, 'Erro ao salvar perfil').message);
@@ -306,13 +388,81 @@ export default function SalonProfile() {
   };
 
   const bookingAbsoluteUrl = buildPublicBookingUrl(salonSlug, publicBookingUrl || undefined);
+  const invalidBusinessHourIndexes = useMemo(() => findInvalidBusinessHours(businessHours), [businessHours]);
+  const hasUnsavedChanges = useMemo(
+    () =>
+      Boolean(profileSnapshot) &&
+      buildProfileSnapshot({
+        salonName,
+        salonSlug,
+        salonDescription,
+        salonPhone,
+        salonWhatsapp,
+        salonCpfCnpj,
+        salonEmail,
+        salonWebsite,
+        salonInstagram,
+        salonFacebook,
+        address,
+        businessHours,
+      }) !== profileSnapshot,
+    [
+      address,
+      businessHours,
+      profileSnapshot,
+      salonCpfCnpj,
+      salonDescription,
+      salonEmail,
+      salonFacebook,
+      salonInstagram,
+      salonName,
+      salonPhone,
+      salonSlug,
+      salonWebsite,
+      salonWhatsapp,
+    ],
+  );
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return undefined;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  if (isProfileLoading) {
+    return (
+      <MainLayout
+        title="Perfil do Salão"
+        subtitle="Gerencie as informações do seu estabelecimento"
+      >
+        <div className="grid max-w-6xl gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <div className="space-y-5">
+            <Skeleton className="h-64 w-full rounded-xl" />
+            <Skeleton className="h-72 w-full rounded-xl" />
+            <Skeleton className="h-72 w-full rounded-xl" />
+          </div>
+          <div className="space-y-5">
+            <Skeleton className="h-56 w-full rounded-xl" />
+            <Skeleton className="h-40 w-full rounded-xl" />
+            <Skeleton className="h-36 w-full rounded-xl" />
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout
       title="Perfil do Salão"
       subtitle="Gerencie as informações do seu estabelecimento"
     >
-      <div className="max-w-4xl space-y-4 sm:space-y-6">
+      <div className="grid max-w-6xl items-start gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
         {isProfileLoading ? (
           <Card className="border-border/70 bg-card/95 shadow-panel">
             <CardContent className="flex items-center gap-3 p-4 text-sm text-muted-foreground sm:p-5">
@@ -323,7 +473,7 @@ export default function SalonProfile() {
         ) : null}
 
         {profileLoadError ? (
-          <Card className="border-destructive/30 bg-destructive/5 shadow-panel">
+          <Card className="border-destructive/30 bg-destructive/5 shadow-panel lg:col-span-2">
             <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
               <div className="flex items-start gap-3">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
@@ -346,7 +496,7 @@ export default function SalonProfile() {
         ) : null}
 
         {/* Avatar / header card */}
-        <Card>
+        <Card className="lg:col-start-2 lg:row-start-1">
           <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
@@ -390,7 +540,7 @@ export default function SalonProfile() {
         </Card>
 
         {/* Booking URL card */}
-        <Card className="border-border/70 bg-card/95 shadow-panel">
+        <Card className="border-border/70 bg-card/95 shadow-panel lg:col-start-2 lg:row-start-2">
           <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
               <div className="min-w-0">
@@ -427,7 +577,7 @@ export default function SalonProfile() {
         </Card>
 
         {/* Basic info card */}
-        <Card>
+        <Card className="lg:col-start-1 lg:row-start-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Building2 className="w-5 h-5 text-primary" />
@@ -457,7 +607,7 @@ export default function SalonProfile() {
                     placeholder="meu-salao"
                     value={salonSlug}
                     onChange={(e) =>
-                      setSalonSlug(e.target.value.toLowerCase().replace(/\s+/g, '-'))
+                      setSalonSlug(sanitizeSalonSlug(e.target.value))
                     }
                     className="rounded-l-none"
                   />
@@ -478,7 +628,7 @@ export default function SalonProfile() {
         </Card>
 
         {/* Contact card */}
-        <Card>
+        <Card className="lg:col-start-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Phone className="w-5 h-5 text-primary" />
@@ -590,20 +740,25 @@ export default function SalonProfile() {
         </Card>
 
         {/* Address card */}
-        <SalonAddressCard
-          values={address}
-          onChange={handleAddressChange}
-          isAddressLoading={isAddressLoading}
-          lockedFields={lockedAddressFields}
-        />
+        <div className="lg:col-start-1">
+          <SalonAddressCard
+            values={address}
+            onChange={handleAddressChange}
+            isAddressLoading={isAddressLoading}
+            lockedFields={lockedAddressFields}
+          />
+        </div>
 
         {/* Business hours card */}
-        <SalonBusinessHoursCard
-          businessHours={businessHours}
-          onUpdate={updateBusinessHours}
-        />
+        <div className="lg:col-start-1">
+          <SalonBusinessHoursCard
+            businessHours={businessHours}
+            onUpdate={updateBusinessHours}
+            invalidIndexes={invalidBusinessHourIndexes}
+          />
+        </div>
 
-        <Card>
+        <Card className="lg:col-start-2 lg:row-start-3">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <CalendarDays className="w-5 h-5 text-primary" />
@@ -629,10 +784,13 @@ export default function SalonProfile() {
           </CardContent>
         </Card>
 
-        <div className="sticky bottom-3 z-10 flex justify-end rounded-2xl border border-border/70 bg-card/90 p-3 shadow-panel backdrop-blur sm:bottom-4">
+        <div className="sticky bottom-3 z-10 flex flex-col gap-3 rounded-2xl border border-border/70 bg-card/90 p-3 shadow-panel backdrop-blur sm:bottom-4 sm:flex-row sm:items-center sm:justify-between lg:col-span-2">
+          <p className="text-sm text-muted-foreground">
+            {hasUnsavedChanges ? 'Existem alterações pendentes.' : 'Nenhuma alteração pendente.'}
+          </p>
           <Button
             onClick={() => void handleSave()}
-            disabled={isLoading || isProfileLoading}
+            disabled={isLoading || !hasUnsavedChanges}
             className="w-full gap-2 sm:w-auto"
             size="lg"
           >
