@@ -40,9 +40,9 @@ export function FinancialFiltersPanel({
   return (
     <div className="grid grid-cols-1 gap-3 rounded-xl border bg-muted/30 p-3 sm:grid-cols-2 lg:grid-cols-4">
       <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">Tipo</Label>
+        <Label htmlFor="financial-filter-type" className="text-xs text-muted-foreground">Tipo</Label>
         <Select value={filters.type} onValueChange={(value) => onChange('type', value)}>
-          <SelectTrigger className="h-9 text-sm">
+          <SelectTrigger id="financial-filter-type" className="h-11 text-sm">
             <SelectValue placeholder="Todos" />
           </SelectTrigger>
           <SelectContent>
@@ -54,9 +54,9 @@ export function FinancialFiltersPanel({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">Categoria</Label>
+        <Label htmlFor="financial-filter-category" className="text-xs text-muted-foreground">Categoria</Label>
         <Select value={filters.categoryId} onValueChange={(value) => onChange('categoryId', value)}>
-          <SelectTrigger className="h-9 text-sm">
+          <SelectTrigger id="financial-filter-category" className="h-11 text-sm">
             <SelectValue placeholder="Todas" />
           </SelectTrigger>
           <SelectContent>
@@ -71,9 +71,9 @@ export function FinancialFiltersPanel({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">Forma de pagamento</Label>
+        <Label htmlFor="financial-filter-payment-method" className="text-xs text-muted-foreground">Forma de pagamento</Label>
         <Select value={filters.paymentMethod} onValueChange={(value) => onChange('paymentMethod', value)}>
-          <SelectTrigger className="h-9 text-sm">
+          <SelectTrigger id="financial-filter-payment-method" className="h-11 text-sm">
             <SelectValue placeholder="Todas" />
           </SelectTrigger>
           <SelectContent>
@@ -88,9 +88,9 @@ export function FinancialFiltersPanel({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">Profissional</Label>
+        <Label htmlFor="financial-filter-professional" className="text-xs text-muted-foreground">Profissional</Label>
         <Select value={filters.professionalId} onValueChange={(value) => onChange('professionalId', value)}>
-          <SelectTrigger className="h-9 text-sm">
+          <SelectTrigger id="financial-filter-professional" className="h-11 text-sm">
             <SelectValue placeholder="Todos" />
           </SelectTrigger>
           <SelectContent>
@@ -105,9 +105,9 @@ export function FinancialFiltersPanel({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">Conciliacao</Label>
+        <Label htmlFor="financial-filter-reconciled" className="text-xs text-muted-foreground">Conciliação</Label>
         <Select value={filters.reconciled} onValueChange={(value) => onChange('reconciled', value)}>
-          <SelectTrigger className="h-9 text-sm">
+          <SelectTrigger id="financial-filter-reconciled" className="h-11 text-sm">
             <SelectValue placeholder="Todos" />
           </SelectTrigger>
           <SelectContent>

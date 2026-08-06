@@ -22,14 +22,21 @@ interface CashFlowChartProps {
 export function CashFlowChart({ dateFilter }: CashFlowChartProps) {
   const [data, setData] = useState<Array<{ date: string; income: number; expenses: number; balance: number }>>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     const { from, to } = getDateRangeFromFilter(dateFilter);
     setIsLoading(true);
+    setLoadError(null);
     transactionsApi.getCashFlow({ from, to })
       .then((res) => { if (!cancelled) setData(res); })
-      .catch(() => { if (!cancelled) setData([]); })
+      .catch(() => {
+        if (!cancelled) {
+          setData([]);
+          setLoadError('Não foi possível carregar o fluxo de caixa. Tente novamente em instantes.');
+        }
+      })
       .finally(() => { if (!cancelled) setIsLoading(false); });
     return () => { cancelled = true; };
   }, [dateFilter]);
@@ -46,7 +53,11 @@ export function CashFlowChart({ dateFilter }: CashFlowChartProps) {
         </div>
       </CardHeader>
       <CardContent>
-        {data.length === 0 && !isLoading ? (
+        {loadError && !isLoading ? (
+          <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-destructive/35 bg-destructive/5 px-4 text-center">
+            <p className="max-w-md text-sm text-destructive">{loadError}</p>
+          </div>
+        ) : data.length === 0 && !isLoading ? (
           <div className="h-48 flex items-center justify-center">
             <p className="text-sm text-muted-foreground">Sem dados para o período selecionado</p>
           </div>

@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 
 const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
 
@@ -37,6 +38,7 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
   const [list, setList] = useState<RecurringTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [recurringToDelete, setRecurringToDelete] = useState<RecurringTransaction | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [type, setType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE');
   const [description, setDescription] = useState('');
@@ -114,31 +116,31 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
         <DialogHeader className="border-b border-border/70 pb-4 pr-10">
           <DialogTitle className="flex items-center gap-2">
             <RefreshCw className="h-4 w-4" />
-            Lançamentos Recorrentes
+            Contas fixas
           </DialogTitle>
           <DialogDescription>
-            Templates que geram lançamentos automaticamente, como aluguel, salários e rotinas fixas.
+            Lançamentos que se repetem no caixa, como aluguel, salários e rotinas fixas.
           </DialogDescription>
         </DialogHeader>
 
         <DialogBody>
           <DialogSection>
             <p className="text-sm font-medium text-foreground">
-              Monte recorrências com frequência, valor e forma de pagamento para reduzir trabalho manual no caixa.
+              Cadastre contas fixas para reduzir lançamentos manuais no caixa.
             </p>
           </DialogSection>
 
           <DialogSection className="bg-transparent">
             <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">Nova recorrência</p>
-              <p className="text-sm text-muted-foreground">Defina a regra base antes de ativar o ciclo automático.</p>
+              <p className="text-sm font-medium text-foreground">Nova conta fixa</p>
+              <p className="text-sm text-muted-foreground">Defina tipo, frequência, valor e forma de pagamento.</p>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Tipo</Label>
+                <Label htmlFor="recurring-type">Tipo</Label>
                 <Select value={type} onValueChange={(value) => setType(value as 'INCOME' | 'EXPENSE')}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="recurring-type"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="INCOME">Entrada</SelectItem>
                     <SelectItem value="EXPENSE">Saída</SelectItem>
@@ -146,9 +148,9 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Frequência</Label>
+                <Label htmlFor="recurring-frequency">Frequência</Label>
                 <Select value={frequency} onValueChange={(value) => setFrequency(value as 'MONTHLY' | 'WEEKLY')}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="recurring-frequency"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="MONTHLY">Mensal</SelectItem>
                     <SelectItem value="WEEKLY">Semanal</SelectItem>
@@ -159,14 +161,14 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
 
             {frequency === 'MONTHLY' ? (
               <div className="space-y-2">
-                <Label>Dia do mês (1-28)</Label>
-                <Input type="number" min={1} max={28} value={dayOfMonth} onChange={(e) => setDayOfMonth(e.target.value)} />
+                <Label htmlFor="recurring-day-of-month">Dia do mês (1-28)</Label>
+                <Input id="recurring-day-of-month" type="number" min={1} max={28} value={dayOfMonth} onChange={(e) => setDayOfMonth(e.target.value)} />
               </div>
             ) : (
               <div className="space-y-2">
-                <Label>Dia da semana</Label>
+                <Label htmlFor="recurring-day-of-week">Dia da semana</Label>
                 <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="recurring-day-of-week"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {WEEKDAY_LABELS.map((label, index) => (
                       <SelectItem key={index} value={String(index)}>{label}</SelectItem>
@@ -177,23 +179,24 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
             )}
 
             <div className="space-y-2">
-              <Label>Descrição</Label>
-              <Input placeholder="Ex: Aluguel, Salário..." value={description} onChange={(e) => setDescription(e.target.value)} />
+              <Label htmlFor="recurring-description">Descrição</Label>
+              <Input id="recurring-description" placeholder="Ex: Aluguel, Salário..." value={description} onChange={(e) => setDescription(e.target.value)} />
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Valor (R$)</Label>
+                <Label htmlFor="recurring-amount">Valor (R$)</Label>
                 <CurrencyInput
+                  id="recurring-amount"
                   cents
                   value={amount}
                   onChange={setAmount}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Pagamento</Label>
+                <Label htmlFor="recurring-payment-method">Pagamento</Label>
                 <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                  <SelectTrigger id="recurring-payment-method"><SelectValue placeholder="Selecionar" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="CASH">Dinheiro</SelectItem>
                     <SelectItem value="PIX">Pix</SelectItem>
@@ -207,13 +210,13 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
 
             <Button type="button" className="w-full gap-2" onClick={() => void handleCreate()} disabled={isSaving}>
               {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              Criar recorrência
+              Criar conta fixa
             </Button>
           </DialogSection>
 
           <DialogSection className="bg-transparent">
             <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">Ativas</p>
+              <p className="text-sm font-medium text-foreground">Contas fixas ativas</p>
               <p className="text-sm text-muted-foreground">Revise os ciclos em vigor e desative o que não deve continuar.</p>
             </div>
 
@@ -222,7 +225,7 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
             ) : list.length === 0 ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">Nenhuma recorrência ativa</p>
+              <p className="py-4 text-center text-sm text-muted-foreground">Nenhuma conta fixa ativa</p>
             ) : (
               <div className="space-y-2">
                 {list.map((item) => {
@@ -248,10 +251,10 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
                         variant="ghost"
                         size="icon"
                         className="flex-shrink-0 text-destructive hover:text-destructive/90"
-                        aria-label="Excluir recorrencia"
+                        aria-label="Desativar conta fixa"
                         disabled={deletingId === item.id}
-                        onClick={() => void handleDelete(item.id)}
-                        title="Desativar recorrência"
+                        onClick={() => setRecurringToDelete(item)}
+                        title="Desativar conta fixa"
                       >
                         {deletingId === item.id ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -271,6 +274,20 @@ export function RecurringTransactionsDialog({ open, onOpenChange }: RecurringTra
           <Button variant="outline" onClick={() => onOpenChange(false)}>Fechar</Button>
         </DialogStickyFooter>
       </DialogContent>
+      <DeleteConfirmationDialog
+        open={!!recurringToDelete}
+        isLoading={!!deletingId}
+        title="Desativar conta fixa?"
+        description={`Esta conta fixa não continuará gerando lançamentos: ${recurringToDelete?.description ?? ''}.`}
+        onOpenChange={(open) => {
+          if (!deletingId && !open) setRecurringToDelete(null);
+        }}
+        onConfirm={async () => {
+          if (!recurringToDelete) return;
+          await handleDelete(recurringToDelete.id);
+          setRecurringToDelete(null);
+        }}
+      />
     </Dialog>
   );
 }
