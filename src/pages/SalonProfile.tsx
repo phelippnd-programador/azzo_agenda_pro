@@ -516,7 +516,7 @@ export default function SalonProfile() {
           <TabsContent value="identidade" className="space-y-5">
             <div className="flex flex-col gap-5">
         {/* Avatar / header card */}
-        <Card className="order-2">
+        <Card className="order-1">
           <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
@@ -597,7 +597,7 @@ export default function SalonProfile() {
         </Card>
 
         {/* Basic info card */}
-        <Card className="order-1">
+        <Card className="order-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Building2 className="w-5 h-5 text-primary" />
