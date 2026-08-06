@@ -109,7 +109,7 @@ export type HeatmapReportResponse = {
   dataInicio: string;
   dataFim: string;
   professionalId?: string | null;
-  matrix: HeatmapCell[][];
+  matrix: Array<Array<HeatmapCell | null> | null>;
 };
 
 export type CatalogReportResponse = {

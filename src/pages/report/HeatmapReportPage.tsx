@@ -75,8 +75,11 @@ const getCellClass = (cell?: HeatmapCell) => {
   return "border-sky-300 bg-sky-100 text-sky-950 hover:bg-sky-200 dark:border-sky-500/35 dark:bg-sky-500/20 dark:text-sky-100";
 };
 
+const isHeatmapCell = (cell: HeatmapCell | null | undefined): cell is HeatmapCell =>
+  Boolean(cell);
+
 const getCellByDayAndHour = (report: HeatmapReportResponse | null, day: number, hour: number) =>
-  report?.matrix?.flat().find((cell) => cell.diaSemana === day && cell.hora === hour);
+  report?.matrix?.flat().filter(isHeatmapCell).find((cell) => cell.diaSemana === day && cell.hora === hour);
 
 export default function HeatmapReportPage() {
   const monthRange = useMemo(() => getMonthRange(), []);
@@ -184,7 +187,7 @@ export default function HeatmapReportPage() {
     });
   };
 
-  const cells = useMemo(() => report?.matrix?.flat() ?? [], [report]);
+  const cells = useMemo(() => report?.matrix?.flat().filter(isHeatmapCell) ?? [], [report]);
   const summary = useMemo(() => {
     const availableCells = cells.filter((cell) => cell.minutosDisponiveis > 0);
     const totalAvailable = availableCells.reduce((total, cell) => total + cell.minutosDisponiveis, 0);

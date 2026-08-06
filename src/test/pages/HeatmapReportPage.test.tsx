@@ -29,6 +29,12 @@ vi.mock("@/components/layout/MainLayout", () => ({
   ),
 }));
 
+vi.mock("@/contexts/MenuPermissionsContext", () => ({
+  useMenuPermissions: () => ({
+    allowedRoutes: ["/relatorio/ocupacao"],
+  }),
+}));
+
 vi.mock("@/lib/api/professionals", () => ({
   professionalsApi: {
     getAll: getProfessionalsMock,
@@ -51,7 +57,9 @@ describe("HeatmapReportPage", () => {
       dataFim: "2026-03-31",
       professionalId: null,
       matrix: [
+        null,
         [
+          null,
           {
             diaSemana: 1,
             hora: 9,
