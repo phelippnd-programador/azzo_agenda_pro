@@ -34,6 +34,7 @@ import { maskCpfCnpj, onlyDigits } from '@/lib/input-masks';
 import { CnpjAutoFillField } from '@/components/shared/CnpjAutoFillField';
 import type { CnpjConsultaResponse } from '@/lib/api/cnpj';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const defaultBusinessHours: BusinessHours[] = [
   { day: 'Segunda-feira', enabled: true, open: '09:00', close: '19:00' },
@@ -462,18 +463,9 @@ export default function SalonProfile() {
       title="Perfil do Salão"
       subtitle="Gerencie as informações do seu estabelecimento"
     >
-      <div className="grid max-w-6xl items-start gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        {isProfileLoading ? (
-          <Card className="border-border/70 bg-card/95 shadow-panel">
-            <CardContent className="flex items-center gap-3 p-4 text-sm text-muted-foreground sm:p-5">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              Carregando dados do salão...
-            </CardContent>
-          </Card>
-        ) : null}
-
+      <div className="max-w-6xl space-y-5">
         {profileLoadError ? (
-          <Card className="border-destructive/30 bg-destructive/5 shadow-panel lg:col-span-2">
+          <Card className="border-destructive/30 bg-destructive/5 shadow-panel">
             <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
               <div className="flex items-start gap-3">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
@@ -495,6 +487,34 @@ export default function SalonProfile() {
           </Card>
         ) : null}
 
+        <Tabs defaultValue="identidade" className="space-y-5">
+          <div className="overflow-x-auto pb-1">
+            <TabsList className="flex h-auto min-w-max gap-1 rounded-xl border bg-muted/30 p-1">
+              <TabsTrigger value="identidade" className="gap-2 whitespace-nowrap">
+                <Building2 className="h-4 w-4" />
+                Identidade
+              </TabsTrigger>
+              <TabsTrigger value="contato" className="gap-2 whitespace-nowrap">
+                <Phone className="h-4 w-4" />
+                Contato
+              </TabsTrigger>
+              <TabsTrigger value="endereco" className="gap-2 whitespace-nowrap">
+                <Globe className="h-4 w-4" />
+                Endereço
+              </TabsTrigger>
+              <TabsTrigger value="horarios" className="gap-2 whitespace-nowrap">
+                <CalendarDays className="h-4 w-4" />
+                Horários
+              </TabsTrigger>
+              <TabsTrigger value="operacao" className="gap-2 whitespace-nowrap">
+                <CalendarDays className="h-4 w-4" />
+                Operação
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="identidade" className="space-y-5">
+            <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
         {/* Avatar / header card */}
         <Card className="lg:col-start-2 lg:row-start-1">
           <CardContent className="p-4 sm:p-6">
@@ -628,7 +648,11 @@ export default function SalonProfile() {
         </Card>
 
         {/* Contact card */}
-        <Card className="lg:col-start-1">
+            </div>
+          </TabsContent>
+
+          <TabsContent value="contato" className="space-y-5">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Phone className="w-5 h-5 text-primary" />
@@ -740,7 +764,10 @@ export default function SalonProfile() {
         </Card>
 
         {/* Address card */}
-        <div className="lg:col-start-1">
+          </TabsContent>
+
+          <TabsContent value="endereco" className="space-y-5">
+        <div>
           <SalonAddressCard
             values={address}
             onChange={handleAddressChange}
@@ -748,17 +775,21 @@ export default function SalonProfile() {
             lockedFields={lockedAddressFields}
           />
         </div>
+          </TabsContent>
 
         {/* Business hours card */}
-        <div className="lg:col-start-1">
+          <TabsContent value="horarios" className="space-y-5">
+        <div>
           <SalonBusinessHoursCard
             businessHours={businessHours}
             onUpdate={updateBusinessHours}
             invalidIndexes={invalidBusinessHourIndexes}
           />
         </div>
+          </TabsContent>
 
-        <Card className="lg:col-start-2 lg:row-start-3">
+          <TabsContent value="operacao" className="space-y-5">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <CalendarDays className="w-5 h-5 text-primary" />
@@ -783,6 +814,8 @@ export default function SalonProfile() {
             </Button>
           </CardContent>
         </Card>
+          </TabsContent>
+        </Tabs>
 
         <div className="sticky bottom-3 z-10 flex flex-col gap-3 rounded-2xl border border-border/70 bg-card/90 p-3 shadow-panel backdrop-blur sm:bottom-4 sm:flex-row sm:items-center sm:justify-between lg:col-span-2">
           <p className="text-sm text-muted-foreground">

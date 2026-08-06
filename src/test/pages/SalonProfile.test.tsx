@@ -118,6 +118,8 @@ describe("SalonProfile", () => {
   });
 
   it("should expose salon profile form fields by accessible labels", async () => {
+    const user = userEvent.setup();
+
     render(
       <MemoryRouter initialEntries={["/perfil-salao"]}>
         <SalonProfile />
@@ -128,6 +130,12 @@ describe("SalonProfile", () => {
     [
       "Nome do Salão *",
       "Descrição",
+    ].forEach((label) => {
+      expect(screen.getByLabelText(label)).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("tab", { name: /Contato/i }));
+    [
       "Telefone",
       "WhatsApp",
       "E-mail",
@@ -135,6 +143,12 @@ describe("SalonProfile", () => {
       "CPF/CNPJ",
       "Instagram",
       "Facebook",
+    ].forEach((label) => {
+      expect(screen.getByLabelText(label)).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("tab", { name: /Endereco|Endereço/i }));
+    [
       "Rua",
       "Número",
       "Complemento",
@@ -142,6 +156,12 @@ describe("SalonProfile", () => {
       "Cidade",
       "Estado",
       "CEP",
+    ].forEach((label) => {
+      expect(screen.getByLabelText(label)).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("tab", { name: /Horarios|Horários/i }));
+    [
       "Segunda-feira abertura",
       "Segunda-feira fechamento",
     ].forEach((label) => {
@@ -170,11 +190,16 @@ describe("SalonProfile", () => {
   });
 
   it("should display the special closures section", async () => {
+    const user = userEvent.setup();
+
     render(
       <MemoryRouter initialEntries={["/perfil-salao"]}>
         <SalonProfile />
       </MemoryRouter>
     );
+
+    await screen.findByText("Link de Agendamento Público");
+    await user.click(screen.getByRole("tab", { name: /Operacao|Operação/i }));
 
     await screen.findByText("Fechamentos Especiais");
   });
