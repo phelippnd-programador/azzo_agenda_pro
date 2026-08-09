@@ -3,6 +3,14 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { LgpdRequestDetail, LgpdRequestStatus } from "@/types/lgpd";
 import { formatLgpdStatus, formatLgpdEventType } from "@/lib/lgpd-formatters";
@@ -44,7 +52,7 @@ export function LgpdRequestDetailPanel({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Detalhe e atualizacao de status</CardTitle>
+        <CardTitle>Detalhe e atualização de status</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {isLoadingDetail ? (
@@ -56,7 +64,7 @@ export function LgpdRequestDetailPanel({
           </Alert>
         ) : !detail ? (
           <p className="text-sm text-muted-foreground">
-            Selecione uma solicitacao para ver detalhes.
+            Selecione uma solicitação para ver detalhes.
           </p>
         ) : (
           <>
@@ -74,43 +82,55 @@ export function LgpdRequestDetailPanel({
                 <span className="font-medium">Email:</span> {detail.request.requesterEmail}
               </p>
               <p>
-                <span className="font-medium">Descricao:</span>{" "}
+                <span className="font-medium">Descrição:</span>{" "}
                 {detail.request.description || "-"}
               </p>
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
-              <select
-                aria-label="Status"
-                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                value={updateStatus}
-                onChange={(e) => onChangeStatus(e.target.value as LgpdRequestStatus)}
-              >
-                {STATUS_OPTIONS.map((status) => (
-                  <option key={status} value={status}>
-                    {formatLgpdStatus(status)}
-                  </option>
-                ))}
-              </select>
-              <Input
-                aria-label="Resumo de resposta"
-                placeholder="Resumo de resposta (opcional)"
-                value={updateSummary}
-                onChange={(e) => onChangeSummary(e.target.value)}
+              <div className="space-y-1.5">
+                <Label htmlFor="lgpd-detail-status">Status</Label>
+                <Select
+                  value={updateStatus}
+                  onValueChange={(value) => onChangeStatus(value as LgpdRequestStatus)}
+                >
+                  <SelectTrigger id="lgpd-detail-status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {formatLgpdStatus(status)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="lgpd-detail-summary">Resumo de resposta (opcional)</Label>
+                <Input
+                  id="lgpd-detail-summary"
+                  placeholder="ex.: dados enviados por email"
+                  value={updateSummary}
+                  onChange={(e) => onChangeSummary(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="lgpd-detail-note">Nota da alteração de status</Label>
+              <Textarea
+                id="lgpd-detail-note"
+                placeholder="Registre o motivo ou contexto da alteração"
+                value={updateNote}
+                onChange={(e) => onChangeNote(e.target.value)}
               />
             </div>
-            <Textarea
-              aria-label="Nota da alteracao de status"
-              placeholder="Nota da alteracao de status"
-              value={updateNote}
-              onChange={(e) => onChangeNote(e.target.value)}
-            />
             <Button onClick={onUpdateStatus} disabled={isUpdatingStatus}>
               {isUpdatingStatus ? "Atualizando..." : "Atualizar status"}
             </Button>
 
             <div>
-              <p className="text-sm font-medium mb-2">Historico de eventos</p>
+              <p className="text-sm font-medium mb-2">Histórico de eventos</p>
               {!detail.events.length ? (
                 <p className="text-sm text-muted-foreground">Sem eventos.</p>
               ) : (

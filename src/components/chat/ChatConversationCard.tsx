@@ -3,15 +3,20 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveApiMediaUrl } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { ChatAppointmentMarker, ChatConversation } from "@/types/chat";
-import { Clock } from "lucide-react";
+import { Clock, MessageCircle, Send } from "lucide-react";
 
 const MARKER_LABELS: Record<ChatAppointmentMarker, string> = {
-  NAO_INICIADO: "Nao iniciado",
+  NAO_INICIADO: "Não iniciado",
   EM_ANDAMENTO: "Em andamento",
   PAUSADO: "Pausado",
-  CONCLUIDO: "Concluido",
-  NAO_COMPARECEU: "Nao compareceu",
+  CONCLUIDO: "Concluído",
+  NAO_COMPARECEU: "Não compareceu",
   CANCELADO: "Cancelado",
+};
+
+const CHANNEL_LABELS: Record<ChatConversation["channel"], string> = {
+  WHATSAPP: "WhatsApp",
+  TELEGRAM: "Telegram",
 };
 
 const formatDateTime = (value?: string | null) => {
@@ -40,8 +45,10 @@ const getInitials = (name?: string | null) => {
 
 export function ChatConversationCard({ conversation, selected, onClick }: Props) {
   const marker = MARKER_LABELS[conversation.appointmentMarker];
-  const preview = conversation.lastMessagePreview || "Sem ultima mensagem.";
+  const preview = conversation.lastMessagePreview || "Sem última mensagem.";
   const avatarSrc = resolveApiMediaUrl(conversation.clientProfileImageUrl);
+  const channelLabel = CHANNEL_LABELS[conversation.channel] ?? "Canal";
+  const ChannelIcon = conversation.channel === "TELEGRAM" ? Send : MessageCircle;
 
   return (
     <button
@@ -50,42 +57,46 @@ export function ChatConversationCard({ conversation, selected, onClick }: Props)
       aria-pressed={selected}
       aria-label={`Abrir conversa com ${conversation.clientName || "Cliente"}`}
       className={cn(
-        "w-full rounded-lg border p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "w-full rounded-xl border p-3 text-left transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         selected
-          ? "border-primary/30 bg-primary/5"
-          : "border-transparent bg-muted/40 hover:bg-muted/70"
+          ? "border-primary/35 bg-primary/10 shadow-[0_16px_34px_-26px_rgba(15,23,42,0.30)]"
+          : "border-border/40 bg-background/55 hover:border-border/80 hover:bg-muted/60"
       )}
     >
-      <div className="flex items-start gap-2">
-        <Avatar className="w-8 h-8 flex-shrink-0">
+      <div className="flex min-w-0 items-start gap-2.5">
+        <Avatar className="h-10 w-10 flex-shrink-0">
           <AvatarImage src={avatarSrc || undefined} />
-          <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
+          <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
             {getInitials(conversation.clientName)}
           </AvatarFallback>
         </Avatar>
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-col gap-1">
             <div className="flex min-w-0 items-start gap-1.5">
-              <p className="min-w-0 flex-1 font-medium text-foreground text-sm truncate">
+              <p className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
                 {conversation.clientName || "Cliente"}
               </p>
               {conversation.unreadCount > 0 ? (
-                <Badge className="flex h-4 min-w-4 shrink-0 items-center justify-center bg-emerald-600 px-1 text-[10px] text-white dark:bg-emerald-500">
+                <Badge className="flex h-4 min-w-4 shrink-0 items-center justify-center bg-emerald-600 px-1 text-xs text-white dark:bg-emerald-500">
                   {conversation.unreadCount}
                 </Badge>
               ) : null}
               <span className="ml-auto flex shrink-0 items-center gap-1 text-[11px] text-muted-foreground">
-                <Clock className="w-3 h-3" />
+                <Clock className="h-3 w-3" />
                 {formatDateTime(conversation.lastMessageAt)}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
-              <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
+              <Badge variant="secondary" className="h-5 shrink-0 px-1.5 text-xs">
                 {marker}
+              </Badge>
+              <Badge variant="outline" className="h-5 shrink-0 gap-1 px-1.5 text-xs">
+                <ChannelIcon className="h-3 w-3" />
+                {channelLabel}
               </Badge>
             </div>
           </div>
-          <p className="mt-0.5 truncate text-[12px] text-muted-foreground">
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
             {preview}
           </p>
         </div>

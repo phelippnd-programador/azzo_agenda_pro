@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { auditoriaApi } from "@/lib/api";
 import { useAuditEventDetail } from "@/hooks/useAuditEventDetail";
@@ -32,6 +34,7 @@ import type {
   AuditSearchQueryDto,
   AuditStatus,
 } from "@/types/auditoria";
+import { getEnv } from "@/config/env";
 
 const isAuditModule = (value: string): value is AuditModule =>
   (AUDIT_MODULES as readonly string[]).includes(value);
@@ -109,7 +112,7 @@ export default function Auditoria() {
   const aggregationCards = useMemo(
     () => [
       {
-        title: "Modulos mais frequentes",
+        title: "Módulos mais frequentes",
         items: aggregations.byModule.slice(0, 3),
         formatLabel: (key: string) => moduleLabel(key),
       },
@@ -119,7 +122,7 @@ export default function Auditoria() {
         formatLabel: (key: string) => statusLabel(key),
       },
       {
-        title: "Acoes mais executadas",
+        title: "Ações mais executadas",
         items: aggregations.byAction.slice(0, 3),
         formatLabel: (key: string) => actionMeta(key).label,
       },
@@ -173,88 +176,94 @@ export default function Auditoria() {
             <CardTitle>Filtros de consulta</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
-              <div className="space-y-1">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-8">
+              <div className="space-y-1 xl:col-span-2">
                 <p className="text-xs text-muted-foreground">Periodo inicial</p>
                 <Input
                   type="datetime-local"
+                  className="min-w-0"
                   value={fromInput}
                   onChange={(e) => setFromInput(e.target.value)}
                 />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 xl:col-span-2">
                 <p className="text-xs text-muted-foreground">Periodo final</p>
                 <Input
                   type="datetime-local"
+                  className="min-w-0"
                   value={toInput}
                   onChange={(e) => setToInput(e.target.value)}
                 />
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Modulo</p>
-                <select
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                  value={moduleInput}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setModuleInput(value === "" || isAuditModule(value) ? value : "");
-                  }}
+                <p className="text-xs text-muted-foreground">Módulo</p>
+                <Select
+                  value={moduleInput || "all"}
+                  onValueChange={(value) => setModuleInput(value === "all" || isAuditModule(value) ? (value === "all" ? "" : value) : "")}
                 >
-                  <option value="">Todos</option>
-                  {filterOptions?.modules.map((module) => (
-                    <option key={module} value={module}>
-                      {moduleLabel(module)}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {filterOptions?.modules.map((module) => (
+                      <SelectItem key={module} value={module}>
+                        {moduleLabel(module)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Status</p>
-                <select
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                  value={statusInput}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setStatusInput(value === "" || isAuditStatus(value) ? value : "");
-                  }}
+                <Select
+                  value={statusInput || "all"}
+                  onValueChange={(value) => setStatusInput(value === "all" || isAuditStatus(value) ? (value === "all" ? "" : value) : "")}
                 >
-                  <option value="">Todos</option>
-                  {filterOptions?.statuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {filterOptions?.statuses.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Acao</p>
-                <select
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                  value={actionInput}
-                  onChange={(e) => setActionInput(e.target.value)}
-                >
-                  <option value="">Todas</option>
-                  {filterOptions?.actions.map((action) => (
-                    <option key={action} value={action}>
-                      {actionMeta(action).label}
-                    </option>
-                  ))}
-                </select>
+                <p className="text-xs text-muted-foreground">Ação</p>
+                <Select value={actionInput || "all"} onValueChange={(value) => setActionInput(value === "all" ? "" : value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {filterOptions?.actions.map((action) => (
+                      <SelectItem key={action} value={action}>
+                        {actionMeta(action).label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Registro afetado</p>
-                <select
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                  value={entityTypeInput}
-                  onChange={(e) => setEntityTypeInput(e.target.value)}
-                >
-                  <option value="">Todas</option>
-                  {filterOptions?.entityTypes.map((entityType) => (
-                    <option key={entityType} value={entityType}>
-                      {entityMeta(entityType).label}
-                    </option>
-                  ))}
-                </select>
+                <Select value={entityTypeInput || "all"} onValueChange={(value) => setEntityTypeInput(value === "all" ? "" : value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {filterOptions?.entityTypes.map((entityType) => (
+                      <SelectItem key={entityType} value={entityType}>
+                        {entityMeta(entityType).label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
@@ -298,7 +307,7 @@ export default function Auditoria() {
                 <AlertDescription className="space-y-1 text-xs">
                   <div className="flex items-center gap-2">
                     <a
-                      href={`${(import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, "") || "http://localhost:8080/api/v1"}${auditoriaApi.downloadExport(lastExport.exportId)}`}
+                      href={`${(getEnv("VITE_API_URL") || import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, "") || "http://localhost:8080/api/v1"}${auditoriaApi.downloadExport(lastExport.exportId)}`}
                       download
                       className="inline-flex items-center gap-1 rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90"
                     >
@@ -325,7 +334,7 @@ export default function Auditoria() {
               </CardHeader>
               <CardContent className="space-y-2">
                 {!card.items.length ? (
-                  <p className="text-sm text-muted-foreground">Sem dados no periodo.</p>
+                  <p className="text-sm text-muted-foreground">Sem dados no período.</p>
                 ) : (
                   card.items.map((item) => (
                     <div key={item.key} className="flex items-center justify-between text-sm">
@@ -356,31 +365,66 @@ export default function Auditoria() {
               <p className="text-sm text-muted-foreground">Carregando eventos...</p>
             ) : !items.length ? (
               <p className="text-sm text-muted-foreground">
-                Nenhum evento encontrado no periodo informado.
+                Nenhum evento encontrado no período informado.
               </p>
             ) : (
               <TooltipProvider delayDuration={150}>
-                <div className="overflow-x-auto">
-                  <table className="min-w-[1100px] w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-left text-muted-foreground">
-                        <th className="py-2">Data</th>
-                        <th className="py-2">Modulo</th>
-                        <th className="py-2">Acao</th>
-                        <th className="py-2">Registro afetado</th>
-                        <th className="py-2">Status</th>
-                        <th className="py-2">Ator</th>
-                        <th className="py-2">IP</th>
-                        <th className="py-2">Request ID</th>
-                        <th className="py-2 text-right">Detalhe</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                <div className="space-y-2 md:hidden">
+                  {items.map((item) => (
+                    <div key={item.id} className="rounded-xl border border-border/70 bg-card p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 space-y-0.5">
+                          <p className="text-sm font-medium text-foreground">
+                            {actionMeta(item.action).label}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {moduleLabel(item.module)} • {formatDateTime(item.createdAt)}
+                          </p>
+                        </div>
+                        <Badge className={statusBadgeClass[item.status]}>
+                          {statusLabel(item.status)}
+                        </Badge>
+                      </div>
+                      <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                        <p className="truncate">Registro: {entityMeta(item.entityType).label}</p>
+                        <p className="truncate">Ator: {item.actorName || item.actorUserId || "-"}</p>
+                        <p className="truncate font-mono">IP: {maskIpAddress(item.ipAddress)}</p>
+                        <p className="truncate font-mono">Req: {item.requestId}</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 gap-1.5"
+                        onClick={() => openEventDetail(item.id)}
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        Ver detalhe
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="hidden md:block">
+                  <Table className="min-w-[1120px]">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="min-w-44 whitespace-nowrap">Data</TableHead>
+                        <TableHead>Módulo</TableHead>
+                        <TableHead>Ação</TableHead>
+                        <TableHead>Registro afetado</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Ator</TableHead>
+                        <TableHead>IP</TableHead>
+                        <TableHead>Request ID</TableHead>
+                        <TableHead className="text-right">Detalhe</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                       {items.map((item) => (
-                        <tr key={item.id} className="border-b hover:bg-muted/40">
-                          <td className="py-2">{formatDateTime(item.createdAt)}</td>
-                          <td className="py-2">{moduleLabel(item.module)}</td>
-                          <td className="py-2">
+                        <TableRow key={item.id}>
+                          <TableCell className="whitespace-nowrap">{formatDateTime(item.createdAt)}</TableCell>
+                          <TableCell>{moduleLabel(item.module)}</TableCell>
+                          <TableCell>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <span className="cursor-help underline decoration-dotted underline-offset-2">
@@ -389,8 +433,8 @@ export default function Auditoria() {
                               </TooltipTrigger>
                               <TooltipContent>{actionMeta(item.action).description}</TooltipContent>
                             </Tooltip>
-                          </td>
-                          <td className="py-2">
+                          </TableCell>
+                          <TableCell>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <span className="cursor-help underline decoration-dotted underline-offset-2">
@@ -399,37 +443,37 @@ export default function Auditoria() {
                               </TooltipTrigger>
                               <TooltipContent>{entityMeta(item.entityType).description}</TooltipContent>
                             </Tooltip>
-                          </td>
-                          <td className="py-2">
+                          </TableCell>
+                          <TableCell>
                             <Badge className={statusBadgeClass[item.status]}>
                               {statusLabel(item.status)}
                             </Badge>
-                          </td>
-                          <td className="py-2">{item.actorName || item.actorUserId || "-"}</td>
-                          <td className="py-2 font-mono text-xs text-muted-foreground">
+                          </TableCell>
+                          <TableCell>{item.actorName || item.actorUserId || "-"}</TableCell>
+                          <TableCell className="font-mono text-xs text-muted-foreground">
                             {maskIpAddress(item.ipAddress)}
-                          </td>
-                          <td className="py-2 font-mono text-xs">{item.requestId}</td>
-                          <td className="py-2 text-right">
+                          </TableCell>
+                          <TableCell className="max-w-44 truncate font-mono text-xs">{item.requestId}</TableCell>
+                          <TableCell className="text-right">
                             <Button
                               variant="outline"
                               size="icon"
-                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              className="text-primary hover:bg-primary/8"
                               onClick={() => openEventDetail(item.id)}
                               aria-label="Ver detalhe do evento"
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
                 </div>
                 <div className="flex flex-col gap-3 border-t pt-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0 space-y-1">
                     <p className="text-xs text-muted-foreground">
-                      Paginacao por cursor: {hasNext ? "ha proxima pagina" : "fim da listagem"}
+                      Paginação por cursor: {hasNext ? "há próxima página" : "fim da listagem"}
                     </p>
                     <p className="break-all font-mono text-xs text-muted-foreground">
                       cursor: {nextCursor || "-"}
@@ -454,12 +498,12 @@ export default function Auditoria() {
         {/* Retention events */}
         <Card>
           <CardHeader>
-            <CardTitle>Eventos de retencao e expurgo</CardTitle>
+            <CardTitle>Eventos de retenção e expurgo</CardTitle>
           </CardHeader>
           <CardContent>
             {!retentionEvents.length ? (
               <p className="text-sm text-muted-foreground">
-                Nenhum evento de retencao no periodo.
+                Nenhum evento de retenção no período.
               </p>
             ) : (
               <div className="space-y-2">

@@ -18,6 +18,21 @@ vi.mock("@/components/layout/MainLayout", () => ({
   ),
 }));
 
+vi.mock("@/contexts/MenuPermissionsContext", () => ({
+  useMenuPermissions: () => ({
+    isLoading: false,
+    allowedRoutes: [
+      "/financeiro",
+      "/financeiro/fechamento-caixa",
+      "/financeiro/comissoes",
+      "/financeiro/profissionais",
+    ],
+    menuItems: [],
+    hasRoutePermission: () => true,
+    refreshPermissions: vi.fn(),
+  }),
+}));
+
 vi.mock("@/hooks/useTransactions", () => ({
   useTransactions: () => ({
     transactions: [

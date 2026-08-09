@@ -86,12 +86,12 @@ describe("WhatsAppReactivationQueue", () => {
     );
 
     expect(await screen.findByText("Fila operacional de abandonos")).toBeInTheDocument();
-    expect(screen.getByText("Excecoes que exigem acao humana")).toBeInTheDocument();
+    expect(screen.getByText("Exceções que exigem ação humana")).toBeInTheDocument();
     expect(screen.getByText("Ana Costa")).toBeInTheDocument();
     expect(screen.getByText("Maria Silva")).toBeInTheDocument();
     expect(screen.getByText("Escolha de horario")).toBeInTheDocument();
     expect(screen.getByText("Fluxo travado")).toBeInTheDocument();
-    expect(screen.getByText("O assistente identificou travamento no fluxo apos 4 tentativas.")).toBeInTheDocument();
+    expect(screen.getByText((_, element) => element?.textContent === "O assistente identificou travamento no fluxo após 4 tentativas.")).toBeInTheDocument();
     expect(screen.getAllByText(/Corte/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Phelipp/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/15:00/).length).toBeGreaterThan(0);

@@ -5,32 +5,38 @@ import Professionals from "@/pages/Professionals";
 
 const canAccessMock = vi.fn((path: string) => path === "/financeiro/comissoes");
 
+const mocks = vi.hoisted(() => ({
+  useProfessionals: vi.fn(),
+}));
+
+const baseProfessionalsHookState = {
+  professionals: [
+    {
+      id: "pro-1",
+      name: "Ana Costa",
+      email: "ana@qa.local",
+      phone: "(11) 99999-0000",
+      specialties: ["Cabelo"],
+      isActive: true,
+      accessUserCreated: true,
+      workingHours: [],
+    },
+  ],
+  professionalLimits: { currentProfessionals: 1, maxProfessionals: 3, remaining: 2 },
+  pagination: { page: 1, limit: 20, total: 41, hasMore: true },
+  isLoading: false,
+  isLimitsLoading: false,
+  error: null,
+  refetch: vi.fn(),
+  goToPage: vi.fn(),
+  createProfessional: vi.fn(),
+  updateProfessional: vi.fn(),
+  deleteProfessional: vi.fn(),
+  resetProfessionalPassword: vi.fn(),
+};
+
 vi.mock("@/hooks/useProfessionals", () => ({
-  useProfessionals: () => ({
-    professionals: [
-      {
-        id: "pro-1",
-        name: "Ana Costa",
-        email: "ana@qa.local",
-        phone: "(11) 99999-0000",
-        specialties: ["Cabelo"],
-        isActive: true,
-        accessUserCreated: true,
-        workingHours: [],
-      },
-    ],
-    professionalLimits: { currentCount: 1, maxProfessionals: 3, canCreate: true },
-    pagination: { page: 1, limit: 20, total: 41, hasMore: true },
-    isLoading: false,
-    isLimitsLoading: false,
-    error: null,
-    refetch: vi.fn(),
-    goToPage: vi.fn(),
-    createProfessional: vi.fn(),
-    updateProfessional: vi.fn(),
-    deleteProfessional: vi.fn(),
-    resetProfessionalPassword: vi.fn(),
-  }),
+  useProfessionals: mocks.useProfessionals,
 }));
 
 vi.mock("@/hooks/useSpecialties", () => ({
@@ -73,6 +79,7 @@ vi.mock("@/components/chat/ChatInboxNotifier", () => ({
 describe("Professionals", () => {
   beforeEach(() => {
     canAccessMock.mockImplementation((path: string) => path === "/financeiro/comissoes");
+    mocks.useProfessionals.mockReturnValue(baseProfessionalsHookState);
   });
 
   it("should render professional list and new professional action", async () => {
@@ -82,11 +89,11 @@ describe("Professionals", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("Comissao por profissional")).toBeInTheDocument();
-    expect(screen.getByText(/Financeiro > Comissoes/i)).toBeInTheDocument();
+    expect(await screen.findByText("Comissão por profissional")).toBeInTheDocument();
+    expect(screen.getByText(/Financeiro > Comissões/i)).toBeInTheDocument();
     expect(screen.getAllByText("Ana Costa").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: /Novo Profissional/i })).toBeInTheDocument();
-    expect(screen.getByText("Pagina 1 de 3")).toBeInTheDocument();
+    expect(screen.getByText("Página 1 de 3")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Visualizar profissionais em cards" })
     ).toBeInTheDocument();
@@ -104,8 +111,8 @@ describe("Professionals", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("Comissao por profissional")).toBeInTheDocument();
-    expect(screen.queryByText(/Financeiro > Comissoes/i)).not.toBeInTheDocument();
+    expect(await screen.findByText("Comissão por profissional")).toBeInTheDocument();
+    expect(screen.queryByText(/Financeiro > Comissões/i)).not.toBeInTheDocument();
     expect(screen.getByText(/Use o perfil do profissional/i)).toBeInTheDocument();
   });
 
@@ -120,10 +127,27 @@ describe("Professionals", () => {
 
     await user.click(await screen.findByRole("button", { name: /Novo Profissional/i }));
 
-    expect(screen.getByText("Novo Profissional")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: /Novo profissional/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Criar profissional/i })).toBeInTheDocument();
     expect(
       screen.getByText(/o sistema cria o acesso do profissional automaticamente/i)
     ).toBeInTheDocument();
   }, 10000);
+
+  it("disables the create-professional action and shows the limit banner when the plan limit is reached", async () => {
+    mocks.useProfessionals.mockReturnValue({
+      ...baseProfessionalsHookState,
+      professionalLimits: { currentProfessionals: 3, maxProfessionals: 3, remaining: 0 },
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/profissionais"]}>
+        <Professionals />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText(/Limite do plano atingido/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Novo Profissional/i })).toBeDisabled();
+    expect(screen.queryByRole("heading", { name: "Novo Profissional" })).not.toBeInTheDocument();
+  });
 });

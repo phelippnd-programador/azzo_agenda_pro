@@ -58,7 +58,7 @@ describe("SuggestionsPage", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("Nova sugestao")).toBeInTheDocument();
+    expect(await screen.findByText("Nova sugestão")).toBeInTheDocument();
     expect(screen.getByText("Melhorar agenda")).toBeInTheDocument();
   });
 
@@ -71,10 +71,10 @@ describe("SuggestionsPage", () => {
       </MemoryRouter>
     );
 
-    await screen.findByText("Nova sugestao");
-    await user.type(screen.getByPlaceholderText("Titulo da sugestao"), "Novo fluxo");
-    await user.type(screen.getByPlaceholderText("Descreva sua sugestao..."), "Melhorar o cadastro");
-    await user.click(screen.getByRole("button", { name: /Enviar sugestao/i }));
+    await screen.findByText("Nova sugestão");
+    await user.type(screen.getByLabelText("Título"), "Novo fluxo");
+    await user.type(screen.getByLabelText("Descrição"), "Melhorar o cadastro");
+    await user.click(screen.getByRole("button", { name: /Enviar sugestão/i }));
 
     await waitFor(() => {
       expect(createMock).toHaveBeenCalled();

@@ -171,7 +171,7 @@ describe("Auditoria", () => {
 
     expect(await screen.findByText("Filtros de consulta")).toBeInTheDocument();
     expect(screen.getByText("Eventos")).toBeInTheDocument();
-    expect(screen.getByText("Acoes mais executadas")).toBeInTheDocument();
+    expect(screen.getByText("Ações mais executadas")).toBeInTheDocument();
   });
 
   it("exibe eventos na tabela com modulos corretos", async () => {
@@ -181,8 +181,8 @@ describe("Auditoria", () => {
       </MemoryRouter>
     );
 
-    // moduleLabel("RBAC") = "Permissoes de acesso" aparece na tabela e nos cards
-    const rbacTexts = await screen.findAllByText("Permissoes de acesso");
+    // moduleLabel("RBAC") = "Permissões de acesso" aparece na tabela e nos cards
+    const rbacTexts = await screen.findAllByText("Permissões de acesso");
     expect(rbacTexts.length).toBeGreaterThan(0);
     // moduleLabel("WHATSAPP") = "WhatsApp" aparece na tabela
     const waTexts = await screen.findAllByText("WhatsApp");
@@ -196,9 +196,9 @@ describe("Auditoria", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("Modulos mais frequentes")).toBeInTheDocument();
+    expect(await screen.findByText("Módulos mais frequentes")).toBeInTheDocument();
     expect(screen.getByText("Status dos eventos")).toBeInTheDocument();
-    expect(screen.getByText("Acoes mais executadas")).toBeInTheDocument();
+    expect(screen.getByText("Ações mais executadas")).toBeInTheDocument();
   });
 
   it("abre dialog de detalhe ao clicar no botao", async () => {
@@ -283,7 +283,7 @@ describe("Auditoria", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("Eventos de retencao e expurgo")).toBeInTheDocument();
+    expect(await screen.findByText("Eventos de retenção e expurgo")).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText(/Linhas afetadas/i)).toBeInTheDocument();
     });

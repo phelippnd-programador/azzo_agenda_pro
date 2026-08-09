@@ -61,7 +61,7 @@ export function Header({
             <Button
               variant="ghost"
               size="icon"
-              className="hidden h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground lg:flex"
+              className="hidden shrink-0 text-muted-foreground hover:text-foreground lg:flex"
               onClick={onToggleDesktopSidebar}
               aria-label={isDesktopSidebarOpen ? "Recolher menu lateral" : "Expandir menu lateral"}
             >
@@ -70,7 +70,7 @@ export function Header({
           ) : null}
           <div className="min-w-0 space-y-1">
             <div className="flex min-w-0 items-center gap-3">
-              <h1 className="truncate font-display text-base font-semibold tracking-tight text-foreground sm:text-[1.1rem]">
+              <h1 className="truncate font-display text-base font-semibold tracking-tight text-foreground sm:text-lg">
                 {title}
               </h1>
             </div>
@@ -83,7 +83,7 @@ export function Header({
         </div>
 
         <div className="flex flex-shrink-0 items-center gap-2">
-          <ThemeToggle className="theme-toggle-shell h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground" />
+          <ThemeToggle className="theme-toggle-shell h-10 w-10 text-muted-foreground hover:bg-accent hover:text-foreground" />
 
           <DropdownMenu
             onOpenChange={(open) => {
@@ -96,22 +96,22 @@ export function Header({
               <Button
                 variant="ghost"
                 size="icon"
-              className="relative h-9 w-9 rounded-xl border border-transparent text-muted-foreground hover:border-border/70 hover:bg-card/80 hover:text-foreground"
-              aria-label="Abrir notificacoes"
+              className="relative rounded-xl border border-transparent text-muted-foreground hover:border-border/70 hover:bg-card/80 hover:text-foreground"
+              aria-label="Abrir notificações"
             >
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 ? (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
+                  <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 ) : null}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72 sm:w-80">
-              <DropdownMenuLabel>Notificacoes</DropdownMenuLabel>
+              <DropdownMenuLabel>Notificações</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {!summaryItems.length ? (
-                <DropdownMenuItem className="text-sm text-muted-foreground">Nenhuma notificacao</DropdownMenuItem>
+                <DropdownMenuItem className="text-sm text-muted-foreground">Nenhuma notificação</DropdownMenuItem>
               ) : null}
               {summaryItems.slice(0, 5).map((item) => (
                 <DropdownMenuItem
@@ -123,9 +123,9 @@ export function Header({
                 >
                   <span className="flex items-center gap-2 text-sm font-medium">
                     {!(item.viewed ?? Boolean(item.viewedAt)) ? <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" /> : null}
-                    {item.channel || "Notificacao"}
+                    {item.channel || "Notificação"}
                     {!(item.viewed ?? Boolean(item.viewedAt)) ? (
-                      <Badge variant="outline" className="border-primary/30 bg-primary/5 px-1.5 py-0 text-[10px] text-primary">
+                      <Badge variant="outline" className="border-primary/30 bg-primary/5 px-1.5 py-0 text-xs text-primary">
                         Nova
                       </Badge>
                     ) : null}

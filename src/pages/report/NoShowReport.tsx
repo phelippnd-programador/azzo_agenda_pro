@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Download, Filter, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ReportTabs } from "@/pages/report/components/ReportTabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateInput } from "@/components/ui/date-input";
 import { Input } from "@/components/ui/input";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -216,6 +218,8 @@ export default function NoShowReport() {
       title="Relatorio de no-show"
       subtitle="Visao quantitativa com totais do periodo e agrupamento por dia, profissional ou cliente."
     >
+      <ReportTabs />
+
       <div className="space-y-6">
         <Card>
           <CardHeader>
@@ -228,11 +232,11 @@ export default function NoShowReport() {
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Periodo inicial</p>
-                <Input type="date" value={fromInput} onChange={(event) => setFromInput(event.target.value)} />
+                <DateInput aria-label="Periodo inicial" value={fromInput} onChange={(event) => setFromInput(event.target.value)} />
               </div>
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Periodo final</p>
-                <Input type="date" value={toInput} onChange={(event) => setToInput(event.target.value)} />
+                <DateInput aria-label="Periodo final" value={toInput} onChange={(event) => setToInput(event.target.value)} />
               </div>
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Profissional</p>

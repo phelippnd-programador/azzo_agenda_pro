@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users } from "lucide-react";
+import { AlertTriangle, Users } from "lucide-react";
 import type { ProfessionalLimits } from "@/lib/api";
 
 interface ProfessionalLimitMeterProps {
@@ -34,10 +34,19 @@ export function ProfessionalLimitMeter({
   const used = Math.max(limits.currentProfessionals || 0, 0);
   const remaining = Math.max(limits.remaining || 0, 0);
   const percent = Math.min(Math.round((used / max) * 100), 100);
-  const nearLimit = remaining <= 2;
+  const limitReached = remaining <= 0;
+  const nearLimit = !limitReached && remaining <= 2;
 
   return (
-    <Card className={nearLimit ? "border-amber-300 bg-amber-50/30" : ""}>
+    <Card
+      className={
+        limitReached
+          ? "border-destructive/40 bg-destructive/5"
+          : nearLimit
+            ? "border-warning/40 bg-warning/8"
+            : ""
+      }
+    >
       <CardContent className="p-4 sm:p-5 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <p className="text-sm font-medium text-foreground flex items-center gap-2">
@@ -49,12 +58,19 @@ export function ProfessionalLimitMeter({
           </span>
         </div>
 
-        <Progress value={percent} className="h-2.5" />
+        <Progress value={percent} className={limitReached ? "h-2.5 [&>div]:bg-destructive" : "h-2.5"} />
 
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{percent}% utilizado</span>
           <span>{remaining} disponiveis</span>
         </div>
+
+        {limitReached ? (
+          <p className="flex items-start gap-1.5 text-xs font-medium text-destructive">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            Limite do plano atingido. Faca upgrade para cadastrar mais profissionais.
+          </p>
+        ) : null}
       </CardContent>
     </Card>
   );

@@ -5,6 +5,7 @@ import { RankedBarCard } from "@/components/common/RankedBarCard";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DateInput } from "@/components/ui/date-input";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageErrorState } from "@/components/ui/page-states";
@@ -342,11 +343,11 @@ export default function ClientProfile() {
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="space-y-2">
                   <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Data inicial</span>
-                  <Input type="date" value={historyFrom} onChange={(event) => setHistoryFrom(event.target.value)} />
+                  <DateInput value={historyFrom} onChange={(event) => setHistoryFrom(event.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Data final</span>
-                  <Input type="date" value={historyTo} onChange={(event) => setHistoryTo(event.target.value)} />
+                  <DateInput value={historyTo} onChange={(event) => setHistoryTo(event.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Servico</span>

@@ -63,10 +63,10 @@ export default function ForgotPassword() {
 
         <Card className="auth-panel border-border/80">
           <CardHeader className="text-center pb-2 sm:pb-4">
-            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-[2rem]">
+            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-3xl">
               Recuperar senha
             </CardTitle>
-            <CardDescription className="text-sm leading-6 sm:text-[15px]">
+            <CardDescription className="text-sm leading-6">
               Digite seu e-mail para receber instruções de redefinição.
             </CardDescription>
           </CardHeader>

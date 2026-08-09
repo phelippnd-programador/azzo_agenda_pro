@@ -48,6 +48,10 @@ interface TransactionListProps {
   onEdit: (transaction: Transaction) => void;
   onDelete: (id: string) => void;
   onReconcile: (id: string) => void;
+  reconcilingTransactionId?: string | null;
+  hasActiveFilters?: boolean;
+  onClearFilters?: () => void;
+  onCreateIncome?: () => void;
   readOnly?: boolean;
 }
 
@@ -61,6 +65,10 @@ export function TransactionList({
   onEdit,
   onDelete,
   onReconcile,
+  reconcilingTransactionId,
+  hasActiveFilters = false,
+  onClearFilters,
+  onCreateIncome,
   readOnly = false,
 }: TransactionListProps) {
   const sortedTransactions = [...transactions].sort(
@@ -96,9 +104,28 @@ export function TransactionList({
       </CardHeader>
       <CardContent>
         {sortedTransactions.length === 0 ? (
-          <div className="py-12 text-center">
+          <div className="rounded-2xl border border-dashed border-border/70 bg-background/70 px-4 py-10 text-center">
             <DollarSign className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
-            <p className="text-muted-foreground">Nenhuma transacao encontrada</p>
+            <p className="font-medium text-foreground">
+              {hasActiveFilters ? 'Nenhuma transação para estes filtros' : 'Nenhuma transação registrada'}
+            </p>
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+              {hasActiveFilters
+                ? 'Limpe ou ajuste os filtros para voltar a ver os lançamentos do período.'
+                : 'Registre uma entrada ou saída para começar a acompanhar o caixa.'}
+            </p>
+            <div className="mt-4 flex flex-col justify-center gap-2 sm:flex-row">
+              {hasActiveFilters && onClearFilters ? (
+                <Button variant="outline" onClick={onClearFilters}>
+                  Limpar filtros
+                </Button>
+              ) : null}
+              {!hasActiveFilters && onCreateIncome ? (
+                <Button onClick={onCreateIncome}>
+                  Nova Entrada
+                </Button>
+              ) : null}
+            </div>
           </div>
         ) : (
           <>
@@ -130,24 +157,24 @@ export function TransactionList({
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-foreground">{transaction.description}</p>
                         <div className="mt-1 flex flex-wrap items-center gap-2">
-                          <Badge variant="outline" className="text-[10px] sm:text-xs">
+                          <Badge variant="outline" className="text-xs sm:text-xs">
                             {transaction.category}
                           </Badge>
                           {transaction.professionalId ? (
-                            <Badge variant="secondary" className="text-[10px] sm:text-xs">
+                            <Badge variant="secondary" className="text-xs sm:text-xs">
                               Comissao vinculada
                             </Badge>
                           ) : null}
                           {transaction.source === 'RECURRING' ? (
                             <Badge
                               variant="outline"
-                              className="gap-1 border-blue-300 text-[10px] text-blue-600 dark:border-blue-500/30 dark:text-blue-300 sm:text-xs"
+                              className="gap-1 border-blue-300 text-xs text-blue-600 dark:border-blue-500/30 dark:text-blue-300 sm:text-xs"
                             >
                               <RefreshCw className="h-2.5 w-2.5" />
                               Recorrente
                             </Badge>
                           ) : null}
-                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground sm:text-xs">
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground sm:text-xs">
                             <PaymentIcon className="h-3 w-3" />
                             {getPaymentLabel(transaction.paymentMethod)}
                           </span>
@@ -159,13 +186,16 @@ export function TransactionList({
                       <div className="text-left sm:text-right">
                         <p
                           className={`text-sm font-semibold sm:text-base ${
-                            isIncome ? 'text-green-600 dark:text-green-300' : 'text-red-600 dark:text-red-300'
+                            isIncome ? 'text-success' : 'text-destructive'
                           }`}
                         >
                           {isIncome ? '+' : '-'}
                           {formatCurrency(transaction.amount)}
                         </p>
-                        <p className="text-[10px] text-muted-foreground sm:text-xs">{formatDateOnly(transaction.date)}</p>
+                        <p className="text-xs text-muted-foreground sm:text-xs">{formatDateOnly(transaction.date)}</p>
+                        <Badge variant="outline" className="mt-1 bg-background/85 text-xs">
+                          {transaction.reconciled ? 'Conciliada' : 'Pendente'}
+                        </Badge>
                       </div>
 
                       {!readOnly ? (
@@ -173,12 +203,15 @@ export function TransactionList({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 flex-shrink-0"
-                            title={transaction.reconciled ? 'Conciliado - clique para desmarcar' : 'Marcar como conciliado'}
+                            className="flex-shrink-0"
+                            aria-label={transaction.reconciled ? 'Desmarcar transacao conciliada' : 'Marcar transacao como conciliada'}
+                            disabled={reconcilingTransactionId === transaction.id}
                             onClick={() => onReconcile(transaction.id)}
                           >
-                            {transaction.reconciled ? (
-                              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-300" />
+                            {reconcilingTransactionId === transaction.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                            ) : transaction.reconciled ? (
+                              <CheckCircle2 className="h-4 w-4 text-success" />
                             ) : (
                               <Circle className="h-4 w-4 text-muted-foreground" />
                             )}
@@ -186,7 +219,7 @@ export function TransactionList({
 
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                              <Button variant="ghost" size="icon" className="flex-shrink-0" aria-label="Abrir acoes da transacao">
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -195,7 +228,7 @@ export function TransactionList({
                                 <Pencil className="mr-2 h-4 w-4" />
                                 Editar
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600" onClick={() => onDelete(transaction.id)}>
+                              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDelete(transaction.id)}>
                                 Excluir
                               </DropdownMenuItem>
                             </DropdownMenuContent>

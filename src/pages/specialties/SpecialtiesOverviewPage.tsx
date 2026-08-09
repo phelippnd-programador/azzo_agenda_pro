@@ -1,11 +1,17 @@
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Tag, Trash2 } from "lucide-react";
+import { MoreVertical, Pencil, Plus, Tag, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { CrudListToolbar } from "@/components/crud/CrudListToolbar";
 import { DeleteConfirmationDialog } from "@/components/common/DeleteConfirmationDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogBody,
@@ -292,8 +298,8 @@ export default function SpecialtiesOverviewPage() {
               >
                 Cancelar
               </Button>
-              <Button onClick={handleCreate} disabled={isCreating}>
-                {isCreating ? "Salvando..." : "Criar especialidade"}
+              <Button onClick={handleCreate} isLoading={isCreating} loadingText="Salvando...">
+                Criar especialidade
               </Button>
             </DialogStickyFooter>
           </DialogContent>
@@ -371,32 +377,41 @@ export default function SpecialtiesOverviewPage() {
                         ) : null}
                       </div>
                     </div>
-                    <div className="flex justify-end gap-1 sm:justify-start">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() =>
-                            openEditDialog({
-                              id: specialty.id,
-                              name: specialty.name,
-                              description: specialty.description,
-                            })
-                          }
-                          aria-label={`Editar especialidade ${specialty.name}`}
-                        >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() =>
-                            setSpecialtyToDelete({ id: specialty.id, name: specialty.name })
-                          }
-                          aria-label={`Remover especialidade ${specialty.name}`}
-                        >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <div className="flex justify-end sm:justify-start">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Abrir acoes da especialidade ${specialty.name}`}
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() =>
+                              openEditDialog({
+                                id: specialty.id,
+                                name: specialty.name,
+                                description: specialty.description,
+                              })
+                            }
+                          >
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() =>
+                              setSpecialtyToDelete({ id: specialty.id, name: specialty.name })
+                            }
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Remover
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </CardContent>
                 </Card>
@@ -442,35 +457,44 @@ export default function SpecialtiesOverviewPage() {
                             {specialty.description || "Sem descricao"}
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  openEditDialog({
-                                    id: specialty.id,
-                                    name: specialty.name,
-                                    description: specialty.description,
-                                  })
-                                }
-                                aria-label={`Editar especialidade ${specialty.name}`}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                onClick={() =>
-                                  setSpecialtyToDelete({
-                                    id: specialty.id,
-                                    name: specialty.name,
-                                  })
-                                }
-                                aria-label={`Remover especialidade ${specialty.name}`}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                            <div className="flex items-center justify-end">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={`Abrir acoes da especialidade ${specialty.name}`}
+                                  >
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      openEditDialog({
+                                        id: specialty.id,
+                                        name: specialty.name,
+                                        description: specialty.description,
+                                      })
+                                    }
+                                  >
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Editar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={() =>
+                                      setSpecialtyToDelete({
+                                        id: specialty.id,
+                                        name: specialty.name,
+                                      })
+                                    }
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Remover
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </TableCell>
                         </TableRow>

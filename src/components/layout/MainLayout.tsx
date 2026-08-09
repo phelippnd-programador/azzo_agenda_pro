@@ -80,7 +80,7 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
         isDesktopOpen={desktopSidebarOpen}
         onToggleDesktop={() => setDesktopSidebarOpen((current) => !current)}
       />
-      <div className={desktopSidebarOpen ? 'lg:pl-72' : 'lg:pl-20'}>
+      <div className={desktopSidebarOpen ? 'lg:pl-80' : 'lg:pl-20'}>
         <Header
           title={title}
           subtitle={subtitle}
@@ -92,9 +92,9 @@ export function MainLayout({ children, title, subtitle }: MainLayoutProps) {
           {!isLicenseRoute && isPlanExpired ? (
             <PageErrorState
               title="Plano vencido"
-              description="Seu plano esta vencido. Regularize o pagamento para continuar usando o sistema."
+              description="Seu plano está vencido. Regularize o pagamento para continuar usando o sistema."
               action={{
-                label: 'Ir para Licenca',
+                label: 'Ir para Licença',
                 onClick: () => navigate('/financeiro/licenca'),
               }}
             />

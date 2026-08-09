@@ -1,19 +1,31 @@
 import { useEffect, useMemo, useState } from "react";
+import { CrudListToolbar } from "@/components/crud/CrudListToolbar";
+import { ModuleIntro } from "@/components/layout/module-surfaces";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogSection,
+  DialogStickyFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageEmptyState } from "@/components/ui/page-states";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { resolveUiError } from "@/lib/error-utils";
 import type { CreateStockMovementRequest, StockItem, StockMovement, StockMovementType } from "@/types/stock";
-import { ArrowDownCircle, ArrowLeftRight, ArrowUpCircle, Scale } from "lucide-react";
-import { Link, useMatch, useNavigate } from "react-router-dom";
+import { ArrowDownCircle, ArrowUpCircle, Scale } from "lucide-react";
+import { useMatch, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { formatDateTime, getListItems } from "./utils";
 
@@ -41,6 +53,7 @@ export default function StockMovementsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [items, setItems] = useState<StockItem[]>([]);
   const [movements, setMovements] = useState<StockMovement[]>([]);
+  const [search, setSearch] = useState("");
   const [selectedType, setSelectedType] = useState<"all" | StockMovementType>("all");
   const [selectedItem, setSelectedItem] = useState<string>("all");
   const [page, setPage] = useState(1);
@@ -74,12 +87,14 @@ export default function StockMovementsPage() {
   }, [isCreateRoute]);
 
   const filteredMovements = useMemo(() => {
+    const term = search.trim().toLowerCase();
     return movements.filter((movement) => {
+      const matchesTerm = !term || movement.motivo.toLowerCase().includes(term);
       const matchesType = selectedType === "all" || movement.tipo === selectedType;
       const matchesItem = selectedItem === "all" || movement.itemEstoqueId === selectedItem;
-      return matchesType && matchesItem;
+      return matchesTerm && matchesType && matchesItem;
     });
-  }, [movements, selectedType, selectedItem]);
+  }, [movements, search, selectedType, selectedItem]);
 
   const pagedMovements = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -89,7 +104,7 @@ export default function StockMovementsPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [selectedItem, selectedType]);
+  }, [search, selectedItem, selectedType]);
 
   const handleCreate = async () => {
     if (!form.itemEstoqueId || !form.motivo.trim()) {
@@ -125,102 +140,138 @@ export default function StockMovementsPage() {
   }
 
   return (
-    <Card className="border-border/80">
-      <CardHeader className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle>Movimentacoes de estoque</CardTitle>
-          <Dialog
-            open={isDialogOpen}
-            onOpenChange={(open) => {
-              setIsDialogOpen(open);
-              if (!open && isCreateRoute) {
-                navigate("/estoque/movimentacoes", { replace: true });
-              }
-            }}
-          >
-            <Button variant="outline" className="gap-2" asChild>
-              <Link to="/estoque/movimentacoes/nova"><ArrowLeftRight className="h-4 w-4" />Nova movimentacao</Link>
-            </Button>
-            <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Nova movimentacao</DialogTitle>
-                <DialogDescription>Registre entrada, saida ou ajuste de saldo.</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-3">
+    <div className="space-y-4">
+      <ModuleIntro
+        eyebrow="Movimentacoes"
+        title="Registre entradas, saidas e ajustes de saldo"
+        description="Filtre o historico por motivo, tipo ou item e registre movimentacoes sem sair da tela."
+      />
+
+      <CrudListToolbar
+        searchPlaceholder="Buscar por motivo"
+        searchValue={search}
+        onSearchChange={setSearch}
+        actionLabel="Movimentacao"
+        actionLabelMobile="Nova"
+        actionLabelDesktop="Nova movimentacao"
+        onAction={() => setIsDialogOpen(true)}
+        actionDataTour="stock-movement-new-button"
+      />
+
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open && isCreateRoute) {
+            navigate("/estoque/movimentacoes", { replace: true });
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader className="border-b border-border/70 pb-4 pr-10">
+            <DialogTitle>Nova movimentacao</DialogTitle>
+            <DialogDescription>Registre entrada, saida ou ajuste de saldo.</DialogDescription>
+          </DialogHeader>
+          <DialogBody>
+            <DialogSection className="bg-transparent">
+              <div className="space-y-1">
+                <Label>Item</Label>
+                <Select
+                  value={form.itemEstoqueId}
+                  onValueChange={(value) => setForm((prev) => ({ ...prev, itemEstoqueId: value }))}
+                >
+                  <SelectTrigger data-tour="stock-movement-item-select">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {items.map((item) => <SelectItem key={item.id} value={item.id}>{item.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label>Item</Label>
-                  <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={form.itemEstoqueId} onChange={(e) => setForm((prev) => ({ ...prev, itemEstoqueId: e.target.value }))}>
-                    <option value="">Selecione</option>
-                    {items.map((item) => <option key={item.id} value={item.id}>{item.nome}</option>)}
-                  </select>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label>Tipo</Label>
-                    <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={form.tipo} onChange={(e) => setForm((prev) => ({ ...prev, tipo: e.target.value as CreateStockMovementRequest["tipo"] }))}>
-                      <option value="ENTRADA">ENTRADA</option>
-                      <option value="SAIDA">SAIDA</option>
-                      <option value="AJUSTE">AJUSTE</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <Label>Quantidade</Label>
-                    <Input type="number" min="0.0001" step="0.0001" value={form.quantidade} onChange={(e) => setForm((prev) => ({ ...prev, quantidade: Number(e.target.value || 0) }))} />
-                  </div>
+                  <Label>Tipo</Label>
+                  <Select
+                    value={form.tipo}
+                    onValueChange={(value) => setForm((prev) => ({ ...prev, tipo: value as CreateStockMovementRequest["tipo"] }))}
+                  >
+                    <SelectTrigger data-tour="stock-movement-type-select">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ENTRADA">ENTRADA</SelectItem>
+                      <SelectItem value="SAIDA">SAIDA</SelectItem>
+                      <SelectItem value="AJUSTE">AJUSTE</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label>Motivo</Label>
-                  <Input value={form.motivo} onChange={(e) => setForm((prev) => ({ ...prev, motivo: e.target.value }))} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Valor unitario pago (opcional)</Label>
-                  <CurrencyInput
-                    value={form.valorUnitarioPago ?? 0}
-                    onChange={(val) => setForm((prev) => ({ ...prev, valorUnitarioPago: val }))}
-                  />
+                  <Label>Quantidade</Label>
+                  <Input data-tour="stock-movement-quantity-input" type="number" min="0.0001" step="0.0001" value={form.quantidade} onChange={(e) => setForm((prev) => ({ ...prev, quantidade: Number(e.target.value || 0) }))} />
                 </div>
               </div>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsDialogOpen(false);
-                    if (isCreateRoute) navigate("/estoque/movimentacoes", { replace: true });
-                  }}
-                >
-                  Cancelar
-                </Button>
-                <Button onClick={() => void handleCreate()} disabled={isSaving}>{isSaving ? "Salvando..." : "Registrar"}</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
+              <div className="space-y-1">
+                <Label>Motivo</Label>
+                <Input data-tour="stock-movement-reason-input" value={form.motivo} onChange={(e) => setForm((prev) => ({ ...prev, motivo: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label>Valor unitario pago (opcional)</Label>
+                <CurrencyInput
+                  value={form.valorUnitarioPago ?? 0}
+                  onChange={(val) => setForm((prev) => ({ ...prev, valorUnitarioPago: val }))}
+                />
+              </div>
+            </DialogSection>
+          </DialogBody>
+          <DialogStickyFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDialogOpen(false);
+                if (isCreateRoute) navigate("/estoque/movimentacoes", { replace: true });
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button data-tour="stock-movement-dialog-submit" onClick={() => void handleCreate()} isLoading={isSaving} loadingText="Salvando...">
+              Registrar
+            </Button>
+          </DialogStickyFooter>
+        </DialogContent>
+      </Dialog>
 
-        <p className="text-sm text-muted-foreground">
-          Filtre o historico por tipo ou item e registre entradas, saidas e ajustes sem sair da tela.
-        </p>
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+        <Select value={selectedType} onValueChange={(value) => setSelectedType(value as "all" | StockMovementType)}>
+          <SelectTrigger data-tour="stock-movements-filter-type">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os tipos</SelectItem>
+            <SelectItem value="ENTRADA">Entradas</SelectItem>
+            <SelectItem value="SAIDA">Saidas</SelectItem>
+            <SelectItem value="AJUSTE">Ajustes</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={selectedItem} onValueChange={setSelectedItem}>
+          <SelectTrigger data-tour="stock-movements-filter-item">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os itens</SelectItem>
+            {items.map((item) => <SelectItem key={item.id} value={item.id}>{item.nome}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
 
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-          <select className="h-10 rounded-md border border-input bg-background px-3 text-sm" value={selectedType} onChange={(e) => setSelectedType(e.target.value as "all" | StockMovementType)}>
-            <option value="all">Todos os tipos</option>
-            <option value="ENTRADA">Entradas</option>
-            <option value="SAIDA">Saidas</option>
-            <option value="AJUSTE">Ajustes</option>
-          </select>
-          <select className="h-10 rounded-md border border-input bg-background px-3 text-sm" value={selectedItem} onChange={(e) => setSelectedItem(e.target.value)}>
-            <option value="all">Todos os itens</option>
-            {items.map((item) => <option key={item.id} value={item.id}>{item.nome}</option>)}
-          </select>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-2">
+      <Card className="border-border/80">
+      <CardContent className="space-y-2 pt-6">
         {!filteredMovements.length ? (
           <PageEmptyState
             title="Nenhuma movimentacao encontrada"
             description="Registre uma entrada, saida ou ajuste para iniciar o historico."
             action={{
               label: "Nova movimentacao",
-              onClick: () => navigate("/estoque/movimentacoes/nova"),
+              onClick: () => setIsDialogOpen(true),
             }}
           />
         ) : (
@@ -233,16 +284,17 @@ export default function StockMovementsPage() {
             return (
               <div
                 key={movement.id}
+                data-tour="stock-movement-row"
                 className="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 transition-colors hover:bg-muted/35 sm:gap-4 sm:p-4"
               >
                 <div
                   className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                    isEntrada ? "bg-green-100 dark:bg-green-500/15" : isSaida ? "bg-red-100 dark:bg-red-500/15" : "bg-indigo-100 dark:bg-indigo-500/15"
+                    isEntrada ? "bg-success/15" : isSaida ? "bg-destructive/15" : "bg-muted"
                   }`}
                 >
                   <Icon
                     className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                      isEntrada ? "text-green-600 dark:text-green-300" : isSaida ? "text-red-600 dark:text-red-300" : "text-indigo-600 dark:text-indigo-300"
+                      isEntrada ? "text-success" : isSaida ? "text-destructive" : "text-muted-foreground"
                     }`}
                   />
                 </div>
@@ -250,11 +302,11 @@ export default function StockMovementsPage() {
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-foreground text-sm truncate">{movement.motivo}</p>
                   <div className="flex flex-wrap items-center gap-2 mt-1">
-                    <Badge variant="outline" className="text-[10px] sm:text-xs">
+                    <Badge variant="outline" className="text-xs">
                       {MOVEMENT_TYPE_LABELS[movement.tipo] ?? movement.tipo}
                     </Badge>
-                    <span className="text-[10px] sm:text-xs text-muted-foreground">{itemNome}</span>
-                    <span className="text-[10px] sm:text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">{itemNome}</span>
+                    <span className="text-xs text-muted-foreground">
                       Saldo: {movement.saldoAnterior} {"->"} {movement.saldoPosterior}
                     </span>
                   </div>
@@ -263,12 +315,12 @@ export default function StockMovementsPage() {
                 <div className="text-right flex-shrink-0">
                   <p
                     className={`font-semibold text-sm sm:text-base ${
-                      isEntrada ? "text-green-600" : isSaida ? "text-red-600" : "text-indigo-600"
+                      isEntrada ? "text-success" : isSaida ? "text-destructive" : "text-muted-foreground"
                     }`}
                   >
                     {isEntrada ? "+" : isSaida ? "-" : ""}{movement.quantidade}
                   </p>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground">{formatDateTime(movement.createdAt)}</p>
+                  <p className="text-xs text-muted-foreground">{formatDateTime(movement.createdAt)}</p>
                 </div>
               </div>
             );
@@ -282,6 +334,7 @@ export default function StockMovementsPage() {
           onNext={() => setPage((prev) => Math.min(totalPages, prev + 1))}
         />
       </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 }

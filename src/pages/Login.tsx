@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { getCurrentBillingSubscription } from '@/services/billingService';
 import { ApiError } from '@/lib/api/core';
 import { authApi } from '@/lib/api/auth';
+import { onboardingApi } from '@/lib/api/onboarding';
 import { resolveUiError } from '@/lib/error-utils';
 import { setLicenseAccessStatus } from '@/lib/license-access';
 import { loginSchema, type LoginForm } from '@/schemas/auth';
@@ -121,6 +122,17 @@ export default function Login() {
       if (currentUser?.role === "PROFESSIONAL") {
         return "/agenda";
       }
+      if (currentUser?.role === "OWNER") {
+        try {
+          const onboardingStatus = await onboardingApi.getStatus();
+          if (!onboardingStatus.onboardingComplete && !onboardingStatus.onboardingSkipped) {
+            return "/onboarding";
+          }
+        } catch (onboardingError) {
+          // Se o status nao puder ser consultado, segue para o dashboard normalmente.
+          console.warn('Nao foi possivel consultar o status do onboarding.', onboardingError);
+        }
+      }
       return '/dashboard';
     } catch (error) {
       if (error instanceof ApiError && (error.status === 402 || error.status === 404)) {
@@ -155,6 +167,11 @@ export default function Login() {
         }
       }
 
+      // Uma nova tentativa de login nunca deve herdar o status de bloqueio
+      // (BLOCKED) de uma sessao/tenant anterior na mesma aba — sessionStorage
+      // persiste entre reloads, entao sem isso um usuario cujo pagamento
+      // acabou de ser regularizado ficaria travado no login ate fechar a aba.
+      setLicenseAccessStatus("UNKNOWN");
       await login(values.email, values.password, mfaRequired ? mfaCode : undefined);
       toast.success('Login realizado com sucesso!');
       setMfaRequired(false);
@@ -202,27 +219,34 @@ export default function Login() {
         <ThemeToggle className="theme-toggle-shell h-8 w-8" />
       </div>
       <div className="relative z-10 w-full max-w-md">
-        <div className="mb-3 space-y-1.5 text-center">
+        <div className="mb-6 space-y-3 text-center sm:mb-8">
+          <div className="flex justify-center">
+            <span className="brand-orbit-badge">
+              <span className="brand-orbit-dot" />
+              Acesso a operação em andamento
+            </span>
+          </div>
+          <p className="section-eyebrow">Bem-vindo de volta</p>
           <BrandLockup className="justify-center" caption="Operating System" />
-          <div className="flex flex-wrap items-center justify-center gap-1.5">
-            <span className="rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-medium tracking-wide text-primary">
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+            <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[11px] font-medium tracking-wide text-primary">
               Acesso único
             </span>
-            <span className="rounded-full border border-border/70 bg-background/80 px-2.5 py-0.5 text-[10px] font-medium tracking-wide text-muted-foreground">
+            <span className="rounded-full border border-border/70 bg-background/80 px-3 py-1 text-[11px] font-medium tracking-wide text-muted-foreground">
               Sessão protegida
             </span>
-            <span className="rounded-full border border-border/70 bg-background/80 px-2.5 py-0.5 text-[10px] font-medium tracking-wide text-muted-foreground">
+            <span className="rounded-full border border-border/70 bg-background/80 px-3 py-1 text-[11px] font-medium tracking-wide text-muted-foreground">
               Retomada rápida
             </span>
           </div>
         </div>
 
         <Card className="auth-panel border-border/80">
-          <CardHeader className="text-center pb-1 pt-4">
-            <CardTitle className="text-xl font-semibold tracking-tight">
-              Bem-vindo de volta!
+          <CardHeader className="text-center pb-2 sm:pb-4">
+            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              Entre na sua conta
             </CardTitle>
-            <CardDescription className="text-xs leading-5">
+            <CardDescription className="text-sm leading-6">
               Acesse sua operação sem perder contexto e retome de onde parou.
             </CardDescription>
           </CardHeader>
@@ -338,6 +362,7 @@ export default function Login() {
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="rememberPassword"
+                  aria-label="Salvar e-mail neste dispositivo"
                   checked={rememberPassword}
                   onCheckedChange={(checked) => setRememberPassword(Boolean(checked))}
                   disabled={isLoading}

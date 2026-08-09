@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AlertCircle, CalendarClock, ReceiptText, UserRoundX } from "lucide-react";
 import { Link } from "react-router-dom";
+import { appRouteManifest } from "@/app/route-manifest";
 import { dashboardApi, type DashboardNoShowInsightsResponse } from "@/lib/api";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MetricCard } from "@/components/dashboard/MetricCard";
-import { formatCurrency, formatDateOnly } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 
 const calculateGrowthPercent = (current: number, previous?: number | null): number | null => {
   if (!previous || previous <= 0) return null;
@@ -16,49 +16,66 @@ const calculateGrowthPercent = (current: number, previous?: number | null): numb
 export function NoShowInsights() {
   const [data, setData] = useState<DashboardNoShowInsightsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        setIsLoading(true);
-        const response = await dashboardApi.getNoShowInsights();
-        if (!cancelled) setData(response);
-      } catch {
-        if (!cancelled) setData(null);
-      } finally {
-        if (!cancelled) setIsLoading(false);
+  const load = useCallback(async (isMounted?: () => boolean) => {
+    try {
+      setIsLoading(true);
+      setHasError(false);
+      const response = await dashboardApi.getNoShowInsights();
+      if (!isMounted || isMounted()) setData(response);
+    } catch {
+      if (!isMounted || isMounted()) {
+        setData(null);
+        setHasError(true);
       }
-    };
-    void load();
-    return () => {
-      cancelled = true;
-    };
+    } finally {
+      if (!isMounted || isMounted()) setIsLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+    void load(() => mounted);
+    return () => {
+      mounted = false;
+    };
+  }, [load]);
+
   const growth = calculateGrowthPercent(data?.totalNoShows ?? 0, data?.previousPeriodNoShows);
-  const items = data?.recentItems ?? [];
 
   return (
-    <Card className="tone-rose-panel">
+    <Card className="border-border/70 bg-background/95 shadow-none">
       <CardHeader className="pb-3">
         <CardTitle className="flex flex-col gap-3 text-base sm:flex-row sm:items-start sm:justify-between sm:text-lg">
           <div className="flex items-center gap-2">
-            <UserRoundX className="h-5 w-5 text-rose-700" />
-            No-show no periodo
+            <UserRoundX className="h-5 w-5 text-warning" />
+            No-show no período
           </div>
-          <Button asChild size="sm" variant="outline" className="w-full border-rose-200 sm:w-auto">
-            <Link to="/relatorio/no-show">Abrir pagina</Link>
+          <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
+            <Link to={appRouteManifest.reports.noShow}>Abrir página</Link>
           </Button>
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Visao analitica e operacional dos clientes que nao compareceram no mes atual.
+          Visão analítica e operacional dos clientes que não compareceram no mês atual.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
+        {hasError ? (
+          <div className="flex flex-col gap-3 rounded-2xl border border-dashed border-border/70 bg-background/80 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-medium text-foreground">Não foi possível carregar os dados de no-show.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Os indicadores não foram substituídos por zero.</p>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => void load()}>
+              Atualizar
+            </Button>
+          </div>
+        ) : null}
+        {!hasError ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <MetricCard
-            title="No-show no mes"
+            title="No-show no mês"
             value={isLoading ? "..." : data?.totalNoShows ?? 0}
             icon={AlertCircle}
             trend={{
@@ -66,8 +83,8 @@ export function NoShowInsights() {
               isPositive: (growth ?? 0) <= 0,
               unavailableLabel: "Sem comparativo anterior",
             }}
-            iconClassName="bg-rose-600"
-            className="tone-surface border-rose-200/80 dark:border-rose-500/20 dark:bg-rose-500/10"
+            iconClassName="bg-warning"
+            className="border-warning/25 bg-warning/8"
             compact
             wrapValue
           />
@@ -75,17 +92,17 @@ export function NoShowInsights() {
             title="Taxa de no-show"
             value={isLoading ? "..." : `${(data?.noShowRate ?? 0).toFixed(1)}%`}
             icon={CalendarClock}
-            iconClassName="bg-orange-500"
-            className="tone-surface border-orange-200/80 dark:border-orange-500/20 dark:bg-orange-500/10"
+            iconClassName="bg-warning"
+            className="border-warning/25 bg-warning/8"
             compact
             wrapValue
           />
           <MetricCard
-            title="Ultimos 7 dias"
+            title="Últimos 7 dias"
             value={isLoading ? "..." : data?.lastSevenDaysNoShows ?? 0}
             icon={CalendarClock}
-            iconClassName="bg-amber-500"
-            className="tone-surface border-amber-200/80 dark:border-amber-500/20 dark:bg-amber-500/10"
+            iconClassName="bg-muted text-muted-foreground"
+            className="border-border/70 bg-background/85"
             compact
             wrapValue
           />
@@ -93,61 +110,13 @@ export function NoShowInsights() {
             title="Receita em risco"
             value={isLoading ? "..." : formatCurrency(data?.revenueAtRisk ?? 0)}
             icon={ReceiptText}
-            iconClassName="bg-slate-700 dark:bg-slate-200"
-            className="tone-surface border-slate-200 dark:border-slate-700"
+            iconClassName="bg-primary"
+            className="border-primary/20 bg-primary/8"
             compact
             wrapValue
           />
         </div>
-
-        {/* <div className="rounded-2xl border border-rose-200 bg-white/80 p-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold text-slate-900">Lista operacional de no-show</p>
-              <p className="text-xs text-muted-foreground">
-                Ultimos casos para o time acompanhar, contactar ou analisar recorrencia.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="border-rose-200 bg-rose-50 text-rose-800">
-                {isLoading ? "..." : `${data?.totalNoShows ?? 0} no mes`}
-              </Badge>
-
-            </div>
-          </div>
-
-          {!isLoading && items.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-center text-sm text-muted-foreground">
-              Nenhum no-show registrado no periodo atual.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {items.map((appointment) => (
-                <div
-                  key={appointment.appointmentId}
-                  className="rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3"
-                >
-                  <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
-                    <div>
-                      <p className="font-medium text-slate-900">{appointment.clientName || "Cliente nao identificado"}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {(appointment.serviceNames || []).join(", ") || "Servico nao identificado"} â€¢ {appointment.professionalName || "Profissional nao identificado"}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="border-rose-200 bg-rose-50 text-rose-800">
-                      Nao compareceu
-                    </Badge>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                    <span>{appointment.date ? formatDateOnly(appointment.date) : "-"}</span>
-                    <span>{appointment.startTime} - {appointment.endTime}</span>
-                    <span>{formatCurrency(appointment.totalPrice || 0)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div> */}
+        ) : null}
       </CardContent>
     </Card>
   );

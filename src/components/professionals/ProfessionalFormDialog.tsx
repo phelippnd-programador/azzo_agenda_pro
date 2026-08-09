@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
   DialogBody,
@@ -15,10 +17,12 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
-import { Loader2 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, Loader2 } from 'lucide-react';
 import { maskPhoneBr } from '@/lib/input-masks';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { professionalFormSchema, type ProfessionalFormValues } from '@/schemas/professional';
 import type { WorkingHours } from '@/types';
 
 const defaultWorkingHours: WorkingHours[] = [
@@ -32,8 +36,8 @@ const defaultWorkingHours: WorkingHours[] = [
 ];
 
 const weekdayLabels: Record<number, string> = {
-  0: 'Domingo', 1: 'Segunda', 2: 'Terca', 3: 'Quarta',
-  4: 'Quinta', 5: 'Sexta', 6: 'Sabado',
+  0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta',
+  4: 'Quinta', 5: 'Sexta', 6: 'Sábado',
 };
 
 type ProfessionalData = {
@@ -69,7 +73,30 @@ interface ProfessionalFormDialogProps {
   refetchSpecialties: () => void;
   onCreate: (data: FormPayload) => Promise<unknown>;
   onUpdate: (id: string, data: Partial<FormPayload>) => Promise<unknown>;
+  /** Limite de profissionais do plano já atingido — bloqueia apenas a criação (edição continua liberada). */
+  creationLimitReached?: boolean;
+  /**
+   * Habilita criar especialidade sem sair do diálogo. Quando ausente (padrão da
+   * página consolidada), a caixa segue sendo apenas seleção do catálogo
+   * existente. O onboarding fornece porque um tenant novo começa com zero
+   * especialidades e ficaria sem saída dentro do assistente.
+   */
+  onCreateSpecialty?: (name: string) => Promise<unknown>;
+  /**
+   * Agrupa "profissional ativo" num bloco "Opções avançadas" recolhido. Default
+   * false mantém o layout da página consolidada intacto.
+   */
+  advancedCollapsed?: boolean;
 }
+
+const emptyDefaults: ProfessionalFormValues = {
+  name: '',
+  email: '',
+  phone: '',
+  specialties: [],
+  isActive: true,
+  workingHours: defaultWorkingHours,
+};
 
 export function ProfessionalFormDialog({
   open,
@@ -82,95 +109,135 @@ export function ProfessionalFormDialog({
   refetchSpecialties,
   onCreate,
   onUpdate,
+  creationLimitReached = false,
+  onCreateSpecialty,
+  advancedCollapsed = false,
 }: ProfessionalFormDialogProps) {
   const { user } = useAuth();
-  const [formName, setFormName] = useState('');
-  const [formEmail, setFormEmail] = useState('');
-  const [formPhone, setFormPhone] = useState('');
-  const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
-  const [formIsActive, setFormIsActive] = useState(true);
-  const [formWorkingHours, setFormWorkingHours] = useState<WorkingHours[]>(defaultWorkingHours);
+  const [newSpecialty, setNewSpecialty] = useState('');
+  const [isCreatingSpecialty, setIsCreatingSpecialty] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(!advancedCollapsed);
   const [isWorkingHoursDisabled, setIsWorkingHoursDisabled] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [linkCurrentUser, setLinkCurrentUser] = useState(false);
 
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+  } = useForm<ProfessionalFormValues>({
+    resolver: zodResolver(professionalFormSchema),
+    defaultValues: emptyDefaults,
+  });
+
   const canLinkCurrentUser =
     !!user && (user.role === 'OWNER' || user.role === 'ADMIN') && !editingProfessional;
 
-  const resetForm = () => {
-    setFormName('');
-    setFormEmail('');
-    setFormPhone('');
-    setSelectedSpecialties([]);
-    setFormIsActive(true);
-    setFormWorkingHours(defaultWorkingHours);
-    setIsWorkingHoursDisabled(false);
-    setLinkCurrentUser(false);
-  };
-
   useEffect(() => {
     if (!open) return;
+    setLinkCurrentUser(false);
     if (!editingProfessional) {
-      resetForm();
+      reset(emptyDefaults);
+      setIsWorkingHoursDisabled(false);
       return;
     }
     const prof = editingProfessional;
-    setFormName(prof.name);
-    setFormEmail(prof.email);
-    setFormPhone(prof.phone);
-    setSelectedSpecialties(prof.specialties || []);
-    setFormIsActive(prof.isActive);
     const hasWorkingHours = Array.isArray(prof.workingHours) && prof.workingHours.length > 0;
-    if (!hasWorkingHours) {
-      setFormWorkingHours(defaultWorkingHours.map((item) => ({ ...item, startTime: '00:00', endTime: '00:00', isWorking: false })));
-      setIsWorkingHoursDisabled(true);
-    } else {
-      const normalized = defaultWorkingHours.map((def) => {
-        const current = prof.workingHours.find((item) => item.dayOfWeek === def.dayOfWeek);
-        return current
-          ? { dayOfWeek: current.dayOfWeek, startTime: current.startTime || def.startTime, endTime: current.endTime || def.endTime, isWorking: !!current.isWorking }
-          : def;
-      });
-      setFormWorkingHours(normalized);
-      setIsWorkingHoursDisabled(false);
-    }
-  }, [open, editingProfessional]); // eslint-disable-line react-hooks/exhaustive-deps
+    const workingHours = !hasWorkingHours
+      ? defaultWorkingHours.map((item) => ({ ...item, startTime: '00:00', endTime: '00:00', isWorking: false }))
+      : defaultWorkingHours.map((def) => {
+          const current = prof.workingHours.find((item) => item.dayOfWeek === def.dayOfWeek);
+          return current
+            ? { dayOfWeek: current.dayOfWeek, startTime: current.startTime || def.startTime, endTime: current.endTime || def.endTime, isWorking: !!current.isWorking }
+            : def;
+        });
+    reset({
+      name: prof.name,
+      email: prof.email,
+      phone: prof.phone,
+      specialties: prof.specialties || [],
+      isActive: prof.isActive,
+      workingHours,
+    });
+    setIsWorkingHoursDisabled(!hasWorkingHours);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editingProfessional]);
 
   useEffect(() => {
     if (!canLinkCurrentUser || !linkCurrentUser || !user) return;
-    setFormName((current) => current || user.name || '');
-    setFormEmail(user.email || '');
-    setFormPhone((current) => current || user.phone || '');
+    const current = watch();
+    setValue('name', current.name || user.name || '');
+    setValue('email', user.email || '');
+    setValue('phone', current.phone || user.phone || '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canLinkCurrentUser, linkCurrentUser, user]);
 
+  const selectedSpecialties = watch('specialties');
+  const formWorkingHours = watch('workingHours');
+  const formIsActive = watch('isActive');
+
   const toggleSpecialty = (name: string) => {
-    setSelectedSpecialties((prev) => prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]);
+    const next = selectedSpecialties.includes(name)
+      ? selectedSpecialties.filter((n) => n !== name)
+      : [...selectedSpecialties, name];
+    setValue('specialties', next, { shouldDirty: true });
+  };
+
+  const handleCreateSpecialty = async () => {
+    if (!onCreateSpecialty) return;
+    const name = newSpecialty.trim();
+    if (!name) return;
+    const alreadyExists = specialties.some(
+      (item) => item.name.trim().toLowerCase() === name.toLowerCase()
+    );
+    if (alreadyExists) {
+      // Evita duplicar o catálogo só por diferença de caixa/espaço: apenas marca a existente.
+      const existing = specialties.find(
+        (item) => item.name.trim().toLowerCase() === name.toLowerCase()
+      );
+      if (existing && !selectedSpecialties.includes(existing.name)) {
+        setValue('specialties', [...selectedSpecialties, existing.name], { shouldDirty: true });
+      }
+      setNewSpecialty('');
+      return;
+    }
+    setIsCreatingSpecialty(true);
+    try {
+      await onCreateSpecialty(name);
+      if (!selectedSpecialties.includes(name)) {
+        setValue('specialties', [...selectedSpecialties, name], { shouldDirty: true });
+      }
+      setNewSpecialty('');
+    } finally {
+      setIsCreatingSpecialty(false);
+    }
   };
 
   const updateWorkingHour = (dayOfWeek: number, field: 'startTime' | 'endTime' | 'isWorking', value: string | boolean) => {
-    setFormWorkingHours((prev) => prev.map((item) => item.dayOfWeek === dayOfWeek ? { ...item, [field]: value } : item));
+    setValue(
+      'workingHours',
+      formWorkingHours.map((item) => (item.dayOfWeek === dayOfWeek ? { ...item, [field]: value } : item)),
+      { shouldDirty: true }
+    );
   };
 
-  const handleSubmit = async () => {
+  const onSubmit = async (values: ProfessionalFormValues) => {
+    if (!editingProfessional && creationLimitReached) {
+      toast.error('Limite de profissionais do seu plano atingido. Faça upgrade para adicionar mais.');
+      return;
+    }
     if (linkCurrentUser && hasLinkedCurrentUserProfessional) {
-      toast.error('Seu usuario ja esta vinculado a um profissional.');
-      return;
-    }
-    if (!formName || !formEmail || !formPhone) {
-      toast.error('Preencha todos os campos obrigatorios');
-      return;
-    }
-    const invalidWorkingRange = formWorkingHours.some((item) => item.isWorking && item.startTime >= item.endTime);
-    if (invalidWorkingRange) {
-      toast.error('Revise os horarios: o inicio deve ser menor que o fim.');
+      toast.error('Seu usuário já está vinculado a um profissional.');
       return;
     }
     setIsSubmitting(true);
     try {
       const payload: FormPayload = {
-        name: formName, email: formEmail, phone: formPhone,
-        specialties: selectedSpecialties, commissionRate: 0,
-        isActive: formIsActive, workingHours: formWorkingHours,
+        name: values.name, email: values.email, phone: values.phone,
+        specialties: values.specialties, commissionRate: 0,
+        isActive: values.isActive, workingHours: values.workingHours,
         userId: linkCurrentUser ? user?.id : undefined,
         createUser: linkCurrentUser ? false : true,
       };
@@ -185,28 +252,55 @@ export function ProfessionalFormDialog({
     }
   };
 
+  const onInvalid = (formErrors: Record<string, unknown>) => {
+    if (formErrors.name || formErrors.email || formErrors.phone) {
+      toast.error('Preencha todos os campos obrigatorios');
+      return;
+    }
+    if (formErrors.workingHours) {
+      toast.error('Revise os horários: o início deve ser menor que o fim.');
+    }
+  };
+
+  const activeToggleSection = (
+    <DialogSection className="flex flex-col gap-3 bg-transparent sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <Label>Profissional ativo</Label>
+        <p className="text-xs text-muted-foreground">Disponível para agendamentos</p>
+      </div>
+      <Switch checked={formIsActive} onCheckedChange={(checked) => setValue('isActive', checked, { shouldDirty: true })} />
+    </DialogSection>
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="mx-4 max-h-[85vh] max-w-md overflow-y-auto sm:mx-auto sm:max-w-2xl">
-        <DialogHeader className="border-b border-border/70 pb-4 pr-10">
-          <DialogTitle>{editingProfessional ? 'Editar Profissional' : 'Novo Profissional'}</DialogTitle>
+      {/*
+        O scroll fica no DialogBody, não no DialogContent: o DialogStickyFooter
+        usa position:sticky e, com o DialogContent em `grid` + overflow, o bloco
+        conteiner do rodapé vira a própria célula do grid (altura exata dele),
+        sem espaço para grudar — o rodapé acabava rolando no meio do conteúdo.
+      */}
+      <DialogContent className="mx-4 flex max-h-[85vh] max-w-md flex-col overflow-hidden sm:mx-auto sm:max-w-2xl">
+        <DialogHeader className="shrink-0 border-b border-border/70 pb-4 pr-10">
+          <DialogTitle>{editingProfessional ? 'Editar profissional' : 'Novo profissional'}</DialogTitle>
           <DialogDescription>
-            {editingProfessional ? 'Atualize os dados do profissional' : 'Adicione um novo membro a equipe'}
+            {editingProfessional ? 'Atualize os dados do profissional' : 'Adicione um novo membro à equipe'}
           </DialogDescription>
         </DialogHeader>
-        <DialogBody>
+        <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="contents">
+        <DialogBody className="min-h-0 flex-1 overflow-y-auto">
           <DialogSection>
             <p className="text-sm font-medium text-foreground">
-              {editingProfessional ? 'Ajuste dados operacionais, especialidades e disponibilidade.' : 'Cadastre o profissional com os dados minimos para liberar agenda, especialidades e horarios.'}
+              {editingProfessional ? 'Ajuste dados operacionais, especialidades e disponibilidade.' : 'Cadastre o profissional com os dados mínimos para liberar agenda, especialidades e horários.'}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              E-mail, telefone e horario de trabalho ajudam a deixar o perfil pronto para operacao desde o primeiro acesso.
+              E-mail, telefone e horário de trabalho ajudam a deixar o perfil pronto para operação desde o primeiro acesso.
             </p>
             {!editingProfessional ? (
               <div className="mt-3 rounded-xl border border-emerald-200/70 bg-emerald-50/80 p-3 text-sm text-emerald-900 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-100">
                 {linkCurrentUser
-                  ? 'Este profissional vai usar o mesmo login da sua conta atual, mantendo as permissoes administrativas.'
-                  : 'Ao salvar, o sistema cria o acesso do profissional automaticamente e envia uma senha temporaria para o e-mail informado.'}
+                  ? 'Este profissional vai usar o mesmo login da sua conta atual, mantendo as permissões administrativas.'
+                  : 'Ao salvar, o sistema cria o acesso do profissional automaticamente e envia uma senha temporária para o e-mail informado.'}
               </div>
             ) : null}
           </DialogSection>
@@ -214,7 +308,7 @@ export function ProfessionalFormDialog({
           <DialogSection className="bg-transparent">
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">Dados principais</p>
-              <p className="text-sm text-muted-foreground">Identificacao e contato para liberar uso operacional e acesso do profissional.</p>
+              <p className="text-sm text-muted-foreground">Identificação e contato para liberar uso operacional e acesso do profissional.</p>
             </div>
 
             {canLinkCurrentUser ? (
@@ -222,10 +316,10 @@ export function ProfessionalFormDialog({
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-foreground">
-                      Este usuario tambem atende clientes?
+                      Este usuário também atende clientes?
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Ative para vincular este profissional ao seu login atual sem perder as permissoes administrativas.
+                      Ative para vincular este profissional ao seu login atual sem perder as permissões administrativas.
                     </p>
                   </div>
                   <Switch
@@ -236,22 +330,21 @@ export function ProfessionalFormDialog({
                 </div>
                 {hasLinkedCurrentUserProfessional ? (
                   <p className="mt-3 text-xs text-amber-700">
-                    Seu usuario atual ja esta vinculado a um profissional.
+                    Seu usuário atual já está vinculado a um profissional.
                   </p>
                 ) : linkCurrentUser ? (
                   <p className="mt-3 text-xs text-muted-foreground">
-                    O profissional usara o mesmo e-mail e o mesmo login da sua conta atual.
+                    O profissional usará o mesmo e-mail e o mesmo login da sua conta atual.
                   </p>
                 ) : null}
               </div>
             ) : null}
 
             <div className="space-y-2">
-              <Label>Nome Completo *</Label>
+              <Label>Nome completo *</Label>
               <Input
                 placeholder="Nome do profissional"
-                value={formName}
-                onChange={(e) => setFormName(e.target.value)}
+                {...register('name')}
               />
             </div>
 
@@ -261,44 +354,68 @@ export function ProfessionalFormDialog({
                 <Input
                   type="email"
                   placeholder="email@exemplo.com"
-                  value={formEmail}
-                  onChange={(e) => setFormEmail(e.target.value)}
                   disabled={!!editingProfessional || linkCurrentUser}
+                  {...register('email')}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Telefone *</Label>
                 <Input
                   placeholder="(11) 99999-0000"
-                  value={formPhone}
-                  onChange={(e) => setFormPhone(maskPhoneBr(e.target.value))}
                   disabled={!!editingProfessional}
+                  {...register('phone', {
+                    onChange: (e) => setValue('phone', maskPhoneBr(e.target.value)),
+                  })}
                 />
               </div>
             </div>
             {editingProfessional ? (
               <p className="text-xs text-muted-foreground">
-                E-mail e telefone nao podem ser alterados na edicao do profissional.
+                E-mail e telefone não podem ser alterados na edição do profissional.
               </p>
             ) : linkCurrentUser ? (
               <p className="text-xs text-muted-foreground">
-                O e-mail fica travado porque sera compartilhado com o seu usuario atual.
+                O e-mail fica travado porque será compartilhado com o seu usuário atual.
               </p>
             ) : (
               <p className="text-xs text-muted-foreground">
-                Use um e-mail valido. Ele recebera a senha temporaria do primeiro acesso.
+                Use um e-mail válido. Ele receberá a senha temporária do primeiro acesso.
               </p>
             )}
           </DialogSection>
 
           <DialogSection className="bg-transparent">
             <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">Escopo de atuacao</p>
-              <p className="text-sm text-muted-foreground">Defina onde esse profissional atua e quais servicos ele pode assumir.</p>
+              <p className="text-sm font-medium text-foreground">Escopo de atuação</p>
+              <p className="text-sm text-muted-foreground">Defina onde esse profissional atua e quais serviços ele pode assumir.</p>
             </div>
 
             <div className="space-y-2">
               <Label>Especialidades</Label>
+              {onCreateSpecialty ? (
+                <div className="flex gap-2">
+                  <Input
+                    aria-label="Nova especialidade"
+                    placeholder="Ex: Corte, Coloração"
+                    value={newSpecialty}
+                    onChange={(e) => setNewSpecialty(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        void handleCreateSpecialty();
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void handleCreateSpecialty()}
+                    disabled={isCreatingSpecialty || !newSpecialty.trim()}
+                  >
+                    {isCreatingSpecialty ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Criar'}
+                  </Button>
+                </div>
+              ) : null}
               <div className="max-h-48 space-y-3 overflow-y-auto rounded-xl border border-border/70 bg-background/80 p-3">
               {isLoadingSpecialties && <p className="text-sm text-muted-foreground">Carregando especialidades...</p>}
               {specialtiesError && (
@@ -369,23 +486,39 @@ export function ProfessionalFormDialog({
             </div>
               {isWorkingHoursDisabled ? (
                 <p className="text-xs text-amber-700">
-                  Horarios de trabalho nao informados pelo backend. Edicao desativada.
+                  Horários de trabalho não informados pelo backend. Edição desativada.
                 </p>
               ) : null}
             </div>
           </DialogSection>
 
-          <DialogSection className="flex flex-col gap-3 bg-transparent sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <Label>Profissional Ativo</Label>
-              <p className="text-xs text-muted-foreground">Disponivel para agendamentos</p>
-            </div>
-            <Switch checked={formIsActive} onCheckedChange={setFormIsActive} />
-          </DialogSection>
+          {advancedCollapsed ? (
+            <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="flex w-full items-center justify-between px-4 text-sm font-medium"
+                >
+                  Opções avançadas
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${advancedOpen ? 'rotate-180' : ''}`}
+                  />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>{activeToggleSection}</CollapsibleContent>
+            </Collapsible>
+          ) : (
+            activeToggleSection
+          )}
         </DialogBody>
         <DialogStickyFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button
+            type="submit"
+            disabled={isSubmitting || (!editingProfessional && creationLimitReached)}
+            title={!editingProfessional && creationLimitReached ? 'Limite de profissionais do seu plano atingido' : undefined}
+          >
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -394,6 +527,7 @@ export function ProfessionalFormDialog({
             ) : editingProfessional ? 'Salvar profissional' : 'Criar profissional'}
           </Button>
         </DialogStickyFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

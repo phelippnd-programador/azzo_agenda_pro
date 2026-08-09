@@ -67,8 +67,14 @@ export type AppointmentManagementReportParams = {
   pageSize?: number;
 };
 
+export type AppointmentConclusionAction = "ADD_TO_COMANDA" | "PAY_NOW";
+
 export type AppointmentStatusUpdatePayload = {
   paymentMethod?: PaymentMethod;
+  /** Relevante apenas ao concluir (status COMPLETED): "ADD_TO_COMANDA" so vincula o
+   * servico a comanda (sem lancar no caixa agora) ou "PAY_NOW" cobra e fecha a
+   * comanda imediatamente, lancando a receita no caixa. */
+  conclusionAction?: AppointmentConclusionAction;
 };
 
 export const appointmentsApi = {

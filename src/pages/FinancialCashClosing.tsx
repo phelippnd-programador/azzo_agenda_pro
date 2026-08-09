@@ -10,6 +10,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ConfirmationDialog } from "@/components/common/ConfirmationDialog";
 import { DeleteConfirmationDialog } from "@/components/common/DeleteConfirmationDialog";
 import { TransactionDialog } from "@/components/financial/TransactionDialog";
 import { TransactionList } from "@/components/financial/TransactionList";
@@ -24,6 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { DateInput } from "@/components/ui/date-input";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
@@ -48,8 +50,8 @@ import { toast } from "sonner";
 
 const PAYMENT_METHODS: Array<{ key: CashClosingPaymentMethod; label: string }> = [
   { key: "CASH", label: "Dinheiro" },
-  { key: "CREDIT_CARD", label: "CartÃ£o de crÃ©dito" },
-  { key: "DEBIT_CARD", label: "CartÃ£o de dÃ©bito" },
+  { key: "CREDIT_CARD", label: "Cartão de crédito" },
+  { key: "DEBIT_CARD", label: "Cartão de débito" },
   { key: "PIX", label: "Pix" },
   { key: "OTHER", label: "Outros" },
 ];
@@ -86,12 +88,15 @@ export default function FinancialCashClosing() {
     OTHER: 0,
   });
   const [isSubmittingClose, setIsSubmittingClose] = useState(false);
+  const [isConfirmCloseOpen, setIsConfirmCloseOpen] = useState(false);
 
   const [isTransactionOpen, setIsTransactionOpen] = useState(false);
   const [transactionDefaultType, setTransactionDefaultType] = useState<"INCOME" | "EXPENSE">("INCOME");
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const [isDeletingTransaction, setIsDeletingTransaction] = useState(false);
+  const [closingToRemove, setClosingToRemove] = useState<string | null>(null);
+  const [isRemovingClosing, setIsRemovingClosing] = useState(false);
 
   const selectedClosing = useMemo(
     () => closings.find((item) => item.id === selectedId) ?? closings[0] ?? null,
@@ -136,7 +141,7 @@ export default function FinancialCashClosing() {
       });
       setError(null);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "NÃ£o foi possÃ­vel carregar os fechamentos de caixa";
+      const message = err instanceof Error ? err.message : "Não foi possível carregar os fechamentos de caixa";
       setError(message);
     } finally {
       setIsLoading(false);
@@ -188,6 +193,10 @@ export default function FinancialCashClosing() {
   };
 
   const handleOpenCashClosing = async () => {
+    if (openingDate > todayDateKey()) {
+      toast.error("Não é possível abrir caixa para uma data futura.");
+      return;
+    }
     setIsSubmittingOpen(true);
     try {
       const created = await cashClosingsApi.open({
@@ -201,7 +210,7 @@ export default function FinancialCashClosing() {
       setOpeningNotes("");
       toast.success("Caixa aberto com sucesso");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "NÃ£o foi possÃ­vel abrir o caixa");
+      toast.error(err instanceof Error ? err.message : "Não foi possível abrir o caixa");
     } finally {
       setIsSubmittingOpen(false);
     }
@@ -209,6 +218,12 @@ export default function FinancialCashClosing() {
 
   const handleCloseCashClosing = async () => {
     if (!selectedClosing) return;
+    if (!isSelectedCashOpen) {
+      toast.error("Este caixa ja foi fechado.");
+      setIsConfirmCloseOpen(false);
+      setIsCloseDialogVisible(false);
+      return;
+    }
     setIsSubmittingClose(true);
     try {
       const payload = PAYMENT_METHODS.reduce<Partial<Record<CashClosingPaymentMethod, number>>>((acc, method) => {
@@ -222,10 +237,11 @@ export default function FinancialCashClosing() {
       });
       await loadClosings(true);
       setSelectedId(closed.id);
+      setIsConfirmCloseOpen(false);
       setIsCloseDialogVisible(false);
-      toast.success("Fechamento de caixa concluÃ­do");
+      toast.success("Fechamento de caixa concluído");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "NÃ£o foi possÃ­vel fechar o caixa");
+      toast.error(err instanceof Error ? err.message : "Não foi possível fechar o caixa");
     } finally {
       setIsSubmittingClose(false);
     }
@@ -238,7 +254,7 @@ export default function FinancialCashClosing() {
       await refetchTransactions();
       await loadClosings(true);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "NÃ£o foi possÃ­vel conciliar o lanÃ§amento");
+      toast.error(err instanceof Error ? err.message : "Não foi possível conciliar o lançamento");
     }
   };
 
@@ -256,6 +272,22 @@ export default function FinancialCashClosing() {
     }
   };
 
+  const handleRemoveClosing = async () => {
+    if (!closingToRemove) return;
+    setIsRemovingClosing(true);
+    try {
+      await cashClosingsApi.remove(closingToRemove);
+      if (selectedId === closingToRemove) setSelectedId(null);
+      await loadClosings(true);
+      setClosingToRemove(null);
+      toast.success("Caixa removido.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível remover o caixa");
+    } finally {
+      setIsRemovingClosing(false);
+    }
+  };
+
   const handleCreateTransaction = async (payload: TransactionMutationInput) => {
     const created = await createTransaction(payload);
     await loadClosings(true);
@@ -270,7 +302,7 @@ export default function FinancialCashClosing() {
 
   if (isLoading) {
     return (
-      <MainLayout title="Fechamento de Caixa" subtitle="Caixa operacional do dia e conferÃªncia final">
+      <MainLayout title="Fechamento de Caixa" subtitle="Caixa operacional do dia e conferência final">
         <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
           <Skeleton className="h-[24rem]" />
           <Skeleton className="h-[24rem]" />
@@ -281,9 +313,9 @@ export default function FinancialCashClosing() {
 
   if (error) {
     return (
-      <MainLayout title="Fechamento de Caixa" subtitle="Caixa operacional do dia e conferÃªncia final">
+      <MainLayout title="Fechamento de Caixa" subtitle="Caixa operacional do dia e conferência final">
         <PageErrorState
-          title="NÃ£o foi possÃ­vel carregar o fechamento de caixa"
+          title="Não foi possível carregar o fechamento de caixa"
           description={error}
           action={{ label: "Tentar novamente", onClick: () => void loadClosings() }}
         />
@@ -292,7 +324,7 @@ export default function FinancialCashClosing() {
   }
 
   return (
-    <MainLayout title="Fechamento de Caixa" subtitle="Caixa operacional do dia e conferÃªncia final">
+    <MainLayout title="Fechamento de Caixa" subtitle="Caixa operacional do dia e conferência final">
       <div className="space-y-4 sm:space-y-6">
         <div className="grid gap-3 sm:grid-cols-3">
           <Card className="surface-panel border">
@@ -311,7 +343,7 @@ export default function FinancialCashClosing() {
           </Card>
           <Card className="surface-panel border">
             <CardHeader className="pb-2">
-              <CardDescription>DiferenÃ§a consolidada</CardDescription>
+              <CardDescription>Diferença consolidada</CardDescription>
               <CardTitle className="text-2xl">
                 {selectedClosing ? formatCurrency(selectedClosing.totalDifference) : "R$ 0,00"}
               </CardTitle>
@@ -321,7 +353,7 @@ export default function FinancialCashClosing() {
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-muted-foreground">
-            Esta pÃ¡gina agora concentra a operaÃ§Ã£o do caixa do dia e o fechamento final por forma de pagamento.
+            Esta página agora concentra a operação do caixa do dia e o fechamento final por forma de pagamento.
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => void loadClosings(true)} disabled={isRefreshing}>
@@ -338,14 +370,14 @@ export default function FinancialCashClosing() {
         {closings.length === 0 ? (
           <PageEmptyState
             title="Nenhum fechamento registrado"
-            description="Abra o primeiro caixa do dia para iniciar a operaÃ§Ã£o e registrar a conferÃªncia final."
+            description="Abra o primeiro caixa do dia para iniciar a operação e registrar a conferência final."
             action={{ label: "Abrir caixa", onClick: () => setIsOpenDialogVisible(true) }}
           />
         ) : (
           <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
             <Card className="surface-panel border">
               <CardHeader className="pb-3">
-                <CardTitle>HistÃ³rico</CardTitle>
+                <CardTitle>Histórico</CardTitle>
                 <CardDescription>Selecione um caixa para operar ou revisar o fechamento do dia.</CardDescription>
               </CardHeader>
               <CardContent className="px-0 pt-0">
@@ -356,7 +388,7 @@ export default function FinancialCashClosing() {
                         <TableHead>Data</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Esperado</TableHead>
-                        <TableHead>DiferenÃ§a</TableHead>
+                        <TableHead>Diferença</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -375,7 +407,7 @@ export default function FinancialCashClosing() {
                               </Badge>
                             </TableCell>
                             <TableCell>{formatCurrency(closing.totalExpected)}</TableCell>
-                            <TableCell className={closing.totalDifference === 0 ? "" : "text-orange-700"}>
+                            <TableCell className={closing.totalDifference === 0 ? "" : "text-warning"}>
                               {formatCurrency(closing.totalDifference)}
                             </TableCell>
                           </TableRow>
@@ -393,7 +425,7 @@ export default function FinancialCashClosing() {
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <CardTitle>{formatDateOnly(selectedClosing.businessDate)}</CardTitle>
-                      <CardDescription>Caixa do dia com operaÃ§Ã£o e consolidado por forma de pagamento.</CardDescription>
+                      <CardDescription>Caixa do dia com operação e consolidado por forma de pagamento.</CardDescription>
                     </div>
                     <Badge variant={isSelectedCashOpen ? "secondary" : "outline"}>
                       {isSelectedCashOpen ? "Aberto" : "Fechado"}
@@ -409,7 +441,7 @@ export default function FinancialCashClosing() {
                       <div className="mt-1 text-lg font-semibold">{formatCurrency(selectedClosing.totalCounted)}</div>
                     </div>
                     <div className="rounded-2xl border bg-muted/40 p-3">
-                      <div className="text-xs uppercase tracking-wide text-muted-foreground">DiferenÃ§a</div>
+                      <div className="text-xs uppercase tracking-wide text-muted-foreground">Diferença</div>
                       <div className="mt-1 text-lg font-semibold">{formatCurrency(selectedClosing.totalDifference)}</div>
                     </div>
                   </div>
@@ -418,15 +450,15 @@ export default function FinancialCashClosing() {
                   <div className="rounded-2xl border bg-muted/30 p-4">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                       <div>
-                        <h3 className="text-sm font-semibold">OperaÃ§Ã£o do caixa</h3>
+                        <h3 className="text-sm font-semibold">Operação do caixa</h3>
                         <p className="text-sm text-muted-foreground">
-                          Registre entradas e saÃ­das do dia aqui. O fechamento continua sendo a etapa final.
+                          Registre entradas e saídas do dia aqui. O fechamento continua sendo a etapa final.
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <Button
                           variant="outline"
-                          className="border-green-300 text-green-700 hover:bg-green-50"
+                          className="border-success/40 text-success hover:bg-success/8"
                           onClick={() => openNewTransaction("INCOME")}
                           disabled={!isSelectedCashOpen}
                         >
@@ -435,25 +467,25 @@ export default function FinancialCashClosing() {
                         </Button>
                         <Button
                           variant="outline"
-                          className="border-red-300 text-red-700 hover:bg-red-50"
+                          className="border-destructive/40 text-destructive hover:bg-destructive/8"
                           onClick={() => openNewTransaction("EXPENSE")}
                           disabled={!isSelectedCashOpen}
                         >
                           <ArrowDownCircle className="mr-2 h-4 w-4" />
-                          Nova saÃ­da
+                          Nova saída
                         </Button>
                       </div>
                     </div>
                     <div className="mt-4 grid gap-3 sm:grid-cols-3">
                       <div className="rounded-2xl border bg-background p-3">
                         <div className="text-xs uppercase tracking-wide text-muted-foreground">Entradas do dia</div>
-                        <div className="mt-1 text-lg font-semibold text-green-700">
+                        <div className="mt-1 text-lg font-semibold text-success">
                           {formatCurrency(summary.totalIncome)}
                         </div>
                       </div>
                       <div className="rounded-2xl border bg-background p-3">
-                        <div className="text-xs uppercase tracking-wide text-muted-foreground">SaÃ­das do dia</div>
-                        <div className="mt-1 text-lg font-semibold text-red-700">
+                        <div className="text-xs uppercase tracking-wide text-muted-foreground">Saídas do dia</div>
+                        <div className="mt-1 text-lg font-semibold text-destructive">
                           {formatCurrency(summary.totalExpenses)}
                         </div>
                       </div>
@@ -464,7 +496,7 @@ export default function FinancialCashClosing() {
                     </div>
                     {!isSelectedCashOpen ? (
                       <p className="mt-3 text-sm text-muted-foreground">
-                        Este caixa jÃ¡ foi encerrado. As movimentaÃ§Ãµes continuam visÃ­veis, mas a operaÃ§Ã£o ficou somente leitura.
+                        Este caixa já foi encerrado. As movimentações continuam visíveis, mas a operação ficou somente leitura.
                       </p>
                     ) : null}
                   </div>
@@ -499,18 +531,29 @@ export default function FinancialCashClosing() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-semibold">Totais por forma de pagamento</h3>
-                      {isSelectedCashOpen ? (
-                        <Button onClick={() => setIsCloseDialogVisible(true)}>Fechar caixa</Button>
-                      ) : null}
+                      <div className="flex gap-2">
+                        {isSelectedCashOpen && selectedClosing.businessDate > todayDateKey() ? (
+                          <Button
+                            variant="outline"
+                            className="border-destructive/30 text-destructive hover:bg-destructive/8"
+                            onClick={() => setClosingToRemove(selectedClosing.id)}
+                          >
+                            Remover caixa
+                          </Button>
+                        ) : null}
+                        {isSelectedCashOpen ? (
+                          <Button onClick={() => setIsCloseDialogVisible(true)}>Fechar caixa</Button>
+                        ) : null}
+                      </div>
                     </div>
                     <div className="overflow-x-auto rounded-2xl border">
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>MÃ©todo</TableHead>
+                            <TableHead>Método</TableHead>
                             <TableHead>Esperado</TableHead>
                             <TableHead>Contado</TableHead>
-                            <TableHead>DiferenÃ§a</TableHead>
+                            <TableHead>Diferença</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -520,7 +563,7 @@ export default function FinancialCashClosing() {
                               <TableCell>{formatCurrency(selectedClosing.expectedTotals[method.key] ?? 0)}</TableCell>
                               <TableCell>{formatCurrency(selectedClosing.countedTotals[method.key] ?? 0)}</TableCell>
                               <TableCell
-                                className={(selectedClosing.differenceTotals[method.key] ?? 0) === 0 ? "" : "text-orange-700"}
+                                className={(selectedClosing.differenceTotals[method.key] ?? 0) === 0 ? "" : "text-warning"}
                               >
                                 {formatCurrency(selectedClosing.differenceTotals[method.key] ?? 0)}
                               </TableCell>
@@ -556,33 +599,36 @@ export default function FinancialCashClosing() {
             <DialogTitle>Abrir caixa</DialogTitle>
             <DialogDescription>
               {openDialogAutoTriggered
-                ? "Nenhum caixa estÃ¡ aberto no momento. Confirme a abertura para iniciar a operaÃ§Ã£o do dia."
-                : "Crie o registro do dia operacional antes de iniciar a movimentaÃ§Ã£o e a conferÃªncia final."}
+                ? "Nenhum caixa está aberto no momento. Confirme a abertura para iniciar a operação do dia."
+                : "Crie o registro do dia operacional antes de iniciar a movimentação e a conferência final."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="cash-opening-date">Data do caixa</Label>
-              <Input
+              <DateInput
                 id="cash-opening-date"
-                type="date"
+                max={todayDateKey()}
                 value={openingDate}
                 onChange={(event) => setOpeningDate(event.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cash-opening-notes">ObservaÃ§Ãµes</Label>
+              <Label htmlFor="cash-opening-notes">Observações</Label>
               <Textarea
                 id="cash-opening-notes"
                 value={openingNotes}
                 onChange={(event) => setOpeningNotes(event.target.value)}
-                placeholder="Ex: abertura feita pela recepÃ§Ã£o da manhÃ£."
+                placeholder="Ex: abertura feita pela recepção da manhã."
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsOpenDialogVisible(false)}>Cancelar</Button>
-            <Button onClick={handleOpenCashClosing} disabled={isSubmittingOpen || !openingDate}>
+            <Button
+              onClick={handleOpenCashClosing}
+              disabled={isSubmittingOpen || !openingDate || openingDate > todayDateKey()}
+            >
               {isSubmittingOpen ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CalendarDays className="mr-2 h-4 w-4" />}
               Confirmar abertura
             </Button>
@@ -594,7 +640,7 @@ export default function FinancialCashClosing() {
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Fechar caixa</DialogTitle>
-            <DialogDescription>Informe o contado final por mÃ©todo. O sistema calcula a diferenÃ§a sobre o esperado.</DialogDescription>
+            <DialogDescription>Informe o contado final por método. O sistema calcula a diferença sobre o esperado.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 sm:grid-cols-2">
             {PAYMENT_METHODS.map((method) => (
@@ -615,23 +661,33 @@ export default function FinancialCashClosing() {
             ))}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="cash-closing-notes">ObservaÃ§Ãµes finais</Label>
+            <Label htmlFor="cash-closing-notes">Observações finais</Label>
             <Textarea
               id="cash-closing-notes"
               value={closingNotes}
               onChange={(event) => setClosingNotes(event.target.value)}
-              placeholder="Ex: diferenÃ§a explicada por troco inicial e pagamento pendente."
+              placeholder="Ex: diferença explicada por troco inicial e pagamento pendente."
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCloseDialogVisible(false)}>Cancelar</Button>
-            <Button onClick={handleCloseCashClosing} disabled={isSubmittingClose}>
-              {isSubmittingClose ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            <Button onClick={() => setIsConfirmCloseOpen(true)} disabled={isSubmittingClose}>
               Encerrar caixa
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmationDialog
+        open={isConfirmCloseOpen}
+        onOpenChange={setIsConfirmCloseOpen}
+        title="Confirmar fechamento do caixa?"
+        description="Depois de fechado, os lançamentos deste caixa ficam somente leitura e a diferença apurada não pode mais ser ajustada. Confira os valores contados antes de confirmar."
+        isLoading={isSubmittingClose}
+        confirmLabel="Confirmar fechamento"
+        loadingLabel="Fechando..."
+        onConfirm={handleCloseCashClosing}
+      />
 
       <TransactionDialog
         open={isTransactionOpen}
@@ -650,12 +706,24 @@ export default function FinancialCashClosing() {
       <DeleteConfirmationDialog
         open={!!transactionToDelete}
         isLoading={isDeletingTransaction}
-        title="Excluir transaÃ§Ã£o do caixa?"
-        description="Tem certeza que deseja excluir este lanÃ§amento do caixa? Esta aÃ§Ã£o nÃ£o pode ser desfeita."
+        title="Excluir transação do caixa?"
+        description="Tem certeza que deseja excluir este lançamento do caixa? Esta ação não pode ser desfeita."
         onOpenChange={(open) => {
           if (!isDeletingTransaction && !open) setTransactionToDelete(null);
         }}
         onConfirm={handleDeleteTransaction}
+      />
+
+      <DeleteConfirmationDialog
+        open={!!closingToRemove}
+        isLoading={isRemovingClosing}
+        title="Remover caixa futuro?"
+        description="Remove este registro de caixa. Só é permitido para datas futuras e sem nenhum lançamento - use isso para corrigir um caixa aberto por engano."
+        confirmLabel="Remover"
+        onOpenChange={(open) => {
+          if (!isRemovingClosing && !open) setClosingToRemove(null);
+        }}
+        onConfirm={handleRemoveClosing}
       />
     </MainLayout>
   );

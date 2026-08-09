@@ -3,8 +3,10 @@ import { Navigate, Route } from "react-router-dom";
 import { appRouteManifest } from "@/app/route-manifest";
 import {
   AbandonmentReport,
+  ReportsHubPage,
   ClientsReportPage,
   FinancialReportPage,
+  HeatmapReportPage,
   LicenseReportPage,
   ManagementReportPage,
   SalesReportPage,
@@ -12,6 +14,7 @@ import {
   Agenda,
   AppointmentManagementReport,
   Auditoria,
+  CatalogReportPage,
   ChatPage,
   ClientImportDetailPage,
   ClientImportsPage,
@@ -62,6 +65,12 @@ import {
   Unauthorized,
   UserProfile,
   WhatsAppIntegration,
+  TelegramIntegration,
+  PaymentIntegrationSettings,
+  PosPage,
+  PosComandaPage,
+  PackagesPage,
+  MembershipPlansPage,
   ReactivationSettings,
   OnboardingPage,
 } from "@/app/routes/lazy-pages";
@@ -83,11 +92,11 @@ export function ProtectedRouteGroup({
       <Route path={appRouteManifest.shell.notifications} element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
       <Route path={appRouteManifest.shell.agenda} element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
 
-      <Route path={appRouteManifest.reports.root} element={<ProtectedRoute><Navigate to={appRouteManifest.reports.appointments} replace /></ProtectedRoute>} />
+      <Route path={appRouteManifest.reports.root} element={<ProtectedRoute><ReportsHubPage /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.appointments} element={<ProtectedRoute><AppointmentManagementReport /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.noShow} element={<ProtectedRoute><NoShowReport /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.abandonment} element={<ProtectedRoute><AbandonmentReport /></ProtectedRoute>} />
-      <Route path={appRouteManifest.reports.legacyRoot} element={<ProtectedRoute><Navigate to={appRouteManifest.reports.appointments} replace /></ProtectedRoute>} />
+      <Route path={appRouteManifest.reports.legacyRoot} element={<ProtectedRoute><Navigate to={appRouteManifest.reports.root} replace /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.legacyAppointments} element={<ProtectedRoute><Navigate to={appRouteManifest.reports.appointments} replace /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.legacyAppointmentsPlural} element={<ProtectedRoute><Navigate to={appRouteManifest.reports.appointments} replace /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.legacyNoShow} element={<ProtectedRoute><Navigate to={appRouteManifest.reports.noShow} replace /></ProtectedRoute>} />
@@ -100,6 +109,8 @@ export function ProtectedRouteGroup({
       <Route path={appRouteManifest.reports.clientes} element={<ProtectedRoute><ClientsReportPage /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.licencas} element={<ProtectedRoute><LicenseReportPage /></ProtectedRoute>} />
       <Route path={appRouteManifest.reports.gerencial} element={<ProtectedRoute><ManagementReportPage /></ProtectedRoute>} />
+      <Route path={appRouteManifest.reports.ocupacao} element={<ProtectedRoute><HeatmapReportPage /></ProtectedRoute>} />
+      <Route path={appRouteManifest.reports.catalogo} element={<ProtectedRoute><CatalogReportPage /></ProtectedRoute>} />
 
       <Route path={appRouteManifest.services.root} element={<ProtectedRoute><Services /></ProtectedRoute>}>
         <Route index element={<ServicesOverviewPage />} />
@@ -164,6 +175,12 @@ export function ProtectedRouteGroup({
       <Route path={appRouteManifest.profiles.user} element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
       <Route path={appRouteManifest.profiles.salon} element={<ProtectedRoute><SalonProfile /></ProtectedRoute>} />
       <Route path={appRouteManifest.settings.whatsapp} element={<ProtectedRoute><WhatsAppIntegration /></ProtectedRoute>} />
+      <Route path={appRouteManifest.settings.telegram} element={<ProtectedRoute><TelegramIntegration /></ProtectedRoute>} />
+      <Route path={appRouteManifest.settings.payments} element={<ProtectedRoute><PaymentIntegrationSettings /></ProtectedRoute>} />
+      <Route path={appRouteManifest.pos.root} element={<ProtectedRoute><PosPage /></ProtectedRoute>} />
+      <Route path={appRouteManifest.pos.detail} element={<ProtectedRoute><PosComandaPage /></ProtectedRoute>} />
+      <Route path={appRouteManifest.packages.root} element={<ProtectedRoute><PackagesPage /></ProtectedRoute>} />
+      <Route path={appRouteManifest.memberships.root} element={<ProtectedRoute><MembershipPlansPage /></ProtectedRoute>} />
       <Route path={appRouteManifest.settings.reactivation} element={<ProtectedRoute><ReactivationSettings /></ProtectedRoute>} />
       <Route path={appRouteManifest.settings.systemAdmin} element={<ProtectedRoute><SystemAdminPage /></ProtectedRoute>} />
 

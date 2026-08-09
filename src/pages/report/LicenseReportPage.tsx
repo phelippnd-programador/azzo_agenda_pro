@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { RefreshCw, Shield, ShieldAlert, ShieldCheck, ShieldOff } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ReportTabs } from "@/pages/report/components/ReportTabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,6 +75,8 @@ export default function LicenseReportPage() {
       title="Relatorio de licencas"
       subtitle="Visao administrativa de todos os tenants, status de plano e vencimentos."
     >
+      <ReportTabs />
+
       <div className="space-y-6">
         {/* Summary cards */}
         {data && (

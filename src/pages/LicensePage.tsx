@@ -340,7 +340,7 @@ export default function LicensePage() {
     >
       <div className="space-y-6">
         {fetchError ? (
-          <Alert className="border-red-200 bg-red-50 dark:border-red-900/70 dark:bg-red-950/40">
+          <Alert variant="destructive">
             <AlertTitle>Nao foi possivel carregar sua assinatura</AlertTitle>
             <AlertDescription>{fetchError}</AlertDescription>
           </Alert>

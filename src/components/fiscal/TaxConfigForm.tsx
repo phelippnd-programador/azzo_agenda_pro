@@ -104,13 +104,24 @@ export function TaxConfigForm() {
   };
 
   const handleSave = async () => {
+    const parsedIcmsRate = parseFloat(icmsRate);
+    const parsedPisRate = parseFloat(pisRate);
+    const parsedCofinsRate = parseFloat(cofinsRate);
+    if (![parsedIcmsRate, parsedPisRate, parsedCofinsRate].every((rate) => Number.isFinite(rate) && rate >= 0)) {
+      toast({
+        title: 'Aliquotas invalidas',
+        description: 'Informe valores numericos validos (maior ou igual a zero) para ICMS, PIS e COFINS.',
+        variant: 'destructive',
+      });
+      return;
+    }
     try {
       setIsSaving(true);
       await fiscalApi.updateTaxConfig({
         regime,
-        icmsRate: parseFloat(icmsRate),
-        pisRate: parseFloat(pisRate),
-        cofinsRate: parseFloat(cofinsRate),
+        icmsRate: parsedIcmsRate,
+        pisRate: parsedPisRate,
+        cofinsRate: parsedCofinsRate,
         issuerRazaoSocial: issuerRazaoSocial.trim() || undefined,
         issuerNomeFantasia: issuerNomeFantasia.trim() || undefined,
         issuerCnpj: onlyDigits(issuerCnpj),

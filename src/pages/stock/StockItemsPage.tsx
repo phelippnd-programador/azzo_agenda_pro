@@ -1,22 +1,37 @@
 import { useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CrudListToolbar } from "@/components/crud/CrudListToolbar";
+import { ModuleIntro } from "@/components/layout/module-surfaces";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogSection,
+  DialogStickyFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageEmptyState } from "@/components/ui/page-states";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
-import type { CreateStockItemRequest, StockItem } from "@/types/stock";
-import { Edit, Plus, Power } from "lucide-react";
+import { stockItemFormSchema, type StockItemFormValues } from "@/schemas/stockItem";
+import type { StockItem } from "@/types/stock";
+import { Edit, Power } from "lucide-react";
 import { Link, useMatch, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { getListItems } from "./utils";
 
-const initialForm: CreateStockItemRequest = {
+const initialForm: StockItemFormValues = {
   nome: "",
   sku: "",
   unidadeMedida: "UN",
@@ -38,7 +53,10 @@ export default function StockItemsPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [page, setPage] = useState(1);
   const pageSize = 12;
-  const [form, setForm] = useState<CreateStockItemRequest>(initialForm);
+  const { register, handleSubmit, watch, setValue, reset } = useForm<StockItemFormValues>({
+    resolver: zodResolver(stockItemFormSchema),
+    defaultValues: initialForm,
+  });
 
   const load = async () => {
     try {
@@ -93,7 +111,7 @@ export default function StockItemsPage() {
   }, [filteredItems, page]);
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
 
-  const resetForm = () => setForm(initialForm);
+  const resetForm = () => reset(initialForm);
 
   useEffect(() => {
     setPage(1);
@@ -109,14 +127,14 @@ export default function StockItemsPage() {
     }
   };
 
-  const handleCreate = async () => {
-    if (!form.nome.trim() || !form.unidadeMedida.trim()) {
-      toast.error("Nome e unidade sao obrigatorios.");
-      return;
-    }
+  const onInvalidForm = () => {
+    toast.error("Nome e unidade sao obrigatorios.");
+  };
+
+  const handleCreate = async (values: StockItemFormValues) => {
     setIsSaving(true);
     try {
-      await stockApi.createItem({ ...form, estoqueMinimo: Number(form.estoqueMinimo || 0) });
+      await stockApi.createItem({ ...values, estoqueMinimo: Number(values.estoqueMinimo || 0) });
       toast.success("Item criado com sucesso.");
       setIsCreateOpen(false);
       resetForm();
@@ -128,17 +146,13 @@ export default function StockItemsPage() {
     }
   };
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (values: StockItemFormValues) => {
     if (!editingItem) return;
-    if (!form.nome.trim() || !form.unidadeMedida.trim()) {
-      toast.error("Nome e unidade sao obrigatorios.");
-      return;
-    }
     setIsSaving(true);
     try {
       await stockApi.updateItem(editingItem.id, {
-        ...form,
-        estoqueMinimo: Number(form.estoqueMinimo || 0),
+        ...values,
+        estoqueMinimo: Number(values.estoqueMinimo || 0),
       });
       toast.success("Item atualizado com sucesso.");
       setEditingItem(null);
@@ -153,7 +167,7 @@ export default function StockItemsPage() {
 
   const openEdit = (item: StockItem) => {
     setEditingItem(item);
-    setForm({
+    reset({
       nome: item.nome,
       sku: item.sku || "",
       unidadeMedida: item.unidadeMedida,
@@ -162,25 +176,33 @@ export default function StockItemsPage() {
     });
   };
 
+  const formEstoqueMinimo = watch("estoqueMinimo");
+
   const FormFields = (
-    <div className="space-y-3">
+    <div data-tour="stock-items-form" className="space-y-3">
       <div className="space-y-1">
         <Label htmlFor="item-nome">Nome</Label>
-        <Input id="item-nome" value={form.nome} onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))} />
+        <Input id="item-nome" {...register("nome")} />
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1">
           <Label htmlFor="item-sku">SKU</Label>
-          <Input id="item-sku" value={form.sku || ""} onChange={(e) => setForm((prev) => ({ ...prev, sku: e.target.value }))} />
+          <Input id="item-sku" {...register("sku")} />
         </div>
         <div className="space-y-1">
           <Label htmlFor="item-unidade">Unidade</Label>
-          <Input id="item-unidade" value={form.unidadeMedida} onChange={(e) => setForm((prev) => ({ ...prev, unidadeMedida: e.target.value }))} />
+          <Input id="item-unidade" {...register("unidadeMedida")} />
         </div>
       </div>
       <div className="space-y-1">
         <Label htmlFor="item-estoque-minimo">Estoque minimo</Label>
-        <Input id="item-estoque-minimo" type="number" min="0" value={form.estoqueMinimo} onChange={(e) => setForm((prev) => ({ ...prev, estoqueMinimo: Number(e.target.value || 0) }))} />
+        <Input
+          id="item-estoque-minimo"
+          type="number"
+          min="0"
+          value={formEstoqueMinimo}
+          onChange={(e) => setValue("estoqueMinimo", Number(e.target.value || 0))}
+        />
       </div>
     </div>
   );
@@ -190,64 +212,74 @@ export default function StockItemsPage() {
   }
 
   return (
-    <Card className="border-border/80">
-      <CardHeader className="gap-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle>Itens de estoque</CardTitle>
-          <Dialog
-            open={isCreateOpen}
-            onOpenChange={(open) => {
-              setIsCreateOpen(open);
-              if (!open && isCreateRoute) {
-                navigate("/estoque/itens", { replace: true });
-              }
-            }}
-          >
-            <Button className="gap-2 sm:self-auto" asChild>
-              <Link to="/estoque/itens/novo"><Plus className="h-4 w-4" />Novo item</Link>
+    <div className="space-y-4">
+      <ModuleIntro
+        eyebrow="Itens de estoque"
+        title="Cadastre itens e acompanhe o saldo minimo"
+        description="Controle rapidamente o status operacional de cada item usado nos atendimentos."
+      />
+
+      <CrudListToolbar
+        searchPlaceholder="Buscar por nome ou SKU"
+        searchValue={search}
+        onSearchChange={setSearch}
+        actionLabel="Item"
+        actionLabelMobile="Novo"
+        actionLabelDesktop="Novo item"
+        onAction={() => navigate("/estoque/itens/novo")}
+        searchDataTour="stock-items-search"
+        actionDataTour="stock-items-new-button"
+      />
+
+      <div className="max-w-xs">
+        <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}>
+          <SelectTrigger data-tour="stock-items-status-filter">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="active">Ativos</SelectItem>
+            <SelectItem value="inactive">Inativos</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Dialog
+        open={isCreateOpen}
+        onOpenChange={(open) => {
+          setIsCreateOpen(open);
+          if (!open && isCreateRoute) {
+            navigate("/estoque/itens", { replace: true });
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader className="border-b border-border/70 pb-4 pr-10">
+            <DialogTitle>Novo item</DialogTitle>
+            <DialogDescription>Cadastre um item para controle de estoque.</DialogDescription>
+          </DialogHeader>
+          <DialogBody>
+            <DialogSection className="bg-transparent">{FormFields}</DialogSection>
+          </DialogBody>
+          <DialogStickyFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsCreateOpen(false);
+                if (isCreateRoute) navigate("/estoque/itens", { replace: true });
+              }}
+            >
+              Cancelar
             </Button>
-            <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Novo item</DialogTitle>
-                <DialogDescription>Cadastre um item para controle de estoque.</DialogDescription>
-              </DialogHeader>
-              {FormFields}
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsCreateOpen(false);
-                    if (isCreateRoute) navigate("/estoque/itens", { replace: true });
-                  }}
-                >
-                  Cancelar
-                </Button>
-                <Button onClick={() => void handleCreate()} disabled={isSaving}>{isSaving ? "Salvando..." : "Salvar"}</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Cadastre itens, acompanhe saldo minimo e controle rapidamente o status operacional.
-        </p>
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-          <Input
-            placeholder="Buscar por nome ou SKU"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <select
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-          >
-            <option value="all">Todos os status</option>
-            <option value="active">Ativos</option>
-            <option value="inactive">Inativos</option>
-          </select>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-2">
+            <Button data-tour="stock-items-dialog-submit" onClick={() => void handleSubmit(handleCreate, onInvalidForm)()} isLoading={isSaving} loadingText="Salvando...">
+              Salvar
+            </Button>
+          </DialogStickyFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Card className="border-border/80">
+      <CardContent className="space-y-2 pt-6">
         {!filteredItems.length ? (
           <PageEmptyState
             title="Nenhum item encontrado"
@@ -261,6 +293,7 @@ export default function StockItemsPage() {
           pagedItems.map((item) => (
             <div
               key={item.id}
+              data-tour="stock-item-row"
               className="flex flex-col gap-4 rounded-xl border border-border/70 bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0 flex-1">
@@ -287,10 +320,10 @@ export default function StockItemsPage() {
                   <Badge variant={item.ativo ? "secondary" : "outline"}>
                     {item.ativo ? "Ativo" : "Inativo"}
                   </Badge>
-                  <Button variant="outline" size="sm" className="gap-1" asChild>
+                  <Button data-tour="stock-item-edit-button" variant="outline" size="sm" className="gap-1" asChild>
                     <Link to={`/estoque/itens/${item.id}/editar`}><Edit className="h-3 w-3" />Editar</Link>
                   </Button>
-                  <Button variant="outline" size="sm" className="gap-1" onClick={() => void handleToggleActive(item)}>
+                  <Button data-tour="stock-item-toggle-button" variant="outline" size="sm" className="gap-1" onClick={() => void handleToggleActive(item)}>
                     <Power className="h-3 w-3" />
                     {item.ativo ? "Inativar" : "Ativar"}
                   </Button>
@@ -318,12 +351,14 @@ export default function StockItemsPage() {
         }}
       >
         <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
+          <DialogHeader className="border-b border-border/70 pb-4 pr-10">
             <DialogTitle>Editar item</DialogTitle>
             <DialogDescription>Atualize dados do item selecionado.</DialogDescription>
           </DialogHeader>
-          {FormFields}
-          <DialogFooter>
+          <DialogBody>
+            <DialogSection className="bg-transparent">{FormFields}</DialogSection>
+          </DialogBody>
+          <DialogStickyFooter>
             <Button
               variant="outline"
               onClick={() => {
@@ -333,10 +368,13 @@ export default function StockItemsPage() {
             >
               Cancelar
             </Button>
-            <Button onClick={() => void handleUpdate()} disabled={isSaving}>{isSaving ? "Salvando..." : "Salvar alteracoes"}</Button>
-          </DialogFooter>
+            <Button onClick={() => void handleSubmit(handleUpdate, onInvalidForm)()} isLoading={isSaving} loadingText="Salvando...">
+              Salvar alteracoes
+            </Button>
+          </DialogStickyFooter>
         </DialogContent>
       </Dialog>
-    </Card>
+      </Card>
+    </div>
   );
 }

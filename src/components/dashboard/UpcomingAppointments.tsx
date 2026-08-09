@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { ConfirmationDialog } from '@/components/common/ConfirmationDialog';
 import { Clock, MoreVertical } from 'lucide-react';
 import { Appointment } from '@/types';
 import { formatCurrency } from '@/lib/format';
@@ -21,6 +23,7 @@ interface UpcomingAppointmentsProps {
 
 export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingAppointmentsProps) {
   const navigate = useNavigate();
+  const [appointmentToCancel, setAppointmentToCancel] = useState<Appointment | null>(null);
 
   const getServiceLabel = (appointment: Appointment) => {
     const names =
@@ -29,19 +32,20 @@ export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingA
         .filter((name): name is string => !!name) || [];
 
     if (names.length) return names.join(', ');
-    return appointment.service?.name || 'Servico';
+    return appointment.service?.name || 'Serviço';
   };
 
   return (
-    <Card className="border-border/70 bg-background/95 shadow-none">
+    <>
+      <Card className="border-border/70 bg-background/95 shadow-none">
       <CardHeader className="flex flex-row items-start justify-between gap-3 pb-3">
         <div className="space-y-1">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             Agenda do dia
           </p>
-          <CardTitle className="text-base sm:text-lg">Proximos agendamentos</CardTitle>
+          <CardTitle className="text-base sm:text-lg">Próximos agendamentos</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Agenda do dia com acesso rapido para confirmacao e atendimento.
+            Agenda do dia com acesso rápido para confirmação e atendimento.
           </p>
         </div>
         <Button
@@ -81,7 +85,7 @@ export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingA
                       status={appointment.status}
                       labelMap={appointmentStatusLabelMap}
                       toneMap={appointmentStatusBadgeToneMap}
-                      className="text-[10px] sm:text-xs"
+                      className="text-xs sm:text-xs"
                     />
                   </div>
                   <p className="truncate text-xs text-muted-foreground sm:text-sm">
@@ -105,31 +109,54 @@ export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingA
                 </div>
               </div>
 
-              <div className="flex justify-end sm:justify-start">
+              <div className="flex flex-wrap justify-end gap-2 sm:justify-start">
+                {appointment.status === 'PENDING' ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8"
+                    onClick={() => onUpdateStatus?.(appointment.id, 'CONFIRMED')}
+                  >
+                    Confirmar
+                  </Button>
+                ) : null}
+                {appointment.status === 'CONFIRMED' ? (
+                  <Button
+                    size="sm"
+                    className="h-8"
+                    onClick={() => onUpdateStatus?.(appointment.id, 'IN_PROGRESS')}
+                  >
+                    Iniciar
+                  </Button>
+                ) : null}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 flex-shrink-0"
-                      aria-label={`Abrir acoes do agendamento de ${appointment.client?.name || 'cliente'}`}
+                      aria-label={`Abrir ações do agendamento de ${appointment.client?.name || 'cliente'}`}
                     >
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onUpdateStatus?.(appointment.id, 'CONFIRMED')}>
-                      Confirmar
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onUpdateStatus?.(appointment.id, 'IN_PROGRESS')}>
-                      Iniciar atendimento
-                    </DropdownMenuItem>
+                    {appointment.status !== 'PENDING' ? (
+                      <DropdownMenuItem onClick={() => onUpdateStatus?.(appointment.id, 'CONFIRMED')}>
+                        Confirmar
+                      </DropdownMenuItem>
+                    ) : null}
+                    {appointment.status !== 'CONFIRMED' ? (
+                      <DropdownMenuItem onClick={() => onUpdateStatus?.(appointment.id, 'IN_PROGRESS')}>
+                        Iniciar atendimento
+                      </DropdownMenuItem>
+                    ) : null}
                     <DropdownMenuItem onClick={() => navigate('/agenda')}>
                       Reagendar
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className="text-destructive"
-                      onClick={() => onUpdateStatus?.(appointment.id, 'CANCELLED')}
+                      onClick={() => setAppointmentToCancel(appointment)}
                     >
                       Cancelar
                     </DropdownMenuItem>
@@ -140,6 +167,27 @@ export function UpcomingAppointments({ appointments, onUpdateStatus }: UpcomingA
           ))
         )}
       </CardContent>
-    </Card>
+      </Card>
+      <ConfirmationDialog
+      open={Boolean(appointmentToCancel)}
+      title="Cancelar agendamento?"
+      description={
+        appointmentToCancel?.client?.name
+          ? `O agendamento de ${appointmentToCancel.client.name} será cancelado.`
+          : 'Este agendamento será cancelado.'
+      }
+      confirmLabel="Cancelar agendamento"
+      confirmClassName="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+      onOpenChange={(open) => {
+        if (!open) setAppointmentToCancel(null);
+      }}
+      onConfirm={() => {
+        if (appointmentToCancel) {
+          void onUpdateStatus?.(appointmentToCancel.id, 'CANCELLED');
+        }
+        setAppointmentToCancel(null);
+      }}
+      />
+    </>
   );
 }

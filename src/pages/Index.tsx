@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
+import { appRouteManifest } from '@/app/route-manifest';
 import { RankedBarCard } from '@/components/common/RankedBarCard';
 import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { UpcomingAppointments } from '@/components/dashboard/UpcomingAppointments';
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
@@ -11,6 +11,7 @@ import { MonthlyRevenueLineChart } from '@/components/dashboard/MonthlyRevenueLi
 import { NoShowInsights } from '@/components/dashboard/NoShowInsights';
 import { WhatsAppReactivationChart } from '@/components/dashboard/WhatsAppReactivationChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,6 +27,7 @@ import { shouldForceLogoutOnDashboardRetry } from '@/lib/dashboard-auth-retry';
 import type { DashboardCustomerRankingResponse } from '@/types';
 import type { DashboardProfessionalMetricsResponse } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
 const normalizeDateToIso = (value: unknown) => {
   if (!value) return '';
@@ -70,21 +72,17 @@ function FlowStageCard({
 }: {
   icon: typeof Route;
   label: string;
-  value: number;
+  value: string | number;
   tone: 'amber' | 'sky';
 }) {
-  const toneClasses =
-    tone === 'amber'
-      ? {
-        wrapper: 'tone-surface border-orange-200/80 dark:border-orange-500/20 dark:bg-orange-500/10',
-        text: 'text-orange-700 dark:text-orange-300',
-        value: 'text-orange-900 dark:text-orange-100',
-      }
-      : {
-        wrapper: 'tone-surface border-sky-200/80 dark:border-sky-500/20 dark:bg-sky-500/10',
-        text: 'text-sky-700 dark:text-sky-300',
-        value: 'text-sky-900 dark:text-sky-100',
-      };
+  // Ambas as variantes representam contagens de estagnação no funil (risco); só a origem
+  // (agendamento direto vs. canal WhatsApp) difere. O cabeçalho do card já desambigua isso.
+  void tone;
+  const toneClasses = {
+    wrapper: 'border-warning/25 bg-warning/8',
+    text: 'text-warning',
+    value: 'text-foreground',
+  };
 
   return (
     <div className={`rounded-xl border px-3 py-3 ${toneClasses.wrapper}`}>
@@ -109,51 +107,152 @@ function QuickSignalCard({
   tone,
 }: {
   label: string;
-  value: number;
+  value: ReactNode;
   icon: typeof Clock;
   tone: 'amber' | 'emerald' | 'slate' | 'blue';
 }) {
   const toneMap = {
     amber: {
-      wrapper: 'border-amber-200/70 bg-amber-50/70 dark:border-amber-500/20 dark:bg-amber-500/10',
-      icon: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
-      label: 'text-amber-700 dark:text-amber-300',
-      value: 'text-amber-950 dark:text-amber-50',
+      wrapper: 'border-warning/20 bg-warning/8',
+      icon: 'bg-warning/12 text-warning',
+      label: 'text-warning',
+      value: 'text-foreground',
     },
     emerald: {
-      wrapper: 'border-emerald-200/70 bg-emerald-50/70 dark:border-emerald-500/20 dark:bg-emerald-500/10',
-      icon: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
-      label: 'text-emerald-700 dark:text-emerald-300',
-      value: 'text-emerald-950 dark:text-emerald-50',
+      wrapper: 'border-success/20 bg-success/8',
+      icon: 'bg-success/12 text-success',
+      label: 'text-success',
+      value: 'text-foreground',
     },
     slate: {
-      wrapper: 'border-slate-200 bg-gradient-to-br from-slate-50 to-white dark:border-slate-700 dark:from-slate-900 dark:to-slate-800/70',
-      icon: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
-      label: 'text-slate-600 dark:text-slate-300',
-      value: 'text-slate-950 dark:text-slate-50',
+      wrapper: 'border-border/70 bg-background/70',
+      icon: 'bg-muted/80 text-muted-foreground',
+      label: 'text-muted-foreground',
+      value: 'text-foreground',
     },
     blue: {
-      wrapper: 'border-blue-200/70 bg-blue-50/70 dark:border-blue-500/20 dark:bg-blue-500/10',
-      icon: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
-      label: 'text-blue-700 dark:text-blue-300',
-      value: 'text-blue-950 dark:text-blue-50',
+      wrapper: 'border-primary/20 bg-primary/8',
+      icon: 'bg-primary/12 text-primary',
+      label: 'text-primary',
+      value: 'text-foreground',
     },
   } as const;
 
   const styles = toneMap[tone];
 
   return (
-    <div className={`rounded-2xl border p-3 ${styles.wrapper}`}>
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className={`text-[11px] font-medium uppercase tracking-[0.14em] ${styles.label}`}>{label}</p>
-          <p className={`mt-1 text-2xl font-bold ${styles.value}`}>{value}</p>
+    <div className={cn('rounded-xl border px-3.5 py-3 backdrop-blur-sm transition-colors', styles.wrapper)}>
+      <div className="flex min-h-16 items-center justify-between gap-3">
+        <div className="min-w-0 space-y-1">
+          <p className={cn('text-[10px] font-semibold uppercase tracking-[0.16em]', styles.label)}>{label}</p>
+          <p className={cn('truncate text-2xl font-bold tracking-tight', styles.value)}>{value}</p>
         </div>
-        <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${styles.icon}`}>
-          <Icon className="h-5 w-5" />
+        <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', styles.icon)}>
+          <Icon className="h-4 w-4" />
         </div>
       </div>
     </div>
+  );
+}
+
+function DashboardCommandPanel({
+  isProfessionalUser,
+  pendingAppointments,
+  completedToday,
+  riskCount,
+  todayRevenue,
+  nextAppointmentLabel,
+  onOpenAgenda,
+}: {
+  isProfessionalUser: boolean;
+  pendingAppointments: number;
+  completedToday: number;
+  riskCount: number;
+  todayRevenue: number;
+  nextAppointmentLabel: string;
+  onOpenAgenda: () => void;
+}) {
+  const hasRisk = riskCount > 0 || pendingAppointments > 0;
+
+  return (
+    <Card className="overflow-hidden border-border/70 bg-card/95 shadow-panel backdrop-blur-sm">
+      <CardContent className="p-0">
+        <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="space-y-5 p-4 sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="max-w-3xl space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Agora no salão
+                  </p>
+                  <Badge
+                    variant={hasRisk ? 'default' : 'outline'}
+                    className={cn(
+                      'rounded-full px-2.5 py-0.5 text-[11px]',
+                      !hasRisk && 'border-success/25 bg-success/8 text-success',
+                    )}
+                  >
+                    {hasRisk ? 'Atenção agora' : 'Fluxo estável'}
+                  </Badge>
+                </div>
+                <div className="space-y-1">
+                  <h2 className="max-w-2xl text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+                    {hasRisk ? 'Priorize as pendências antes do próximo atendimento.' : 'Operação do dia sob controle.'}
+                  </h2>
+                  <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+                    {isProfessionalUser
+                      ? 'Sua agenda, entregas e comissão ficam reunidas para reduzir troca de tela entre atendimentos.'
+                      : 'Veja o que exige ação agora e abra a agenda sem precisar descer pelos blocos analíticos.'}
+                  </p>
+                </div>
+              </div>
+              <Button className="h-11 w-full gap-2 rounded-xl px-5 shadow-soft sm:w-auto" onClick={onOpenAgenda}>
+                Abrir agenda
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="grid gap-3 min-[520px]:grid-cols-2 min-[1500px]:grid-cols-4">
+              <QuickSignalCard label="Pendentes" value={pendingAppointments} icon={Clock} tone={hasRisk ? 'amber' : 'slate'} />
+              <QuickSignalCard label="Concluídos" value={completedToday} icon={CheckCircle} tone="emerald" />
+              <QuickSignalCard label={isProfessionalUser ? 'Comissão' : 'Receita hoje'} value={formatCurrency(todayRevenue)} icon={DollarSign} tone="blue" />
+              <QuickSignalCard label="Risco" value={riskCount} icon={Route} tone={riskCount > 0 ? 'amber' : 'slate'} />
+            </div>
+          </div>
+
+          <aside className="border-t border-border/70 bg-background/70 p-4 backdrop-blur-sm sm:p-6 lg:border-l lg:border-t-0">
+            <div className="flex h-full flex-col justify-between gap-5">
+              <div className="space-y-3">
+                <div
+                  className={cn(
+                    'flex h-11 w-11 items-center justify-center rounded-2xl',
+                    hasRisk ? 'bg-warning/12 text-warning' : 'bg-success/12 text-success',
+                  )}
+                >
+                  {hasRisk ? <Clock className="h-5 w-5" /> : <CheckCircle className="h-5 w-5" />}
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Próxima ação
+                  </p>
+                  <p className="text-base font-semibold leading-6 text-foreground">{nextAppointmentLabel}</p>
+                </div>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  {hasRisk
+                    ? 'Resolva os pontos abertos primeiro. Depois acompanhe tendência e performance com mais contexto.'
+                    : 'Sem bloqueio imediato. Use os blocos abaixo para acompanhar tendência e oportunidades.'}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border/70 bg-card/75 px-3.5 py-3 text-xs text-muted-foreground">
+                {hasRisk
+                  ? `${pendingAppointments} pendente(s) e ${riskCount} ponto(s) de risco no radar.`
+                  : 'Agenda, caixa e risco seguem sem urgência operacional.'}
+              </div>
+            </div>
+          </aside>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -230,7 +329,7 @@ export default function Dashboard() {
     } catch (error) {
       setProfessionalMetrics(null);
       setProfessionalMetricsError(
-        error instanceof Error ? error.message : 'Erro ao carregar metricas do profissional'
+        error instanceof Error ? error.message : 'Erro ao carregar métricas do profissional'
       );
     } finally {
       setProfessionalMetricsLoading(false);
@@ -399,68 +498,47 @@ export default function Dashboard() {
     );
   }
 
+  const nextActionAppointment = enrichedAppointments.find((appointment) =>
+    ['PENDING', 'CONFIRMED', 'IN_PROGRESS'].includes(appointment.status)
+  );
+  const dashboardRiskCount = isProfessionalUser
+    ? resolvedMetrics.pendingAppointments
+    : resolvedMetrics.pendingAppointments +
+      (resolvedMetrics.notConcludedToday ?? 0) +
+      (resolvedMetrics.whatsAppOpenFlowsToday ?? 0);
+  const nextAppointmentLabel = nextActionAppointment
+    ? `${nextActionAppointment.startTime} · ${nextActionAppointment.client?.name || 'Cliente'}`
+    : isProfessionalUser
+      ? 'Nenhuma pendência imediata na sua agenda.'
+      : 'Nenhuma pendência imediata na operação.';
+  const customerRankingItems = (customerRanking?.items || []).map((item) => ({
+    id: item.clientId,
+    name: item.clientName,
+    value: item.completedServices,
+    badgeText: formatCurrency(item.revenueTotal),
+    metaText: `${item.completedServices} serviço(s) · ${item.completedAppointments} atendimento(s) · última: ${
+      item.lastAppointmentDate ? new Date(`${item.lastAppointmentDate}T12:00:00`).toLocaleDateString('pt-BR') : '-'
+    }`,
+  }));
+
   return (
     <MainLayout title="Dashboard" subtitle={formattedDate}>
       <div className="space-y-5 sm:space-y-6">
-        <ModuleIntro
-          eyebrow="Visao executiva"
-          title={
-            isProfessionalUser
-              ? 'Priorize agenda, volume entregue e comissao do periodo atual.'
-              : 'Comece pelo que exige acao agora e desca depois para risco operacional e desempenho do mes.'
-          }
-          description={
-            isProfessionalUser
-              ? 'A leitura foi organizada para destacar sinais do dia antes dos blocos de apoio.'
-              : 'O topo resume operacao imediata; os blocos seguintes ajudam a localizar perda de conversao e concentracao de receita.'
-          }
-          badges={[
-            { label: 'Hoje' },
-            { label: 'Mes atual' },
-            { label: `${todayAppointments.length} agendamento(s) no dia` },
-          ]}
-          actions={
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => navigate('/agenda')}>
-              Abrir agenda do dia
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          }
-          points={[
-            {
-              eyebrow: isProfessionalUser ? 'Leitura principal' : 'Primeira leitura',
-              title: isProfessionalUser ? 'Pendencias, entrega e agenda' : 'Agenda, equipe e gargalos',
-              description: isProfessionalUser
-                ? 'Confirme pendencias, acompanhe o volume concluido e ajuste sua agenda antes dos blocos analiticos.'
-                : 'Trate agenda, equipe e gargalos do funil antes de descer para os graficos e rankings.',
-            },
-            {
-              eyebrow: 'Atalho de operacao',
-              title: 'Bata o olho e decida rapido',
-              description: 'Use os cards do topo para ler volume, receita, clientes e pendencias sem trocar de tela.',
-            },
-            {
-              eyebrow: 'Proximo passo',
-              title: 'Entre pela agenda do dia',
-              description: 'Quando houver pendencias ou conflito de horario, a agenda continua sendo o ponto de acao mais rapido.',
-            },
-          ]}
-        />
-
-        <WorkspaceNotice
-          title="Area de trabalho do dashboard"
-          description={
-            isProfessionalUser
-              ? 'Use os indicadores do topo para decidir o foco do dia e desca apenas depois para os blocos de apoio.'
-              : 'Leia primeiro o operacional imediato e depois use os blocos abaixo para encontrar risco, conversao e concentracao de receita.'
-          }
-          badge={isProfessionalUser ? `${resolvedMetrics.pendingAppointments} pendencia(s)` : `${resolvedMetrics.notConcludedToday ?? 0} em risco hoje`}
+        <DashboardCommandPanel
+          isProfessionalUser={isProfessionalUser}
+          pendingAppointments={resolvedMetrics.pendingAppointments}
+          completedToday={resolvedMetrics.completedToday}
+          riskCount={dashboardRiskCount}
+          todayRevenue={isProfessionalUser ? resolvedMetrics.monthlyRevenue : resolvedMetrics.todayRevenue}
+          nextAppointmentLabel={nextAppointmentLabel}
+          onOpenAgenda={() => navigate('/agenda')}
         />
 
         {!isProfessionalUser && <OnboardingChecklist />}
 
         <DashboardSectionHeader
-          eyebrow="Operacao"
-          title="O que exige atencao hoje"
+          eyebrow="Operação"
+          title="O que exige atenção hoje"
           description={
             isProfessionalUser
               ? 'Comece pelo seu volume concluído, pendências do dia e próxima agenda.'
@@ -471,7 +549,7 @@ export default function Dashboard() {
         <div className="grid gap-3 sm:gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 min-[1700px]:grid-cols-4">
             <MetricCard
-              title={isProfessionalUser ? 'Servicos concluidos' : 'Agendamentos Hoje'}
+              title={isProfessionalUser ? 'Serviços concluídos' : 'Agendamentos Hoje'}
               value={resolvedMetrics.todayAppointments}
               icon={isProfessionalUser ? CheckCircle : Calendar}
               trend={
@@ -483,11 +561,11 @@ export default function Dashboard() {
                     unavailableLabel: 'Sem dados anteriores',
                   }
               }
-              iconClassName={isProfessionalUser ? 'bg-emerald-600' : 'bg-primary'}
+              iconClassName={isProfessionalUser ? 'bg-success' : 'bg-primary'}
               compact
             />
             <MetricCard
-              title={isProfessionalUser ? 'Faturamento no periodo' : 'Faturamento Hoje'}
+              title={isProfessionalUser ? 'Faturamento no período' : 'Faturamento Hoje'}
                 value={formatCurrency(resolvedMetrics.todayRevenue)}
               icon={DollarSign}
               trend={
@@ -499,7 +577,7 @@ export default function Dashboard() {
                     unavailableLabel: 'Sem dados anteriores',
                   }
               }
-              iconClassName="bg-green-600"
+              iconClassName="bg-success"
               compact
               wrapValue
             />
@@ -520,7 +598,7 @@ export default function Dashboard() {
               compact
             />
             <MetricCard
-              title={isProfessionalUser ? 'Comissao no periodo' : 'Faturamento Mensal'}
+              title={isProfessionalUser ? 'Comissão no período' : 'Faturamento Mensal'}
                 value={formatCurrency(resolvedMetrics.monthlyRevenue)}
               icon={TrendingUp}
               trend={
@@ -532,14 +610,14 @@ export default function Dashboard() {
                     unavailableLabel: 'Sem dados anteriores',
                   }
               }
-              iconClassName="bg-blue-600"
+              iconClassName="bg-primary"
               compact
               wrapValue
             />
           </div>
           <Card className="border-border/70 bg-muted/15 shadow-none">
             <CardHeader className="space-y-1 pb-3">
-              <CardTitle className="text-base sm:text-lg">Resumo rapido do dia</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Resumo rápido do dia</CardTitle>
               <p className="text-xs text-muted-foreground">
                 Números que merecem leitura imediata antes de navegar pelo restante do dashboard.
               </p>
@@ -567,7 +645,7 @@ export default function Dashboard() {
                   />
                 ) : (
                   <QuickSignalCard
-                    label="Clientes no mes"
+                    label="Clientes no mês"
                     value={resolvedMetrics.totalClients}
                     icon={Users}
                     tone="blue"
@@ -604,15 +682,32 @@ export default function Dashboard() {
             <UpcomingAppointments appointments={enrichedAppointments} onUpdateStatus={updateAppointmentStatus} />
           </div>
 
-          <Card className="shadow-none">
-            <CardHeader className="pb-2 sm:pb-4">
-              <CardTitle className="text-base sm:text-lg">Equipe Disponível</CardTitle>
+          <Card className="border-border/70 bg-background/95 shadow-none">
+            <CardHeader className="flex flex-col gap-3 pb-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-base sm:text-lg">Equipe disponível</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Status dos profissionais no dia para entender agenda, ocupação e próximos atendimentos.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={() => navigate(appRouteManifest.professionals.root)}
+              >
+                Ver equipe
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             </CardHeader>
             <CardContent className="space-y-3 sm:space-y-4">
               {activeProfessionals.length === 0 ? (
-                <p className="py-4 text-center text-sm text-muted-foreground">
-                  Nenhum profissional cadastrado
-                </p>
+                <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 px-4 py-8 text-center">
+                  <p className="text-sm font-medium text-foreground">Nenhum profissional cadastrado</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Cadastre a equipe para acompanhar disponibilidade e próximos horários no dashboard.
+                  </p>
+                </div>
               ) : (
                 activeProfessionals.slice(0, 5).map((professional) => {
                   const professionalAppointments = todayAppointments.filter(
@@ -628,7 +723,7 @@ export default function Dashboard() {
                   return (
                     <div
                       key={professional.id}
-                      className="flex flex-col gap-3 rounded-xl border border-border/60 bg-muted/30 p-3 sm:flex-row sm:items-center"
+                      className="flex flex-col gap-3 rounded-xl border border-border/70 bg-background/85 p-3 transition-colors hover:bg-muted/15 sm:flex-row sm:items-center"
                     >
                       <Avatar className="h-9 w-9 flex-shrink-0 sm:h-10 sm:w-10">
                         <AvatarImage src={professional.avatar} />
@@ -642,22 +737,22 @@ export default function Dashboard() {
                             {professional.name}
                           </p>
                           <p className="max-w-[240px] truncate text-xs text-muted-foreground">
-                            {professional.specialties.slice(0, 2).join(', ')}
+                            {professional.specialties.slice(0, 2).join(', ') || 'Sem especialidade informada'}
                           </p>
                         </div>
                         <Badge
                           variant="outline"
-                          className={`w-fit shrink-0 text-[10px] sm:text-xs ${currentAppointment
-                            ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-300'
+                          className={`w-fit shrink-0 text-xs sm:text-xs ${currentAppointment
+                            ? 'border-primary/25 bg-primary/8 text-primary'
                               : nextAppointment
-                                ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-500/20 dark:bg-green-500/10 dark:text-green-300'
+                                ? 'border-success/25 bg-success/8 text-success'
                                 : 'border-border bg-muted text-muted-foreground'
                             }`}
                         >
                           {currentAppointment
                             ? 'Ocupado'
                             : nextAppointment
-                              ? `Prox: ${nextAppointment.startTime}`
+                              ? `Próx: ${nextAppointment.startTime}`
                               : 'Livre'}
                         </Badge>
                       </div>
@@ -670,25 +765,35 @@ export default function Dashboard() {
         </div>
 
         {!isProfessionalUser ? (
-          <>
+          <Tabs defaultValue="risco" className="space-y-4">
+            <TabsList className="flex h-auto w-full max-w-full overflow-x-auto rounded-xl border bg-muted/30 p-1 sm:w-fit">
+              <TabsTrigger value="risco" className="min-w-fit flex-1 whitespace-nowrap px-4 py-2 text-sm sm:flex-none">
+                Risco e conversão
+              </TabsTrigger>
+              <TabsTrigger value="performance" className="min-w-fit flex-1 whitespace-nowrap px-4 py-2 text-sm sm:flex-none">
+                Desempenho do mês
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="risco" className="space-y-4">
             <DashboardSectionHeader
-              eyebrow="Risco e conversao"
-              title="Onde a operacao perde oportunidade"
+              eyebrow="Risco e conversão"
+              title="Onde a operação perde oportunidade"
               description="Use estes blocos para entender onde o funil trava hoje e quais sinais merecem intervenção imediata."
             />
 
             <div className="grid gap-4 lg:grid-cols-2">
-              <Card className="border-orange-200/70 bg-orange-50/65 shadow-none dark:border-orange-500/20 dark:bg-orange-500/10">
+              <Card className="border-warning/25 bg-warning/8 shadow-none">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base sm:text-lg">Fluxos nao concluidos hoje</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">Fluxos não concluídos hoje</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Etapas do funil geral que ficaram pelo caminho antes da conclusao.
+                    Etapas do funil geral que ficaram pelo caminho antes da conclusão.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="tone-surface rounded-xl border border-orange-200/80 px-4 py-3 dark:border-orange-500/20 dark:bg-orange-500/10">
-                    <p className="text-xs text-orange-700 dark:text-orange-300">Total em risco hoje</p>
-                    <p className="text-3xl font-bold text-orange-900 dark:text-orange-100">
+                  <div className="rounded-xl border border-warning/25 bg-warning/8 px-4 py-3">
+                    <p className="text-xs text-warning">Total em risco hoje</p>
+                    <p className="text-3xl font-bold text-foreground">
                       {resolvedMetrics.notConcludedToday ?? 0}
                     </p>
                   </div>
@@ -718,20 +823,34 @@ export default function Dashboard() {
                       tone="amber"
                     />
                   </div>
+                  <div className="flex flex-col gap-2 rounded-xl border border-border/70 bg-background/80 p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      Revise a fila para entender em qual etapa o cliente desistiu.
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                      onClick={() => navigate(appRouteManifest.reports.abandonment)}
+                    >
+                      Ver abandonos
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-sky-200/70 bg-sky-50/65 shadow-none dark:border-sky-500/20 dark:bg-sky-500/10">
+              <Card className="border-warning/25 bg-warning/8 shadow-none">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base sm:text-lg">WhatsApp em aberto hoje</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Conversas ainda nao resolvidas antes de virarem abandono formal.
+                    Conversas ainda não resolvidas antes de virarem abandono formal.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="tone-surface rounded-xl border border-sky-200/80 px-4 py-3 dark:border-sky-500/20 dark:bg-sky-500/10">
-                    <p className="text-xs text-sky-700 dark:text-sky-300">Total pausado no canal</p>
-                    <p className="text-3xl font-bold text-sky-900 dark:text-sky-100">
+                  <div className="rounded-xl border border-warning/25 bg-warning/8 px-4 py-3">
+                    <p className="text-xs text-warning">Total pausado no canal</p>
+                    <p className="text-3xl font-bold text-foreground">
                       {resolvedMetrics.whatsAppOpenFlowsToday ?? 0}
                     </p>
                   </div>
@@ -761,6 +880,20 @@ export default function Dashboard() {
                       tone="sky"
                     />
                   </div>
+                  <div className="flex flex-col gap-2 rounded-xl border border-border/70 bg-background/80 p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      Entre no chat para assumir conversas paradas antes que virem abandono.
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                      onClick={() => navigate(appRouteManifest.chat.root)}
+                    >
+                      Abrir chat
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -770,17 +903,13 @@ export default function Dashboard() {
             <div className="w-full">
               <WhatsAppReactivationChart />
             </div>
+            </TabsContent>
 
-            <WorkspaceNotice
-              title="Leitura de risco antes da performance"
-              description="Se abandono, WhatsApp em aberto ou no-show subirem, trate isso antes de usar os blocos abaixo para analisar crescimento e ranking."
-              badge={`${(resolvedMetrics.notConcludedToday ?? 0) + (resolvedMetrics.whatsAppOpenFlowsToday ?? 0)} sinais prioritarios`}
-            />
-
+            <TabsContent value="performance" className="space-y-4">
             <DashboardSectionHeader
               eyebrow="Performance"
-              title="Receita e desempenho do mes"
-              description="Depois de tratar a operacao do dia, use estes blocos para leitura de crescimento, receita e ranking."
+              title="Receita e desempenho do mês"
+              description="Depois de tratar a operação do dia, use estes blocos para leitura de crescimento, receita e ranking."
             />
 
             <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
@@ -790,17 +919,10 @@ export default function Dashboard() {
 
             <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
               <RankedBarCard
-                title="Clientes com mais serviços no período"
+                title="Clientes mais recorrentes"
                 icon={Users}
                 subtitle={customerRanking?.lastUpdatedAt ? `Atualizado em ${new Date(customerRanking.lastUpdatedAt).toLocaleString('pt-BR')}` : undefined}
-                items={(customerRanking?.items || []).map((item) => ({
-                  id: item.clientId,
-                  name: item.clientName,
-                  value: item.completedServices,
-                    badgeText: formatCurrency(item.revenueTotal),
-                  metaText: `${item.completedServices} serviço(s) - ${item.completedAppointments} atendimento(s) - última: ${item.lastAppointmentDate ? new Date(`${item.lastAppointmentDate}T12:00:00`).toLocaleDateString('pt-BR') : '-'
-                    }`,
-                }))}
+                items={customerRankingItems}
                 maxItems={5}
                 valueLabel="Serviços"
                 labelPrefix="Cliente"
@@ -808,7 +930,7 @@ export default function Dashboard() {
               />
 
               <RankedBarCard
-                title="Top profissionais no dashboard"
+                title="Profissionais por atendimento concluído"
                 icon={TrendingUp}
                 subtitle={`Mês atual: ${new Date(`${monthStartIso}T12:00:00`).toLocaleDateString('pt-BR')} a ${new Date(`${monthEndIso}T12:00:00`).toLocaleDateString('pt-BR')}`}
                 items={topProfessionalItems}
@@ -819,21 +941,15 @@ export default function Dashboard() {
                 valueFormatter={(value) => `${value} atendimento(s)`}
               />
             </div>
-          </>
+            </TabsContent>
+          </Tabs>
         ) : (
           <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
             <RankedBarCard
-              title="Clientes com mais serviços no período"
+              title="Clientes mais recorrentes"
               icon={Users}
               subtitle={customerRanking?.lastUpdatedAt ? `Atualizado em ${new Date(customerRanking.lastUpdatedAt).toLocaleString('pt-BR')}` : undefined}
-              items={(customerRanking?.items || []).map((item) => ({
-                id: item.clientId,
-                name: item.clientName,
-                value: item.completedServices,
-                  badgeText: formatCurrency(item.revenueTotal),
-                metaText: `${item.completedServices} serviço(s) - ${item.completedAppointments} atendimento(s) - última: ${item.lastAppointmentDate ? new Date(`${item.lastAppointmentDate}T12:00:00`).toLocaleDateString('pt-BR') : '-'
-                  }`,
-              }))}
+              items={customerRankingItems}
               maxItems={5}
               valueLabel="Serviços"
               labelPrefix="Cliente"
@@ -842,9 +958,9 @@ export default function Dashboard() {
 
             <Card className="border-border/70 bg-muted/15 shadow-none">
               <CardHeader className="space-y-1 pb-3">
-                <CardTitle className="text-base sm:text-lg">Resumo da sua operacao</CardTitle>
+                <CardTitle className="text-base sm:text-lg">Resumo da sua operação</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Um checkpoint rapido para manter foco em entrega, agenda e conversao do dia.
+                  Um checkpoint rápido para manter foco em entrega, agenda e conversão do dia.
                 </p>
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-muted-foreground">
@@ -853,19 +969,19 @@ export default function Dashboard() {
                     Leitura recomendada
                   </p>
                   <p className="mt-2 font-medium text-foreground">
-                    Volume entregue, receita do periodo e comissao acumulada precisam ser lidos juntos.
+                    Volume entregue, receita do período e comissão acumulada precisam ser lidos juntos.
                   </p>
                   <p className="mt-1">
-                    Use os cards do topo para acompanhar esses tres sinais sem perder o foco na agenda do dia.
+                    Use os cards do topo para acompanhar esses três sinais sem perder o foco na agenda do dia.
                   </p>
                 </div>
                 <div className="rounded-xl border border-border/70 bg-background/85 p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    Proximo passo
+                    Próximo passo
                   </p>
-                  <p className="mt-2 font-medium text-foreground">Confirme pendencias e empurre conclusao.</p>
+                  <p className="mt-2 font-medium text-foreground">Confirme pendências e empurre conclusão.</p>
                   <p className="mt-1">
-                    Priorize confirmacao de pendencias na agenda e mantenha o foco em converter atendimentos agendados em servicos concluidos.
+                    Priorize confirmação de pendências na agenda e mantenha o foco em converter atendimentos agendados em serviços concluídos.
                   </p>
                 </div>
               </CardContent>

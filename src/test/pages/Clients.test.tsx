@@ -69,11 +69,11 @@ describe("Clients", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText("Total de Clientes")).toBeInTheDocument();
-    expect(screen.getByText("Ativos nesta pagina")).toBeInTheDocument();
+    expect(screen.getByText("Total de clientes")).toBeInTheDocument();
+    expect(screen.getByText("Ativos nesta página")).toBeInTheDocument();
     expect(screen.getAllByText("Maria Silva").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: /Novo Cliente/i })).toBeInTheDocument();
-    expect(screen.getByText("Pagina 1 de 3")).toBeInTheDocument();
+    expect(screen.getByText("Página 1 de 3")).toBeInTheDocument();
   }, 10000);
 
   it("should open the client create dialog from the shared crud toolbar", async () => {
@@ -91,7 +91,7 @@ describe("Clients", () => {
 
     await user.click(screen.getByRole("button", { name: /Novo Cliente/i }));
 
-    expect(screen.getByText("Novo Cliente")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: /Novo cliente/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Criar cliente/i })).toBeInTheDocument();
   }, 10000);
 });

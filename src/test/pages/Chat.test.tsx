@@ -183,16 +183,16 @@ describe("ChatPage", () => {
 
     expect(await screen.findByText("Modo Manual")).toBeInTheDocument();
     expect(screen.getByText("Todas as conversas")).toBeInTheDocument();
-    expect(screen.getByText("Historico completo de mensagens por cliente")).toBeInTheDocument();
+    expect(screen.getByText("Histórico completo de mensagens por cliente")).toBeInTheDocument();
     expect(screen.getByLabelText("Buscar conversas")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Nao lidas" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: "Não lidas" })).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByRole("button", { name: "Todas" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: "Abrir conversa com Maria Silva" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getAllByText("Maria Silva").length).toBeGreaterThan(0);
     expect(screen.getByText("Modo Manual")).toBeInTheDocument();
     expect(screen.getByText("Mensagem teste")).toBeInTheDocument();
     expect(screen.getByText("Falhou")).toBeInTheDocument();
-    expect(screen.getByText("Saida manual")).toBeInTheDocument();
+    expect(screen.getByText("Saída manual")).toBeInTheDocument();
     expect(screen.getByText("Cliente")).toBeInTheDocument();
     expect(screen.getByText("Recebida")).toBeInTheDocument();
     expect(screen.getByLabelText("Mensagem para o cliente")).toBeInTheDocument();
@@ -302,7 +302,7 @@ describe("ChatPage", () => {
     expect(within(conversationsList).queryByText("Cliente 1")).not.toBeInTheDocument();
   }, 10000);
 
-  it("exibe badge de nao lidas quando unreadCount > 0", async () => {
+  it("exibe badge de não lidas quando unreadCount > 0", async () => {
     chatState.conversations = [
       buildConversation({ id: "conv-1", unreadCount: 3 }),
       buildConversation({ id: "conv-2", clientId: "client-2", clientName: "Joao", unreadCount: 0 }),
@@ -325,7 +325,7 @@ describe("ChatPage", () => {
   it("botao Carregar mensagens anteriores aparece quando hasNextMessages=true", async () => {
     renderChatPage();
 
-    // por padrao hasNextMessages = false no mock, botao nao aparece
+    // por padrão hasNextMessages = false no mock, botão não aparece
     await screen.findByText("Modo Manual");
     expect(screen.queryByRole("button", { name: /Carregar mensagens anteriores/i })).not.toBeInTheDocument();
   }, 10000);

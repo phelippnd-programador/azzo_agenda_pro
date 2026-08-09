@@ -1,5 +1,6 @@
 import { AlertTriangle, MessageSquareText } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ReportTabs } from "@/pages/report/components/ReportTabs";
 import { WhatsAppReactivationQueue } from "@/components/dashboard/WhatsAppReactivationQueue";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -9,6 +10,8 @@ export default function AbandonmentReport() {
       title="Relatorio de abandono"
       subtitle="Fila operacional para acompanhar conversas pausadas, excecoes e retomadas do WhatsApp."
     >
+      <ReportTabs />
+
       <div className="space-y-6">
         <Alert>
           <MessageSquareText className="h-4 w-4" />

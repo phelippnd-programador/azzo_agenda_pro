@@ -56,7 +56,7 @@ describe("NoShowInsights", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("No-show no periodo")).toBeInTheDocument();
+    expect(await screen.findByText("No-show no período")).toBeInTheDocument();
     expect(screen.getByText("50.0%")).toBeInTheDocument();
   });
 
@@ -78,7 +78,7 @@ describe("NoShowInsights", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("No-show no periodo")).toBeInTheDocument();
+    expect(await screen.findByText("No-show no período")).toBeInTheDocument();
     expect(screen.getByText("0.0%")).toBeInTheDocument();
   });
 });

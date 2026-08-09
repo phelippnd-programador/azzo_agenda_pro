@@ -30,8 +30,8 @@ function resolveNotificationTitle(item: NotificationItem) {
   if (channel.includes("PAYMENT")) return "Pagamento recebido";
   if (channel.includes("APPOINTMENT")) return "Novo agendamento";
   if (item.status === "FAILED") return "Falha no envio";
-  if (item.status === "PENDING") return "Notificacao pendente";
-  return item.channel || "Notificacao";
+  if (item.status === "PENDING") return "Notificação pendente";
+  return item.channel || "Notificação";
 }
 
 export function NotificationBell() {
@@ -53,20 +53,20 @@ export function NotificationBell() {
           variant="ghost"
           size="icon"
           className="relative h-8 w-8 sm:h-9 sm:w-9"
-          aria-label="Abrir notificacoes"
+          aria-label="Abrir notificações"
         >
           <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
           {unreadCount > 0 ? (
-            <Badge className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 p-0 flex items-center justify-center bg-destructive text-[10px] sm:text-xs">
+            <Badge className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 p-0 flex items-center justify-center bg-destructive text-xs sm:text-xs">
               {unreadCount > 99 ? "99+" : unreadCount}
             </Badge>
           ) : null}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-72 sm:w-80">
-        <DropdownMenuLabel>Notificacoes</DropdownMenuLabel>
+        <DropdownMenuLabel>Notificações</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {!summaryItems.length ? <DropdownMenuItem className="text-sm text-muted-foreground">Nenhuma notificacao</DropdownMenuItem> : null}
+        {!summaryItems.length ? <DropdownMenuItem className="text-sm text-muted-foreground">Nenhuma notificação</DropdownMenuItem> : null}
         {summaryItems.slice(0, 5).map((item) => (
           <DropdownMenuItem
             key={item.id}

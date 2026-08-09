@@ -18,6 +18,7 @@ import type {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateInput } from "@/components/ui/date-input";
 import { Input } from "@/components/ui/input";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -34,16 +35,16 @@ const STATUS_OPTIONS = [
 
 const STAGE_OPTIONS = [
   { label: "Todas as etapas", value: "ALL" },
-  { label: "Servico", value: "SERVICE_SELECTION" },
+  { label: "Serviço", value: "SERVICE_SELECTION" },
   { label: "Profissional", value: "PROFESSIONAL_SELECTION" },
-  { label: "Horario", value: "TIME_SELECTION" },
-  { label: "Revisao final", value: "FINAL_REVIEW" },
+  { label: "Horário", value: "TIME_SELECTION" },
+  { label: "Revisão final", value: "FINAL_REVIEW" },
 ] as const;
 
 const PAGE_SIZE_OPTIONS = [
-  { label: "12 por pagina", value: "12" },
-  { label: "24 por pagina", value: "24" },
-  { label: "50 por pagina", value: "50" },
+  { label: "12 por página", value: "12" },
+  { label: "24 por página", value: "24" },
+  { label: "50 por página", value: "50" },
 ] as const;
 
 const emptyQueue: DashboardWhatsAppReactivationQueueResponse = {
@@ -86,32 +87,32 @@ const maskPhone = (value?: string | null) => {
 const getStatusBadgeClass = (status?: string | null) => {
   switch (status) {
     case "ACTIVE":
-      return "border-amber-200 bg-amber-50 text-amber-800";
+      return "border-warning/25 bg-warning/10 text-warning";
     case "REACTIVATED":
-      return "border-emerald-200 bg-emerald-50 text-emerald-800";
+      return "border-success/25 bg-success/10 text-success";
     case "CONVERTED":
-      return "border-blue-200 bg-blue-50 text-blue-800";
+      return "border-primary/25 bg-primary/10 text-primary";
     case "CANCELLED":
-      return "border-rose-200 bg-rose-50 text-rose-800";
+      return "border-destructive/25 bg-destructive/10 text-destructive";
     case "EXHAUSTED":
-      return "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200";
+      return "border-border/70 bg-muted text-muted-foreground";
     default:
-      return "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200";
+      return "border-border/70 bg-muted text-muted-foreground";
   }
 };
 
 const getStageBadgeClass = (stage?: string | null) => {
   switch (stage) {
     case "SERVICE_SELECTION":
-      return "border-amber-200 bg-amber-50 text-amber-800";
+      return "border-warning/25 bg-warning/10 text-warning";
     case "PROFESSIONAL_SELECTION":
-      return "border-orange-200 bg-orange-50 text-orange-800";
+      return "border-warning/25 bg-warning/10 text-warning";
     case "TIME_SELECTION":
-      return "border-blue-200 bg-blue-50 text-blue-800";
+      return "border-primary/25 bg-primary/10 text-primary";
     case "FINAL_REVIEW":
-      return "border-emerald-200 bg-emerald-50 text-emerald-800";
+      return "border-success/25 bg-success/10 text-success";
     default:
-      return "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200";
+      return "border-border/70 bg-muted text-muted-foreground";
   }
 };
 
@@ -126,7 +127,7 @@ const getManualInterventionLabel = (reason?: string | null) => {
     case "STAGE_RETRY_LIMIT":
       return "Fluxo travado";
     default:
-      return "Intervencao manual";
+      return "Intervenção manual";
   }
 };
 
@@ -239,12 +240,12 @@ export function WhatsAppReactivationQueue() {
   };
 
   return (
-    <Card className="tone-surface border-slate-200 dark:border-slate-700">
+    <Card className="border-border/70 bg-background/95 shadow-none">
       <CardHeader className="gap-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-1">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <MessageSquareText className="h-5 w-5 text-slate-700 dark:text-slate-200" />
+              <MessageSquareText className="h-5 w-5 text-primary" />
               Fila operacional de abandonos
             </CardTitle>
             <CardDescription>
@@ -257,7 +258,7 @@ export function WhatsAppReactivationQueue() {
               {queue.totalItems ?? 0} ciclo(s) encontrado(s)
             </div>
             <div>
-              Pagina {Math.max(currentPage, 1)} de {Math.max(totalPages, 1)}
+              Página {Math.max(currentPage, 1)} de {Math.max(totalPages, 1)}
             </div>
           </div>
         </div>
@@ -265,11 +266,11 @@ export function WhatsAppReactivationQueue() {
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
           <div className="space-y-2">
             <p className="text-xs text-muted-foreground">Data inicial</p>
-            <Input type="date" value={fromInput} onChange={(event) => setFromInput(event.target.value)} />
+            <DateInput value={fromInput} onChange={(event) => setFromInput(event.target.value)} />
           </div>
           <div className="space-y-2">
             <p className="text-xs text-muted-foreground">Data final</p>
-            <Input type="date" value={toInput} onChange={(event) => setToInput(event.target.value)} />
+            <DateInput value={toInput} onChange={(event) => setToInput(event.target.value)} />
           </div>
           <div className="space-y-2">
             <p className="text-xs text-muted-foreground">Status</p>
@@ -308,13 +309,13 @@ export function WhatsAppReactivationQueue() {
               <Input
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
-                placeholder="Cliente, telefone, servico..."
+                placeholder="Cliente, telefone, serviço..."
                 className="pl-9"
               />
             </div>
           </div>
           <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">Pagina</p>
+            <p className="text-xs text-muted-foreground">Página</p>
             <Select value={pageSizeInput} onValueChange={setPageSizeInput}>
               <SelectTrigger>
                 <SelectValue placeholder="Tamanho" />
@@ -357,46 +358,46 @@ export function WhatsAppReactivationQueue() {
             ))}
           </div>
         ) : queue.items.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-6 py-10 text-center dark:border-slate-700 dark:bg-slate-900/40">
-            <RefreshCcw className="mx-auto mb-3 h-8 w-8 text-slate-500 dark:text-slate-300" />
+          <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 px-6 py-10 text-center">
+            <RefreshCcw className="mx-auto mb-3 h-8 w-8 text-primary" />
             <p className="font-medium text-foreground">Nenhum ciclo encontrado neste filtro</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Ajuste periodo, busca, etapa ou status para revisar outros abandonos do WhatsApp.
+              Ajuste período, busca, etapa ou status para revisar outros abandonos do WhatsApp.
             </p>
           </div>
         ) : (
           <div className="space-y-3">
             {queue.exceptionItems.length > 0 ? (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
+              <div className="rounded-2xl border border-warning/25 bg-warning/8 p-4">
                 <div className="mb-3 flex items-start gap-3">
                   <div className="rounded-xl bg-background/85 p-2 dark:bg-background/60">
-                    <AlertCircle className="h-5 w-5 text-amber-700" />
+                    <AlertCircle className="h-5 w-5 text-warning" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-amber-950">Excecoes que exigem acao humana</p>
-                    <p className="text-xs text-amber-800">
-                      Falhas recentes de envio, destinos invalidos ou fluxos travados que precisam de conferencia manual.
+                    <p className="text-sm font-semibold text-foreground">Exceções que exigem ação humana</p>
+                    <p className="text-xs text-muted-foreground">
+                      Falhas recentes de envio, destinos inválidos ou fluxos travados que precisam de conferência manual.
                     </p>
                   </div>
                 </div>
                 <div className="grid gap-3 xl:grid-cols-2">
                   {queue.exceptionItems.map((item) => (
-                    <div key={`exception-${item.cycleId}`} className="rounded-xl border border-amber-200 bg-background/90 p-3 dark:border-amber-500/20 dark:bg-background/70">
+                    <div key={`exception-${item.cycleId}`} className="rounded-xl border border-border/70 bg-background/90 p-3">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium text-slate-900 dark:text-slate-50">{item.customerName || "Cliente nao identificado"}</p>
-                        <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-800">
+                        <p className="font-medium text-foreground">{item.customerName || "Cliente não identificado"}</p>
+                        <Badge variant="outline" className="border-warning/25 bg-warning/10 text-warning">
                           {Boolean(item.manualInterventionSuggested)
                             ? getManualInterventionLabel(item.manualInterventionReason)
                             : item.cancelReason === "INVALID_DESTINATION"
-                            ? "Destino invalido"
-                            : item.latestAttemptStatusLabel || "Excecao"}
+                            ? "Destino inválido"
+                            : item.latestAttemptStatusLabel || "Exceção"}
                         </Badge>
                       </div>
-                      <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{buildContextSummary(item)}</p>
+                      <p className="mt-2 text-sm text-foreground">{buildContextSummary(item)}</p>
                       <p className="mt-2 text-xs text-muted-foreground">
                         {Boolean(item.manualInterventionSuggested)
-                          ? `Usuario preso no mesmo passo${item.manualInterventionAttempts ? ` (${item.manualInterventionAttempts} tentativas)` : ""}.`
-                          : item.latestAttemptError || item.cancelReason || "Sem detalhe tecnico"}
+                          ? `Usuário preso no mesmo passo${item.manualInterventionAttempts ? ` (${item.manualInterventionAttempts} tentativas)` : ""}.`
+                          : item.latestAttemptError || item.cancelReason || "Sem detalhe técnico"}
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         {item.clientId ? (
@@ -419,19 +420,19 @@ export function WhatsAppReactivationQueue() {
             {queue.items.map((item) => (
               <div
                 key={item.cycleId}
-                className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50/70 p-4 shadow-sm dark:border-slate-700 dark:from-slate-900 dark:to-slate-800/70"
+                className="rounded-2xl border border-border/70 bg-background/90 p-4 transition-colors hover:bg-muted/15"
               >
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="text-base font-semibold text-foreground">
-                        {item.customerName || "Cliente nao identificado"}
+                        {item.customerName || "Cliente não identificado"}
                       </p>
                       <Badge variant="outline" className={getStatusBadgeClass(item.status)}>
                         {item.statusLabel || item.status || "Indefinido"}
                       </Badge>
                       <Badge variant="outline" className={getStageBadgeClass(item.lastStage)}>
-                        {item.lastStageLabel || item.lastStage || "Etapa nao identificada"}
+                        {item.lastStageLabel || item.lastStage || "Etapa não identificada"}
                       </Badge>
                     </div>
 
@@ -463,12 +464,12 @@ export function WhatsAppReactivationQueue() {
 
                 <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
                   <div className="space-y-3">
-                    <div className="rounded-xl border border-slate-200 bg-white/80 px-3 py-3 dark:border-slate-700 dark:bg-slate-900/50">
-                      <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Contexto salvo</p>
-                      <p className="mt-1 text-sm font-medium text-slate-900 dark:text-slate-50">{buildContextSummary(item)}</p>
+                    <div className="rounded-xl border border-border/70 bg-background/80 px-3 py-3">
+                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Contexto salvo</p>
+                      <p className="mt-1 text-sm font-medium text-foreground">{buildContextSummary(item)}</p>
                       {Boolean(item.manualInterventionSuggested) ? (
                         <div className="mt-2">
-                          <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-800">
+                          <Badge variant="outline" className="border-warning/25 bg-warning/10 text-warning">
                             {getManualInterventionLabel(item.manualInterventionReason)}
                           </Badge>
                         </div>
@@ -476,17 +477,17 @@ export function WhatsAppReactivationQueue() {
                       <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
                         {item.nextAttemptAt ? (
                           <span>
-                            Proxima tentativa #{item.nextAttemptNumber ?? "-"} em {formatDateTime(item.nextAttemptAt)}
+                            Próxima tentativa #{item.nextAttemptNumber ?? "-"} em {formatDateTime(item.nextAttemptAt)}
                           </span>
                         ) : item.latestAttemptAt ? (
                           <span>
-                            Ultima tentativa #{item.latestAttemptNumber ?? "-"} em {formatDateTime(item.latestAttemptAt)}
+                            Última tentativa #{item.latestAttemptNumber ?? "-"} em {formatDateTime(item.latestAttemptAt)}
                           </span>
                         ) : (
                           <span>Sem tentativa registrada ainda</span>
                         )}
                         {item.latestAttemptStatusLabel ? (
-                          <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                          <Badge variant="outline" className="border-border/70 bg-muted text-muted-foreground">
                             {item.latestAttemptStatusLabel}
                           </Badge>
                         ) : null}
@@ -494,70 +495,70 @@ export function WhatsAppReactivationQueue() {
                     </div>
 
                     <div className="grid gap-3 md:grid-cols-2">
-                      <div className="rounded-xl border border-slate-200 bg-white/80 px-3 py-3 dark:border-slate-700 dark:bg-slate-900/50">
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                          Ultima mensagem do cliente
+                      <div className="rounded-xl border border-border/70 bg-background/80 px-3 py-3">
+                        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          Última mensagem do cliente
                         </p>
-                        <p className="mt-2 text-sm text-slate-800 dark:text-slate-200">
-                          {item.customerLastMessage || "Nao capturada"}
+                        <p className="mt-2 text-sm text-foreground">
+                          {item.customerLastMessage || "Não capturada"}
                         </p>
                       </div>
-                      <div className="rounded-xl border border-slate-200 bg-white/80 px-3 py-3 dark:border-slate-700 dark:bg-slate-900/50">
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                          Ultimo contexto do assistente
+                      <div className="rounded-xl border border-border/70 bg-background/80 px-3 py-3">
+                        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          Último contexto do assistente
                         </p>
-                        <p className="mt-2 text-sm text-slate-800 dark:text-slate-200">
-                          {item.assistantLastPrompt || "Nao capturado"}
+                        <p className="mt-2 text-sm text-foreground">
+                          {item.assistantLastPrompt || "Não capturado"}
                         </p>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-3 dark:border-slate-700 dark:bg-slate-900/40">
-                      <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Sinais operacionais</p>
-                      <div className="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+                    <div className="rounded-xl border border-border/70 bg-muted/15 px-3 py-3">
+                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Sinais operacionais</p>
+                      <div className="mt-2 space-y-2 text-sm text-muted-foreground">
                         <div className="flex items-center justify-between gap-3">
-                          <span>Servico</span>
-                          <span className="font-medium text-slate-900 dark:text-slate-50">{item.lastServiceName || "-"}</span>
+                          <span>Serviço</span>
+                          <span className="font-medium text-foreground">{item.lastServiceName || "-"}</span>
                         </div>
                         <div className="flex items-center justify-between gap-3">
                           <span>Profissional</span>
-                          <span className="font-medium text-slate-900 dark:text-slate-50">{item.lastProfessionalName || "-"}</span>
+                          <span className="font-medium text-foreground">{item.lastProfessionalName || "-"}</span>
                         </div>
                         <div className="flex items-center justify-between gap-3">
                           <span>Data pretendida</span>
-                          <span className="font-medium text-slate-900 dark:text-slate-50">
+                          <span className="font-medium text-foreground">
                             {item.lastRequestedDate ? formatDateOnly(item.lastRequestedDate) : "-"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between gap-3">
-                          <span>Horario pretendido</span>
-                          <span className="font-medium text-slate-900 dark:text-slate-50">{item.lastRequestedTime || "-"}</span>
+                          <span>Horário pretendido</span>
+                          <span className="font-medium text-foreground">{item.lastRequestedTime || "-"}</span>
                         </div>
                       </div>
                     </div>
 
                     {item.cancelReason || item.latestAttemptError ? (
-                      <div className="rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-3 text-sm text-amber-900">
+                      <div className="rounded-xl border border-warning/25 bg-warning/10 px-3 py-3 text-sm text-foreground">
                         <div className="mb-1 flex items-center gap-2 font-medium">
-                          <AlertCircle className="h-4 w-4" />
-                          Sinal de atencao operacional
+                          <AlertCircle className="h-4 w-4 text-warning" />
+                          Sinal de atenção operacional
                         </div>
                         {item.cancelReason ? <p>Cancelamento: {item.cancelReason}</p> : null}
-                        {item.latestAttemptError ? <p>Ultimo erro: {item.latestAttemptError}</p> : null}
+                        {item.latestAttemptError ? <p>Último erro: {item.latestAttemptError}</p> : null}
                       </div>
                     ) : null}
 
                     {Boolean(item.manualInterventionSuggested) ? (
-                      <div className="rounded-xl border border-orange-200 bg-orange-50/80 px-3 py-3 text-sm text-orange-950">
+                      <div className="rounded-xl border border-warning/25 bg-warning/10 px-3 py-3 text-sm text-foreground">
                         <div className="mb-1 flex items-center gap-2 font-medium">
-                          <AlertCircle className="h-4 w-4" />
-                          Intervencao manual necessaria
+                          <AlertCircle className="h-4 w-4 text-warning" />
+                          Intervenção manual necessária
                         </div>
                         <p>
                           O assistente identificou travamento no fluxo
-                          {item.manualInterventionAttempts ? ` apos ${item.manualInterventionAttempts} tentativas` : ""}.
+                          {item.manualInterventionAttempts ? ` após ${item.manualInterventionAttempts} tentativas` : ""}.
                         </p>
                       </div>
                     ) : null}
@@ -567,8 +568,8 @@ export function WhatsAppReactivationQueue() {
             ))}
 
             {hasError ? (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                Nao foi possivel atualizar a fila agora. Os dados exibidos podem estar defasados.
+              <div className="rounded-xl border border-warning/25 bg-warning/10 px-3 py-2 text-xs text-foreground">
+                Não foi possível atualizar a fila agora. Os dados exibidos podem estar defasados.
               </div>
             ) : null}
           </div>

@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Download, Filter, RefreshCw } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ReportTabs } from "@/pages/report/components/ReportTabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateInput } from "@/components/ui/date-input";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -281,6 +283,8 @@ export default function AppointmentManagementReport() {
       title="Relatorio gerencial de agendamentos"
       subtitle="Visao consolidada para leitura rapida da agenda, com foco em status, receita e oportunidades."
     >
+      <ReportTabs />
+
       <div className="space-y-6">
         <Card>
           <CardHeader>
@@ -322,8 +326,7 @@ export default function AppointmentManagementReport() {
               </div>
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Data inicial</p>
-                <Input
-                  type="date"
+                <DateInput aria-label="Data inicial"
                   value={fromInput}
                   onChange={(event) => {
                     setPeriodPresetInput("CUSTOM");
@@ -333,8 +336,7 @@ export default function AppointmentManagementReport() {
               </div>
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Data final</p>
-                <Input
-                  type="date"
+                <DateInput aria-label="Data final"
                   value={toInput}
                   onChange={(event) => {
                     setPeriodPresetInput("CUSTOM");

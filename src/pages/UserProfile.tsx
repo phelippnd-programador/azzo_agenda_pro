@@ -3,7 +3,7 @@ import { UserProfileContent } from "@/components/users/UserProfileContent";
 
 export default function UserProfile() {
   return (
-    <MainLayout title="Perfil" subtitle="Gerencie seus dados pessoais, foto e seguranca da conta">
+    <MainLayout title="Perfil" subtitle="Gerencie seus dados pessoais, foto e segurança da conta">
       <UserProfileContent />
     </MainLayout>
   );

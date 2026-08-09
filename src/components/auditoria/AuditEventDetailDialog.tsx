@@ -43,7 +43,7 @@ export function AuditEventDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden p-0">
+      <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden p-0 sm:max-w-4xl">
         <DialogHeader className="sticky top-0 z-10 shrink-0 border-b bg-background px-4 pb-2 pt-3 pr-12 sm:px-5 sm:pb-2 sm:pt-4 sm:pr-12">
           <DialogTitle>Detalhe do evento</DialogTitle>
           <DialogDescription>

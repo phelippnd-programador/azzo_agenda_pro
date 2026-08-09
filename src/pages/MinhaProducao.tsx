@@ -213,7 +213,7 @@ export default function MinhaProducao() {
             <Card>
               <CardHeader className="pb-1 pt-4 px-4">
                 <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                  <TrendingUp className="h-3.5 w-3.5 text-violet-500" />
+                  <TrendingUp className="h-3.5 w-3.5 text-success" />
                   Faturado
                 </CardTitle>
               </CardHeader>

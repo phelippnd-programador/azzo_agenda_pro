@@ -8,7 +8,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ApuracaoImposto, TipoImposto } from '@/types/apuracao';
-import { formatCurrency } from '@/lib/tax-calculator';
+import { formatCurrency } from '@/lib/format';
 import { Receipt } from 'lucide-react';
 
 interface ApuracaoImpostoListProps {

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
 import { Button } from '@/components/ui/button';
@@ -15,18 +16,29 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   ArrowDownCircle,
+  ArrowRight,
   ArrowUpCircle,
   BarChart2,
+  BarChart3,
   Download,
   Filter,
   Loader2,
+  MoreHorizontal,
+  Receipt,
   RefreshCw,
   Tag,
   TrendingDown,
   TrendingUp,
   Wallet,
   X,
+  type LucideIcon,
 } from 'lucide-react';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { TransactionDialog } from '@/components/financial/TransactionDialog';
@@ -37,12 +49,44 @@ import { RecurringTransactionsDialog } from '@/components/financial/RecurringTra
 import { FinancialFiltersPanel, type FinancialFilters } from '@/components/financial/FinancialFiltersPanel';
 import { useTransactions, useTransactionCategories, getDateRangeFromFilter } from '@/hooks/useTransactions';
 import { useProfessionals } from '@/hooks/useProfessionals';
+import { useMenuPermissions } from '@/contexts/MenuPermissionsContext';
 import { transactionsApi } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
 import { toast } from 'sonner';
 import type { Transaction } from '@/types';
 
+type FinanceArea = {
+  path: string;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+};
+
+const FINANCE_AREAS: FinanceArea[] = [
+  {
+    path: '/financeiro/fechamento-caixa',
+    title: 'Fechamento de Caixa',
+    description: 'Abra, confira e feche o caixa do dia.',
+    icon: Wallet,
+  },
+  {
+    path: '/financeiro/comissoes',
+    title: 'Comissões',
+    description: 'Apuração e pagamento das comissões da equipe.',
+    icon: Receipt,
+  },
+  {
+    path: '/financeiro/profissionais',
+    title: 'Equipe',
+    description: 'Desempenho financeiro por profissional.',
+    icon: BarChart3,
+  },
+];
+
 export default function Financial() {
+  const { allowedRoutes } = useMenuPermissions();
+  const allowedSet = new Set(allowedRoutes ?? []);
+  const visibleAreas = FINANCE_AREAS.filter((area) => allowedSet.has(area.path));
   const [dateFilter, setDateFilter] = useState('today');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FinancialFilters>({
@@ -62,6 +106,7 @@ export default function Financial() {
   const [isRecurringOpen, setIsRecurringOpen] = useState(false);
   const [showCashFlow, setShowCashFlow] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [reconcilingTransactionId, setReconcilingTransactionId] = useState<string | null>(null);
 
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
@@ -111,11 +156,16 @@ export default function Financial() {
   };
 
   const handleReconcile = async (id: string) => {
+    const transaction = transactions.find((item) => item.id === id);
+    setReconcilingTransactionId(id);
     try {
       await transactionsApi.reconcile(id);
       refetch();
+      toast.success(transaction?.reconciled ? 'Transação marcada como pendente' : 'Transação conciliada');
     } catch {
-      toast.error('Erro ao conciliar lancamento');
+      toast.error('Erro ao conciliar lançamento');
+    } finally {
+      setReconcilingTransactionId(null);
     }
   };
 
@@ -188,168 +238,156 @@ export default function Financial() {
       <div className="space-y-4 sm:space-y-6">
         <ModuleIntro
           eyebrow="Caixa e receita"
-          title="Leia o saldo primeiro, depois filtre a operaÃ§Ã£o e sÃ³ entÃ£o entre no detalhe dos lanÃ§amentos."
-          description="A tela foi organizada para separar visÃ£o financeira, Ã¡rea de trabalho e lista operacional sem misturar tudo no mesmo bloco."
+          title="Financeiro do salão"
+          description="Acompanhe o saldo, registre entradas e saídas, concilie lançamentos e acesse rotinas de caixa."
           badges={[
-            { label: `${totalCount} lancamento(s)` },
+            { label: `${totalCount} lançamento(s)` },
             { label: `${activeFilterCount} filtro(s)` },
             { label: dateFilter },
           ]}
-          points={[
-            {
-              eyebrow: 'Leitura principal',
-              title: 'Saldo e direÃ§Ã£o do caixa',
-              description: 'Comece pelo saldo e compare entradas e saÃ­das antes de abrir filtros ou exportaÃ§Ãµes.',
-            },
-            {
-              eyebrow: 'Operacao',
-              title: 'Filtre, registre e concilie',
-              description: 'Use a barra de aÃ§Ãµes para filtrar perÃ­odo, abrir o fluxo de caixa e registrar novos lanÃ§amentos.',
-            },
-            {
-              eyebrow: 'Proximo passo',
-              title: 'Revise a lista apÃ³s aplicar contexto',
-              description: 'A lista de transaÃ§Ãµes fica mais Ãºtil depois que vocÃª define recorte, categoria e profissional.',
-            },
-          ]}
         />
+
+        {visibleAreas.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-3">
+            {visibleAreas.map((area) => (
+              <Card key={area.path} className="border-border/70 shadow-none">
+                <div className="flex h-full flex-col gap-2 p-4">
+                  <div className="flex items-center gap-2">
+                    <area.icon className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-medium text-foreground">{area.title}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{area.description}</p>
+                  <Button asChild variant="outline" size="sm" className="mt-auto w-full justify-between">
+                    <Link to={area.path}>
+                      Abrir
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : null}
 
         <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
           <HighlightMetricCard
             title="Entradas"
             value={formatCurrency(summary.totalIncome)}
             icon={TrendingUp}
-            className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 dark:border-green-500/20 dark:from-green-500/10 dark:to-emerald-500/5"
-            titleClassName="text-green-700 dark:text-green-300"
-            valueClassName="text-green-800 dark:text-green-100"
-            iconContainerClassName="bg-green-100 dark:bg-green-500/15"
-            iconClassName="text-green-600 dark:text-green-300"
+            className="border-success/25 bg-success/8"
+            titleClassName="text-success"
+            valueClassName="text-success"
+            iconContainerClassName="bg-success/15"
+            iconClassName="text-success"
           />
           <HighlightMetricCard
             title="Saidas"
             value={formatCurrency(summary.totalExpenses)}
             icon={TrendingDown}
-            className="border-red-200 bg-gradient-to-br from-red-50 to-rose-50 dark:border-red-500/20 dark:from-red-500/10 dark:to-rose-500/5"
-            titleClassName="text-red-700 dark:text-red-300"
-            valueClassName="text-red-800 dark:text-red-100"
-            iconContainerClassName="bg-red-100 dark:bg-red-500/15"
-            iconClassName="text-red-600 dark:text-red-300"
+            className="border-destructive/25 bg-destructive/8"
+            titleClassName="text-destructive"
+            valueClassName="text-destructive"
+            iconContainerClassName="bg-destructive/15"
+            iconClassName="text-destructive"
           />
           <HighlightMetricCard
             title="Saldo"
             value={formatCurrency(summary.balance)}
             icon={Wallet}
-            className={
-              summary.balance >= 0
-                ? 'border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5'
-                : 'border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 dark:border-orange-500/20 dark:from-orange-500/10 dark:to-amber-500/5'
-            }
-            titleClassName={summary.balance >= 0 ? 'text-primary' : 'text-orange-700 dark:text-orange-300'}
-            valueClassName={summary.balance >= 0 ? 'text-primary' : 'text-orange-800 dark:text-orange-100'}
-            iconContainerClassName={summary.balance >= 0 ? 'bg-primary/15' : 'bg-orange-100 dark:bg-orange-500/15'}
-            iconClassName={summary.balance >= 0 ? 'text-primary' : 'text-orange-600 dark:text-orange-300'}
+            className={summary.balance >= 0 ? 'border-primary/20 bg-primary/8' : 'border-warning/25 bg-warning/8'}
+            titleClassName={summary.balance >= 0 ? 'text-primary' : 'text-warning'}
+            valueClassName={summary.balance >= 0 ? 'text-primary' : 'text-warning'}
+            iconContainerClassName={summary.balance >= 0 ? 'bg-primary/15' : 'bg-warning/15'}
+            iconClassName={summary.balance >= 0 ? 'text-primary' : 'text-warning'}
           />
         </div>
 
         <WorkspaceNotice
-          title="Area de trabalho financeira"
-          description="Ajuste perÃ­odo, filtros, visÃµes auxiliares e crie lanÃ§amentos sem perder o contexto do caixa atual."
+          title="Operação financeira"
+          description="Defina o período, filtre quando necessário e registre movimentos do caixa."
           badge={`Saldo atual: ${formatCurrency(summary.balance)}`}
         />
 
         <div className="space-y-3">
           <div className="rounded-2xl border border-border/70 bg-muted/15 p-3 sm:p-4">
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">Contexto e filtros</p>
-              <p className="text-sm text-muted-foreground">
-                Ajuste periodo, filtros e visoes auxiliares antes de descer para a lista de transacoes.
-              </p>
-            </div>
-
-            <div className="-mx-1 mt-3 overflow-x-auto pb-1">
-              <div className="flex min-w-max gap-2 px-1">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground">Período e filtros</p>
                 <Select value={dateFilter} onValueChange={setDateFilter}>
-                  <SelectTrigger className="h-9 w-36 text-sm sm:w-44">
+                  <SelectTrigger id="financial-date-filter" aria-label="Período financeiro" className="h-11 w-full text-sm sm:w-44">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="today">Hoje</SelectItem>
-                    <SelectItem value="week">Ultima semana</SelectItem>
-                    <SelectItem value="month">Ultimo mes</SelectItem>
+                    <SelectItem value="week">Última semana</SelectItem>
+                    <SelectItem value="month">Último mês</SelectItem>
                     <SelectItem value="all">Todos</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
 
-                <Button variant="outline" size="sm" className="h-9 gap-2" onClick={() => setShowFilters((value) => !value)}>
+              <div className="grid gap-2 sm:grid-cols-2 lg:flex lg:flex-wrap lg:justify-end">
+                <Button variant="outline" className="h-11 gap-2" onClick={() => setShowFilters((value) => !value)}>
                   <Filter className="h-3.5 w-3.5" />
                   Filtros
                   {activeFilterCount > 0 ? (
-                    <Badge variant="secondary" className="ml-0.5 px-1.5 py-0 text-[10px]">
+                    <Badge variant="secondary" className="ml-0.5 px-1.5 py-0 text-xs">
                       {activeFilterCount}
                     </Badge>
                   ) : null}
                 </Button>
 
                 {activeFilterCount > 0 ? (
-                  <Button variant="ghost" size="sm" className="h-9 gap-1 text-muted-foreground" onClick={clearFilters}>
+                  <Button variant="ghost" className="h-11 gap-1 text-muted-foreground" onClick={clearFilters}>
                     <X className="h-3.5 w-3.5" />
                     Limpar
                   </Button>
                 ) : null}
 
-                <Button variant="outline" size="sm" className="h-9 gap-2 whitespace-nowrap" onClick={() => setShowCashFlow((value) => !value)}>
-                  <BarChart2 className="h-3.5 w-3.5" />
-                  <span className="sm:hidden">Fluxo</span>
-                  <span className="hidden sm:inline">Fluxo de caixa</span>
+                <Button
+                  variant="outline"
+                  className="h-11 gap-2 whitespace-nowrap border-success/40 text-success hover:bg-success/8"
+                  onClick={() => openNewTransaction('INCOME')}
+                >
+                  <ArrowUpCircle className="h-4 w-4" />
+                  Nova Entrada
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-11 gap-2 whitespace-nowrap border-destructive/40 text-destructive hover:bg-destructive/8"
+                  onClick={() => openNewTransaction('EXPENSE')}
+                >
+                  <ArrowDownCircle className="h-4 w-4" />
+                  Nova Saída
                 </Button>
 
-                <Button variant="outline" size="sm" className="h-9 gap-2 whitespace-nowrap" onClick={handleExportCsv} disabled={isExporting}>
-                  {isExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-                  <span className="sm:hidden">CSV</span>
-                  <span className="hidden sm:inline">Exportar CSV</span>
-                </Button>
-
-                <Button variant="outline" size="sm" className="h-9 gap-2 whitespace-nowrap" onClick={() => setIsCategoriesOpen(true)}>
-                  <Tag className="h-3.5 w-3.5" />
-                  <span>Categorias</span>
-                </Button>
-
-                <Button variant="outline" size="sm" className="h-9 gap-2 whitespace-nowrap" onClick={() => setIsRecurringOpen(true)}>
-                  <RefreshCw className="h-3.5 w-3.5" />
-                  <span className="sm:hidden">Recorr.</span>
-                  <span className="hidden sm:inline">Recorrentes</span>
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="h-11 gap-2">
+                      <MoreHorizontal className="h-4 w-4" />
+                      Mais
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onClick={() => setShowCashFlow((value) => !value)}>
+                      <BarChart2 className="mr-2 h-4 w-4" />
+                      {showCashFlow ? 'Ocultar fluxo de caixa' : 'Ver fluxo de caixa'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleExportCsv} disabled={isExporting}>
+                      {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                      Exportar CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setIsCategoriesOpen(true)}>
+                      <Tag className="mr-2 h-4 w-4" />
+                      Categorias
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setIsRecurringOpen(true)}>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Contas fixas
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-border/70 bg-background/80 p-3 sm:p-4">
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">Lancamentos rapidos</p>
-              <p className="text-sm text-muted-foreground">
-                Registre entrada ou saida sem perder o contexto do saldo atual.
-              </p>
-            </div>
-
-            <div className="mt-3 grid grid-cols-1 gap-2 sm:flex sm:justify-end">
-              <Button
-                variant="outline"
-                className="gap-2 whitespace-nowrap border-green-300 text-green-700 hover:bg-green-50 dark:border-green-500/30 dark:text-green-300 dark:hover:bg-green-500/10"
-                onClick={() => openNewTransaction('INCOME')}
-              >
-                <ArrowUpCircle className="h-4 w-4" />
-                <span className="sm:hidden">Entrada</span>
-                <span className="hidden sm:inline">Nova Entrada</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="gap-2 whitespace-nowrap border-red-300 text-red-700 hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10"
-                onClick={() => openNewTransaction('EXPENSE')}
-              >
-                <ArrowDownCircle className="h-4 w-4" />
-                <span className="sm:hidden">Saida</span>
-                <span className="hidden sm:inline">Nova Saida</span>
-              </Button>
             </div>
           </div>
 
@@ -375,6 +413,10 @@ export default function Financial() {
           onEdit={openEditTransaction}
           onDelete={(id) => setTransactionToDelete(id)}
           onReconcile={handleReconcile}
+          reconcilingTransactionId={reconcilingTransactionId}
+          hasActiveFilters={activeFilterCount > 0}
+          onClearFilters={clearFilters}
+          onCreateIncome={() => openNewTransaction('INCOME')}
         />
 
         <TransactionDialog

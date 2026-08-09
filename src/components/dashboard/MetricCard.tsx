@@ -63,13 +63,13 @@ export function MetricCard({
                 <p
                   className={cn(
                     compact ? 'text-xs font-medium' : 'text-xs sm:text-sm font-medium',
-                    trend.isPositive ? 'text-green-600' : 'text-red-600'
+                    trend.isPositive ? 'text-success' : 'text-destructive'
                   )}
                 >
                   {trend.isPositive ? '+' : '-'}
                   {Math.abs(trend.value).toFixed(1)}%
                   <span className={cn('text-muted-foreground ml-1', compact ? 'inline' : 'hidden sm:inline')}>
-                    vs. periodo anterior
+                    vs. período anterior
                   </span>
                 </p>
               )

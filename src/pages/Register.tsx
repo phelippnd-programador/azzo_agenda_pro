@@ -31,23 +31,26 @@ const getPasswordStrengthStatus = (value: string) => {
     return {
       label: "Fraca",
       width: "33%",
-      barClassName: "bg-red-600 dark:bg-red-500",
-      textClassName: "text-red-700 dark:text-red-300",
+      value: 33,
+      barClassName: "bg-destructive",
+      textClassName: "text-destructive",
     };
   }
   if (score <= 4) {
     return {
       label: "Media",
       width: "66%",
-      barClassName: "bg-amber-500 dark:bg-amber-400",
-      textClassName: "text-amber-700 dark:text-amber-300",
+      value: 66,
+      barClassName: "bg-warning",
+      textClassName: "text-warning",
     };
   }
   return {
     label: "Forte",
     width: "100%",
-    barClassName: "bg-emerald-600 dark:bg-emerald-500",
-    textClassName: "text-emerald-700 dark:text-emerald-300",
+    value: 100,
+    barClassName: "bg-success",
+    textClassName: "text-success",
   };
 };
 
@@ -207,10 +210,10 @@ export default function Register() {
 
         <Card className="auth-panel border-border/80">
           <CardHeader className="text-center pb-2 sm:pb-4">
-            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-[2.1rem]">
+            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-3xl">
               Crie sua conta
             </CardTitle>
-            <CardDescription className="text-sm leading-6 sm:text-[15px]">
+            <CardDescription className="text-sm leading-6">
               {step === 1 ? "Seus dados pessoais e termos legais" : "Dados do seu salao"}
             </CardDescription>
             <div className="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
@@ -319,7 +322,15 @@ export default function Register() {
                     </Button>
                   </div>
                   <div className="space-y-1">
-                    <div className="h-1.5 w-full rounded bg-muted">
+                    <div
+                      className="h-1.5 w-full rounded bg-muted"
+                      role="progressbar"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={watchedPassword ? passwordStrength.value : 0}
+                      aria-valuetext={watchedPassword ? passwordStrength.label : "Nao definida"}
+                      aria-labelledby="register-password-strength"
+                    >
                       <div
                         className={`h-full rounded transition-all ${
                           watchedPassword
@@ -576,25 +587,6 @@ export default function Register() {
             </p>
           </CardContent>
         </Card>
-
-        <p className="mt-4 text-center text-xs text-muted-foreground sm:mt-6">
-          Ao criar sua conta, voce concorda com nossos{" "}
-          <button
-            type="button"
-            className="text-primary hover:underline"
-            onClick={() => void openLegalDialog("TERMS_OF_USE")}
-          >
-            Termos de Uso
-          </button>{" "}
-          e{" "}
-          <button
-            type="button"
-            className="text-primary hover:underline"
-            onClick={() => void openLegalDialog("PRIVACY_POLICY")}
-          >
-            Politica de Privacidade
-          </button>
-        </p>
       </div>
 
       <LegalDocumentDialog

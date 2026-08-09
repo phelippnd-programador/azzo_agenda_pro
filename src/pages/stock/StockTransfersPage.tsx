@@ -1,13 +1,25 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { CrudListToolbar } from "@/components/crud/CrudListToolbar";
+import { ModuleIntro } from "@/components/layout/module-surfaces";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogSection,
+  DialogStickyFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageEmptyState } from "@/components/ui/page-states";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { stockApi } from "@/lib/api";
 import { resolveUiError } from "@/lib/error-utils";
@@ -27,15 +39,29 @@ export default function StockTransfersPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [transfers, setTransfers] = useState<StockTransfer[]>([]);
   const [items, setItems] = useState<StockItem[]>([]);
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 8;
   const [form, setForm] = useState<CreateStockTransferRequest>(initialForm);
-  const totalPages = Math.max(1, Math.ceil(transfers.length / pageSize));
-  const pagedTransfers = transfers.slice((page - 1) * pageSize, page * pageSize);
+
+  const filteredTransfers = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return transfers;
+    return transfers.filter((transfer) =>
+      `${transfer.origem} ${transfer.destino} ${transfer.itemNome}`.toLowerCase().includes(term)
+    );
+  }, [transfers, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredTransfers.length / pageSize));
+  const pagedTransfers = filteredTransfers.slice((page - 1) * pageSize, page * pageSize);
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   const load = async () => {
     try {
@@ -116,18 +142,27 @@ export default function StockTransfersPage() {
   }
 
   return (
-    <Card className="border-border/80">
-      <CardHeader>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle>Transferencias</CardTitle>
-          <Button onClick={() => setIsDialogOpen(true)}>Nova transferencia</Button>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Organize envios entre unidades e acompanhe o status de cada transferencia em um unico fluxo.
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {!transfers.length ? (
+    <div className="space-y-4">
+      <ModuleIntro
+        eyebrow="Transferencias"
+        title="Organize envios de estoque entre unidades"
+        description="Acompanhe o status de cada transferencia em um unico fluxo, do rascunho ao recebimento."
+      />
+
+      <CrudListToolbar
+        searchPlaceholder="Buscar por origem, destino ou item"
+        searchValue={search}
+        onSearchChange={setSearch}
+        actionLabel="Transferencia"
+        actionLabelMobile="Nova"
+        actionLabelDesktop="Nova transferencia"
+        onAction={() => setIsDialogOpen(true)}
+        actionDataTour="stock-transfer-new-button"
+      />
+
+      <Card className="border-border/80">
+      <CardContent className="space-y-2 pt-6">
+        {!filteredTransfers.length ? (
           <PageEmptyState
             title="Nenhuma transferencia cadastrada"
             description="Crie transferencias para movimentar estoque entre unidades."
@@ -135,7 +170,7 @@ export default function StockTransfersPage() {
           />
         ) : (
           pagedTransfers.map((transfer) => (
-            <div key={transfer.id} className="rounded-xl border border-border/70 bg-card p-4">
+            <div key={transfer.id} data-tour="stock-transfer-row" className="rounded-xl border border-border/70 bg-card p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-medium text-foreground">
                   {transfer.origem} {"->"} {transfer.destino}
@@ -152,7 +187,7 @@ export default function StockTransfersPage() {
                   <p className="mt-1 font-medium text-foreground">{transfer.quantidade}</p>
                 </div>
               </div>
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div data-tour="stock-transfer-actions" className="mt-2 flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -181,14 +216,16 @@ export default function StockTransfersPage() {
           onNext={() => setPage((prev) => Math.min(totalPages, prev + 1))}
         />
       </CardContent>
+      </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
+          <DialogHeader className="border-b border-border/70 pb-4 pr-10">
             <DialogTitle>Nova transferencia</DialogTitle>
             <DialogDescription>Registre uma transferencia entre unidades.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
+          <DialogBody>
+          <DialogSection className="bg-transparent">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div className="space-y-1">
                 <Label htmlFor="transfer-origem">Origem</Label>
@@ -210,19 +247,21 @@ export default function StockTransfersPage() {
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div className="space-y-1">
                 <Label htmlFor="transfer-item">Item</Label>
-                <select
-                  id="transfer-item"
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                <Select
                   value={form.itemEstoqueId}
-                  onChange={(e) => setForm((prev) => ({ ...prev, itemEstoqueId: e.target.value }))}
+                  onValueChange={(value) => setForm((prev) => ({ ...prev, itemEstoqueId: value }))}
                 >
-                  <option value="">Selecione</option>
-                  {items.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.nome}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger id="transfer-item">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {items.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1">
                 <Label htmlFor="transfer-quantidade">Quantidade</Label>
@@ -243,17 +282,18 @@ export default function StockTransfersPage() {
                 onChange={(e) => setForm((prev) => ({ ...prev, observacao: e.target.value }))}
               />
             </div>
-          </div>
-          <DialogFooter>
+          </DialogSection>
+          </DialogBody>
+          <DialogStickyFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={() => void handleCreate()} disabled={isSaving}>
-              {isSaving ? "Salvando..." : "Criar transferencia"}
+            <Button onClick={() => void handleCreate()} isLoading={isSaving} loadingText="Salvando...">
+              Criar transferencia
             </Button>
-          </DialogFooter>
+          </DialogStickyFooter>
         </DialogContent>
       </Dialog>
-    </Card>
+    </div>
   );
 }

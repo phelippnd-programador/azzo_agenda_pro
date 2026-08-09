@@ -11,13 +11,13 @@ export const META_WHATSAPP_MANAGER_URL = "https://business.facebook.com/latest/w
 export const META_SYSTEM_USERS_URL = "https://business.facebook.com/latest/settings/system-users";
 export const META_GRAPH_EXPLORER_URL = "https://developers.facebook.com/tools/explorer/";
 export const WIZARD_STEPS = [
-  "Verificacao inicial",
+  "Verificação inicial",
   "Business Manager",
-  "Criacao do WABA",
-  "Vinculacao do numero",
-  "Insercao do token",
-  "Configuracao do webhook",
-  "Validacao da conexao",
+  "Criação do WABA",
+  "Vinculação do número",
+  "Inserção do token",
+  "Configuração do webhook",
+  "Validação da conexão",
 ] as const;
 
 export type EmbeddedSetupInfo = {
@@ -167,10 +167,10 @@ export async function loadMetaSdk(appId: string): Promise<FacebookSdk> {
 
 export function formatOnboardingStatus(status: string): string {
   const map: Record<string, string> = {
-    NOT_STARTED: "Configuracao ainda nao iniciada",
-    IN_PROGRESS: "Configuracao em andamento",
+    NOT_STARTED: "Configuração ainda não iniciada",
+    IN_PROGRESS: "Configuração em andamento",
     CONNECTED: "Conectado",
-    FAILED: "Falha na conexao",
+    FAILED: "Falha na conexão",
     DISCONNECTED: "Desconectado",
   };
   return map[status] ?? status;

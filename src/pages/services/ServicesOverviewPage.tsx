@@ -1,11 +1,8 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PageEmptyState, PageErrorState, PageListLoadingState } from '@/components/ui/page-states';
 import { PaginationControls } from '@/components/ui/pagination-controls';
@@ -19,51 +16,30 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-  Dialog,
-  DialogBody,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogSection,
-  DialogStickyFooter,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Plus, Clock, MoreVertical, Scissors, Loader2 } from 'lucide-react';
+import { Plus, Clock, MoreVertical, Package } from 'lucide-react';
 import { useServices } from '@/hooks/useServices';
 import { DeleteConfirmationDialog } from '@/components/common/DeleteConfirmationDialog';
 import { useProfessionals } from '@/hooks/useProfessionals';
-import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/format';
-import { CurrencyInput } from '@/components/ui/currency-input';
 import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
+import { ServiceFormDialog } from '@/components/services/ServiceFormDialog';
+import type { Service } from '@/types';
 
 const categories = ['Todos', 'Cabelo', 'Barba', 'Unhas', 'Estetica', 'Maquiagem', 'Outros'];
-type ServiceFormErrors = {
-  name?: string;
-  duration?: string;
-  price?: string;
-};
+
+const formatCategoryLabel = (category: string) => (category === 'Estetica' ? 'Estética' : category);
 
 export default function ServicesOverviewPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [isNewServiceOpen, setIsNewServiceOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingService, setEditingService] = useState<string | null>(null);
+  const [editingService, setEditingService] = useState<Service | null>(null);
   const [serviceToDelete, setServiceToDelete] = useState<string | null>(null);
   const [isDeletingService, setIsDeletingService] = useState(false);
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
@@ -71,15 +47,6 @@ export default function ServicesOverviewPage() {
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [isRemoveSelectedOpen, setIsRemoveSelectedOpen] = useState(false);
   const [isRemoveAllOpen, setIsRemoveAllOpen] = useState(false);
-
-  const [formName, setFormName] = useState('');
-  const [formDescription, setFormDescription] = useState('');
-  const [formDuration, setFormDuration] = useState('60');
-  const [formPrice, setFormPrice] = useState(0);
-  const [formCategory, setFormCategory] = useState('Cabelo');
-  const [formProfessionalIds, setFormProfessionalIds] = useState<string[]>([]);
-  const [formIsActive, setFormIsActive] = useState(true);
-  const [formErrors, setFormErrors] = useState<ServiceFormErrors>({});
 
   const {
     services,
@@ -108,82 +75,9 @@ export default function ServicesOverviewPage() {
     filteredServices.length > 0 &&
     filteredServices.every((service) => selectedServiceIds.includes(service.id));
 
-  const resetForm = () => {
-    setFormName('');
-    setFormDescription('');
-    setFormDuration('60');
-    setFormPrice(0);
-    setFormCategory('Cabelo');
-    setFormProfessionalIds([]);
-    setFormIsActive(true);
-    setFormErrors({});
-    setEditingService(null);
-  };
-
-  const openEditDialog = (service: typeof services[0]) => {
-    setFormName(service.name);
-    setFormDescription(service.description);
-    setFormDuration(String(service.duration));
-    setFormPrice(service.price);
-    setFormCategory(service.category);
-    setFormProfessionalIds(Array.isArray(service.professionalIds) ? service.professionalIds : []);
-    setFormIsActive(service.isActive);
-    setEditingService(service.id);
+  const openEditDialog = (service: Service) => {
+    setEditingService(service);
     setIsNewServiceOpen(true);
-  };
-
-  const toggleProfessional = (professionalId: string) => {
-    setFormProfessionalIds((prev) =>
-      prev.includes(professionalId)
-        ? prev.filter((id) => id !== professionalId)
-        : [...prev, professionalId]
-    );
-  };
-
-  const handleSubmit = async () => {
-    const nextErrors: ServiceFormErrors = {};
-    const durationValue = Number.parseInt(formDuration, 10);
-
-    if (!formName.trim()) {
-      nextErrors.name = 'Informe o nome do servico.';
-    }
-    if (!formDuration.trim() || !Number.isFinite(durationValue) || durationValue <= 0) {
-      nextErrors.duration = 'Informe uma duracao valida em minutos.';
-    }
-    if (!Number.isFinite(formPrice) || formPrice <= 0) {
-      nextErrors.price = 'Informe um preco maior que zero.';
-    }
-
-    if (Object.keys(nextErrors).length > 0) {
-      setFormErrors(nextErrors);
-      toast.error('Preencha todos os campos obrigatorios');
-      return;
-    }
-
-    setFormErrors({});
-    setIsSubmitting(true);
-    try {
-      const serviceData = {
-        name: formName.trim(),
-        description: formDescription,
-        duration: durationValue,
-        price: formPrice,
-        category: formCategory,
-        professionalIds: formProfessionalIds,
-        isActive: formIsActive,
-      };
-
-      if (editingService) {
-        await updateService(editingService, serviceData);
-      } else {
-        await createService(serviceData);
-      }
-
-      setIsNewServiceOpen(false);
-      resetForm();
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const handleDelete = async () => {
@@ -255,7 +149,7 @@ export default function ServicesOverviewPage() {
   if (error) {
     return (
       <PageErrorState
-        title="Nao foi possivel carregar os servicos"
+        title="Não foi possível carregar os serviços"
         description={error}
         action={{ label: 'Tentar novamente', onClick: refetch }}
       />
@@ -265,247 +159,74 @@ export default function ServicesOverviewPage() {
   return (
     <div className="space-y-4 sm:space-y-6">
       <ModuleIntro
-        eyebrow="Catalogo"
-        title="Estruture o portifolio de servicos com preco, duracao, categoria e disponibilidade por equipe."
-        description="Use a busca, os filtros e a alternancia entre cards e tabela para revisar o catalogo com menos atrito."
+        eyebrow="Catálogo"
+        title="Estruture o portfólio de serviços com preço, duração, categoria e disponibilidade por equipe."
+        description="Use a busca, os filtros e a alternância entre cards e tabela para revisar o catálogo com menos atrito."
         badges={[
-          { label: `${pagination.total} servico(s)` },
-          { label: selectedCategory },
+          { label: `${pagination.total} serviço(s)` },
+          { label: formatCategoryLabel(selectedCategory) },
           { label: viewMode === 'grid' ? 'Cards' : 'Lista' },
         ]}
         points={[
           {
-            eyebrow: 'Catalogo',
-            title: 'Preco, duracao e contexto',
-            description: 'Mantenha nome, tempo e valor claros para reduzir duvidas no agendamento e na operacao.',
+            eyebrow: 'Catálogo',
+            title: 'Preço, duração e contexto',
+            description: 'Mantenha nome, tempo e valor claros para reduzir dúvidas no agendamento e na operação.',
           },
           {
             eyebrow: 'Equipe',
             title: 'Disponibilidade por profissional',
-            description: 'Restrinja apenas quando o servico depender de pessoas especificas; no restante, mantenha amplo.',
+            description: 'Restrinja apenas quando o serviço depender de pessoas específicas; no restante, mantenha amplo.',
           },
           {
-            eyebrow: 'Navegacao',
-            title: 'Cards para leitura, lista para manutencao',
-            description: 'Troque de visualizacao conforme a tarefa: revisar rapido ou editar em sequencia.',
+            eyebrow: 'Navegação',
+            title: 'Cards para leitura, lista para manutenção',
+            description: 'Troque de visualização conforme a tarefa: revisar rápido ou editar em sequência.',
           },
         ]}
       />
 
-      <Dialog
+      <div className="flex justify-end">
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/pacotes">
+            <Package className="mr-2 h-4 w-4" />
+            Pacotes de serviços
+          </Link>
+        </Button>
+      </div>
+
+      <CrudListToolbar
+        searchPlaceholder="Buscar serviços..."
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        gridAriaLabel="Visualizar serviços em cards"
+        tableAriaLabel="Visualizar serviços em lista"
+        actionLabel="Serviço"
+        actionLabelMobile="Novo"
+        actionLabelDesktop="Novo serviço"
+        actionIcon={Plus}
+        onAction={() => {
+          setEditingService(null);
+          setIsNewServiceOpen(true);
+        }}
+      />
+
+      <ServiceFormDialog
         open={isNewServiceOpen}
         onOpenChange={(open) => {
           setIsNewServiceOpen(open);
-          if (!open) resetForm();
+          if (!open) setEditingService(null);
         }}
-      >
-        <CrudListToolbar
-          searchPlaceholder="Buscar servicos..."
-          searchValue={searchTerm}
-          onSearchChange={setSearchTerm}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          gridAriaLabel="Visualizar servicos em cards"
-          tableAriaLabel="Visualizar servicos em lista"
-          actionLabel="Servico"
-          actionLabelMobile="Novo"
-          actionLabelDesktop="Novo servico"
-          actionIcon={Plus}
-          onAction={() => {
-            setEditingService(null);
-            setIsNewServiceOpen(true);
-          }}
-        />
+        editingService={editingService}
+        professionals={professionals}
+        isLoadingProfessionals={isLoadingProfessionals}
+        onCreate={createService}
+        onUpdate={updateService}
+      />
 
-        <DialogContent className="mx-4 max-h-[85vh] max-w-md overflow-y-auto sm:mx-auto sm:max-w-2xl">
-          <DialogHeader className="border-b border-border/70 pb-4 pr-10">
-            <DialogTitle>{editingService ? 'Editar servico' : 'Novo servico'}</DialogTitle>
-            <DialogDescription>
-              {editingService ? 'Atualize os dados do servico' : 'Preencha os dados do novo servico'}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogBody>
-                <DialogSection>
-                  <p className="text-sm font-medium text-foreground">
-                    {editingService ? 'Revise nome, duracao, preco e disponibilidade antes de salvar.' : 'Cadastre o servico com nome claro, preco e duracao para manter o catalogo consistente.'}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Se nenhum profissional for marcado, o servico continua disponivel para toda a equipe.
-                  </p>
-                </DialogSection>
-
-                <DialogSection className="bg-transparent">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-foreground">Estrutura do servico</p>
-                    <p className="text-sm text-muted-foreground">Defina nome, categoria, duracao e preco com o minimo de ambiguidade operacional.</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Nome do servico *</Label>
-                    <Input
-                      placeholder="Ex: Corte Feminino"
-                      value={formName}
-                      onChange={(e) => {
-                        setFormName(e.target.value);
-                        if (formErrors.name) {
-                          setFormErrors((current) => ({ ...current, name: undefined }));
-                        }
-                      }}
-                      aria-invalid={Boolean(formErrors.name)}
-                    />
-                    {formErrors.name ? (
-                      <p className="text-xs text-destructive">{formErrors.name}</p>
-                    ) : null}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Descricao</Label>
-                    <Textarea
-                      placeholder="Descreva o servico..."
-                      value={formDescription}
-                      onChange={(e) => setFormDescription(e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label>Duracao (min) *</Label>
-                      <Input
-                        type="number"
-                        placeholder="60"
-                        value={formDuration}
-                        onChange={(e) => {
-                          setFormDuration(e.target.value);
-                          if (formErrors.duration) {
-                            setFormErrors((current) => ({ ...current, duration: undefined }));
-                          }
-                        }}
-                        aria-invalid={Boolean(formErrors.duration)}
-                      />
-                      {formErrors.duration ? (
-                        <p className="text-xs text-destructive">{formErrors.duration}</p>
-                      ) : null}
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Preco (R$) *</Label>
-                      <CurrencyInput
-                        value={formPrice}
-                        onChange={(val) => {
-                          setFormPrice(val);
-                          if (formErrors.price) {
-                            setFormErrors((current) => ({ ...current, price: undefined }));
-                          }
-                        }}
-                        aria-invalid={Boolean(formErrors.price)}
-                      />
-                      {formErrors.price ? (
-                        <p className="text-xs text-destructive">{formErrors.price}</p>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Categoria</Label>
-                    <Select value={formCategory} onValueChange={setFormCategory}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.filter((c) => c !== 'Todos').map((cat) => (
-                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </DialogSection>
-
-                <DialogSection className="bg-transparent">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-foreground">Equipe elegivel</p>
-                    <p className="text-sm text-muted-foreground">Restrinja quando o servico depender de pessoas especificas. Caso contrario, mantenha o atendimento aberto para todos.</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Profissionais</Label>
-                    <div className="max-h-48 space-y-3 overflow-y-auto rounded-xl border border-border/70 bg-background/80 p-3">
-                    {isLoadingProfessionals ? (
-                      <p className="text-sm text-muted-foreground">Carregando profissionais...</p>
-                    ) : !professionals.length ? (
-                      <p className="text-sm text-muted-foreground">Nenhum profissional cadastrado.</p>
-                    ) : (
-                      professionals.map((professional) => (
-                        <label
-                          key={professional.id}
-                          className="flex items-center gap-2 text-sm cursor-pointer"
-                        >
-                          <Checkbox
-                            checked={formProfessionalIds.includes(professional.id)}
-                            onCheckedChange={() => toggleProfessional(professional.id)}
-                          />
-                          <span>{professional.name}</span>
-                          {!professional.isActive ? (
-                            <Badge variant="outline" className="text-[10px] text-muted-foreground">
-                              Inativo
-                            </Badge>
-                          ) : null}
-                        </label>
-                      ))
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Servicos sem profissional vinculado nao aparecem no agendamento.
-                  </p>
-                  {formProfessionalIds.length > 0 ? (
-                    <div className="flex flex-wrap gap-1">
-                      {formProfessionalIds.map((id) => {
-                        const professional = professionals.find((item) => item.id === id);
-                        if (!professional) return null;
-                        return (
-                          <Badge key={id} variant="secondary" className="text-[10px] sm:text-xs">
-                            {professional.name}
-                          </Badge>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-                  </div>
-                </DialogSection>
-
-                <DialogSection className="flex flex-col gap-3 bg-transparent sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <Label>Servico ativo</Label>
-                    <p className="text-xs text-muted-foreground">Disponivel para agendamento</p>
-                  </div>
-                  <Switch
-                    checked={formIsActive}
-                    onCheckedChange={setFormIsActive}
-                  />
-                </DialogSection>
-          </DialogBody>
-          <DialogStickyFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsNewServiceOpen(false);
-                resetForm();
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={handleSubmit} disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {editingService ? 'Salvando...' : 'Criando...'}
-                </>
-              ) : editingService ? 'Salvar servico' : 'Criar servico'}
-            </Button>
-          </DialogStickyFooter>
-        </DialogContent>
-      </Dialog>
-
-        <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card/80 p-3 shadow-[0_14px_34px_-30px_rgba(15,23,42,0.28)] sm:flex-row sm:items-center sm:justify-between">
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
             <Checkbox
               checked={allFilteredSelected}
@@ -543,15 +264,15 @@ export default function ServicesOverviewPage() {
                 onClick={() => setSelectedCategory(category)}
                 className="whitespace-nowrap text-xs sm:text-sm"
               >
-                {category}
+                {formatCategoryLabel(category)}
               </Button>
             ))}
           </div>
         </div>
 
       <WorkspaceNotice
-        title="Area de trabalho de servicos"
-        description="Filtre por categoria, selecione itens em lote e abra o cadastro para ajustar preco, duracao e equipe."
+        title="Área de trabalho de serviços"
+        description="Filtre por categoria, selecione itens em lote e abra o cadastro para ajustar preço, duração e equipe."
         badge={
           selectedServiceIds.length
             ? `${selectedServiceIds.length} selecionado(s)`
@@ -563,16 +284,16 @@ export default function ServicesOverviewPage() {
         <PageEmptyState
           title={
             searchTerm || selectedCategory !== 'Todos'
-              ? 'Nenhum servico encontrado para os filtros atuais'
-              : 'Nenhum servico cadastrado'
+              ? 'Nenhum serviço encontrado para os filtros atuais'
+              : 'Nenhum serviço cadastrado'
           }
           description={
             searchTerm || selectedCategory !== 'Todos'
               ? 'A busca e os filtros atuais esconderam todos os resultados. Limpe os filtros para voltar a ver a lista completa.'
-              : 'Cadastre o primeiro servico para comecar a montar o catalogo operacional do salao.'
+              : 'Cadastre o primeiro serviço para começar a montar o catálogo operacional do salão.'
           }
           action={{
-            label: searchTerm || selectedCategory !== 'Todos' ? 'Limpar filtros' : 'Novo servico',
+            label: searchTerm || selectedCategory !== 'Todos' ? 'Limpar filtros' : 'Novo serviço',
             onClick: () => {
               if (searchTerm || selectedCategory !== 'Todos') {
                 setSearchTerm('');
@@ -590,7 +311,7 @@ export default function ServicesOverviewPage() {
           {filteredServices.map((service) => (
             <Card
               key={service.id}
-              className={`transition-shadow hover:shadow-md ${!service.isActive ? 'opacity-60' : ''}`}
+              className={`border-border/70 bg-card/95 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-panel ${!service.isActive ? 'opacity-60' : ''}`}
             >
               <CardContent className="p-4 sm:p-5">
                 <div className="mb-3 flex items-start justify-between gap-2">
@@ -598,7 +319,7 @@ export default function ServicesOverviewPage() {
                     <Checkbox
                       checked={selectedServiceIds.includes(service.id)}
                       onCheckedChange={() => toggleServiceSelection(service.id)}
-                      aria-label="Selecionar servico"
+                      aria-label="Selecionar serviço"
                       className="mt-1"
                     />
                     <div className="min-w-0 flex-1">
@@ -607,13 +328,13 @@ export default function ServicesOverviewPage() {
                           {service.name}
                         </h3>
                         {!service.isActive && (
-                          <Badge variant="outline" className="text-[10px] sm:text-xs text-muted-foreground">
+                          <Badge variant="outline" className="text-xs sm:text-xs text-muted-foreground">
                             Inativo
                           </Badge>
                         )}
                       </div>
-                      <Badge variant="secondary" className="text-[10px] sm:text-xs">
-                        {service.category}
+                      <Badge variant="secondary" className="text-xs sm:text-xs">
+                        {formatCategoryLabel(service.category)}
                       </Badge>
                     </div>
                   </div>
@@ -623,7 +344,7 @@ export default function ServicesOverviewPage() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 flex-shrink-0"
-                        aria-label={`Abrir acoes do servico ${service.name}`}
+                        aria-label={`Abrir ações do serviço ${service.name}`}
                       >
                         <MoreVertical className="w-4 h-4" />
                       </Button>
@@ -646,10 +367,10 @@ export default function ServicesOverviewPage() {
                 </div>
 
                 <p className="mb-4 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
-                  {service.description || 'Sem descricao'}
+                  {service.description || 'Sem descrição'}
                 </p>
 
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/70 pt-3">
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                     <span className="text-xs sm:text-sm">{service.duration} min</span>
@@ -663,7 +384,7 @@ export default function ServicesOverviewPage() {
           ))}
         </div>
       ) : (
-        <Card className="border-border/70 shadow-none">
+        <Card className="overflow-hidden border-border/70 bg-card/95 shadow-panel">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -672,13 +393,13 @@ export default function ServicesOverviewPage() {
                     <Checkbox
                       checked={allFilteredSelected}
                       onCheckedChange={(checked) => toggleSelectAllFiltered(checked === true)}
-                      aria-label="Selecionar todos os servicos filtrados"
+                      aria-label="Selecionar todos os serviços filtrados"
                     />
                   </TableHead>
-                  <TableHead>Servico</TableHead>
-                  <TableHead className="hidden md:table-cell">Descricao</TableHead>
-                  <TableHead className="text-center">Duracao</TableHead>
-                  <TableHead className="text-right">Preco</TableHead>
+                  <TableHead>Serviço</TableHead>
+                  <TableHead className="hidden md:table-cell">Descrição</TableHead>
+                  <TableHead className="text-center">Duração</TableHead>
+                  <TableHead className="text-right">Preço</TableHead>
                   <TableHead className="text-center">Status</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
@@ -693,21 +414,21 @@ export default function ServicesOverviewPage() {
                       <Checkbox
                         checked={selectedServiceIds.includes(service.id)}
                         onCheckedChange={() => toggleServiceSelection(service.id)}
-                        aria-label={`Selecionar servico ${service.name}`}
+                        aria-label={`Selecionar serviço ${service.name}`}
                       />
                     </TableCell>
                     <TableCell>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="truncate font-medium">{service.name}</p>
-                          <Badge variant="secondary" className="text-[10px] sm:text-xs">
-                            {service.category}
+                          <Badge variant="secondary" className="text-xs sm:text-xs">
+                            {formatCategoryLabel(service.category)}
                           </Badge>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="hidden max-w-[320px] truncate text-sm text-muted-foreground md:table-cell">
-                      {service.description || 'Sem descricao'}
+                      {service.description || 'Sem descrição'}
                     </TableCell>
                     <TableCell className="text-center text-sm">
                       {service.duration} min
@@ -716,7 +437,7 @@ export default function ServicesOverviewPage() {
                       {formatCurrency(service.price)}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant={service.isActive ? 'default' : 'outline'} className="text-[10px] sm:text-xs">
+                      <Badge variant={service.isActive ? 'default' : 'outline'} className="text-xs sm:text-xs">
                         {service.isActive ? 'Ativo' : 'Inativo'}
                       </Badge>
                     </TableCell>
@@ -727,7 +448,7 @@ export default function ServicesOverviewPage() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            aria-label={`Abrir acoes do servico ${service.name}`}
+                            aria-label={`Abrir ações do serviço ${service.name}`}
                           >
                             <MoreVertical className="w-4 h-4" />
                           </Button>
@@ -770,8 +491,8 @@ export default function ServicesOverviewPage() {
       <DeleteConfirmationDialog
         open={!!serviceToDelete}
         isLoading={isDeletingService}
-        title="Excluir servico?"
-        description="Tem certeza que deseja excluir este servico? Esta acao nao pode ser desfeita."
+        title="Excluir serviço?"
+        description="Tem certeza que deseja excluir este serviço? Esta ação não pode ser desfeita."
         onOpenChange={(open) => {
           if (isDeletingService) return;
           if (!open) setServiceToDelete(null);
@@ -782,8 +503,8 @@ export default function ServicesOverviewPage() {
       <DeleteConfirmationDialog
         open={isRemoveSelectedOpen}
         isLoading={isDeletingSelected}
-        title="Remover servicos selecionados?"
-        description={`Tem certeza que deseja remover ${selectedServiceIds.length} servico(s) selecionado(s)? Esta acao nao pode ser desfeita.`}
+        title="Remover serviços selecionados?"
+        description={`Tem certeza que deseja remover ${selectedServiceIds.length} serviço(s) selecionado(s)? Esta ação não pode ser desfeita.`}
         onOpenChange={(open) => {
           if (isDeletingSelected) return;
           setIsRemoveSelectedOpen(open);
@@ -794,8 +515,8 @@ export default function ServicesOverviewPage() {
       <DeleteConfirmationDialog
         open={isRemoveAllOpen}
         isLoading={isDeletingAll}
-        title="Remover todos os servicos?"
-        description="Tem certeza que deseja remover todos os servicos cadastrados? Esta acao nao pode ser desfeita."
+        title="Remover todos os serviços?"
+        description="Tem certeza que deseja remover todos os serviços cadastrados? Esta ação não pode ser desfeita."
         onOpenChange={(open) => {
           if (isDeletingAll) return;
           setIsRemoveAllOpen(open);

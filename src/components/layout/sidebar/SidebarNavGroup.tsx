@@ -41,7 +41,7 @@ export const SidebarNavGroup = memo(function SidebarNavGroup({
   const isGroupActive = isParentActive || Boolean(activeChildPath);
   const parentIsAccessible = isSidebarGroupEntryAccessible(entry.path, allowedSet);
   const contentId = `sidebar-group-${entry.id}`;
-  const parentLinkLabel = entry.path === "/financeiro" ? "Resumo" : "Visao geral";
+  const parentLinkLabel = entry.path === "/financeiro" ? "Resumo" : "Visão geral";
 
   if (compact) {
     return (
@@ -51,7 +51,7 @@ export const SidebarNavGroup = memo(function SidebarNavGroup({
             type="button"
             aria-label={entry.label}
             className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-xl text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              "flex h-10 w-10 items-center justify-center rounded-xl text-sm transition-[background-color,color,box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
               isGroupActive
                 ? "bg-primary/10 text-primary font-medium shadow-soft ring-1 ring-primary/10"
                 : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"
@@ -61,7 +61,7 @@ export const SidebarNavGroup = memo(function SidebarNavGroup({
             <span className="sr-only">{entry.label}</span>
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent side="right" align="start" className="w-64">
+        <DropdownMenuContent side="right" align="start" className="w-72">
           <DropdownMenuLabel>{entry.label}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {parentIsAccessible ? (
@@ -95,7 +95,7 @@ export const SidebarNavGroup = memo(function SidebarNavGroup({
     <div className="space-y-0.5">
       <div
         className={cn(
-          "flex h-10 items-center gap-1 rounded-xl text-sm transition-colors",
+          "flex h-10 items-center gap-1 rounded-xl text-sm transition-[background-color,color,box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0",
           isGroupActive
             ? "bg-primary/8 text-primary font-medium ring-1 ring-primary/10"
             : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"
@@ -121,35 +121,47 @@ export const SidebarNavGroup = memo(function SidebarNavGroup({
         >
           <ChevronDown
             className={cn(
-              "h-3.5 w-3.5 opacity-60 transition-transform duration-200",
+              "h-3.5 w-3.5 opacity-60 transition-transform duration-300 ease-out",
               isOpen ? "rotate-180" : "rotate-0"
             )}
           />
         </button>
       </div>
-      {isOpen ? (
-        <div id={contentId} className="ml-4 space-y-1 border-l border-border/80 pl-3 py-1">
-          {parentIsAccessible ? (
-            <SidebarNavLink
-              path={entry.path}
-              label={parentLinkLabel}
-              icon={entry.icon}
-              isActive={isParentActive}
-              onNavigate={onNavigate}
-            />
-          ) : null}
-          {entry.children.map((item) => (
-            <SidebarNavLink
-              key={item.path}
-              path={item.path}
-              label={item.label}
-              icon={item.icon}
-              isActive={activeChildPath === item.path || isSidebarEntryActive(pathname, item.path)}
-              onNavigate={onNavigate}
-            />
-          ))}
+      <div
+        id={contentId}
+        aria-hidden={!isOpen}
+        inert={isOpen ? undefined : true}
+        className={cn(
+          "grid overflow-hidden transition-[grid-template-rows,opacity,transform] duration-300 ease-out",
+          isOpen
+            ? "grid-rows-[1fr] opacity-100 translate-y-0"
+            : "grid-rows-[0fr] -translate-y-1 opacity-0 pointer-events-none"
+        )}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="ml-4 space-y-1 border-l border-sidebar-border/80 py-1 pl-3">
+            {parentIsAccessible ? (
+              <SidebarNavLink
+                path={entry.path}
+                label={parentLinkLabel}
+                icon={entry.icon}
+                isActive={isParentActive}
+                onNavigate={onNavigate}
+              />
+            ) : null}
+            {entry.children.map((item) => (
+              <SidebarNavLink
+                key={item.path}
+                path={item.path}
+                label={item.label}
+                icon={item.icon}
+                isActive={activeChildPath === item.path || isSidebarEntryActive(pathname, item.path)}
+                onNavigate={onNavigate}
+              />
+            ))}
+          </div>
         </div>
-      ) : null}
+      </div>
     </div>
   );
 });

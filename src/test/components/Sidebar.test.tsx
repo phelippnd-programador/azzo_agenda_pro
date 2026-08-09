@@ -3,19 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { Sidebar } from "@/components/layout/Sidebar";
 
-const { logoutMock } = vi.hoisted(() => ({
+const { logoutMock, menuPermissionsMock } = vi.hoisted(() => ({
   logoutMock: vi.fn().mockResolvedValue(undefined),
-}));
-
-vi.mock("@/contexts/AuthContext", () => ({
-  useAuth: () => ({
-    user: { role: "OWNER" },
-    logout: logoutMock,
-  }),
-}));
-
-vi.mock("@/contexts/MenuPermissionsContext", () => ({
-  useMenuPermissions: () => ({
+  menuPermissionsMock: {
     allowedRoutes: [
       "/dashboard",
       "/agenda",
@@ -72,13 +62,27 @@ vi.mock("@/contexts/MenuPermissionsContext", () => ({
         active: true,
       },
     ],
+  },
+}));
+
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({
+    user: { role: "OWNER" },
+    logout: logoutMock,
   }),
+}));
+
+vi.mock("@/contexts/MenuPermissionsContext", () => ({
+  useMenuPermissions: () => menuPermissionsMock,
 }));
 
 describe("Sidebar", () => {
   beforeEach(() => {
     logoutMock.mockReset();
     logoutMock.mockResolvedValue(undefined);
+    menuPermissionsMock.menuItems = menuPermissionsMock.menuItems.filter(
+      (item) => item.route !== "/perfil-salao" && item.route !== "/configuracoes"
+    );
     Object.defineProperty(window, "innerWidth", {
       configurable: true,
       writable: true,
@@ -100,7 +104,7 @@ describe("Sidebar", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText("Gestao")).toBeInTheDocument();
+    expect(screen.getByText("Gestão")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Abrir site de agendamento" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Resumo Financeiro" })).toBeInTheDocument();
     expect(screen.getAllByText("Resumo Financeiro")).toHaveLength(1);
@@ -134,6 +138,45 @@ describe("Sidebar", () => {
     expect(screen.getByRole("button", { name: "Expandir menu lateral" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Resumo Financeiro" })).toBeInTheDocument();
     expect(await screen.findByRole("link", { name: "Abrir site de agendamento" })).toBeInTheDocument();
+  });
+
+  it("should expose submenu labels through the compact dropdown instead of inline icon-only children", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/financeiro"]}>
+        <Sidebar isMobileOpen={false} onToggleMobile={vi.fn()} isDesktopOpen={false} onToggleDesktop={vi.fn()} />
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole("button", { name: "Resumo Financeiro" }));
+
+    expect(await screen.findByText("Fechamento de Caixa")).toBeInTheDocument();
+    expect(screen.getByText("Financeiro Profissionais")).toBeInTheDocument();
+  });
+
+  it("should respect management sidebar visibility for bottom items", () => {
+    menuPermissionsMock.menuItems = [
+      ...menuPermissionsMock.menuItems,
+      {
+        id: "salon-profile",
+        route: "/perfil-salao",
+        label: "Perfil do Salão",
+        parentId: null,
+        displayOrder: 900,
+        iconKey: "Building2",
+        active: true,
+        sidebarVisible: false,
+      },
+    ];
+
+    render(
+      <MemoryRouter initialEntries={["/dashboard"]}>
+        <Sidebar isMobileOpen={false} onToggleMobile={vi.fn()} isDesktopOpen onToggleDesktop={vi.fn()} />
+      </MemoryRouter>
+    );
+
+    expect(screen.queryByRole("link", { name: "Perfil do Salão" })).not.toBeInTheDocument();
   });
 
   it("should trigger logout from the sidebar footer", async () => {

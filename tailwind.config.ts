@@ -17,8 +17,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-        display: ["Manrope", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["Aptos", "Segoe UI", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["Manrope", "Aptos", "Segoe UI", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       fontSize: {
         xs: ["12px", { lineHeight: "16px", fontWeight: "400" }],
@@ -51,6 +51,14 @@ export default {
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
+        },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",

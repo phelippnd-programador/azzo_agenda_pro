@@ -1,19 +1,22 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type DayOfWeek = "SEG" | "TER" | "QUA" | "QUI" | "SEX" | "SAB" | "DOM";
-
-export type BusinessHoursDraft = {
-  day: DayOfWeek;
+export type WorkingHoursDraft = {
+  dayOfWeek: number;
   startTime: string;
   endTime: string;
+  isWorking: boolean;
 };
 
 export type ProfessionalDraft = {
   id?: string;
+  /** Usuario vinculado. Permite saber se o dono ja se cadastrou como profissional. */
+  userId?: string;
   name: string;
-  role: string;
-  businessHours: BusinessHoursDraft[];
+  email: string;
+  phone: string;
+  specialties: string[];
+  workingHours: WorkingHoursDraft[];
 };
 
 export type ServiceDraft = {
@@ -22,6 +25,8 @@ export type ServiceDraft = {
   durationMinutes: number;
   price: number;
   description?: string;
+  category: string;
+  professionalIds: string[];
 };
 
 export type SalonDraft = {
@@ -39,7 +44,6 @@ type OnboardingStore = {
   salonData: SalonDraft | null;
   professionals: ProfessionalDraft[];
   services: ServiceDraft[];
-  assignments: Record<string, string[]>;
   setStep: (step: number) => void;
   setSalonData: (data: SalonDraft) => void;
   addProfessional: (p: ProfessionalDraft) => void;
@@ -48,7 +52,8 @@ type OnboardingStore = {
   addService: (s: ServiceDraft) => void;
   updateService: (index: number, s: ServiceDraft) => void;
   removeService: (index: number) => void;
-  setAssignments: (assignments: Record<string, string[]>) => void;
+  /** Substitui as listas locais pelo que existe de fato no backend (retomada em outro dispositivo/sessao). */
+  hydrateFromServer: (data: { professionals: ProfessionalDraft[]; services: ServiceDraft[] }) => void;
   reset: () => void;
 };
 
@@ -57,7 +62,6 @@ const initialState = {
   salonData: null,
   professionals: [],
   services: [],
-  assignments: {},
 };
 
 export const useOnboardingStore = create<OnboardingStore>()(
@@ -90,11 +94,20 @@ export const useOnboardingStore = create<OnboardingStore>()(
         set((state) => ({
           services: state.services.filter((_, i) => i !== index),
         })),
-      setAssignments: (assignments) => set({ assignments }),
+      hydrateFromServer: ({ professionals, services }) => set({ professionals, services }),
       reset: () => set(initialState),
     }),
     {
       name: "azzo:onboarding:draft",
+      // v2: ServiceDraft/ProfessionalDraft mudaram de forma (category/
+      // professionalIds; email/phone/specialties/workingHours) para bater
+      // com o cadastro real. Rascunhos salvos com a forma antiga quebravam
+      // as novas telas (ex.: p.specialties.map em profissional sem esse
+      // campo) ao avancar de etapa. Como esses dados nunca foram
+      // persistidos de verdade no backend (o wizard antigo nao chamava
+      // nenhuma API real), e seguro descartar e comecar do zero.
+      version: 2,
+      migrate: () => ({ ...initialState }),
     }
   )
 );

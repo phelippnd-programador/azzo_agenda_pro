@@ -1,13 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import type { NotificationStatus, NotificationsFilters as FiltersType } from "@/types/notification";
 
 const CHANNEL_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "APPOINTMENT_CREATED", label: "Agendamento criado" },
   { value: "WHATSAPP_REMINDER", label: "Lembrete WhatsApp" },
-  { value: "WHATSAPP_CONFIG_ALERT", label: "Alerta configuracao WhatsApp" },
+  { value: "WHATSAPP_CONFIG_ALERT", label: "Alerta configuração WhatsApp" },
   { value: "WHATSAPP_DELIVERY_ERROR", label: "Falha de entrega WhatsApp" },
 ];
 
@@ -28,44 +29,50 @@ export function NotificationsFilters({
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
       <div className="space-y-1">
         <Label htmlFor="notifications-status">Status</Label>
-        <select
-          id="notifications-status"
-          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-          value={filters.status || ""}
-          onChange={(event) =>
+        <Select
+          value={filters.status || "all"}
+          onValueChange={(value) =>
             onChange({
               ...filters,
-              status: (event.target.value || undefined) as NotificationStatus | undefined,
+              status: (value === "all" ? undefined : value) as NotificationStatus | undefined,
             })
           }
         >
-          <option value="">Todos</option>
-          <option value="FAILED">FAILED</option>
-          <option value="SENT">SENT</option>
-          <option value="PENDING">PENDING</option>
-        </select>
+          <SelectTrigger id="notifications-status">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="FAILED">Falhou</SelectItem>
+            <SelectItem value="SENT">Enviado</SelectItem>
+            <SelectItem value="PENDING">Pendente</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-1">
         <Label htmlFor="notifications-channel">Canal</Label>
-        <select
-          id="notifications-channel"
-          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-          value={filters.channel || ""}
-          onChange={(event) =>
+        <Select
+          value={filters.channel || "all"}
+          onValueChange={(value) =>
             onChange({
               ...filters,
-              channel: event.target.value || undefined,
+              channel: value === "all" ? undefined : value,
             })
           }
         >
-          <option value="">Todos</option>
-          {CHANNEL_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger id="notifications-channel">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            {CHANNEL_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-1">
@@ -88,7 +95,7 @@ export function NotificationsFilters({
       </div>
 
       <div className="flex items-end">
-        <div className="flex items-center justify-between rounded-md border border-input h-10 px-3 w-full">
+        <div className="flex h-10 w-full items-center justify-between rounded-lg border border-border/70 bg-background/60 px-3">
           <Label htmlFor="notifications-failed-only" className="text-sm">
             Somente falhas
           </Label>
@@ -106,9 +113,9 @@ export function NotificationsFilters({
       </div>
 
       <div className="flex items-end">
-        <div className="flex items-center justify-between rounded-md border border-input h-10 px-3 w-full">
+        <div className="flex h-10 w-full items-center justify-between rounded-lg border border-border/70 bg-background/60 px-3">
           <Label htmlFor="notifications-unread-only" className="text-sm">
-            Nao visualizadas
+            Não visualizadas
           </Label>
           <Switch
             id="notifications-unread-only"

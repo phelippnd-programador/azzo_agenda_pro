@@ -80,7 +80,8 @@ describe('SalePage', () => {
       })
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Criar conta gratis agora/i })).toBeInTheDocument();
-    expect(screen.getByText(/Primeira etapa em 2 passos/i)).toBeInTheDocument();
+    expect(screen.getByText(/Cadastro em 2 passos/i)).toBeInTheDocument();
+    expect(screen.getByText(/Veja o plano, crie a conta e continue para o checkout no mesmo fluxo/i)).toBeInTheDocument();
     expect(screen.getByText(/Por que o investimento se paga rapido/i)).toBeInTheDocument();
     expect(screen.getByText(/1 no-show evitado/i)).toBeInTheDocument();
     expect(screen.getByText(/Capturas reais do produto em uso/i)).toBeInTheDocument();

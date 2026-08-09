@@ -28,9 +28,13 @@ export function useChat(options: UseChatOptions = {}) {
   const [isSending, setIsSending] = useState(false);
   const [isUpdatingMarker, setIsUpdatingMarker] = useState(false);
   const [hasNextMessages, setHasNextMessages] = useState(false);
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const hasLoadedConversationsRef = useRef(false);
   const nextCursorRef = useRef<string | null>(null);
+  // Ref (nao state) de propósito: `loadMessages` precisa ler/escrever a
+  // conversa ativa sem que isso recrie sua própria identidade de função a
+  // cada chamada — do contrário, o efeito em Chat.tsx que depende de
+  // `loadMessages` reexecuta em loop assim que a conversa é aberta.
+  const activeConversationIdRef = useRef<string | null>(null);
 
   const loadConversations = useCallback(async (opts: LoadOptions = {}) => {
     try {
@@ -51,15 +55,15 @@ export function useChat(options: UseChatOptions = {}) {
 
   const loadMessages = useCallback(async (conversationId: string, opts: LoadOptions = {}) => {
     if (!conversationId) {
-      setActiveConversationId(null);
+      activeConversationIdRef.current = null;
       setMessages([]);
       nextCursorRef.current = null;
       setHasNextMessages(false);
       return;
     }
     try {
-      const isConversationChanged = activeConversationId !== conversationId;
-      setActiveConversationId(conversationId);
+      const isConversationChanged = activeConversationIdRef.current !== conversationId;
+      activeConversationIdRef.current = conversationId;
       if (!opts.background) {
         setIsLoadingMessages(true);
       }
@@ -76,13 +80,28 @@ export function useChat(options: UseChatOptions = {}) {
       setConversations((prev) => {
         const lastMessage = nextMessages.at(-1);
         if (!lastMessage) return prev;
-        const lastMessagePreview = lastMessage.content?.trim() || "[Conteudo expirado]";
+        const lastMessagePreview = lastMessage.content?.trim() || "[Mensagem sem texto]";
         const lastMessageAt = lastMessage.createdAt;
+        const nextClientId = lastMessage.clientId || null;
+        const current = prev.find((conversation) => conversation.id === conversationId);
+        // Bail out (retorna a mesma referencia) quando nada mudou de fato —
+        // evita recriar `conversations` a cada chamada, o que faria
+        // `selectedConversation` (useMemo derivado) mudar de referencia e
+        // realimentar o efeito que chama loadMessages, causando recarga
+        // continua da conversa aberta.
+        const isUnchanged =
+          current &&
+          current.lastMessagePreview === lastMessagePreview &&
+          current.lastMessageAt === lastMessageAt &&
+          current.unreadCount === 0 &&
+          (!nextClientId || current.clientId === nextClientId);
+        if (isUnchanged) return prev;
+
         const next = prev.map((conversation) =>
           conversation.id === conversationId
             ? {
                 ...conversation,
-                clientId: lastMessage.clientId || conversation.clientId,
+                clientId: nextClientId || conversation.clientId,
                 lastMessagePreview,
                 lastMessageAt,
                 updatedAt: lastMessageAt,
@@ -106,7 +125,7 @@ export function useChat(options: UseChatOptions = {}) {
     } finally {
       setIsLoadingMessages(false);
     }
-  }, [activeConversationId]);
+  }, []);
 
   const loadMoreMessages = useCallback(async (conversationId: string) => {
     if (!conversationId || !nextCursorRef.current || isLoadingMoreMessages) return;

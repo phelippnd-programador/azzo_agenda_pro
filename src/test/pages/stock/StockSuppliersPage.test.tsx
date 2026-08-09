@@ -54,9 +54,9 @@ describe("StockSuppliersPage", () => {
       render(<StockSuppliersPage />);
 
       expect(await screen.findByText("Fornecedor 1")).toBeInTheDocument();
-      expect(screen.getByText("Pagina 1 de 2")).toBeInTheDocument();
+      expect(screen.getByText("Página 1 de 2")).toBeInTheDocument();
 
-      await user.click(screen.getByRole("button", { name: "Proxima" }));
+      await user.click(screen.getByRole("button", { name: "Próxima" }));
       expect(await screen.findByText("Fornecedor 11")).toBeInTheDocument();
 
       await user.click(screen.getByRole("button", { name: "Novo fornecedor" }));

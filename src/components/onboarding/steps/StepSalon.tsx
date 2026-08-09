@@ -55,7 +55,8 @@ export function StepSalon({ initialData, onValidityChange, onDataChange }: StepS
     register,
     control,
     watch,
-    formState: { errors, isValid },
+    reset,
+    formState: { errors, isValid, isDirty },
     setValue,
     getValues,
   } = useForm<SalonFormValues>({
@@ -74,6 +75,24 @@ export function StepSalon({ initialData, onValidityChange, onDataChange }: StepS
   useEffect(() => {
     onValidityChange(isValid);
   }, [isValid, onValidityChange]);
+
+  // Pre-preenche com os dados do tenant (nome do salão, telefone, e-mail
+  // informados no cadastro) quando eles chegam depois do mount — ex.: a
+  // consulta ao perfil do salão ainda estava em andamento quando esta etapa
+  // foi renderizada. Nunca sobrescreve o que a pessoa já digitou aqui.
+  useEffect(() => {
+    if (initialData && !isDirty) {
+      reset({
+        name: initialData.name ?? "",
+        type: initialData.type ?? "",
+        phone: initialData.phone ?? "",
+        city: initialData.city ?? "",
+        state: initialData.state ?? "",
+        email: initialData.email ?? "",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData]);
 
   useEffect(() => {
     const subscription = watch((values) => {

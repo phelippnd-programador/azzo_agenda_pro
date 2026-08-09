@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
 import { viteSourceLocator } from "@metagptx/vite-plugin-source-locator";
 import { atoms } from "@metagptx/web-sdk/plugins";
@@ -26,14 +27,64 @@ const DEV_TLS_CERT_PATH =
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => ({
   plugins: (() => {
-    const atomPlugins = atoms();
+    const isDev = command === "serve";
+    // SEC-006/SEC-009: as ferramentas de editor visual do MetaGPT/Lovable
+    // (viteSourceLocator + atoms) arrastam uma cadeia de build vulneravel
+    // (rollup-plugin-terser -> serialize-javascript). Sao apenas dev tooling,
+    // entao so entram no dev-server; o build de producao nunca as inclui.
+    const devOnlyPlugins = isDev
+      ? (() => {
+          const atomPlugins = atoms();
+          return [
+            viteSourceLocator({ prefix: "mgx" }),
+            ...(Array.isArray(atomPlugins) ? atomPlugins : [atomPlugins]),
+          ];
+        })()
+      : [];
     return [
-      viteSourceLocator({
-        prefix: "mgx",
-      }),
       react(),
+      VitePWA({
+        registerType: "prompt",
+        includeAssets: ["favicon.ico", "icon-192.png", "icon-512.png"],
+        manifest: false,
+        workbox: {
+          // navigateFallback é o "app shell" servido para navegações (F5, URL
+          // direta) quando não há match direto no precache — TEM que ser o
+          // index.html real, nunca a offline.html. Apontar para offline.html
+          // faz o service worker responder toda navegação com a tela de
+          // "sem conexão", mesmo com internet normal.
+          navigateFallback: "/index.html",
+          navigateFallbackDenylist: [/^\/api\//],
+          globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,json}"],
+          globIgnores: ["images/**"],
+          runtimeCaching: [
+            {
+              urlPattern: ({ request, url }) => {
+                if (request.method !== "GET") return false;
+                if (!url.pathname.startsWith("/api/")) return false;
+                return !/^\/api\/v1\/(auth|billing|finance|users|salon\/profile|admin|auditoria|lgpd)/.test(url.pathname);
+              },
+              handler: "NetworkFirst",
+              options: {
+                cacheName: "azzo-api-readonly",
+                networkTimeoutSeconds: 5,
+                expiration: {
+                  maxEntries: 80,
+                  maxAgeSeconds: 60 * 60,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+          ],
+        },
+        devOptions: {
+          enabled: false,
+        },
+      }),
       viteVersionPlugin(),
-      ...(Array.isArray(atomPlugins) ? atomPlugins : [atomPlugins]),
+      ...devOnlyPlugins,
     ];
   })(),
   server: {

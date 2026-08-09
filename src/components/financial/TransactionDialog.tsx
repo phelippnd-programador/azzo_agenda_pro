@@ -3,6 +3,7 @@ import { Loader2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { stockApi, type Professional, type TransactionMutationInput } from '@/lib/api';
 import { Button } from '@/components/ui/button';
+import { DateInput } from '@/components/ui/date-input';
 import {
   Dialog,
   DialogBody,
@@ -239,8 +240,9 @@ export function TransactionDialog({
 
           <DialogSection className="bg-transparent">
             <div className="space-y-2">
-              <Label>Descrição *</Label>
+              <Label htmlFor="transaction-description">Descrição *</Label>
               <Input
+                id="transaction-description"
                 placeholder="Ex: Corte de cabelo - Maria"
                 value={formDescription}
                 onChange={(e) => setFormDescription(e.target.value)}
@@ -249,17 +251,18 @@ export function TransactionDialog({
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Valor (R$) *</Label>
+                <Label htmlFor="transaction-amount">Valor (R$) *</Label>
                 <CurrencyInput
+                  id="transaction-amount"
                   cents
                   value={formAmount}
                   onChange={(val) => setFormAmount(val)}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Data</Label>
-                <Input
-                  type="date"
+                <Label htmlFor="transaction-date">Data</Label>
+                <DateInput
+                  id="transaction-date"
                   value={formDate}
                   onChange={(e) => setFormDate(e.target.value)}
                 />
@@ -267,11 +270,11 @@ export function TransactionDialog({
             </div>
 
             <div className="space-y-2">
-              <Label>Categoria *</Label>
+              <Label htmlFor="transaction-category">Categoria *</Label>
               {!isCreatingCategory ? (
                 <div className="flex gap-2">
                   <Select value={formCategory} onValueChange={setFormCategory}>
-                    <SelectTrigger className="flex-1">
+                    <SelectTrigger id="transaction-category" className="flex-1">
                       <SelectValue placeholder={isLoadingCategories ? 'Carregando...' : 'Selecione'} />
                     </SelectTrigger>
                     <SelectContent>
@@ -282,7 +285,7 @@ export function TransactionDialog({
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button type="button" variant="outline" size="icon" title="Nova categoria" onClick={() => setIsCreatingCategory(true)}>
+                  <Button type="button" variant="outline" size="icon" title="Nova categoria" aria-label="Nova categoria" onClick={() => setIsCreatingCategory(true)}>
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
@@ -312,9 +315,9 @@ export function TransactionDialog({
             </div>
 
             <div className="space-y-2">
-              <Label>Forma de pagamento</Label>
+              <Label htmlFor="transaction-payment-method">Forma de pagamento</Label>
               <Select value={formPaymentMethod} onValueChange={setFormPaymentMethod}>
-                <SelectTrigger>
+                <SelectTrigger id="transaction-payment-method">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -338,9 +341,9 @@ export function TransactionDialog({
               </div>
 
               <div className="space-y-2">
-                <Label>Profissional responsável *</Label>
+                <Label htmlFor="transaction-professional">Profissional responsável *</Label>
                 <Select value={formProfessionalId} onValueChange={setFormProfessionalId}>
-                  <SelectTrigger>
+                  <SelectTrigger id="transaction-professional">
                     <SelectValue placeholder="Selecione o profissional" />
                   </SelectTrigger>
                   <SelectContent>
@@ -355,7 +358,7 @@ export function TransactionDialog({
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Produto</Label>
+                  <Label htmlFor="transaction-product">Produto</Label>
                   <Select
                     value={formProductId}
                     onValueChange={(value) => {
@@ -363,7 +366,7 @@ export function TransactionDialog({
                       if (value) setFormProductCategory('');
                     }}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="transaction-product">
                       <SelectValue placeholder={isLoadingStock ? 'Carregando produtos...' : 'Selecione o produto'} />
                     </SelectTrigger>
                     <SelectContent>
@@ -377,8 +380,9 @@ export function TransactionDialog({
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Categoria do produto</Label>
+                  <Label htmlFor="transaction-product-category">Categoria do produto</Label>
                   <Input
+                    id="transaction-product-category"
                     placeholder="Use se nao quiser vincular a um item"
                     value={formProductCategory}
                     onChange={(e) => {

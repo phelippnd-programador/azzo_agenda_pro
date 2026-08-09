@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, Plus, Pencil, Trash2, AlertTriangle } from 'lucide-react';
+import { DateInput } from "@/components/ui/date-input";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -127,7 +128,7 @@ function ImpactModal({
             Agendamentos afetados
           </DialogTitle>
           <DialogDescription>
-            {affected.length} agendamento{affected.length !== 1 ? 's' : ''} sera{affected.length !== 1 ? 'o' : ''} afetado{affected.length !== 1 ? 's' : ''} pelo fechamento nessa data/horario.
+            {affected?.length} agendamento{affected?.length !== 1 ? 's' : ''} sera{affected?.length !== 1 ? 'o' : ''} afetado{affected?.length !== 1 ? 's' : ''} pelo fechamento nessa data/horario.
             Escolha como deseja prosseguir.
           </DialogDescription>
         </DialogHeader>
@@ -256,9 +257,8 @@ function ClosureFormModal({
             {/* Data */}
             <div className="space-y-2">
               <Label htmlFor="closureDate">Data *</Label>
-              <Input
+              <DateInput
                 id="closureDate"
-                type="date"
                 value={form.closureDate}
                 onChange={(e) => set('closureDate', e.target.value)}
                 required
@@ -478,7 +478,7 @@ export function SettingsClosuresTab() {
       } else {
         const impact = await closuresApi.create(payload);
         setFormOpen(false);
-        if (impact.affectedAppointments.length > 0) {
+        if (impact?.affectedAppointments?.length > 0) {
           setPendingClosure(impact.closure);
           setImpactedAppointments(impact.affectedAppointments);
         } else {
@@ -609,7 +609,7 @@ export function SettingsClosuresTab() {
             <div className="py-10 text-center text-sm text-muted-foreground">
               Carregando fechamentos...
             </div>
-          ) : filteredClosures.length === 0 ? (
+          ) : filteredClosures?.length === 0 ? (
             <EmptyClosures />
           ) : (
             <div className="space-y-2">

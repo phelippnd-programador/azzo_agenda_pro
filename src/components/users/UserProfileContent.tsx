@@ -94,7 +94,7 @@ export function UserProfileContent() {
   }, [mfaUri]);
 
   const profileInitials = useMemo(() => {
-    const base = user?.name || user?.email || "Usuario";
+    const base = user?.name || user?.email || "Usuário";
     return (
       base
         .split(" ")
@@ -151,7 +151,7 @@ export function UserProfileContent() {
       setAvatarUrl(resolveAvatarPreview(refreshedUser));
       toast.success("Foto de perfil atualizada com sucesso");
     } catch (error) {
-      toast.error(resolveUiError(error, "Nao foi possivel enviar a foto de perfil").message);
+      toast.error(resolveUiError(error, "Não foi possível enviar a foto de perfil").message);
     } finally {
       setIsAvatarUploading(false);
     }
@@ -165,7 +165,7 @@ export function UserProfileContent() {
       setAvatarUrl(resolveAvatarPreview(refreshedUser));
       toast.success("Foto de perfil removida com sucesso");
     } catch (error) {
-      toast.error(resolveUiError(error, "Nao foi possivel remover a foto de perfil").message);
+      toast.error(resolveUiError(error, "Não foi possível remover a foto de perfil").message);
     } finally {
       setIsAvatarRemoving(false);
     }
@@ -179,7 +179,7 @@ export function UserProfileContent() {
       setMfaUri(data.otpauthUri);
       setMfaEnrolled(true);
       setMfaEnabled(false);
-      toast.success("MFA preparado. Escaneie o QR Code e confirme o codigo.");
+      toast.success("MFA preparado. Escaneie o QR Code e confirme o código.");
     } catch (error) {
       toast.error(resolveUiError(error, "Erro ao preparar MFA").message);
     } finally {
@@ -189,7 +189,7 @@ export function UserProfileContent() {
 
   const handleEnableMfa = async () => {
     if (!mfaEnableCode || mfaEnableCode.length !== 6) {
-      toast.error("Informe o codigo MFA de 6 digitos");
+      toast.error("Informe o código MFA de 6 dígitos");
       return;
     }
 
@@ -211,7 +211,7 @@ export function UserProfileContent() {
 
   const handleDisableMfa = async () => {
     if (!mfaDisablePassword || !mfaDisableCode || mfaDisableCode.length !== 6) {
-      toast.error("Informe senha atual e codigo MFA de 6 digitos");
+      toast.error("Informe senha atual e código MFA de 6 dígitos");
       return;
     }
 
@@ -263,7 +263,7 @@ export function UserProfileContent() {
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="min-w-0 text-xl font-bold text-foreground sm:text-2xl">
-                  {user?.name || "Usuario"}
+                  {user?.name || "Usuário"}
                 </h2>
                 <Badge variant="secondary">{user?.role || "USER"}</Badge>
               </div>
@@ -294,27 +294,27 @@ export function UserProfileContent() {
       <Card>
         <CardHeader>
           <CardTitle>Dados da conta</CardTitle>
-          <CardDescription>Atualize suas informacoes pessoais e de contato.</CardDescription>
+          <CardDescription>Atualize suas informações pessoais e de contato.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Nome</Label>
-              <Input value={name} onChange={(event) => setName(event.target.value)} />
+              <Label htmlFor="user-profile-name">Nome</Label>
+              <Input id="user-profile-name" value={name} onChange={(event) => setName(event.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Email</Label>
-              <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+              <Label htmlFor="user-profile-email">E-mail</Label>
+              <Input id="user-profile-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Telefone</Label>
-              <Input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="(11) 99999-0000" />
+              <Label htmlFor="user-profile-phone">Telefone</Label>
+              <Input id="user-profile-phone" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="(11) 99999-0000" />
             </div>
             <div className="space-y-2">
-              <Label>Perfil de acesso</Label>
-              <Input value={user?.role || ""} readOnly />
+              <Label htmlFor="user-profile-role">Perfil de acesso</Label>
+              <Input id="user-profile-role" value={user?.role || ""} readOnly className="bg-muted/40" />
             </div>
           </div>
           <Button onClick={handleSaveProfile} disabled={isSavingProfile} className="w-full gap-2 sm:w-auto">
@@ -339,27 +339,41 @@ export function UserProfileContent() {
           <CardDescription>Use sua senha atual para definir uma nova senha de acesso.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Input
-            type="password"
-            placeholder="Senha atual"
-            value={currentPassword}
-            onChange={(event) => setCurrentPassword(event.target.value)}
-            autoComplete="current-password"
-          />
-          <Input
-            type="password"
-            placeholder="Nova senha"
-            value={newPassword}
-            onChange={(event) => setNewPassword(event.target.value)}
-            autoComplete="new-password"
-          />
-          <Input
-            type="password"
-            placeholder="Confirmar nova senha"
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            autoComplete="new-password"
-          />
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="current-password">Senha atual</Label>
+              <Input
+                id="current-password"
+                type="password"
+                placeholder="Senha atual"
+                value={currentPassword}
+                onChange={(event) => setCurrentPassword(event.target.value)}
+                autoComplete="current-password"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-password">Nova senha</Label>
+              <Input
+                id="new-password"
+                type="password"
+                placeholder="Nova senha"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                autoComplete="new-password"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirmar nova senha</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                placeholder="Confirmar nova senha"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                autoComplete="new-password"
+              />
+            </div>
+          </div>
           <Button
             variant="outline"
             onClick={handleChangePassword}
@@ -383,9 +397,9 @@ export function UserProfileContent() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="text-sm">
+            <div className="rounded-lg border border-border/70 bg-background/55 px-4 py-3 text-sm">
               Status:{" "}
-              <span className={mfaEnabled ? "font-medium text-green-600" : "font-medium text-amber-600"}>
+              <span className={mfaEnabled ? "font-medium text-emerald-700 dark:text-emerald-300" : "font-medium text-amber-700 dark:text-amber-300"}>
                 {mfaEnabled ? "Habilitado" : "Desabilitado"}
               </span>
             </div>
@@ -402,14 +416,14 @@ export function UserProfileContent() {
                 </Button>
 
                 {mfaEnrolled && mfaSecret ? (
-                  <div className="space-y-3 rounded-md border p-3">
+                  <div className="space-y-3 rounded-lg border border-border/70 bg-background/55 p-4">
                     <div className="space-y-1">
-                      <Label>Secret (backup manual)</Label>
-                      <Input value={mfaSecret} readOnly />
+                      <Label htmlFor="mfa-secret">Secret (backup manual)</Label>
+                      <Input id="mfa-secret" value={mfaSecret} readOnly className="bg-muted/40" />
                     </div>
                     <div className="space-y-1">
-                      <Label>URI do autenticador</Label>
-                      <Input value={mfaUri} readOnly />
+                      <Label htmlFor="mfa-uri">URI do autenticador</Label>
+                      <Input id="mfa-uri" value={mfaUri} readOnly className="bg-muted/40" />
                     </div>
                     {mfaQrCodeDataUrl ? (
                       <div className="space-y-2">
@@ -420,8 +434,9 @@ export function UserProfileContent() {
                       </div>
                     ) : null}
                     <div className="space-y-1">
-                      <Label>Codigo atual do app</Label>
+                      <Label htmlFor="mfa-enable-code">Código atual do app</Label>
                       <Input
+                        id="mfa-enable-code"
                         value={mfaEnableCode}
                         onChange={(event) => setMfaEnableCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
                         placeholder="000000"
@@ -434,9 +449,10 @@ export function UserProfileContent() {
                 ) : null}
               </>
             ) : (
-              <div className="space-y-3 rounded-md border p-3">
+              <div className="space-y-3 rounded-lg border border-border/70 bg-background/55 p-4">
                 <Label>Desabilitar MFA</Label>
                 <Input
+                  id="mfa-disable-password"
                   type="password"
                   placeholder="Senha atual"
                   value={mfaDisablePassword}
@@ -444,7 +460,8 @@ export function UserProfileContent() {
                   autoComplete="current-password"
                 />
                 <Input
-                  placeholder="Codigo MFA (6 digitos)"
+                  id="mfa-disable-code"
+                  placeholder="Código MFA (6 dígitos)"
                   value={mfaDisableCode}
                   onChange={(event) => setMfaDisableCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
                 />
@@ -465,9 +482,9 @@ export function UserProfileContent() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-4 w-4 text-primary" />
-              Seguranca da conta
+              Segurança da conta
             </CardTitle>
-            <CardDescription>Seu perfil de acesso nao exige configuracao de MFA nesta versao.</CardDescription>
+            <CardDescription>Seu perfil de acesso não exige configuração de MFA nesta versão.</CardDescription>
           </CardHeader>
         </Card>
       )}

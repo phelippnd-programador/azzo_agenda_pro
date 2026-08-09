@@ -42,7 +42,7 @@ describe("Header", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByRole("button", { name: "Abrir notificacoes" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Abrir notificações" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Abrir menu da conta" })).toBeInTheDocument();
   });
 });

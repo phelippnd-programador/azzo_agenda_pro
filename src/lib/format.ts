@@ -3,9 +3,18 @@
 
 // ─── Moeda ────────────────────────────────────────────────────────────────────
 
-/** Formata um valor em reais. Ex: 1500 → "R$ 1.500,00" */
-export const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+/** Formata um valor em reais. Ex: 1500 → "R$ 1.500,00".
+ * Valores invalidos (null/undefined/NaN/string nao-numerica) viram 0 para nunca exibir
+ * "R$ NaN" na interface, mas geram um warning no console (dev) para nao mascarar
+ * silenciosamente um bug upstream que estaria passando um valor quebrado. */
+export const formatCurrency = (value: number | string | null | undefined) => {
+  const numeric = typeof value === "number" ? value : Number(value);
+  const safe = Number.isFinite(numeric) ? numeric : 0;
+  if (!Number.isFinite(numeric) && value !== null && value !== undefined) {
+    console.warn(`formatCurrency recebeu um valor invalido e caiu para 0: ${JSON.stringify(value)}`);
+  }
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(safe);
+};
 
 // ─── Data / Hora ──────────────────────────────────────────────────────────────
 
@@ -62,6 +71,23 @@ export function parseCurrencyInput(raw: string): number {
 /** Converte string de input monetário para centavos inteiros. Ex: "1.500,50" → 150050 */
 export function parseCurrencyInputToCents(raw: string): number {
   return Math.round(parseCurrencyInput(raw) * 100);
+}
+
+/**
+ * Converte string em notacao pt-BR (virgula decimal, ponto como milhar) para float,
+ * para campos de texto livre que nao sao moeda (ex: percentual). Ex: "1.500,50" → 1500.5,
+ * "30,5" → 30.5, "30" → 30. Retorna 0 para entrada invalida ou vazia.
+ */
+export function parseDecimalInput(raw: string): number {
+  const trimmed = raw.trim();
+  if (!trimmed) return 0;
+  const hasComma = trimmed.includes(',');
+  const hasDot = trimmed.includes('.');
+  const normalized = hasComma && hasDot
+    ? trimmed.replace(/\./g, '').replace(',', '.')
+    : trimmed.replace(',', '.');
+  const value = Number(normalized);
+  return Number.isFinite(value) ? value : 0;
 }
 
 // ─── Chave de data ────────────────────────────────────────────────────────────

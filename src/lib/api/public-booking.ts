@@ -41,11 +41,20 @@ export const publicBookingApi = {
       startTime: string;
     }
   ) =>
-    request<{ appointmentId: string; status: string; message?: string }>(
-      `/public/salons/${slug}/appointments`,
-      {
-        method: "POST",
-        body: JSON.stringify(data),
-      }
-    ),
+    request<PublicAppointmentCreated>(`/public/salons/${slug}/appointments`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+};
+
+// F02 — resposta do agendamento publico; campos de sinal presentes apenas
+// quando algum servico exige pagamento antecipado.
+export type PublicAppointmentCreated = {
+  appointmentId: string;
+  status: string;
+  message?: string;
+  depositRequired?: boolean;
+  depositValue?: number;
+  depositPixPayload?: string;
+  depositExpiresAt?: string;
 };

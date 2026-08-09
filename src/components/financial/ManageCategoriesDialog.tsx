@@ -142,10 +142,10 @@ export function ManageCategoriesDialog({
                           }}
                           autoFocus
                         />
-                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-green-600" onClick={() => void handleSaveEdit(category.id)}>
+                        <Button type="button" variant="ghost" size="icon" className="text-success" aria-label={`Salvar categoria ${category.name}`} onClick={() => void handleSaveEdit(category.id)}>
                           <Check className="h-4 w-4" />
                         </Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingId(null); setEditingName(''); }}>
+                        <Button type="button" variant="ghost" size="icon" aria-label={`Cancelar edicao da categoria ${category.name}`} onClick={() => { setEditingId(null); setEditingName(''); }}>
                           <X className="h-4 w-4" />
                         </Button>
                       </>
@@ -153,18 +153,19 @@ export function ManageCategoriesDialog({
                       <>
                         <span className="flex-1 text-sm">{category.name}</span>
                         {category.transactionCount > 0 ? (
-                          <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
+                          <Badge variant="secondary" className="px-1.5 py-0 text-xs">
                             {category.transactionCount}
                           </Badge>
                         ) : null}
-                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingId(category.id); setEditingName(category.name); }}>
+                        <Button type="button" variant="ghost" size="icon" aria-label={`Editar categoria ${category.name}`} onClick={() => { setEditingId(category.id); setEditingName(category.name); }}>
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-red-500 hover:text-red-600"
+                          className="text-destructive hover:text-destructive/90"
+                          aria-label={`Excluir categoria ${category.name}`}
                           disabled={isDeletingId === category.id}
                           onClick={() => void handleDelete(category)}
                         >

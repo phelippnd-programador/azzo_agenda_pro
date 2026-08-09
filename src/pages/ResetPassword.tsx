@@ -75,10 +75,10 @@ export default function ResetPassword() {
 
         <Card className="auth-panel border-border/80">
           <CardHeader className="pb-2 text-center sm:pb-4">
-            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-[2rem]">
+            <CardTitle className="text-2xl font-semibold tracking-tight sm:text-3xl">
               Definir nova senha
             </CardTitle>
-            <CardDescription className="text-sm leading-6 sm:text-[15px]">
+            <CardDescription className="text-sm leading-6">
               Informe sua nova senha para concluir a recuperacao de acesso.
             </CardDescription>
           </CardHeader>

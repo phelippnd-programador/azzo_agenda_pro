@@ -5,10 +5,13 @@ import {
   Boxes,
   Building2,
   CalendarRange,
+  CreditCard,
   PlugZap,
   Receipt,
+  Send,
   ShieldCheck,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,9 +23,49 @@ import { SettingsNotificationsTab } from '@/components/settings/SettingsNotifica
 import { SettingsAccountTab } from '@/components/settings/SettingsAccountTab';
 import { AppointmentConflictSettingsCard } from '@/components/settings/AppointmentConflictSettingsCard';
 import { CancellationPolicyCard } from '@/components/settings/CancellationPolicyCard';
+import { ReminderSettingsCard } from '@/components/settings/ReminderSettingsCard';
+import { LoyaltySettingsCard } from '@/components/settings/LoyaltySettingsCard';
 import { SettingsBusinessHoursTab } from '@/components/settings/SettingsBusinessHoursTab';
 import { SettingsClosuresTab } from '@/components/settings/SettingsClosuresTab';
 import { SettingsLgpdTab } from '@/components/settings/SettingsLgpdTab';
+
+type SettingsLinkCardProps = {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  to: string;
+  actionLabel: string;
+  variant?: 'default' | 'outline';
+};
+
+function SettingsLinkCard({
+  icon: Icon,
+  title,
+  description,
+  to,
+  actionLabel,
+  variant = 'default',
+}: SettingsLinkCardProps) {
+  return (
+    <Card className="h-full border-border/70 bg-card/95 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-panel">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-sm">
+          <Icon className="h-4 w-4 text-primary" />
+          {title}
+        </CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button asChild variant={variant} className="w-full justify-between">
+          <Link to={to}>
+            {actionLabel}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Settings() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -47,7 +90,7 @@ export default function Settings() {
     if (canAccessSalon || isOwner) tabs.push('salon');
     if (isOwner) tabs.push('agenda');
     if (isOwner) tabs.push('lgpd');
-    if (canAccessWhatsApp || canAccessStock) tabs.push('integrations');
+    if (canAccessWhatsApp || canAccessStock || isOwner) tabs.push('integrations');
     if (canAccessTax || canAccessCerts || canAccessNfseConfig || canAccessNfseModule) tabs.push('fiscal');
     return tabs;
   }, [canAccessSalon, isOwner, canAccessWhatsApp, canAccessStock, canAccessTax, canAccessCerts, canAccessNfseConfig, canAccessNfseModule]);
@@ -121,25 +164,13 @@ export default function Settings() {
           {/* ── Salão ── perfil + horários + fechamentos */}
           <TabsContent value="salon" className="space-y-6">
             {canAccessSalon && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4" />
-                    Perfil do Salão
-                  </CardTitle>
-                  <CardDescription>
-                    Nome, endereço, slug, foto e dados públicos do estabelecimento.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button asChild className="gap-2">
-                    <Link to="/perfil-salao">
-                      Abrir perfil do salão
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+              <SettingsLinkCard
+                icon={Building2}
+                title="Perfil do Salão"
+                description="Nome, endereço, slug, foto e dados públicos do estabelecimento."
+                to="/perfil-salao"
+                actionLabel="Abrir perfil do salão"
+              />
             )}
 
             {isOwner && (
@@ -163,6 +194,8 @@ export default function Settings() {
               <div className="grid gap-4 lg:grid-cols-2">
                 <AppointmentConflictSettingsCard />
                 <CancellationPolicyCard />
+                <ReminderSettingsCard />
+                <LoyaltySettingsCard />
               </div>
             </TabsContent>
           )}
@@ -185,46 +218,41 @@ export default function Settings() {
             <Separator />
             <div className="grid gap-4 lg:grid-cols-2">
               {canAccessWhatsApp && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm">
-                      <PlugZap className="h-4 w-4 text-primary" />
-                      WhatsApp Business
-                    </CardTitle>
-                    <CardDescription>
-                      Credenciais, webhook e teste do canal de mensagens.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button asChild className="w-full justify-between">
-                      <Link to="/configuracoes/integracoes/whatsapp">
-                        Configurar WhatsApp
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                <SettingsLinkCard
+                  icon={PlugZap}
+                  title="WhatsApp Business"
+                  description="Credenciais, webhook e teste do canal de mensagens."
+                  to="/configuracoes/integracoes/whatsapp"
+                  actionLabel="Configurar WhatsApp"
+                />
+              )}
+              {isOwner && (
+                <SettingsLinkCard
+                  icon={Send}
+                  title="Telegram"
+                  description="Bot do Telegram, webhook e teste do canal de mensagens."
+                  to="/configuracoes/integracoes/telegram"
+                  actionLabel="Configurar Telegram"
+                />
+              )}
+              {isOwner && (
+                <SettingsLinkCard
+                  icon={CreditCard}
+                  title="Pagamentos (Asaas)"
+                  description="Conta de recebimento do salão para sinal, comandas e assinaturas."
+                  to="/configuracoes/integracoes/pagamentos"
+                  actionLabel="Configurar pagamentos"
+                />
               )}
               {canAccessStock && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm">
-                      <Boxes className="h-4 w-4 text-primary" />
-                      Estoque
-                    </CardTitle>
-                    <CardDescription>
-                      Alertas de estoque mínimo e parâmetros operacionais.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button asChild variant="outline" className="w-full justify-between">
-                      <Link to="/configuracoes/estoque">
-                        Configurar estoque
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                <SettingsLinkCard
+                  icon={Boxes}
+                  title="Estoque"
+                  description="Alertas de estoque mínimo e parâmetros operacionais."
+                  to="/configuracoes/estoque"
+                  actionLabel="Configurar estoque"
+                  variant="outline"
+                />
               )}
             </div>
           </TabsContent>
@@ -240,80 +268,43 @@ export default function Settings() {
             <Separator />
             <div className="grid gap-4 lg:grid-cols-2">
               {canAccessTax && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm">
-                      <Receipt className="h-4 w-4 text-primary" />
-                      Impostos
-                    </CardTitle>
-                    <CardDescription>Regime, alíquotas e regras fiscais do salão.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button asChild className="w-full justify-between">
-                      <Link to="/configuracoes/fiscal/impostos">
-                        Abrir impostos
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                <SettingsLinkCard
+                  icon={Receipt}
+                  title="Impostos"
+                  description="Regime, alíquotas e regras fiscais do salão."
+                  to="/configuracoes/fiscal/impostos"
+                  actionLabel="Abrir impostos"
+                />
               )}
               {canAccessCerts && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm">
-                      <ShieldCheck className="h-4 w-4 text-primary" />
-                      Certificado Digital
-                    </CardTitle>
-                    <CardDescription>Upload e ativação do certificado A1.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button asChild variant="outline" className="w-full justify-between">
-                      <Link to="/configuracoes/fiscal/certificados">
-                        Abrir certificados
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                <SettingsLinkCard
+                  icon={ShieldCheck}
+                  title="Certificado Digital"
+                  description="Upload e ativação do certificado A1."
+                  to="/configuracoes/fiscal/certificados"
+                  actionLabel="Abrir certificados"
+                  variant="outline"
+                />
               )}
               {canAccessNfseConfig && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm">
-                      <Receipt className="h-4 w-4 text-primary" />
-                      Configuração NFS-e
-                    </CardTitle>
-                    <CardDescription>Município, provedor, RPS e parâmetros de emissão.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button asChild variant="outline" className="w-full justify-between">
-                      <Link to="/configuracoes/fiscal/nfse">
-                        Configurar NFS-e
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                <SettingsLinkCard
+                  icon={Receipt}
+                  title="Configuração NFS-e"
+                  description="Município, provedor, RPS e parâmetros de emissão."
+                  to="/configuracoes/fiscal/nfse"
+                  actionLabel="Configurar NFS-e"
+                  variant="outline"
+                />
               )}
               {canAccessNfseModule && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm">
-                      <CalendarRange className="h-4 w-4 text-primary" />
-                      Módulo NFS-e
-                    </CardTitle>
-                    <CardDescription>Emitir, cancelar e consultar notas fiscais.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button asChild variant="outline" className="w-full justify-between">
-                      <Link to="/fiscal/nfse">
-                        Abrir módulo
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                <SettingsLinkCard
+                  icon={CalendarRange}
+                  title="Módulo NFS-e"
+                  description="Emitir, cancelar e consultar notas fiscais."
+                  to="/fiscal/nfse"
+                  actionLabel="Abrir módulo"
+                  variant="outline"
+                />
               )}
             </div>
           </TabsContent>

@@ -1,4 +1,5 @@
 import type { ChatMessage } from "@/types/chat";
+import type { RefObject } from "react";
 import { formatDateLong, formatDateTime } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,7 @@ type ChatTimelineProps = {
   hasNext?: boolean;
   onLoadMore?: () => void;
   onFocusComposer: () => void;
-  containerRef: React.RefObject<HTMLDivElement | null>;
+  containerRef: RefObject<HTMLDivElement | null>;
   onScroll: () => void;
 };
 
@@ -87,7 +88,7 @@ export function ChatTimeline({
     <div
       ref={containerRef}
       onScroll={onScroll}
-      className="flex-1 space-y-3 overflow-y-auto pr-1 py-3"
+      className="min-h-0 flex-1 space-y-3 overflow-y-auto py-3 pr-1"
     >
       {isLoading && messages.length === 0 ? (
         <>
@@ -97,7 +98,7 @@ export function ChatTimeline({
       ) : messages.length === 0 ? (
         <PageEmptyState
           title="Sem mensagens nesta conversa"
-          description="Ainda nao existe historico nesta conversa. Envie a primeira mensagem para iniciar o atendimento manual."
+          description="Ainda não existe histórico nesta conversa. Envie a primeira mensagem para iniciar o atendimento manual."
           action={{
             label: "Escrever primeira mensagem",
             onClick: onFocusComposer,
@@ -121,7 +122,7 @@ export function ChatTimeline({
             if (item.type === "day") {
               return (
                 <div key={item.key} className="flex justify-center py-1">
-                  <Badge variant="outline" className="bg-background">
+                  <Badge variant="outline" className="bg-background/90 backdrop-blur-sm">
                     {item.label}
                   </Badge>
                 </div>
@@ -135,10 +136,10 @@ export function ChatTimeline({
             return (
               <div
                 key={item.key}
-                className={`max-w-[82%] rounded-2xl border p-3 shadow-sm ${
+                className={`max-w-[88%] rounded-2xl border p-3 shadow-[0_14px_30px_-26px_rgba(15,23,42,0.28)] sm:max-w-[82%] ${
                   isOutbound
                     ? "ml-auto border-primary/30 bg-primary text-primary-foreground dark:border-primary/40"
-                    : "border-border bg-background"
+                    : "border-border/80 bg-background/85 dark:bg-card/80"
                 }`}
               >
                 <div className="mb-2 flex items-center justify-between gap-3">
@@ -147,7 +148,7 @@ export function ChatTimeline({
                       isOutbound ? "text-primary-foreground/80" : "text-muted-foreground"
                     }`}
                   >
-                    {isOutbound ? "Saida manual" : "Cliente"}
+                    {isOutbound ? "Saída manual" : "Cliente"}
                   </span>
                   <span
                     className={`text-[11px] ${
@@ -157,12 +158,12 @@ export function ChatTimeline({
                     {formatTimeOnly(message.createdAt)}
                   </span>
                 </div>
-                <p className="whitespace-pre-wrap text-sm">
-                  {message.content || "[Conteudo expirado]"}
+                <p className="break-words whitespace-pre-wrap text-sm leading-6">
+                  {message.content || "[Mensagem sem texto]"}
                 </p>
-                <div className="mt-2 flex items-center justify-between gap-2">
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                   <span
-                    className={`text-[11px] ${
+                    className={`min-w-0 truncate text-[11px] ${
                       isOutbound ? "text-primary-foreground/70" : "text-muted-foreground"
                     }`}
                   >

@@ -114,26 +114,36 @@ export function WhatsAppSetupWizard({
 }: WhatsAppSetupWizardProps) {
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-center gap-2 sm:gap-4">
+      <div data-tour="whatsapp-wizard-progress" className="flex items-start justify-center gap-1 sm:gap-2">
         {WIZARD_STEPS.map((step, index) => {
           const stepNumber = index + 1;
           const stepStatus = resolveStepStatus(currentStep, stepNumber);
           return (
-            <div key={step} className="flex items-center">
-              <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors ${
-                  stepStatus === "done"
-                    ? "bg-primary text-primary-foreground"
-                    : stepStatus === "current"
-                      ? "bg-primary/15 text-primary"
-                      : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {stepStatus === "done" ? <Check className="h-4 w-4" /> : stepNumber}
+            <div key={step} className="flex items-start">
+              <div className="flex w-16 flex-col items-center gap-1 sm:w-24">
+                <div
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors ${
+                    stepStatus === "done"
+                      ? "bg-primary text-primary-foreground"
+                      : stepStatus === "current"
+                        ? "bg-primary/15 text-primary"
+                        : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {stepStatus === "done" ? <Check className="h-4 w-4" /> : stepNumber}
+                </div>
+                {/* Rotulo da etapa visivel para deixar o progresso claro e testavel */}
+                <span
+                  className={`text-center text-xs leading-tight sm:text-xs ${
+                    stepStatus === "current" ? "font-medium text-foreground" : "text-muted-foreground"
+                  }`}
+                >
+                  {step}
+                </span>
               </div>
               {stepNumber < WIZARD_STEPS.length && (
                 <div
-                  className={`mx-2 h-1 w-6 rounded sm:w-10 ${
+                  className={`mt-4 h-1 w-4 rounded sm:w-8 ${
                     currentStep > stepNumber ? "bg-primary" : "bg-muted"
                   }`}
                 />
@@ -152,7 +162,7 @@ export function WhatsAppSetupWizard({
             Fluxo guiado para conectar o WhatsApp Cloud API do tenant sem Embedded Signup.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent data-tour="whatsapp-wizard-step-content" className="space-y-4">
           {currentStep === 1 ? (
             <>
               <Alert>
@@ -625,7 +635,7 @@ export function WhatsAppSetupWizard({
             </div>
           ) : null}
 
-          <div className="flex flex-col gap-2 border-t pt-4 sm:flex-row sm:justify-between">
+          <div data-tour="whatsapp-wizard-nav" className="flex flex-col gap-2 border-t pt-4 sm:flex-row sm:justify-between">
             <Button
               type="button"
               variant="outline"

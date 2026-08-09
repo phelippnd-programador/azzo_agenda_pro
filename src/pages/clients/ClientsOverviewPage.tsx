@@ -97,7 +97,7 @@ export default function ClientsOverviewPage() {
   if (error) {
     return (
       <PageErrorState
-        title="Nao foi possivel carregar os clientes"
+        title="Não foi possível carregar os clientes"
         description={error}
         action={{ label: 'Tentar novamente', onClick: refetch }}
       />
@@ -108,7 +108,7 @@ export default function ClientsOverviewPage() {
     <div className="space-y-4 sm:space-y-6">
       <ModuleIntro
         eyebrow="Relacionamento"
-        title="Acompanhe crescimento da base, recorrencia recente e potencial de receita por cliente."
+        title="Acompanhe crescimento da base, recorrência recente e potencial de receita por cliente."
         description="Use a busca para localizar nomes rapidamente e troque entre cards e lista conforme a tarefa do momento."
         badges={[
           { label: `${pagination.total} cliente(s)` },
@@ -118,17 +118,17 @@ export default function ClientsOverviewPage() {
         points={[
           {
             eyebrow: 'Relacionamento',
-            title: 'Base e recorrencia',
-            description: 'Priorize clientes recentes e recorrentes antes de descer para acoes de edicao.',
+            title: 'Base e recorrência',
+            description: 'Priorize clientes recentes e recorrentes antes de descer para ações de edição.',
           },
           {
-            eyebrow: 'Navegacao',
-            title: 'Cards para leitura, lista para manutencao',
-            description: 'Alterne a visualizacao conforme a tarefa: leitura rapida ou edicao em sequencia.',
+            eyebrow: 'Navegação',
+            title: 'Cards para leitura, lista para manutenção',
+            description: 'Alterne a visualização conforme a tarefa: leitura rápida ou edição em sequência.',
           },
           {
-            eyebrow: 'Proximo passo',
-            title: 'Filtre, revise e abra o historico',
+            eyebrow: 'Próximo passo',
+            title: 'Filtre, revise e abra o histórico',
             description: 'Use a tabela quando precisar comparar visitas, gasto e dados de contato na mesma passada.',
           },
         ]}
@@ -153,7 +153,7 @@ export default function ClientsOverviewPage() {
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3 sm:gap-4">
         <HighlightMetricCard
-          title="Total de Clientes"
+          title="Total de clientes"
           value={String(pagination.total)}
           icon={Users}
           className="border-primary/20 bg-primary/8"
@@ -163,31 +163,31 @@ export default function ClientsOverviewPage() {
           iconClassName="text-primary"
         />
         <HighlightMetricCard
-          title="Ativos nesta pagina"
+          title="Ativos nesta página"
           value={String(activeClientsOnPage)}
           icon={Calendar}
-          className="border-green-200/70 bg-green-50/70 dark:border-green-500/20 dark:bg-green-500/10"
-          titleClassName="text-green-700 dark:text-green-300"
-          valueClassName="text-green-800 dark:text-green-50"
-          iconContainerClassName="bg-green-100 dark:bg-green-500/15"
-          iconClassName="text-green-600 dark:text-green-300"
+          className="border-success/25 bg-success/8"
+          titleClassName="text-success"
+          valueClassName="text-success"
+          iconContainerClassName="bg-success/15"
+          iconClassName="text-success"
         />
         <HighlightMetricCard
-          title="Recorrentes na pagina"
+          title="Recorrentes na página"
           value={String(recurringClientsOnPage)}
           icon={DollarSign}
-          className="border-indigo-200/70 bg-indigo-50/70 dark:border-indigo-500/20 dark:bg-indigo-500/10"
-          titleClassName="text-indigo-700 dark:text-indigo-300"
-          valueClassName="text-indigo-800 dark:text-indigo-50"
-          iconContainerClassName="bg-indigo-100 dark:bg-indigo-500/15"
-          iconClassName="text-indigo-600 dark:text-indigo-300"
+          className="border-border/70 bg-muted/25"
+          titleClassName="text-muted-foreground"
+          valueClassName="text-foreground"
+          iconContainerClassName="bg-muted"
+          iconClassName="text-muted-foreground"
         />
       </div>
 
       <WorkspaceNotice
-        title="Area de trabalho de clientes"
-        description="Busque, alterne a visualizacao e abra rapidamente o cadastro ou o historico do cliente."
-        badge={`${formatCurrency(totalSpentOnPage)} em faturamento nesta pagina`}
+        title="Área de trabalho de clientes"
+        description="Busque, alterne a visualização e abra rapidamente o cadastro ou o histórico do cliente."
+        badge={`${formatCurrency(totalSpentOnPage)} em faturamento nesta página`}
       />
 
       {filteredClients.length === 0 ? (
@@ -195,7 +195,7 @@ export default function ClientsOverviewPage() {
           title={searchTerm ? "Nenhum cliente encontrado para esta busca" : "Nenhum cliente cadastrado"}
           description={
             searchTerm
-              ? "A busca atual nao retornou resultados. Limpe o termo para voltar a ver a lista completa."
+              ? "A busca atual não retornou resultados. Limpe o termo para voltar a ver a lista completa."
               : "Cadastre o primeiro cliente para começar a organizar histórico, visitas e faturamento."
           }
           action={{
@@ -225,16 +225,16 @@ export default function ClientsOverviewPage() {
           ))}
         </div>
       ) : (
-        <Card className="border-border/70 bg-muted/15 shadow-none">
+        <Card className="overflow-hidden border-border/70 bg-card/95 shadow-panel">
           <div className="flex flex-col gap-3 border-b border-border/70 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">Lista de clientes</p>
               <p className="text-sm text-muted-foreground">
-                Compare contato, recorrencia e faturamento sem sair da mesma passada.
+                Compare contato, recorrência e faturamento sem sair da mesma passada.
               </p>
             </div>
             <Badge variant="outline" className="w-fit bg-background/80">
-              {filteredClients.length} visivel(is)
+              {filteredClients.length} visível(is)
             </Badge>
           </div>
           <div className="overflow-x-auto">
@@ -245,7 +245,7 @@ export default function ClientsOverviewPage() {
                   <TableHead className="hidden sm:table-cell">Telefone</TableHead>
                   <TableHead className="hidden md:table-cell">E-mail</TableHead>
                   <TableHead className="text-center">Visitas</TableHead>
-                  <TableHead className="text-right">Total Gasto</TableHead>
+                  <TableHead className="text-right">Total gasto</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
@@ -287,7 +287,7 @@ export default function ClientsOverviewPage() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            aria-label={`Abrir acoes do cliente ${client.name}`}
+                            aria-label={`Abrir ações do cliente ${client.name}`}
                           >
                             <MoreVertical className="h-4 w-4" />
                           </Button>
@@ -297,11 +297,11 @@ export default function ClientsOverviewPage() {
                             Editar
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => openProfilePage(client.id)}>
-                            Ver Historico
+                            Ver histórico
                           </DropdownMenuItem>
                           {user?.role !== 'PROFESSIONAL' && (
                             <DropdownMenuItem
-                              className="text-red-600"
+                              className="text-destructive"
                               onClick={() => openDeleteDialog(client.id)}
                             >
                               Excluir
@@ -343,7 +343,7 @@ export default function ClientsOverviewPage() {
         open={!!clientToDelete}
         isLoading={isDeletingClient}
         title="Excluir cliente?"
-        description="Tem certeza que deseja excluir este cliente? Esta acao nao pode ser desfeita."
+        description="Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita."
         onOpenChange={(open) => {
           if (isDeletingClient) return;
           if (!open) setClientToDelete(null);

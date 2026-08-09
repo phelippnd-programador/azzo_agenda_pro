@@ -5,6 +5,7 @@ import {
   type LicenseAccessStatus,
 } from "@/lib/license-access";
 import { toast } from "sonner";
+import { getEnv } from "@/config/env";
 
 export type StandardApiErrorPayload = {
   code?: string;
@@ -16,7 +17,7 @@ export type StandardApiErrorPayload = {
 };
 
 export const API_URL =
-  (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ||
+  (getEnv("VITE_API_URL") || import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ||
   "http://localhost:8080/api/v1";
 
 const USER_KEY = "auth_user";
@@ -97,6 +98,7 @@ const ALLOWED_ENDPOINT_PREFIXES_WHEN_PLAN_BLOCKED = [
   "/billing/subscriptions",
   "/billing/payments",
   "/checkout/products",
+  "/auth/login",
   "/auth/me",
   "/auth/logout",
   "/config/menus/current",
@@ -325,7 +327,12 @@ export const request = async <T>(
   }
 
   if (response.status === 204) return {} as T;
-  return response.json() as Promise<T>;
+  // Alguns endpoints (ex.: /onboarding/accept-terms) respondem 200 sem corpo
+  // (Response.ok().build() no backend). response.json() em corpo vazio lanca
+  // SyntaxError, fazendo uma chamada bem-sucedida cair no onError do caller.
+  const text = await response.text();
+  if (!text) return {} as T;
+  return JSON.parse(text) as T;
 };
 
 export const requestBlob = async (

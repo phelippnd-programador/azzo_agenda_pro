@@ -45,10 +45,29 @@ import {
   type SetupMode,
 } from "@/components/settings/whatsapp-integration/shared";
 import { TemplateEditor } from "@/components/settings/whatsapp-integration/TemplateEditor";
+import { getEnv } from "@/config/env";
+
+/**
+ * Meta e a opcao recomendada (onboarding rapido via Embedded Signup) e fica
+ * selecionada por padrao quando disponivel. So volta pro "Cloud API guiado"
+ * se o tenant ja tiver uma conexao manual configurada (nao pisa em cima do
+ * que a pessoa ja fez ali).
+ */
+function resolveSetupMode(
+  embeddedEnabled: boolean,
+  config: WhatsAppConfigResponse,
+  embedded: WhatsAppEmbeddedSignupStatusResponse
+): SetupMode {
+  if (!embeddedEnabled) return "wizard";
+  const tokenSource = embedded.tokenSource || config.tokenSource || "MANUAL";
+  const isTokenConfigured = Boolean(embedded.accessTokenConfigured || config.accessTokenConfigured);
+  const jaConectadoViaWizard = tokenSource === "MANUAL" && isTokenConfigured;
+  return jaConectadoViaWizard ? "wizard" : "meta";
+}
 
 export function WhatsAppIntegrationCard() {
   const queryClient = useQueryClient();
-  const [setupMode, setSetupMode] = useState<SetupMode>("wizard");
+  const [setupMode, setSetupMode] = useState<SetupMode>("meta");
   const [currentStep, setCurrentStep] = useState(1);
   const [activateIntegration, setActivateIntegration] = useState(false);
   const [usageProfile, setUsageProfile] = useState<import("@/lib/api/whatsapp").WhatsAppUsageProfile>("COMPLETE");
@@ -89,12 +108,12 @@ export function WhatsAppIntegrationCard() {
   const pendingSetupInfoRef = useRef<EmbeddedSetupInfo | null>(null);
 
   const apiBaseUrl =
-    (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, "") ||
+    ( getEnv('VITE_API_URL') || import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/$/, "") ||
     "http://localhost:8080/api/v1";
-  const metaAppId = (import.meta.env.VITE_META_APP_ID as string | undefined)?.trim() || "";
-  const metaConfigId = (import.meta.env.VITE_META_CONFIG_ID as string | undefined)?.trim() || "";
+  const metaAppId = (getEnv('VITE_META_APP_ID') || import.meta.env.VITE_META_APP_ID as string | undefined)?.trim() || "";
+  const metaConfigId = (getEnv('VITE_META_CONFIG_ID') || import.meta.env.VITE_META_CONFIG_ID as string | undefined)?.trim() || "";
   const metaRedirectUri =
-    (import.meta.env.VITE_META_EMBEDDED_REDIRECT_URI as string | undefined)?.trim() || "";
+    (getEnv('VITE_META_EMBEDDED_REDIRECT_URI') || import.meta.env.VITE_META_EMBEDDED_REDIRECT_URI as string | undefined)?.trim() || "";
   const webhookUrl = apiBaseUrl.replace(/\/api\/v\d+$/, "") + "/webhook/whatsapp";
   const webhookNeedsPublicUrl = /localhost|127\.0\.0\.1/i.test(webhookUrl);
 
@@ -141,7 +160,7 @@ export function WhatsAppIntegrationCard() {
 
         setConfigStatus(config);
         setEmbeddedStatus(embedded);
-        setSetupMode(embeddedEnabled && tokenSource === "EMBEDDED_CODE_EXCHANGE" ? "meta" : "wizard");
+        setSetupMode(resolveSetupMode(embeddedEnabled, config, embedded));
         setActivateIntegration(Boolean(config.whatsappEnabled));
         setUsageProfile((config.usageProfile as import("@/lib/api/whatsapp").WhatsAppUsageProfile) ?? "COMPLETE");
         setCanSchedule(config.canSchedule ?? true);
@@ -218,7 +237,7 @@ export function WhatsAppIntegrationCard() {
 
     setConfigStatus(config);
     setEmbeddedStatus(embedded);
-    setSetupMode(embeddedEnabled && tokenSource === "EMBEDDED_CODE_EXCHANGE" ? "meta" : "wizard");
+    setSetupMode(resolveSetupMode(embeddedEnabled, config, embedded));
     setActivateIntegration(Boolean(config.whatsappEnabled));
     setUsageProfile((config.usageProfile as import("@/lib/api/whatsapp").WhatsAppUsageProfile) ?? "COMPLETE");
     setCanSchedule(config.canSchedule ?? true);
@@ -520,7 +539,7 @@ export function WhatsAppIntegrationCard() {
   };
 
   const renderStatusPanel = () => (
-    <div className="space-y-4">
+    <div data-tour="whatsapp-status-panel" className="space-y-4">
       <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4">
         <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
         <div className="min-w-0 flex-1">
@@ -585,7 +604,7 @@ export function WhatsAppIntegrationCard() {
       </div>
 
       {/* Templates de mensagem */}
-      <div className="rounded-lg border p-4 space-y-4">
+      <div data-tour="whatsapp-templates" className="rounded-lg border p-4 space-y-4">
         <div>
           <p className="text-sm font-semibold">Templates de mensagem automatica</p>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -617,7 +636,7 @@ export function WhatsAppIntegrationCard() {
       </div>
 
       {/* Log de mensagens */}
-      <div className="rounded-lg border p-4 space-y-3">
+      <div data-tour="whatsapp-message-log" className="rounded-lg border p-4 space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold">Histórico de mensagens</p>
           <Button
@@ -646,7 +665,7 @@ export function WhatsAppIntegrationCard() {
             <div className="divide-y text-sm max-h-72 overflow-y-auto">
               {messageLog.map((item) => (
                 <div key={item.id} className="py-2 flex gap-3 items-start">
-                  <span className={`shrink-0 mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium ${item.status === "SENT" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                  <span className={`shrink-0 mt-0.5 px-1.5 py-0.5 rounded text-xs font-medium ${item.status === "SENT" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                     {item.status}
                   </span>
                   <div className="min-w-0 flex-1">
@@ -654,7 +673,7 @@ export function WhatsAppIntegrationCard() {
                     <p className="truncate text-xs mt-0.5">{item.messageText}</p>
                     {item.errorMessage && <p className="text-xs text-destructive mt-0.5">{item.errorMessage}</p>}
                   </div>
-                  <span className="text-[10px] text-muted-foreground shrink-0">{new Date(item.sentAt).toLocaleString("pt-BR")}</span>
+                  <span className="text-xs text-muted-foreground shrink-0">{new Date(item.sentAt).toLocaleString("pt-BR")}</span>
                 </div>
               ))}
             </div>
@@ -706,7 +725,7 @@ export function WhatsAppIntegrationCard() {
   );
 
   return (
-    <Card className="w-full">
+    <Card data-tour="whatsapp-integration-card" className="w-full">
       <CardHeader className="space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -715,15 +734,15 @@ export function WhatsAppIntegrationCard() {
               Integracao WhatsApp
             </CardTitle>
             <CardDescription className="mt-1">
-              Fluxo guiado para conectar o WhatsApp Cloud API por tenant, com validacao, persistencia e teste de envio.
+              Conecte o WhatsApp do seu tenant: login rapido com a Meta (recomendado) ou o passo a passo manual da Cloud API.
             </CardDescription>
           </div>
           {isConnected ? (
-            <Badge className="border border-green-200 bg-green-50 text-green-700">
+            <Badge data-tour="whatsapp-status-badge" className="border border-green-200 bg-green-50 text-green-700">
               WhatsApp Conectado
             </Badge>
           ) : (
-            <Badge variant="outline">Nao conectado</Badge>
+            <Badge data-tour="whatsapp-status-badge" variant="outline">Nao conectado</Badge>
           )}
         </div>
 
@@ -751,14 +770,10 @@ export function WhatsAppIntegrationCard() {
           renderStatusPanel()
         ) : embeddedSignupEnabled ? (
           <Tabs value={setupMode} onValueChange={(value) => setSetupMode(value as SetupMode)} className="space-y-4">
-            <TabsList className="grid h-auto w-full grid-cols-2 gap-2">
+            <TabsList data-tour="whatsapp-setup-tabs" className="grid h-auto w-full grid-cols-2 gap-2">
+              <TabsTrigger value="meta">Meta (recomendado)</TabsTrigger>
               <TabsTrigger value="wizard">Cloud API guiado</TabsTrigger>
-              <TabsTrigger value="meta">Meta</TabsTrigger>
             </TabsList>
-
-            <TabsContent value="wizard" className="space-y-4">
-              {renderWizard()}
-            </TabsContent>
 
             <TabsContent value="meta" className="space-y-4">
               <div className="rounded-xl border border-dashed bg-muted/30 p-4">
@@ -766,7 +781,7 @@ export function WhatsAppIntegrationCard() {
                   <div className="space-y-1">
                     <p className="text-sm font-medium">Conectar com a Meta</p>
                     <p className="text-xs text-muted-foreground">
-                      Fluxo futuro de Embedded Signup. O onboarding guiado da Cloud API continua disponivel na aba ao lado.
+                      Forma mais rapida de conectar: faca login com a conta da Meta e autorize o WhatsApp Business em poucos cliques. Prefere configurar manualmente? Use a aba "Cloud API guiado".
                     </p>
                   </div>
                   <Button
@@ -815,12 +830,16 @@ export function WhatsAppIntegrationCard() {
                 </div>
               </div>
             </TabsContent>
+
+            <TabsContent value="wizard" className="space-y-4">
+              {renderWizard()}
+            </TabsContent>
           </Tabs>
         ) : (
           renderWizard()
         )}
 
-        <div className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div data-tour="whatsapp-activate-switch" className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-medium">Ativar integracao</p>
             <p className="text-xs text-muted-foreground">
@@ -837,7 +856,7 @@ export function WhatsAppIntegrationCard() {
           />
         </div>
 
-        <div className="rounded-lg border p-3">
+        <div data-tour="whatsapp-usage-profile" className="rounded-lg border p-3">
           <p className="text-sm font-medium">Como voce quer usar o WhatsApp?</p>
           <p className="text-xs text-muted-foreground">
             Escolha o perfil de uso. Ele determina quais mensagens automaticas serao enviadas e impacta o custo por conversa na Meta.
@@ -905,7 +924,7 @@ export function WhatsAppIntegrationCard() {
           )}
         </div>
 
-        <div className="rounded-lg border p-3">
+        <div data-tour="whatsapp-permissions" className="rounded-lg border p-3">
           <p className="text-sm font-medium">Permissoes de acao via WhatsApp</p>
           <p className="text-xs text-muted-foreground">
             Defina quais operacoes o cliente pode executar pelo WhatsApp.

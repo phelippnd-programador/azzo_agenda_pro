@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Download, RefreshCw, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ReportTabs } from "@/pages/report/components/ReportTabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateInput } from "@/components/ui/date-input";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -192,6 +194,8 @@ export default function FinancialReportPage() {
       title="Relatorio financeiro"
       subtitle="Leitura consolidada de receitas, despesas, saldo e movimentacoes do periodo."
     >
+      <ReportTabs />
+
       <div className="space-y-6">
         <Card>
           <CardHeader>
@@ -241,8 +245,7 @@ export default function FinancialReportPage() {
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Data inicial</p>
-                <Input
-                  type="date"
+                <DateInput aria-label="Data inicial"
                   value={fromInput}
                   onChange={(e) => {
                     setFromInput(e.target.value);
@@ -252,8 +255,7 @@ export default function FinancialReportPage() {
               </div>
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Data final</p>
-                <Input
-                  type="date"
+                <DateInput aria-label="Data final"
                   value={toInput}
                   onChange={(e) => {
                     setToInput(e.target.value);
@@ -322,11 +324,11 @@ export default function FinancialReportPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                  <TrendingUp className="h-4 w-4 text-emerald-500" /> Receita total
+                  <TrendingUp className="h-4 w-4 text-success" /> Receita total
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400">
+                <p className="text-2xl font-semibold text-success">
                   {formatCurrency(summary.totalIncome)}
                 </p>
               </CardContent>
@@ -334,11 +336,11 @@ export default function FinancialReportPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                  <TrendingDown className="h-4 w-4 text-rose-500" /> Despesa total
+                  <TrendingDown className="h-4 w-4 text-destructive" /> Despesa total
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-semibold text-rose-600 dark:text-rose-400">
+                <p className="text-2xl font-semibold text-destructive">
                   {formatCurrency(summary.totalExpenses)}
                 </p>
               </CardContent>
@@ -351,7 +353,7 @@ export default function FinancialReportPage() {
               </CardHeader>
               <CardContent>
                 <p
-                  className={`text-2xl font-semibold ${summary.balance >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}
+                  className={`text-2xl font-semibold ${summary.balance >= 0 ? "text-success" : "text-destructive"}`}
                 >
                   {formatCurrency(summary.balance)}
                 </p>
@@ -376,8 +378,8 @@ export default function FinancialReportPage() {
                     formatter={(v: number, name: string) => [formatCurrency(v), name]}
                     labelFormatter={(l: string) => `Data: ${l}`}
                   />
-                  <Bar dataKey="Receita" fill="#10b981" radius={[3, 3, 0, 0]} />
-                  <Bar dataKey="Despesa" fill="#ef4444" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="Receita" fill="hsl(var(--success))" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="Despesa" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -427,7 +429,7 @@ export default function FinancialReportPage() {
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">{tx.paymentMethod ?? "-"}</TableCell>
                         <TableCell
-                          className={`text-right text-sm font-medium ${tx.type === "INCOME" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}
+                          className={`text-right text-sm font-medium ${tx.type === "INCOME" ? "text-success" : "text-destructive"}`}
                         >
                           {formatCurrency(tx.amount)}
                         </TableCell>

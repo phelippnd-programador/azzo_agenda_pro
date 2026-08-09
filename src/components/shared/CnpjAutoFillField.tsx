@@ -11,6 +11,7 @@ interface CnpjAutoFillFieldProps {
   onDataLoaded?: (data: CnpjConsultaResponse) => void;
   disabled?: boolean;
   label?: string;
+  helperText?: string;
   required?: boolean;
   id?: string;
 }
@@ -30,6 +31,7 @@ export function CnpjAutoFillField({
   onDataLoaded,
   disabled,
   label = 'CNPJ',
+  helperText,
   required,
   id = 'cnpj',
 }: CnpjAutoFillFieldProps) {
@@ -71,10 +73,14 @@ export function CnpjAutoFillField({
         )}
       </div>
 
+      {helperText && !data && !error && (
+        <p className="text-xs text-muted-foreground">{helperText}</p>
+      )}
+
       {data && !error && (
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Info className="h-3 w-3 shrink-0" />
-          Dados consultados na base publica da Receita Federal. Voce pode editar qualquer campo antes de salvar.
+          Dados consultados na base pública da Receita Federal. Você pode editar qualquer campo antes de salvar.
         </p>
       )}
 

@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Download, Printer, RefreshCw } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ReportTabs } from "@/pages/report/components/ReportTabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateInput } from "@/components/ui/date-input";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -35,7 +37,14 @@ const getMonthRange = () => {
   return { from: toInputDate(new Date(d.getFullYear(), d.getMonth(), 1)), to: toInputDate(d) };
 };
 
-const CHART_COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#f97316"];
+const CHART_COLORS = [
+  "hsl(var(--chart-positive))",
+  "hsl(var(--chart-info))",
+  "hsl(var(--chart-warning))",
+  "hsl(var(--chart-negative))",
+  "hsl(var(--primary))",
+  "hsl(var(--chart-neutral))",
+];
 
 function downloadCsv(data: VendasReportResponse, from: string, to: string) {
   const rows = [
@@ -149,17 +158,22 @@ export default function SalesReportPage() {
     { value: "CUSTOM", label: "Customizado" },
   ];
 
-  const chartData = (data?.topServicos ?? []).slice(0, 10).map((s) => ({
-    name: s.servicoNome.length > 20 ? `${s.servicoNome.substring(0, 18)}...` : s.servicoNome,
-    Receita: Number(s.receitaTotal),
-    Atendimentos: s.totalAgendamentos,
-  }));
+  const chartData = useMemo(
+    () => (data?.topServicos ?? []).slice(0, 10).map((s) => ({
+      name: s.servicoNome.length > 20 ? `${s.servicoNome.substring(0, 18)}...` : s.servicoNome,
+      Receita: Number(s.receitaTotal),
+      Atendimentos: s.totalAgendamentos,
+    })),
+    [data?.topServicos],
+  );
 
   return (
     <MainLayout
       title="Relatorio de vendas"
       subtitle="Leitura consolidada de servicos, receita e desempenho por profissional."
     >
+      <ReportTabs />
+
       <div className="print-region space-y-6">
         <div id="print-report-header" className="print-header hidden" />
         <Card className="print-hide">
@@ -220,8 +234,7 @@ export default function SalesReportPage() {
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Data inicial</p>
-                <Input
-                  type="date"
+                <DateInput aria-label="Data inicial"
                   value={fromInput}
                   onChange={(e) => {
                     setFromInput(e.target.value);
@@ -231,8 +244,7 @@ export default function SalesReportPage() {
               </div>
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Data final</p>
-                <Input
-                  type="date"
+                <DateInput aria-label="Data final"
                   value={toInput}
                   onChange={(e) => {
                     setToInput(e.target.value);
@@ -270,7 +282,7 @@ export default function SalesReportPage() {
         {data?.summary && (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total atendimentos</CardTitle></CardHeader><CardContent><p className="text-2xl font-semibold">{data.summary.totalAgendamentos}</p></CardContent></Card>
-            <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Receita total</CardTitle></CardHeader><CardContent><p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(data.summary.receitaTotal)}</p></CardContent></Card>
+            <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Receita total</CardTitle></CardHeader><CardContent><p className="text-2xl font-semibold text-success">{formatCurrency(data.summary.receitaTotal)}</p></CardContent></Card>
             <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Ticket medio</CardTitle></CardHeader><CardContent><p className="text-2xl font-semibold">{formatCurrency(data.summary.ticketMedio)}</p></CardContent></Card>
           </div>
         )}
@@ -315,7 +327,7 @@ export default function SalesReportPage() {
                           <TableCell className="w-8 text-sm text-muted-foreground">{i + 1}</TableCell>
                           <TableCell className="text-sm font-medium">{s.servicoNome}</TableCell>
                           <TableCell className="text-right text-sm">{s.totalAgendamentos}</TableCell>
-                          <TableCell className="text-right text-sm font-medium text-emerald-600 dark:text-emerald-400">{formatCurrency(s.receitaTotal)}</TableCell>
+                          <TableCell className="text-right text-sm font-medium text-success">{formatCurrency(s.receitaTotal)}</TableCell>
                           <TableCell className="text-right text-sm">{formatCurrency(s.ticketMedio)}</TableCell>
                         </TableRow>
                       ))}
@@ -343,7 +355,7 @@ export default function SalesReportPage() {
                           <TableCell className="w-8 text-sm text-muted-foreground">{i + 1}</TableCell>
                           <TableCell className="text-sm font-medium">{p.profissionalNome}</TableCell>
                           <TableCell className="text-right text-sm">{p.totalAgendamentos}</TableCell>
-                          <TableCell className="text-right text-sm font-medium text-emerald-600 dark:text-emerald-400">{formatCurrency(p.receitaTotal)}</TableCell>
+                          <TableCell className="text-right text-sm font-medium text-success">{formatCurrency(p.receitaTotal)}</TableCell>
                           <TableCell className="text-right text-sm">{formatCurrency(p.ticketMedio)}</TableCell>
                         </TableRow>
                       ))}

@@ -23,9 +23,9 @@ function formatDate(value?: string | null) {
 }
 
 function getStatusBadgeClass(status: NotificationItem["status"]) {
-  if (status === "FAILED") return "border border-red-300 bg-red-100 text-red-900";
-  if (status === "PENDING") return "border border-amber-300 bg-amber-100 text-amber-900";
-  return "border border-emerald-300 bg-emerald-100 text-emerald-900";
+  if (status === "FAILED") return "border border-red-300 bg-red-100 text-red-900 dark:border-red-900/70 dark:bg-red-950/50 dark:text-red-200";
+  if (status === "PENDING") return "border border-amber-300 bg-amber-100 text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-200";
+  return "border border-emerald-300 bg-emerald-100 text-emerald-900 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-200";
 }
 
 export function NotificationsList({
@@ -38,13 +38,13 @@ export function NotificationsList({
 }: NotificationsListProps) {
   return (
     <div className="space-y-3">
-      {!items.length && !loading ? <p className="text-sm text-muted-foreground">Nenhuma notificacao encontrada.</p> : null}
+      {!items.length && !loading ? <p className="text-sm text-muted-foreground">Nenhuma notificação encontrada.</p> : null}
 
       {items.map((item) => (
         <div
           key={item.id}
-          className={`rounded-lg border p-4 space-y-2 ${
-            selectedId === item.id ? "border-primary bg-primary/5" : ""
+          className={`space-y-2 rounded-lg border border-border/70 bg-card/90 p-4 shadow-none transition-colors ${
+            selectedId === item.id ? "border-primary/40 bg-primary/5" : ""
           } ${onSelect ? "cursor-pointer" : ""}`}
           onClick={() => onSelect?.(item.id)}
         >

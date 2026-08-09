@@ -291,8 +291,8 @@ export function AdminMonitoramentoTab({ activeTenants }: AdminMonitoramentoTabPr
                         <td className="px-3 py-2">{event.status || '-'}</td>
                         <td className="px-3 py-2 font-mono text-xs">{event.requestId || '-'}</td>
                         <td className="px-3 py-2">
-                          <Button size="icon" variant="outline" onClick={() => openAuditDetail(event.id)} title="Ver detalhe">
-                            <Eye className="h-4 w-4 text-blue-600" />
+                          <Button size="icon" variant="outline" onClick={() => openAuditDetail(event.id)} aria-label="Ver detalhe do evento de auditoria">
+                            <Eye className="h-4 w-4 text-primary" />
                           </Button>
                         </td>
                       </tr>
@@ -396,8 +396,8 @@ export function AdminMonitoramentoTab({ activeTenants }: AdminMonitoramentoTabPr
                         <td className="px-3 py-2">{item.sourcePage || '-'}</td>
                         <td className="px-3 py-2">{item.status || '-'}</td>
                         <td className="px-3 py-2">
-                          <Button size="icon" variant="outline" onClick={() => openSuggestionDetail(item.id)} title="Detalhar sugestao">
-                            <Eye className="h-4 w-4 text-blue-600" />
+                          <Button size="icon" variant="outline" onClick={() => openSuggestionDetail(item.id)} aria-label="Detalhar sugestao do usuario">
+                            <Eye className="h-4 w-4 text-primary" />
                           </Button>
                         </td>
                       </tr>

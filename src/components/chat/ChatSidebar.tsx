@@ -36,9 +36,12 @@ export function ChatSidebar({
   onReload,
   onClearFilters,
 }: ChatSidebarProps) {
+  const emptyStateClassName =
+    "flex min-h-[16rem] w-full max-w-full flex-col items-center justify-center rounded-xl border border-dashed border-border/70 bg-background/55 px-4 py-8 text-center shadow-none sm:min-h-[18rem] sm:px-5";
+
   return (
-    <Card className="flex h-[calc(100dvh-8rem)] flex-col overflow-hidden lg:h-[calc(100vh-13rem)]">
-      <CardHeader className="pb-2">
+    <Card className="flex h-[calc(100dvh-8rem)] min-w-0 flex-col overflow-hidden border-border/70 bg-card/95 shadow-panel lg:h-[calc(100vh-13rem)]">
+      <CardHeader className="shrink-0 border-b border-border/70 bg-card/80 px-4 pb-3 backdrop-blur-sm sm:px-5">
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -54,7 +57,7 @@ export function ChatSidebar({
             <Input
               value={query}
               onChange={(event) => onQueryChange(event.target.value)}
-              placeholder="Buscar por cliente, telefone ou ultima mensagem"
+              placeholder="Buscar por cliente, telefone ou última mensagem"
               className="pl-9"
               aria-label="Buscar conversas"
             />
@@ -76,7 +79,7 @@ export function ChatSidebar({
               onClick={() => onFilterChange("unread")}
               aria-pressed={filter === "unread"}
             >
-              Nao lidas
+              Não lidas
             </Button>
             <Button
               type="button"
@@ -90,7 +93,7 @@ export function ChatSidebar({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1" aria-label="Lista de conversas">
+      <CardContent className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 py-3 sm:px-4" aria-label="Lista de conversas">
         {isLoading ? (
           <>
             <Skeleton className="h-20 w-full rounded-lg" />
@@ -98,14 +101,14 @@ export function ChatSidebar({
             <Skeleton className="h-20 w-full rounded-lg" />
           </>
         ) : conversations.length === 0 ? (
-          <div className="flex min-h-full items-center">
-            <div className="w-full rounded-2xl border border-dashed border-border/80 bg-card/90 px-5 py-10 text-center shadow-none">
+          <div className="flex min-h-full min-w-0 items-center py-2">
+            <div className={emptyStateClassName}>
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/10">
                 <MessageCircleMore className="h-6 w-6 text-primary" />
               </div>
               <p className="text-base font-semibold text-foreground">Inbox sem conversas ainda</p>
               <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-muted-foreground">
-                Assim que chegarem mensagens do WhatsApp, elas aparecem aqui. Se voce esperava atendimento ativo, atualize o inbox.
+                Assim que chegarem mensagens do WhatsApp ou Telegram, elas aparecem aqui. Se você esperava atendimento ativo, atualize o inbox.
               </p>
               <Button className="mt-4" onClick={onReload}>
                 Atualizar inbox
@@ -113,8 +116,8 @@ export function ChatSidebar({
             </div>
           </div>
         ) : filteredConversations.length === 0 ? (
-          <div className="flex min-h-full items-center">
-            <div className="w-full rounded-2xl border border-dashed border-border/80 bg-card/90 px-5 py-10 text-center shadow-none">
+          <div className="flex min-h-full min-w-0 items-center py-2">
+            <div className={emptyStateClassName}>
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/10">
                 <Search className="h-6 w-6 text-primary" />
               </div>

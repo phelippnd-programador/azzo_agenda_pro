@@ -66,9 +66,9 @@ describe("StockItemsPage", () => {
     );
 
     expect(await screen.findByText("Item 1")).toBeInTheDocument();
-    expect(screen.getByText("Pagina 1 de 2")).toBeInTheDocument();
+    expect(screen.getByText("Página 1 de 2")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Proxima" }));
+    await user.click(screen.getByRole("button", { name: "Próxima" }));
     expect(await screen.findByText("Item 13")).toBeInTheDocument();
 
     const toggleButtons = screen.getAllByRole("button", { name: /Inativar|Ativar/i });

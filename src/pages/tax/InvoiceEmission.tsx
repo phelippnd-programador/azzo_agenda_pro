@@ -309,7 +309,7 @@ export function InvoiceEmissionContent() {
 
         <TabsContent value="new" className="mt-6">
           {editingDraft ? (
-            <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm flex items-center justify-between gap-3">
+            <div className="mb-4 rounded-md border border-warning/30 bg-warning/8 px-4 py-3 text-sm flex items-center justify-between gap-3">
               <span>
                 Editando rascunho <strong>{editingDraft.number}</strong>.
               </span>

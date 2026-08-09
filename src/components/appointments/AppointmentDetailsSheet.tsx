@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Calendar as CalendarIcon,
   DollarSign,
@@ -69,6 +69,8 @@ interface AppointmentDetailsSheetProps {
   clients: Client[];
   isProfessionalUser: boolean;
   canReassignAppointments: boolean;
+  /** Quando true, ao abrir rola ate o bloco de registro operacional e foca o primeiro campo. */
+  focusNotesOnOpen?: boolean;
   onStatusChange: (id: string, status: Appointment['status']) => Promise<void>;
   onDeleteRequest: (id: string) => void;
   onReassignRequest: (appointment: Appointment) => void;
@@ -85,12 +87,14 @@ export function AppointmentDetailsSheet({
   clients,
   isProfessionalUser,
   canReassignAppointments,
+  focusNotesOnOpen = false,
   onStatusChange,
   onDeleteRequest,
   onReassignRequest,
   onViewInvoice,
   onEditSuccess,
 }: AppointmentDetailsSheetProps) {
+  const notesSectionRef = useRef<HTMLDivElement>(null);
   const [historyItem, setHistoryItem] =
     useState<ClientAppointmentHistoryItem | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -174,12 +178,12 @@ export function AppointmentDetailsSheet({
     setIsMarkingNoShow(true);
     try {
       await appointmentsApi.markAttendance(appointment.id, false);
-      toast.success('Agendamento marcado como nao compareceu.');
+      toast.success('Agendamento marcado como não compareceu.');
       onStatusChange(appointment.id, 'NO_SHOW');
       setIsNoShowDialogOpen(false);
       onOpenChange(false);
     } catch (error) {
-      toast.error(resolveUiError(error, 'Nao foi possivel registrar o nao comparecimento.').message);
+      toast.error(resolveUiError(error, 'Não foi possível registrar o não comparecimento.').message);
     } finally {
       setIsMarkingNoShow(false);
     }
@@ -212,7 +216,7 @@ export function AppointmentDetailsSheet({
         toast.error(
           resolveUiError(
             error,
-            'Nao foi possivel carregar o historico deste cliente.',
+            'Não foi possível carregar o histórico deste cliente.',
           ).message,
         );
       })
@@ -224,6 +228,15 @@ export function AppointmentDetailsSheet({
       active = false;
     };
   }, [appointment, open, selectedClient?.id]);
+
+  useEffect(() => {
+    if (!open || !focusNotesOnOpen) return;
+    const timer = window.setTimeout(() => {
+      notesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      notesSectionRef.current?.querySelector('textarea')?.focus();
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [open, focusNotesOnOpen]);
 
   const handleDeleteNote = async (noteId: string) => {
     if (!appointment) return;
@@ -237,7 +250,7 @@ export function AppointmentDetailsSheet({
       );
       toast.success('Registro operacional removido.');
     } catch (error) {
-      toast.error(resolveUiError(error, 'Nao foi possivel remover o registro operacional.').message);
+      toast.error(resolveUiError(error, 'Não foi possível remover o registro operacional.').message);
     } finally {
       setIsDeletingNote(null);
     }
@@ -294,7 +307,7 @@ export function AppointmentDetailsSheet({
       toast.error(
         resolveUiError(
           error,
-          'Nao foi possivel salvar o registro operacional.',
+          'Não foi possível salvar o registro operacional.',
         ).message,
       );
     } finally {
@@ -321,35 +334,37 @@ export function AppointmentDetailsSheet({
 
         {appointment ? (
           <div className="mt-6 space-y-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <span className="text-sm text-muted-foreground">Status</span>
-              <StatusBadge
-                status={appointment.status}
-                labelMap={appointmentStatusLabelMap}
-                toneMap={appointmentStatusBadgeToneMap}
-                className="text-xs"
-              />
-            </div>
+            <div data-tour="apt-details-status" className="space-y-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-sm text-muted-foreground">Status</span>
+                <StatusBadge
+                  status={appointment.status}
+                  labelMap={appointmentStatusLabelMap}
+                  toneMap={appointmentStatusBadgeToneMap}
+                  className="text-xs"
+                />
+              </div>
 
-            {flowMeta ? (
-              <Alert className="border-primary/20 bg-primary/5">
-                <Info className="h-4 w-4" />
-                <AlertTitle>
-                  Etapa {flowMeta.currentStep} de {flowMeta.totalSteps}
-                </AlertTitle>
-                <AlertDescription>
-                  {flowMeta.nextLabel
-                    ? `Proximo passo esperado: ${flowMeta.nextLabel}.`
-                    : 'Atendimento finalizado no fluxo operacional.'}
-                </AlertDescription>
-              </Alert>
-            ) : null}
+              {flowMeta ? (
+                <Alert className="border-primary/20 bg-primary/5">
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>
+                    Etapa {flowMeta.currentStep} de {flowMeta.totalSteps}
+                  </AlertTitle>
+                  <AlertDescription>
+                    {flowMeta.nextLabel
+                      ? `Próximo passo esperado: ${flowMeta.nextLabel}.`
+                      : 'Atendimento finalizado no fluxo operacional.'}
+                  </AlertDescription>
+                </Alert>
+              ) : null}
+            </div>
 
             <Separator />
 
             <div className="space-y-3">
               <h4 className="flex items-center gap-2 text-sm font-medium">
-                <CalendarIcon className="h-4 w-4 text-primary" /> Data e horario
+                <CalendarIcon className="h-4 w-4 text-primary" /> Data e horário
               </h4>
               <div className="space-y-2 rounded-lg bg-muted/40 p-4">
                 <div className="flex items-start justify-between gap-3 text-sm">
@@ -366,7 +381,7 @@ export function AppointmentDetailsSheet({
                   </span>
                 </div>
                 <div className="flex items-start justify-between gap-3 text-sm">
-                  <span className="text-muted-foreground">Horario:</span>
+                  <span className="text-muted-foreground">Horário:</span>
                   <span className="font-medium">
                     {appointment.startTime} - {appointment.endTime}
                   </span>
@@ -420,7 +435,7 @@ export function AppointmentDetailsSheet({
 
             <div className="space-y-3">
               <h4 className="flex items-center gap-2 text-sm font-medium">
-                <Scissors className="h-4 w-4 text-primary" /> Servicos
+                <Scissors className="h-4 w-4 text-primary" /> Serviços
               </h4>
               {appointmentItemsWithService.length ? (
                 <div className="space-y-3 rounded-lg bg-muted/40 p-4">
@@ -443,7 +458,7 @@ export function AppointmentDetailsSheet({
                       >
                         <div className="flex justify-between gap-2">
                           <span className="font-medium">
-                            {service?.name || item.service?.name || 'Servico'}
+                            {service?.name || item.service?.name || 'Serviço'}
                           </span>
                           {service?.category ? (
                             <Badge variant="outline">{service.category}</Badge>
@@ -451,7 +466,7 @@ export function AppointmentDetailsSheet({
                         </div>
 
                         <div className="flex items-start justify-between gap-3 text-sm">
-                          <span className="text-muted-foreground">Duracao:</span>
+                          <span className="text-muted-foreground">Duração:</span>
                           <span>{itemDuration} minutos</span>
                         </div>
 
@@ -589,14 +604,18 @@ export function AppointmentDetailsSheet({
                 )}
               </div>
 
-              <div className="space-y-3 rounded-lg border bg-muted/20 p-4">
+              <div
+                ref={notesSectionRef}
+                data-tour="apt-details-notes"
+                className="space-y-3 rounded-lg border bg-muted/20 p-4 scroll-mt-6"
+              >
                 <div className="space-y-2">
                   <Label htmlFor="serviceExecutionNotes">
-                    Execucao do servico
+                    Execução do serviço
                   </Label>
                   <Textarea
                     id="serviceExecutionNotes"
-                    placeholder="Descreva tecnicas aplicadas, variacoes do servico e ocorrencias relevantes."
+                    placeholder="Descreva técnicas aplicadas, variações do serviço e ocorrências relevantes."
                     value={serviceExecutionNotes}
                     onChange={(event) =>
                       setServiceExecutionNotes(event.target.value)
@@ -628,11 +647,11 @@ export function AppointmentDetailsSheet({
 
                 <div className="space-y-2">
                   <Label htmlFor="internalFollowupNotes">
-                    Proximo passo / acompanhamento
+                    Próximo passo / acompanhamento
                   </Label>
                   <Textarea
                     id="internalFollowupNotes"
-                    placeholder="Informe recomendacoes, manutencao, pendencias ou abordagem sugerida para o proximo atendimento."
+                    placeholder="Informe recomendações, manutenção, pendências ou abordagem sugerida para o próximo atendimento."
                     value={internalFollowupNotes}
                     onChange={(event) =>
                       setInternalFollowupNotes(event.target.value)
@@ -667,7 +686,7 @@ export function AppointmentDetailsSheet({
                 {!canRegisterNotes ? (
                   <p className="text-xs text-muted-foreground">
                     Registros operacionais ficam bloqueados para agendamentos
-                    cancelados ou marcados como nao compareceu.
+                    cancelados ou marcados como não compareceu.
                   </p>
                 ) : null}
               </div>
@@ -729,7 +748,7 @@ export function AppointmentDetailsSheet({
                       {note.internalFollowupNotes ? (
                         <p className="text-sm text-muted-foreground">
                           <span className="font-medium text-foreground">
-                            Proximo passo:
+                            Próximo passo:
                           </span>{' '}
                           {note.internalFollowupNotes}
                         </p>
@@ -746,10 +765,10 @@ export function AppointmentDetailsSheet({
               {appointment.status === 'IN_PROGRESS' && careNotes.length === 0 ? (
                 <Alert className="border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
                   <Info className="h-4 w-4" />
-                  <AlertTitle>Registro obrigatorio antes da conclusao</AlertTitle>
+                  <AlertTitle>Registro obrigatório antes da conclusão</AlertTitle>
                   <AlertDescription>
                     Salve ao menos um detalhe operacional do cliente para
-                    habilitar a conclusao do atendimento.
+                    habilitar a conclusão do atendimento.
                   </AlertDescription>
                 </Alert>
               ) : null}
@@ -759,17 +778,17 @@ export function AppointmentDetailsSheet({
               <>
                 <Separator />
                 <Button className="w-full" onClick={() => onViewInvoice(appointment)}>
-                  <Receipt className="mr-2 h-4 w-4" /> Ver pre-visualizacao da
+                  <Receipt className="mr-2 h-4 w-4" /> Ver pré-visualização da
                   Nota Fiscal
                 </Button>
               </>
             ) : null}
 
-            <div className="space-y-2 pt-4">
+            <div data-tour="apt-details-actions" className="space-y-2 pt-4">
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {appointment.status === 'PENDING' ? (
                   <Button
-                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    className="w-full"
                     onClick={() => onStatusChange(appointment.id, 'CONFIRMED')}
                   >
                     Confirmar agendamento
@@ -786,8 +805,7 @@ export function AppointmentDetailsSheet({
 
                 {appointment.status === 'IN_PROGRESS' ? (
                   <Button
-                    className="w-full bg-green-600 hover:bg-green-700"
-                    disabled={careNotes.length === 0}
+                    className="w-full"
                     onClick={() => onStatusChange(appointment.id, 'COMPLETED')}
                   >
                     Concluir atendimento
@@ -799,7 +817,7 @@ export function AppointmentDetailsSheet({
                 ) ? (
                   <Button
                     variant="outline"
-                    className="w-full border-red-200 text-red-600 hover:bg-red-50"
+                    className="w-full border-destructive/30 text-destructive hover:bg-destructive/10"
                     onClick={() => onStatusChange(appointment.id, 'CANCELLED')}
                   >
                     Cancelar
@@ -809,17 +827,19 @@ export function AppointmentDetailsSheet({
 
               {showNoShowButton ? (
                 <Button
+                  data-tour="apt-details-noshow"
                   variant="outline"
-                  className="col-span-full w-full border-destructive text-destructive hover:bg-destructive/10"
+                  className="w-full border-destructive text-destructive hover:bg-destructive/10"
                   onClick={() => setIsNoShowDialogOpen(true)}
                 >
                   <UserX className="mr-2 h-4 w-4" />
-                  Nao compareceu
+                  Não compareceu
                 </Button>
               ) : null}
 
               {!['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(appointment.status) ? (
                 <Button
+                  data-tour="apt-details-edit"
                   variant="outline"
                   className="w-full"
                   onClick={() => setIsEditOpen(true)}
@@ -830,6 +850,7 @@ export function AppointmentDetailsSheet({
 
               {!isProfessionalUser && canReassignAppointments ? (
                 <Button
+                  data-tour="apt-details-reassign"
                   variant="outline"
                   className="w-full"
                   onClick={() => onReassignRequest(appointment)}
@@ -839,6 +860,7 @@ export function AppointmentDetailsSheet({
               ) : null}
 
               <Button
+                data-tour="apt-details-delete"
                 variant="destructive"
                 className="w-full"
                 onClick={() => onDeleteRequest(appointment.id)}
@@ -861,9 +883,9 @@ export function AppointmentDetailsSheet({
       <AlertDialog open={isNoShowDialogOpen} onOpenChange={setIsNoShowDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar nao comparecimento</AlertDialogTitle>
+            <AlertDialogTitle>Confirmar não comparecimento</AlertDialogTitle>
             <AlertDialogDescription>
-              Isso marcara o agendamento como nao compareceu e enviara uma mensagem ao cliente via WhatsApp, se configurado. Essa acao nao pode ser desfeita.
+              Isso marcará o agendamento como não compareceu e enviará uma mensagem ao cliente via WhatsApp, se configurado. Essa ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -882,7 +904,7 @@ export function AppointmentDetailsSheet({
                   Registrando...
                 </>
               ) : (
-                'Sim, nao compareceu'
+                'Sim, não compareceu'
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

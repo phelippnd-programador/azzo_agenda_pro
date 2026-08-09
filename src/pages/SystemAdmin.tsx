@@ -74,7 +74,7 @@ export default function SystemAdminPage() {
           </TabsContent>
 
           <TabsContent value="menus" className="space-y-6">
-            <AdminMenusTab />
+            <AdminMenusTab selectedTenantId={selectedTenantId} />
           </TabsContent>
 
           <TabsContent value="financeiro" className="space-y-6">

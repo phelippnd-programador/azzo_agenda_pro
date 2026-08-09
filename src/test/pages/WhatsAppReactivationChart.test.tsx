@@ -49,17 +49,17 @@ describe("WhatsAppReactivationChart", () => {
 
     render(<WhatsAppReactivationChart />);
 
-    expect(await screen.findByText("Reativacao de abandono no WhatsApp")).toBeInTheDocument();
+    expect(await screen.findByText("Reativação de abandono no WhatsApp")).toBeInTheDocument();
     expect(screen.getAllByText("Abandonos").length).toBeGreaterThan(0);
     expect(screen.getByText("12")).toBeInTheDocument();
     expect(screen.getAllByText("Reativados").length).toBeGreaterThan(0);
     expect(screen.getAllByText("5").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Convertidos").length).toBeGreaterThan(0);
     expect(screen.getByText("41.7%")).toBeInTheDocument();
-    expect(screen.getByText("Servico")).toBeInTheDocument();
+    expect(screen.getByText("Serviço")).toBeInTheDocument();
     expect(screen.getByText("Profissional")).toBeInTheDocument();
-    expect(screen.getByText("Horario")).toBeInTheDocument();
-    expect(screen.getByText("Revisao final")).toBeInTheDocument();
+    expect(screen.getByText("Horário")).toBeInTheDocument();
+    expect(screen.getByText("Revisão final")).toBeInTheDocument();
   });
 
   it("should render empty state when there is no abandonment data", async () => {
@@ -79,6 +79,6 @@ describe("WhatsAppReactivationChart", () => {
 
     render(<WhatsAppReactivationChart />);
 
-    expect(await screen.findByText("Sem abandonos capturados no periodo")).toBeInTheDocument();
+    expect(await screen.findByText("Sem abandonos capturados no período")).toBeInTheDocument();
   });
 });

@@ -1,0 +1,361 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-31T03:06:02.835Z",
+  "title": "Design System: Azzo Agenda Pro",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Azul Confiança",
+        "canonical": "hsl(221 80% 56%)",
+        "note": "Definido como triplet HSL cru na custom property --primary; consumido via hsl(var(--primary)).",
+        "tonalRamp": [
+          "hsl(221 80% 15%)",
+          "hsl(221 80% 26%)",
+          "hsl(221 80% 37%)",
+          "hsl(221 80% 48%)",
+          "hsl(221 80% 56%)",
+          "hsl(221 80% 68%)",
+          "hsl(221 80% 82%)",
+          "hsl(221 80% 95%)"
+        ]
+      },
+      "brand-accent": {
+        "role": "secondary",
+        "displayName": "Turquesa Sinal",
+        "canonical": "hsl(186 86% 42%)",
+        "tonalRamp": [
+          "hsl(186 86% 15%)",
+          "hsl(186 86% 24%)",
+          "hsl(186 86% 33%)",
+          "hsl(186 86% 42%)",
+          "hsl(186 86% 54%)",
+          "hsl(186 86% 68%)",
+          "hsl(186 86% 82%)",
+          "hsl(186 86% 95%)"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Névoa Fria",
+        "canonical": "hsl(214 29% 97%)",
+        "tonalRamp": [
+          "hsl(214 29% 15%)",
+          "hsl(214 29% 26%)",
+          "hsl(214 29% 38%)",
+          "hsl(214 29% 50%)",
+          "hsl(214 29% 64%)",
+          "hsl(214 29% 78%)",
+          "hsl(214 29% 90%)",
+          "hsl(214 29% 97%)"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Vidro",
+        "canonical": "hsl(0 0% 100%)",
+        "note": "Quase nunca servido em opacidade cheia — 0.95 em card, 0.92 em botão outline, 0.82 em painel de marca."
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Tinta Noturna",
+        "canonical": "hsl(222 33% 14%)",
+        "tonalRamp": [
+          "hsl(222 33% 14%)",
+          "hsl(222 33% 24%)",
+          "hsl(222 33% 34%)",
+          "hsl(222 33% 46%)",
+          "hsl(222 33% 58%)",
+          "hsl(222 33% 72%)",
+          "hsl(222 33% 86%)",
+          "hsl(222 33% 95%)"
+        ]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Grafite Azulado",
+        "canonical": "hsl(218 16% 43%)"
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Fio de Vidro",
+        "canonical": "hsl(215 24% 87%)",
+        "note": "Servido a 70–80% de opacidade em praticamente todo uso."
+      },
+      "destructive": {
+        "role": "tertiary",
+        "displayName": "Vermelho Alerta",
+        "canonical": "hsl(0 72% 51%)",
+        "note": "Única cor quente do sistema e única exceção à Regra da Voz Única."
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Título de página. O maior tipo do sistema; não existe hero acima disso."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Título de seção maior e número de destaque em painel de métrica."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Título de card e de diálogo. Pequeno de propósito — o card se distingue por superfície, não por tamanho de título."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Texto corrido e valor de campo. Desce para 14px/20px em tabela e lista densa."
+      },
+      "label": {
+        "displayName": "Label (eyebrow)",
+        "purpose": "Abre seção, nomeia grupo na sidebar, rotula ponto de destaque. O gesto tipográfico mais repetido do sistema."
+      }
+    },
+    "shadows": [
+      {
+        "name": "soft",
+        "value": "0 10px 28px -20px rgba(15, 23, 42, 0.3)",
+        "purpose": "Repouso de botão, badge de marca e painel raso. É o padrão."
+      },
+      {
+        "name": "panel",
+        "value": "0 24px 60px -32px rgba(15, 23, 42, 0.28)",
+        "purpose": "Superfície de card (.surface-panel) e hover do botão primário."
+      },
+      {
+        "name": "elevated",
+        "value": "0 30px 80px -36px rgba(15, 23, 42, 0.36)",
+        "purpose": "Shell de módulo e diálogo."
+      },
+      {
+        "name": "soft-dark",
+        "value": "0 16px 40px -26px rgba(2, 6, 23, 0.7)",
+        "purpose": "Equivalente de soft no tema escuro; blur e opacidade maiores porque sombra sobre fundo escuro precisa trabalhar mais."
+      },
+      {
+        "name": "panel-dark",
+        "value": "0 26px 70px -32px rgba(2, 6, 23, 0.78)",
+        "purpose": "Equivalente de panel no tema escuro."
+      },
+      {
+        "name": "elevated-dark",
+        "value": "0 34px 90px -34px rgba(2, 6, 23, 0.84)",
+        "purpose": "Equivalente de elevated no tema escuro."
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-transition",
+        "value": "all 200ms",
+        "purpose": "Botão: cor, sombra e translateY do hover se movem juntos."
+      },
+      {
+        "name": "surface-transition",
+        "value": "color 150ms",
+        "purpose": "Padrão da camada base para button, a, input, textarea e select."
+      },
+      {
+        "name": "sidebar-transition",
+        "value": "width 300ms, transform 300ms",
+        "purpose": "Colapso da sidebar no desktop e gaveta no mobile."
+      },
+      {
+        "name": "accordion",
+        "value": "0.2s ease-out",
+        "purpose": "accordion-down / accordion-up, animando até --radix-accordion-content-height."
+      },
+      {
+        "name": "lift",
+        "value": "translateY(-2px)",
+        "purpose": "A elevação do sistema. Estado ativo se comunica por deslocamento, não por troca de nível de sombra."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      },
+      {
+        "name": "2xl",
+        "value": "1400px"
+      }
+    ],
+    "backgroundWash": {
+      "value": "radial-gradient(circle at top left, hsl(var(--primary) / 0.08), transparent 28%), radial-gradient(circle at top right, hsl(var(--brand-accent) / 0.08), transparent 22%)",
+      "attachment": "fixed",
+      "purpose": "A luz sob os painéis de vidro. Fixa na viewport, aplicada no body — é o que dá profundidade sem borda pesada."
+    }
+  },
+  "components": [
+    {
+      "name": "Botão primário",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "A voz de ação do sistema. Sobe 2px no hover com a sombra crescendo junto.",
+      "html": "<button class=\"ds-btn-primary\">Novo agendamento</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.5rem; padding: 0.5rem 1rem; border: none; border-radius: 0.75rem; background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); font-family: Aptos, Segoe UI, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; white-space: nowrap; cursor: pointer; box-shadow: 0 10px 28px -20px rgba(15, 23, 42, 0.3); transition: all 200ms; } .ds-btn-primary:hover { background: hsl(var(--primary) / 0.92); transform: translateY(-2px); box-shadow: 0 24px 60px -32px rgba(15, 23, 42, 0.28); } .ds-btn-primary:active { transform: translateY(0); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring)); }"
+    },
+    {
+      "name": "Botão outline",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Ação secundária sobre superfície de vidro. Mesma mecânica de subida do primário.",
+      "html": "<button class=\"ds-btn-outline\">Cancelar</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.5rem; padding: 0.5rem 1rem; border: 1px solid hsl(var(--input)); border-radius: 0.75rem; background: hsl(var(--card) / 0.92); color: hsl(var(--foreground)); font-family: Aptos, Segoe UI, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; cursor: pointer; box-shadow: 0 10px 28px -20px rgba(15, 23, 42, 0.3); transition: all 200ms; } .ds-btn-outline:hover { transform: translateY(-2px); background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); } .ds-btn-outline:active { transform: translateY(0); } .ds-btn-outline:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring)); }"
+    },
+    {
+      "name": "Botão de ícone (ghost)",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "O único variante que não se move. O componente força ghost quando size=icon — botão de ícone nunca é sólido.",
+      "html": "<button class=\"ds-btn-icon\" aria-label=\"Configurações\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z\"/></svg></button>",
+      "css": ".ds-btn-icon { display: inline-flex; align-items: center; justify-content: center; height: 2.25rem; width: 2.25rem; padding: 0; border: none; border-radius: 0.75rem; background: transparent; color: hsl(var(--foreground)); cursor: pointer; transition: all 200ms; } .ds-btn-icon svg { width: 1rem; height: 1rem; flex-shrink: 0; } .ds-btn-icon:hover { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); } .ds-btn-icon:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring)); }"
+    },
+    {
+      "name": "Campo de texto",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Foco deliberadamente mais suave que o do botão: o anel encosta na borda, sem offset.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Nome do cliente\" />",
+      "css": ".ds-input { display: flex; height: 2.25rem; width: 100%; padding: 0.5rem 0.75rem; border: 1px solid hsl(var(--input)); border-radius: calc(var(--radius) - 2px); background: hsl(var(--card)); color: hsl(var(--foreground)); font-family: Aptos, Segoe UI, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; transition: color 150ms, border-color 150ms, box-shadow 150ms; } .ds-input::placeholder { color: hsl(var(--muted-foreground) / 0.6); } .ds-input:focus-visible { outline: none; border-color: hsl(var(--ring)); box-shadow: 0 0 0 2px hsl(var(--ring) / 0.3); } .ds-input:disabled { cursor: not-allowed; opacity: 0.5; }"
+    },
+    {
+      "name": "Badge",
+      "kind": "chip",
+      "refersTo": "badge-default",
+      "description": "Pílula completa e sempre tingida, nunca sólida: fundo a 12%, borda a 25%, texto na cor cheia.",
+      "html": "<div class=\"ds-badge\">Confirmado</div>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; padding: 0.125rem 0.5rem; border: 1px solid hsl(var(--primary) / 0.25); border-radius: 9999px; background: hsl(var(--primary) / 0.12); color: hsl(var(--primary)); font-family: Aptos, Segoe UI, ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; font-weight: 600; transition: background-color 150ms; } .ds-badge:hover { background: hsl(var(--primary) / 0.18); }"
+    },
+    {
+      "name": "Card (painel de vidro)",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "A superfície base do sistema: branco a 95% com backdrop-blur, borda a 70% e halo difuso.",
+      "html": "<div class=\"ds-card\"><p class=\"ds-card-eyebrow\">Hoje</p><h3 class=\"ds-card-title\">Agenda do dia</h3><p class=\"ds-card-desc\">12 atendimentos, 3 aguardando confirmação.</p></div>",
+      "css": ".ds-card { border: 1px solid hsl(var(--border) / 0.7); border-radius: var(--radius); background: hsl(var(--card) / 0.95); backdrop-filter: blur(4px); box-shadow: 0 24px 60px -32px rgba(15, 23, 42, 0.28); padding: 1.5rem; color: hsl(var(--card-foreground)); } .ds-card-eyebrow { margin: 0 0 0.375rem; font-family: Aptos, Segoe UI, ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.18em; color: hsl(var(--muted-foreground)); } .ds-card-title { margin: 0; font-family: Manrope, Aptos, Segoe UI, ui-sans-serif, system-ui, sans-serif; font-size: 1rem; font-weight: 600; line-height: 1.25; letter-spacing: -0.025em; color: hsl(var(--foreground)); } .ds-card-desc { margin: 0.375rem 0 0; font-family: Aptos, Segoe UI, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; line-height: 1.5rem; color: hsl(var(--muted-foreground)); }"
+    },
+    {
+      "name": "Item de navegação",
+      "kind": "nav",
+      "refersTo": "sidebar-item",
+      "description": "Item da sidebar em três estados. Ativo usa a cor primária; inativo fica em sidebar-foreground.",
+      "html": "<nav class=\"ds-nav\"><p class=\"ds-nav-group\">Operação</p><a class=\"ds-nav-item ds-nav-item--active\" href=\"#\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"M16 2v4M8 2v4M3 10h18\"/></svg>Agenda</a><a class=\"ds-nav-item\" href=\"#\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/></svg>Clientes</a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.5rem; border-radius: var(--radius-lg); border: 1px solid hsl(var(--sidebar-border) / 0.8); background: hsl(var(--sidebar-background) / 0.95); backdrop-filter: blur(16px); } .ds-nav-group { margin: 0.25rem 0 0.5rem 0.875rem; font-family: Aptos, Segoe UI, ui-sans-serif, system-ui, sans-serif; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.18em; color: hsl(var(--sidebar-foreground) / 0.65); } .ds-nav-item { display: flex; align-items: center; gap: 0.625rem; height: 2.5rem; padding: 0 0.875rem; border-radius: 0.75rem; font-family: Aptos, Segoe UI, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; text-decoration: none; color: hsl(var(--sidebar-foreground)); transition: background-color 150ms, color 150ms; } .ds-nav-item svg { width: 1rem; height: 1rem; flex-shrink: 0; } .ds-nav-item:hover { background: hsl(var(--sidebar-accent)); color: hsl(var(--sidebar-accent-foreground)); } .ds-nav-item--active { background: hsl(var(--sidebar-primary) / 0.12); color: hsl(var(--sidebar-primary)); font-weight: 600; }"
+    },
+    {
+      "name": "Estado vazio",
+      "kind": "custom",
+      "refersTo": "page-empty-state",
+      "description": "Borda tracejada e sem sombra — o único uso de traço no sistema, e ele significa ausência de conteúdo.",
+      "html": "<div class=\"ds-empty\"><div class=\"ds-empty-icon\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 12h-6l-2 3h-4l-2-3H2\"/><path d=\"M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"/></svg></div><p class=\"ds-empty-title\">Nenhum serviço cadastrado</p><p class=\"ds-empty-desc\">Cadastre os serviços que o salão oferece para começar a agendar.</p><button class=\"ds-btn-primary ds-empty-action\">Novo serviço</button></div>",
+      "css": ".ds-empty { border: 1px dashed hsl(var(--border) / 0.8); border-radius: var(--radius); background: hsl(var(--card) / 0.9); padding: 3rem 1.5rem; text-align: center; } .ds-empty-icon { display: flex; align-items: center; justify-content: center; width: 3rem; height: 3rem; margin: 0 auto 1rem; border-radius: 1rem; background: hsl(var(--primary) / 0.1); box-shadow: inset 0 0 0 1px hsl(var(--primary) / 0.1); color: hsl(var(--primary)); } .ds-empty-icon svg { width: 1.5rem; height: 1.5rem; } .ds-empty-title { margin: 0; font-family: Aptos, Segoe UI, ui-sans-serif, system-ui, sans-serif; font-size: 1rem; font-weight: 600; color: hsl(var(--foreground)); } .ds-empty-desc { margin: 0.25rem auto 0; max-width: 28rem; font-family: Aptos, Segoe UI, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; line-height: 1.5rem; color: hsl(var(--muted-foreground)); } .ds-empty-action { margin-top: 1rem; }"
+    },
+    {
+      "name": "ModuleIntro",
+      "kind": "custom",
+      "refersTo": "module-intro",
+      "description": "O bloco que abre a maioria dos módulos e concentra a identidade tipográfica: eyebrow → título → descrição, repetido em escala menor nos pontos.",
+      "html": "<div class=\"ds-intro\"><div class=\"ds-intro-head\"><p class=\"ds-intro-eyebrow\">Financeiro</p><p class=\"ds-intro-title\">Fechamento de caixa</p><p class=\"ds-intro-desc\">Confira receitas, despesas e comissões antes de fechar o dia.</p></div><div class=\"ds-intro-points\"><div class=\"ds-intro-point\"><p class=\"ds-intro-point-eyebrow\">Entradas</p><p class=\"ds-intro-point-title\">Receita do dia</p><p class=\"ds-intro-point-desc\">Somatório das comandas fechadas.</p></div><div class=\"ds-intro-point\"><p class=\"ds-intro-point-eyebrow\">Saídas</p><p class=\"ds-intro-point-title\">Comissões</p><p class=\"ds-intro-point-desc\">Calculadas por profissional.</p></div></div></div>",
+      "css": ".ds-intro { border: 1px solid hsl(var(--border) / 0.7); border-radius: var(--radius); background: hsl(var(--card) / 0.9); box-shadow: 0 12px 36px -28px rgba(15, 23, 42, 0.16); padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; } .ds-intro-head { display: flex; flex-direction: column; gap: 0.375rem; } .ds-intro-eyebrow { margin: 0; font-family: Aptos, Segoe UI, ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.16em; color: hsl(var(--muted-foreground)); } .ds-intro-title { margin: 0; font-family: Manrope, Aptos, Segoe UI, ui-sans-serif, system-ui, sans-serif; font-size: 1.125rem; font-weight: 600; letter-spacing: -0.025em; color: hsl(var(--foreground)); } .ds-intro-desc { margin: 0; max-width: 48rem; font-family: Aptos, Segoe UI, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; color: hsl(var(--muted-foreground)); } .ds-intro-points { display: grid; gap: 0.75rem; grid-template-columns: repeat(2, minmax(0, 1fr)); } .ds-intro-point { border: 1px solid hsl(var(--border) / 0.7); border-radius: 1rem; background: hsl(var(--background) / 0.8); padding: 1rem; } .ds-intro-point-eyebrow { margin: 0; font-family: Aptos, Segoe UI, ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: hsl(var(--muted-foreground)); } .ds-intro-point-title { margin: 0.5rem 0 0; font-family: Aptos, Segoe UI, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; color: hsl(var(--foreground)); } .ds-intro-point-desc { margin: 0.25rem 0 0; font-family: Aptos, Segoe UI, ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; color: hsl(var(--muted-foreground)); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "A Mesa de Vidro",
+    "overview": "O sistema não é feito de folhas de papel empilhadas — é feito de painéis de vidro suspensos sobre uma luz fria. O material é literal, não metafórico: quase toda superfície é translúcida (bg-card/95, bg-card/82, bg-background/80) e quase toda superfície tem backdrop-blur. O fundo da página não é uma cor chapada: são dois brilhos radiais vindos dos cantos superiores, azul à esquerda e turquesa à direita, fixos na viewport. Quando um painel se sobrepõe a esse fundo, a luz atravessa. É isso que dá ao sistema a sensação de profundidade sem uma única borda pesada.\n\nA densidade é generosa para uma ferramenta de operação. Raios grandes (0.8rem na maioria das superfícies, 1.5rem nos painéis de módulo), respiro interno de 1.5rem nos cards, e um vocabulário de sombra que é puramente atmosférico — deslocamentos enormes com spread negativo agressivo (0 24px 60px -32px) produzem um halo difuso sob o painel, nunca uma borda escura definida. Nada no sistema usa sombra para dizer \"isto está na frente daquilo\". Tudo repousa levemente acima do fundo, na mesma altura.\n\nA personalidade vive em duas coisas pequenas e insistentes: o eyebrow em caixa alta (11px, peso 600, tracking 0.18em) que abre praticamente toda seção, e a resposta física ao toque — o botão sobe 2px no hover e a sombra cresce com ele, o campo acende um anel suave de 2px no foco. O sistema é discreto em cor e generoso em forma, mas responde quando tocado.\n\nTrês estéticas são explicitamente rejeitadas: salão/beleza (dourado, rosa, script, mármore), ERP denso e cinza (tabela sem respiro, cinza institucional, tela lotada) e dashboard \"dark tech\" (preto com néon, gráfico brilhante, estética de trading). O tema escuro existe por conforto de leitura, não por atitude.",
+    "keyCharacteristics": [
+      "Superfícies translúcidas com backdrop-blur sobre um wash radial fixo",
+      "Sombra ambiente de spread negativo extremo — halo, nunca contorno",
+      "Azul frio único como voz de ação; turquesa quase só em gradiente de marca",
+      "Eyebrow em caixa alta com tracking largo como abertura recorrente de seção",
+      "Elevação por movimento (-translate-y-0.5), não por camada de sombra",
+      "Formas generosas: pílula completa em badges, 0.8rem em cards, 1.5rem em painéis"
+    ],
+    "rules": [
+      {
+        "name": "A Regra da Voz Única",
+        "body": "O azul primário é a única cor com autoridade de ação. Se um elemento não é uma ação, um estado ativo ou um foco, ele não usa o primário. Turquesa não substitui azul em botão nenhum.",
+        "section": "colors"
+      },
+      {
+        "name": "A Regra do Cinza Proibido",
+        "body": "Nenhum neutro do sistema tem saturação zero. Todo cinza é azulado (matiz 212–222). Um #808080 ou #F5F5F5 na tela é bug, não escolha.",
+        "section": "colors"
+      },
+      {
+        "name": "A Regra da Borda Translúcida",
+        "body": "Bordas são servidas a 70–80% de opacidade. Uma borda em opacidade cheia lê como interface de formulário antigo e quebra o material de vidro.",
+        "section": "colors"
+      },
+      {
+        "name": "A Regra do Eyebrow",
+        "body": "Toda seção de conteúdo abre com um rótulo de 11px em caixa alta e tracking 0.18em antes do título. É o gesto tipográfico mais repetido do sistema e o que mais o identifica.",
+        "section": "typography"
+      },
+      {
+        "name": "A Regra da Compressão",
+        "body": "Título usa Manrope com tracking-tight; texto corrido usa Aptos / Segoe UI com tracking normal. Nunca o inverso — Manrope em corpo longo fica apertado e a fonte de corpo em título grande fica frouxa.",
+        "section": "typography"
+      },
+      {
+        "name": "A Regra da Coluna Confortável",
+        "body": "Conteúdo de leitura e formulário nunca passa de max-w-2xl, mesmo com espaço sobrando. Largura total é para lista, tabela e agenda — não para texto.",
+        "section": "layout"
+      },
+      {
+        "name": "A Regra do Halo",
+        "body": "Toda sombra tem spread negativo de pelo menos 2/3 do blur. Uma sombra com spread 0 desenha contorno e mata o material de vidro.",
+        "section": "elevation"
+      },
+      {
+        "name": "A Regra do Movimento como Elevação",
+        "body": "Estado ativo se comunica por deslocamento de 2px, não por troca de nível de sombra. A sombra acompanha o movimento; não o substitui.",
+        "section": "elevation"
+      },
+      {
+        "name": "A Regra da Pílula",
+        "body": "Qualquer coisa que rotula (badge, chip, contador, tag de status) é pílula completa. Qualquer coisa que age ou contém usa o raio da sua escala.",
+        "section": "shapes"
+      },
+      {
+        "name": "A Regra do Tracejado Reservado",
+        "body": "Borda tracejada significa ausência — estado vazio, estado de erro, área de drop. Nunca aparece em superfície com conteúdo.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do servir superfícies com opacidade e backdrop-blur (bg-card/95, backdrop-blur-sm). A translucidez é o material do sistema, não um efeito.",
+      "Do abrir seção com o eyebrow de 11px em caixa alta e tracking 0.18em.",
+      "Do usar o azul primário como voz única de ação, estado ativo e foco.",
+      "Do comunicar estado ativo por movimento de 2px, com a sombra crescendo de soft para panel junto.",
+      "Do manter conteúdo de leitura e formulário em max-w-2xl, mesmo com espaço sobrando.",
+      "Do usar borda tracejada exclusivamente para ausência de conteúdo.",
+      "Do manter os neutros azulados (matiz 212–222); nunca cinza dessaturado.",
+      "Do deixar h1–h4 herdarem font-display tracking-tight da camada base."
+    ],
+    "donts": [
+      "Don't usar sombra com spread 0 ou próximo de 0 — ela desenha contorno e destrói o material de vidro. Todo box-shadow tem spread negativo de ao menos 2/3 do blur.",
+      "Don't usar sombra para indicar hierarquia de camada. A escala soft → panel → elevated é de atmosfera, não de altitude.",
+      "Don't aplicar as classes tone-amber-panel, tone-sky-panel, tone-emerald-panel e tone-rose-panel em tela nova. São herança: cor semântica fica reservada a estado real (sucesso, alerta, erro), não a colorir seção ou identificar módulo.",
+      "Don't usar o turquesa como cor de ação. Ele existe no gradiente de marca e no wash do fundo; não substitui o azul em botão nenhum.",
+      "Don't usar borda em opacidade cheia em superfície de conteúdo — o padrão é 70–80%.",
+      "Don't deixar canto vivo em nenhuma superfície, nem introduzir forma decorativa (diagonal, recorte, silhueta).",
+      "Don't fazer botão de ícone sólido; o componente força ghost de propósito.",
+      "Don't trazer estética de salão/beleza: dourado, rosa, script cursivo, mármore ou ornamento feminino-decorativo. É ferramenta de operação.",
+      "Don't cair em ERP denso e cinza: tabela sem respiro, cinza institucional, tela lotada de campo. O usuário é dono de salão pequeno, não operador treinado.",
+      "Don't fazer \"dark tech\": preto com néon, gráfico brilhante, estética de painel de trading. O tema escuro é conforto de leitura, não atitude."
+    ]
+  }
+}

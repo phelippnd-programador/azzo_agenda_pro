@@ -1,12 +1,24 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import SystemAdminPage from "@/pages/SystemAdmin";
 
-const { listPlansMock, createPlanMock, updatePlanMock } = vi.hoisted(() => ({
+const {
+  listPlansMock,
+  createPlanMock,
+  updatePlanMock,
+  getMenuCatalogMock,
+  getRoleRoutesMock,
+  applyMenuOverridesBulkMock,
+  adminListActiveTenantsMock,
+} = vi.hoisted(() => ({
   listPlansMock: vi.fn(),
   createPlanMock: vi.fn(),
   updatePlanMock: vi.fn(),
+  getMenuCatalogMock: vi.fn(),
+  getRoleRoutesMock: vi.fn(),
+  applyMenuOverridesBulkMock: vi.fn(),
+  adminListActiveTenantsMock: vi.fn(),
 }));
 
 vi.mock("@/contexts/AuthContext", () => ({
@@ -31,13 +43,15 @@ vi.mock("@/lib/api", async () => {
     ...actual,
     configApi: {
       ...actual.configApi,
-      getMenuCatalog: vi.fn().mockResolvedValue({ items: [] }),
+      getMenuCatalog: getMenuCatalogMock,
       createMenuCatalogItem: vi.fn(),
       updateMenuCatalogItem: vi.fn(),
+      getRoleRoutes: getRoleRoutesMock,
+      applyMenuOverridesBulk: applyMenuOverridesBulkMock,
     },
     billingApi: {
       ...actual.billingApi,
-      adminListActiveTenants: vi.fn().mockResolvedValue({ items: [] }),
+      adminListActiveTenants: adminListActiveTenantsMock,
       adminGetTenantPayments: vi.fn().mockResolvedValue({ items: [] }),
       adminActivateLicense: vi.fn(),
       adminDeactivateLicense: vi.fn(),
@@ -83,9 +97,17 @@ describe("SystemAdminPage", () => {
     listPlansMock.mockReset();
     createPlanMock.mockReset();
     updatePlanMock.mockReset();
+    getMenuCatalogMock.mockReset();
+    getRoleRoutesMock.mockReset();
+    applyMenuOverridesBulkMock.mockReset();
+    adminListActiveTenantsMock.mockReset();
     listPlansMock.mockResolvedValue({ items: [] });
     createPlanMock.mockResolvedValue({});
     updatePlanMock.mockResolvedValue({});
+    getMenuCatalogMock.mockResolvedValue({ items: [] });
+    getRoleRoutesMock.mockResolvedValue({ items: [] });
+    applyMenuOverridesBulkMock.mockResolvedValue({ status: "OK", updated: 1, role: "OWNER", timestamp: "" });
+    adminListActiveTenantsMock.mockResolvedValue({ items: [] });
   });
 
   it(
@@ -106,6 +128,131 @@ describe("SystemAdminPage", () => {
       expect(screen.getByRole("button", { name: /Novo menu/i })).toBeInTheDocument();
       await user.click(screen.getByRole("tab", { name: "Financeiro" }));
       expect(screen.getByRole("button", { name: /Novo plano/i })).toBeInTheDocument();
+    },
+    10000
+  );
+
+  it(
+    "should save global menu permission by owner role",
+    async () => {
+      const user = userEvent.setup();
+      getMenuCatalogMock.mockResolvedValue({
+        items: [
+          {
+            id: "stock-root",
+            route: "/estoque",
+            label: "Estoque",
+            parentId: null,
+            parentRoute: null,
+            parentLabel: null,
+            displayOrder: 100,
+            iconKey: "Boxes",
+            active: true,
+            sidebarVisible: true,
+            childrenCount: 0,
+            roleVisibilities: [
+              { role: "ADMIN", enabled: false },
+              { role: "OWNER", enabled: true },
+              { role: "PROFESSIONAL", enabled: false },
+            ],
+          },
+        ],
+      });
+      getRoleRoutesMock.mockResolvedValue({
+        scope: "GLOBAL",
+        role: "OWNER",
+        items: [{ route: "/estoque", enabled: false, overridden: false, reason: null }],
+      });
+
+      render(
+        <MemoryRouter initialEntries={["/configuracoes/admin-sistema"]}>
+          <SystemAdminPage />
+        </MemoryRouter>
+      );
+
+      await user.click(await screen.findByRole("tab", { name: "Menus" }));
+      const stockPermission = await screen.findByRole("checkbox", {
+        name: "Permitir Estoque para OWNER no padrao",
+      });
+
+      await waitFor(() => expect(stockPermission).toBeEnabled());
+      await user.click(stockPermission);
+      await user.click(screen.getByRole("button", { name: "Salvar permissoes" }));
+
+      expect(applyMenuOverridesBulkMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tenantId: undefined,
+          scope: "GLOBAL",
+          role: "OWNER",
+          items: [{ route: "/estoque", enabled: true }],
+        })
+      );
+    },
+    10000
+  );
+
+  it(
+    "should save effective tenant menu permission for owner",
+    async () => {
+      const user = userEvent.setup();
+      adminListActiveTenantsMock.mockResolvedValue({
+        items: [{ tenantId: "tenant-1", name: "Studio QA", planStatus: "ACTIVE" }],
+      });
+      getMenuCatalogMock.mockResolvedValue({
+        items: [
+          {
+            id: "stock-root",
+            route: "/estoque",
+            label: "Estoque",
+            parentId: null,
+            parentRoute: null,
+            parentLabel: null,
+            displayOrder: 100,
+            iconKey: "Boxes",
+            active: true,
+            sidebarVisible: true,
+            childrenCount: 0,
+            roleVisibilities: [
+              { role: "ADMIN", enabled: false },
+              { role: "OWNER", enabled: true },
+              { role: "PROFESSIONAL", enabled: false },
+            ],
+          },
+        ],
+      });
+      getRoleRoutesMock.mockResolvedValue({
+        tenantId: "tenant-1",
+        scope: "TENANT",
+        role: "OWNER",
+        items: [{ route: "/estoque", enabled: false, overridden: true, reason: "Teste" }],
+      });
+
+      render(
+        <MemoryRouter initialEntries={["/configuracoes/admin-sistema"]}>
+          <SystemAdminPage />
+        </MemoryRouter>
+      );
+
+      await user.click(await screen.findByRole("tab", { name: "Menus" }));
+      const scopeSelect = screen.getAllByRole("combobox")[1];
+      await user.click(scopeSelect);
+      await user.click(await screen.findByRole("option", { name: "Tenant selecionado" }));
+      const stockPermission = await screen.findByRole("checkbox", {
+        name: "Permitir Estoque para OWNER no tenant",
+      });
+
+      await waitFor(() => expect(stockPermission).toBeEnabled());
+      await user.click(stockPermission);
+      await user.click(screen.getByRole("button", { name: "Salvar permissoes" }));
+
+      expect(applyMenuOverridesBulkMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tenantId: "tenant-1",
+          scope: "TENANT",
+          role: "OWNER",
+          items: [{ route: "/estoque", enabled: true }],
+        })
+      );
     },
     10000
   );

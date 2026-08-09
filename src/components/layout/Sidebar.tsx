@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, CircleDot, ExternalLink, LogOut, Menu, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink, LogOut, Menu, X } from "lucide-react";
 import { BrandLockup } from "@/components/common/BrandLockup";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -41,9 +41,24 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
   const { allowedRoutes, menuItems } = useMenuPermissions();
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const allowedSet = useMemo(() => new Set(allowedRoutes ?? []), [allowedRoutes]);
+  const menuItemByRoute = useMemo(
+    () => new Map((menuItems ?? []).map((item) => [item.route, item])),
+    [menuItems]
+  );
   const visibleMenuEntries = useMemo(
     () => getVisibleSidebarEntries(menuItems, allowedSet),
     [allowedSet, menuItems]
+  );
+  const visibleBottomItems = useMemo(
+    () =>
+      SIDEBAR_BOTTOM_ITEMS.filter((item) => {
+        if (!item.isVisible(user?.role, allowedSet)) {
+          return false;
+        }
+        const configuredItem = menuItemByRoute.get(item.path);
+        return !configuredItem || configuredItem.sidebarVisible !== false;
+      }),
+    [allowedSet, menuItemByRoute, user?.role]
   );
   const sectionedEntries = useMemo(() => {
     const mapped = SIDEBAR_SECTIONS.map((section) => ({
@@ -152,8 +167,8 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 h-full border-r border-sidebar-border bg-sidebar/95 shadow-[0_10px_40px_-28px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-[width,transform] duration-300",
-          isDesktopOpen ? "lg:w-72" : "lg:w-20",
+          "fixed left-0 top-0 z-50 h-full overflow-hidden border-r border-sidebar-border bg-sidebar/95 shadow-[0_10px_40px_-28px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-[width,transform] duration-300 ease-out",
+          isDesktopOpen ? "lg:w-80" : "lg:w-20",
           "w-72",
           isMobileOpen ? "translate-x-0" : "-translate-x-full",
           "lg:translate-x-0"
@@ -161,11 +176,14 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
       >
         <TooltipProvider delayDuration={120}>
           <div className="flex h-full flex-col">
-            <div className={cn("border-b border-sidebar-border/80 py-4", isCompactDesktop ? "px-3" : "px-4")}>
-              <div className={cn("flex items-center gap-3", isCompactDesktop ? "justify-center" : "justify-between")}>
+            <div className={cn("group/sidebar-header border-b border-sidebar-border/80 py-4", isCompactDesktop ? "px-3" : "px-4")}>
+              <div className={cn("relative flex items-center gap-3", isCompactDesktop ? "justify-center" : "justify-between")}>
                 <Link
                   to={appRouteManifest.shell.dashboard}
-                  className={cn("min-w-0", isCompactDesktop && "flex justify-center")}
+                  className={cn(
+                    "min-w-0 transition-transform duration-200 ease-out hover:-translate-y-0.5",
+                    isCompactDesktop && "flex justify-center"
+                  )}
                   aria-label="Ir para o dashboard"
                 >
                   <BrandLockup
@@ -189,29 +207,26 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="hidden h-8 w-8 flex-shrink-0 rounded-xl text-sidebar-foreground/75 hover:bg-accent hover:text-accent-foreground lg:inline-flex"
+                  className={cn(
+                    "hidden h-8 w-8 flex-shrink-0 rounded-xl text-sidebar-foreground/75 transition-[transform,background-color,color] duration-200 ease-out hover:-translate-y-0.5 hover:bg-accent hover:text-accent-foreground lg:inline-flex",
+                    isCompactDesktop && "absolute right-0 top-1/2 -translate-y-1/2"
+                  )}
                   onClick={onToggleDesktop}
                   aria-label={isDesktopOpen ? "Recolher menu lateral" : "Expandir menu lateral"}
                 >
                   {isDesktopOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 </Button>
               </div>
-              {isCompactDesktop ? (
-                <div className="mt-4 hidden lg:flex justify-center">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-sidebar-border/70 bg-background/70 text-sidebar-foreground/70">
-                    <CircleDot className="h-4 w-4" />
-                  </div>
-                </div>
-              ) : (
+              {!isCompactDesktop ? (
                 <div className="mt-4 hidden lg:block rounded-2xl border border-sidebar-border/70 bg-background/55 px-3 py-2.5">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/60">
-                    Navegacao
+                    Navegação
                   </p>
                   <p className="mt-1 text-xs text-sidebar-foreground/80">
-                    Operacao, cadastro e gestao no mesmo fluxo.
+                    Operação, cadastro e gestão no mesmo fluxo.
                   </p>
                 </div>
-              )}
+              ) : null}
             </div>
 
             <div
@@ -228,7 +243,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
                       </div>
                     ) : (
                       <div className="px-3 pb-2 pt-1">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/65">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/65">
                           {section.label}
                         </p>
                       </div>
@@ -275,7 +290,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
                     to={`/agendar/${salonSlug}`}
                     aria-label="Abrir site de agendamento"
                     className={cn(
-                      "text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                      "text-muted-foreground transition-[background-color,color,transform] duration-200 ease-out hover:-translate-y-0.5 hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                       isCompactDesktop
                         ? "flex h-10 w-10 items-center justify-center rounded-xl"
                         : "flex items-center gap-2.5 h-10 px-3.5 rounded-xl text-sm"
@@ -295,7 +310,7 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
                     )}
                   >
                     <ExternalLink className="w-4 h-4 flex-shrink-0 opacity-50" />
-                    {isCompactDesktop ? <span className="sr-only">Site de agendamento indisponivel</span> : <span className="truncate">Site de agendamento indisponivel</span>}
+                    {isCompactDesktop ? <span className="sr-only">Site de agendamento indisponível</span> : <span className="truncate">Site de agendamento indisponível</span>}
                   </span>
                 )}
               </div>
@@ -307,19 +322,17 @@ export function Sidebar({ isMobileOpen, onToggleMobile, isDesktopOpen, onToggleD
                 isCompactDesktop ? "px-2 space-y-1 lg:flex lg:flex-col lg:items-center" : "px-2 space-y-0.5"
               )}
             >
-              {SIDEBAR_BOTTOM_ITEMS.filter((item) => item.isVisible(user?.role, allowedSet)).map(
-                (item) => (
-                  <SidebarNavLink
-                    key={item.path}
-                    path={item.path}
-                    label={item.label}
-                    icon={item.icon}
-                    compact={isCompactDesktop}
-                    isActive={location.pathname === item.path}
-                    onNavigate={handleNavigate}
-                  />
-                )
-              )}
+              {visibleBottomItems.map((item) => (
+                <SidebarNavLink
+                  key={item.path}
+                  path={item.path}
+                  label={item.label}
+                  icon={item.icon}
+                  compact={isCompactDesktop}
+                  isActive={location.pathname === item.path}
+                  onNavigate={handleNavigate}
+                />
+              ))}
               <button
                 type="button"
                 className={cn(

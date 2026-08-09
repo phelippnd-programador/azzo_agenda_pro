@@ -32,7 +32,7 @@ export function ProfessionalCard({
     <Card
       role="button"
       tabIndex={0}
-      className={`hover:shadow-md transition-shadow cursor-pointer ${!professional.isActive ? "opacity-60" : ""}`}
+      className={`cursor-pointer border-border/70 bg-card/95 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-panel ${!professional.isActive ? "opacity-60" : ""}`}
       onClick={() => onOpenProfile(professional.id)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -57,11 +57,11 @@ export function ProfessionalCard({
               <div className="mt-1 flex flex-wrap gap-1">
                 <Badge
                   variant={professional.isActive ? "default" : "secondary"}
-                  className={`text-[10px] sm:text-xs ${professional.isActive ? "bg-green-100 text-green-700" : ""}`}
+                  className={`text-xs sm:text-xs ${professional.isActive ? "border-success/25 bg-success/12 text-success" : ""}`}
                 >
                   {professional.isActive ? "Ativo" : "Inativo"}
                 </Badge>
-                <Badge variant="outline" className="text-[10px] sm:text-xs">
+                <Badge variant="outline" className="text-xs sm:text-xs">
                   {professional.accessUserCreated ? "Acesso ativo" : "Sem acesso"}
                 </Badge>
               </div>
@@ -74,7 +74,7 @@ export function ProfessionalCard({
                 size="icon"
                 className="h-8 w-8 flex-shrink-0"
                 onClick={(event) => event.stopPropagation()}
-                aria-label={`Abrir acoes de ${professional.name}`}
+                aria-label={`Abrir ações de ${professional.name}`}
               >
                 <MoreVertical className="w-4 h-4" />
               </Button>
@@ -88,7 +88,7 @@ export function ProfessionalCard({
               <DropdownMenuItem onClick={() => onResetPassword(professional)}>
                 Resetar senha
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600" onClick={() => onDelete(professional.id)}>
+              <DropdownMenuItem className="text-destructive" onClick={() => onDelete(professional.id)}>
                 Remover
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -108,12 +108,12 @@ export function ProfessionalCard({
 
         <div className="flex flex-wrap gap-1 mb-4">
           {professional.specialties.slice(0, 3).map((specialty, index) => (
-            <Badge key={index} variant="outline" className="text-[10px] sm:text-xs">
+            <Badge key={index} variant="outline" className="text-xs sm:text-xs">
               {specialty}
             </Badge>
           ))}
           {professional.specialties.length > 3 && (
-            <Badge variant="outline" className="text-[10px] sm:text-xs">
+            <Badge variant="outline" className="text-xs sm:text-xs">
               +{professional.specialties.length - 3}
             </Badge>
           )}
@@ -121,8 +121,8 @@ export function ProfessionalCard({
 
         <p className="text-xs text-muted-foreground">
           {professional.accessUserCreated
-            ? "Use Resetar senha para reenviar um acesso temporario quando necessario."
-            : "Este profissional ainda nao possui usuario de acesso vinculado."}
+            ? "Use Resetar senha para reenviar um acesso temporário quando necessário."
+            : "Este profissional ainda não possui usuário de acesso vinculado."}
         </p>
       </CardContent>
     </Card>

@@ -180,6 +180,7 @@ export function CommissionRuleSetEditor({
                       type="button"
                       variant="outline"
                       size="icon"
+                      aria-label={`Remover regra ${index + 1}`}
                       onClick={() => setRules((current) => current.filter((_, itemIndex) => itemIndex !== index))}
                     >
                       <Trash2 className="h-4 w-4" />

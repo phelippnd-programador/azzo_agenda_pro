@@ -9,9 +9,12 @@ import {
   DollarSign,
   Eye,
   FileSearch,
+  FileSpreadsheet,
   FileText,
+  Grid3X3,
   LayoutDashboard,
   Lightbulb,
+  MapPinned,
   MessageCircleMore,
   MessageSquareDashed,
   Package,
@@ -39,7 +42,7 @@ export const MENU_REGISTRY = {
   },
   [appRouteManifest.reports.root]: {
     icon: BarChart3,
-    label: "Relatorios",
+    label: "Relatórios",
     path: appRouteManifest.reports.root,
   },
   [appRouteManifest.reports.appointments]: {
@@ -79,8 +82,18 @@ export const MENU_REGISTRY = {
   },
   [appRouteManifest.reports.licencas]: {
     icon: ShieldCheck,
-    label: "Licencas",
+    label: "Licenças",
     path: appRouteManifest.reports.licencas,
+  },
+  [appRouteManifest.reports.ocupacao]: {
+    icon: Grid3X3,
+    label: "Ocupacao",
+    path: appRouteManifest.reports.ocupacao,
+  },
+  [appRouteManifest.reports.catalogo]: {
+    icon: FileSpreadsheet,
+    label: "Catalogo avancado",
+    path: appRouteManifest.reports.catalogo,
   },
   [appRouteManifest.reports.gerencial]: {
     icon: BarChart3,
@@ -89,7 +102,7 @@ export const MENU_REGISTRY = {
   },
   [appRouteManifest.shell.notifications]: {
     icon: Bell,
-    label: "Notificacoes",
+    label: "Notificações",
     path: appRouteManifest.shell.notifications,
   },
   [appRouteManifest.shell.agenda]: {
@@ -99,7 +112,7 @@ export const MENU_REGISTRY = {
   },
   [appRouteManifest.services.root]: {
     icon: Scissors,
-    label: "Servicos",
+    label: "Serviços",
     path: appRouteManifest.services.root,
   },
   [appRouteManifest.specialties.root]: {
@@ -114,7 +127,7 @@ export const MENU_REGISTRY = {
   },
   [appRouteManifest.professionals.myHistory]: {
     icon: TrendingUp,
-    label: "Minha Producao",
+    label: "Minha Produção",
     path: appRouteManifest.professionals.myHistory,
   },
   [appRouteManifest.clients.root]: {
@@ -124,7 +137,7 @@ export const MENU_REGISTRY = {
   },
   [appRouteManifest.shell.suggestions]: {
     icon: Lightbulb,
-    label: "Sugestoes",
+    label: "Sugestões",
     path: appRouteManifest.shell.suggestions,
   },
   [appRouteManifest.chat.root]: {
@@ -149,7 +162,7 @@ export const MENU_REGISTRY = {
   },
   [appRouteManifest.finance.commissions]: {
     icon: Receipt,
-    label: "Comissoes",
+    label: "Comissões",
     path: appRouteManifest.finance.commissions,
   },
   [appRouteManifest.finance.professionals]: {
@@ -161,6 +174,21 @@ export const MENU_REGISTRY = {
     icon: CreditCard,
     label: "Plano",
     path: appRouteManifest.finance.license,
+  },
+  [appRouteManifest.pos.root]: {
+    icon: ShoppingCart,
+    label: "Comanda / PDV",
+    path: appRouteManifest.pos.root,
+  },
+  [appRouteManifest.packages.root]: {
+    icon: Package,
+    label: "Pacotes",
+    path: appRouteManifest.packages.root,
+  },
+  [appRouteManifest.memberships.root]: {
+    icon: CreditCard,
+    label: "Clube de Assinaturas",
+    path: appRouteManifest.memberships.root,
   },
   [appRouteManifest.fiscal.root]: {
     icon: Receipt,
@@ -184,12 +212,12 @@ export const MENU_REGISTRY = {
   },
   [appRouteManifest.settings.root]: {
     icon: Settings,
-    label: "Configuracoes",
+    label: "Configurações",
     path: appRouteManifest.settings.root,
   },
   [appRouteManifest.settings.reactivation]: {
     icon: MessageSquareDashed,
-    label: "Reativacao WhatsApp",
+    label: "Reativação WhatsApp",
     path: appRouteManifest.settings.reactivation,
   },
   [appRouteManifest.profiles.user]: {
@@ -199,7 +227,7 @@ export const MENU_REGISTRY = {
   },
   [appRouteManifest.profiles.salon]: {
     icon: Building2,
-    label: "Perfil do Salao",
+    label: "Perfil do Salão",
     path: appRouteManifest.profiles.salon,
   },
 } as const satisfies Record<string, SidebarMenuItem>;
@@ -217,6 +245,8 @@ export const MAIN_MENU_ORDER = [
   appRouteManifest.reports.vendas,
   appRouteManifest.reports.clientes,
   appRouteManifest.reports.licencas,
+  appRouteManifest.reports.ocupacao,
+  appRouteManifest.reports.catalogo,
   appRouteManifest.reports.gerencial,
   appRouteManifest.services.root,
   appRouteManifest.specialties.root,
@@ -231,6 +261,9 @@ export const MAIN_MENU_ORDER = [
   appRouteManifest.finance.commissions,
   appRouteManifest.finance.professionals,
   appRouteManifest.finance.license,
+  appRouteManifest.pos.root,
+  appRouteManifest.packages.root,
+  appRouteManifest.memberships.root,
   appRouteManifest.fiscal.root,
   appRouteManifest.audit.root,
   appRouteManifest.audit.lgpd,
@@ -254,6 +287,8 @@ export const REPORTS_GROUP_PATHS = [
   appRouteManifest.reports.vendas,
   appRouteManifest.reports.clientes,
   appRouteManifest.reports.licencas,
+  appRouteManifest.reports.ocupacao,
+  appRouteManifest.reports.catalogo,
   appRouteManifest.reports.gerencial,
 ] as const;
 
@@ -280,10 +315,13 @@ export const ICON_REGISTRY: Record<string, LucideIcon> = {
   BarChart3,
   ShieldCheck,
   FileSearch,
+  FileSpreadsheet,
   Boxes,
+  Grid3X3,
   User,
   MessageCircleMore,
   MessageSquareDashed,
+  MapPinned,
   Lightbulb,
   Wallet,
 };
@@ -294,7 +332,8 @@ export const DYNAMIC_BOTTOM_ROUTES = new Set([
 ]);
 
 export const STANDALONE_LAST_ROUTES = new Set([appRouteManifest.finance.license]);
-export const GROUP_ONLY_ROUTES = new Set([appRouteManifest.reports.root]);
+// "/relatorio" agora tem pagina hub propria, entao o grupo tambem e clicavel
+export const GROUP_ONLY_ROUTES = new Set<string>([]);
 
 export const HIDDEN_MENU_ROUTES = new Set([
   appRouteManifest.shell.unauthorized,
@@ -318,14 +357,14 @@ export const HIDDEN_MENU_ROUTES = new Set([
 export const SIDEBAR_BOTTOM_ITEMS = [
   {
     path: appRouteManifest.profiles.salon,
-    label: "Perfil do Salao",
+    label: "Perfil do Salão",
     icon: Building2,
     isVisible: (role: string | null | undefined, allowedSet: Set<string>) =>
       role === "OWNER" && allowedSet.has(appRouteManifest.profiles.salon),
   },
   {
     path: appRouteManifest.settings.root,
-    label: "Configuracoes",
+    label: "Configurações",
     icon: Settings,
     isVisible: (_role: string | null | undefined, allowedSet: Set<string>) =>
       allowedSet.has(appRouteManifest.settings.root),
@@ -346,7 +385,7 @@ export const SIDEBAR_SECTIONS = [
   },
   {
     id: "base",
-    label: "Base do negocio",
+    label: "Base do negócio",
     paths: new Set([
       appRouteManifest.clients.root,
       appRouteManifest.services.root,
@@ -356,10 +395,11 @@ export const SIDEBAR_SECTIONS = [
   },
   {
     id: "gestao",
-    label: "Gestao",
+    label: "Gestão",
     paths: new Set([
       appRouteManifest.finance.root,
       appRouteManifest.stock.root,
+      appRouteManifest.memberships.root,
       appRouteManifest.shell.suggestions,
       appRouteManifest.audit.root,
       appRouteManifest.settings.systemAdmin,

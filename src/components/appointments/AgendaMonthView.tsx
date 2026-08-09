@@ -32,7 +32,7 @@ export function AgendaMonthView({
   const averageByActiveDay = activeDays > 0 ? (totalAppointmentsInMonth / activeDays).toFixed(1) : '0.0';
 
   return (
-    <Card className="border-border/70 bg-card/96 shadow-[0_12px_36px_-28px_rgba(15,23,42,0.14)]">
+    <Card className="border-border/70 bg-card/95 shadow-panel">
       <CardContent className="space-y-5 p-4 sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
@@ -40,7 +40,7 @@ export function AgendaMonthView({
               {currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
             </p>
             <p className="text-sm text-foreground">
-              Distribuicao mensal para localizar picos, dias ociosos e concentracao de demanda.
+              Distribuição mensal para localizar picos, dias ociosos e concentração de demanda.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -72,7 +72,7 @@ export function AgendaMonthView({
             <p className="mt-1 text-xl font-semibold text-foreground sm:text-2xl">{highestVolume}</p>
           </div>
           <div className="rounded-2xl border border-border/70 bg-muted/20 p-3">
-            <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Media por dia ativo</p>
+            <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Média por dia ativo</p>
             <p className="mt-1 text-xl font-semibold text-foreground sm:text-2xl">{averageByActiveDay}</p>
           </div>
         </div>
@@ -118,7 +118,7 @@ export function AgendaMonthView({
                       {day.day}
                     </span>
                     {isToday ? (
-                      <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                      <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">
                         Hoje
                       </span>
                     ) : null}
@@ -154,11 +154,11 @@ export function AgendaMonthView({
                         <p className="text-base font-semibold text-foreground">{apptCount}</p>
                       </div>
                       {isBusy ? (
-                        <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                        <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[11px] font-semibold text-primary">
                           Pico
                         </span>
                       ) : isWarm ? (
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
                           Ativo
                         </span>
                       ) : null}
@@ -171,7 +171,7 @@ export function AgendaMonthView({
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Clique em um dia para abrir a grade por horario.
+          Clique em um dia para abrir a grade por horário.
         </p>
       </CardContent>
     </Card>

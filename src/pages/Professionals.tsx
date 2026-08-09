@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ModuleIntro, WorkspaceNotice } from '@/components/layout/module-surfaces';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -76,6 +77,7 @@ export default function Professionals() {
     );
   });
   const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.limit));
+  const limitReached = !!professionalLimits && professionalLimits.remaining <= 0;
   const canAccessFinancialCommissions = canAccess('/financeiro/comissoes');
   const hasLinkedCurrentUserProfessional = professionals.some((professional) => professional.userId === user?.id);
   const activeProfessionalsCount = professionals.filter((professional) => professional.isActive).length;
@@ -83,6 +85,15 @@ export default function Professionals() {
 
   const openEditDialog = (prof: ProfessionalData) => {
     setEditingProfessional(prof);
+    setIsDialogOpen(true);
+  };
+
+  const openCreateDialog = () => {
+    if (limitReached) {
+      toast.error('Limite de profissionais do seu plano atingido. Faça upgrade para adicionar mais.');
+      return;
+    }
+    setEditingProfessional(null);
     setIsDialogOpen(true);
   };
 
@@ -127,7 +138,7 @@ export default function Professionals() {
     return (
       <MainLayout title="Profissionais" subtitle="Gerencie sua equipe">
         <PageErrorState
-          title="Nao foi possivel carregar os profissionais"
+          title="Não foi possível carregar os profissionais"
           description={error}
           action={{ label: 'Tentar novamente', onClick: refetch }}
         />
@@ -149,19 +160,19 @@ export default function Professionals() {
           ]}
           points={[
             {
-              eyebrow: 'Operacao',
+              eyebrow: 'Operação',
               title: 'Cadastre e ative a equipe certa',
               description: 'Mantenha a equipe ativa enxuta e use o perfil individual para detalhes e regras mais profundas.',
             },
             {
-              eyebrow: 'Comissao',
-              title: 'Configuracao saiu da tela principal',
-              description: 'A tela agora serve melhor para gestao do time; a apuracao fica concentrada no modulo financeiro.',
+              eyebrow: 'Comissão',
+              title: 'Configuração saiu da tela principal',
+              description: 'A tela agora serve melhor para gestão do time; a apuração fica concentrada no módulo financeiro.',
             },
             {
-              eyebrow: 'Proximo passo',
+              eyebrow: 'Próximo passo',
               title: 'Busque, revise e abra o perfil',
-              description: 'Use a lista quando precisar agir em sequencia e os cards quando quiser leitura mais humana do time.',
+              description: 'Use a lista quando precisar agir em sequência e os cards quando quiser leitura mais humana do time.',
             },
           ]}
         />
@@ -170,57 +181,57 @@ export default function Professionals() {
 
         <Alert>
           <Info className="h-4 w-4" />
-          <AlertTitle>Comissao por profissional</AlertTitle>
+          <AlertTitle>Comissão por profissional</AlertTitle>
           <AlertDescription>
             {canAccessFinancialCommissions ? (
               <>
-                A configuracao principal de comissao agora e feita no modulo novo. Use o perfil do profissional ou
-                <strong> Financeiro &gt; Comissoes</strong> para configurar regras e acompanhar apuracao.
+                A configuração principal de comissão agora é feita no módulo novo. Use o perfil do profissional ou
+                <strong> Financeiro &gt; Comissões</strong> para configurar regras e acompanhar apuração.
               </>
             ) : (
               <>
-                A configuracao principal de comissao agora e feita no modulo novo. Use o perfil do profissional
-                para configurar regras e acompanhar apuracao.
+                A configuração principal de comissão agora é feita no módulo novo. Use o perfil do profissional
+                para configurar regras e acompanhar apuração.
               </>
             )}
           </AlertDescription>
         </Alert>
 
         <div className="grid gap-3 md:grid-cols-3 sm:gap-4">
-          <Card className="border-border/70 bg-card/90 shadow-none">
+          <Card className="border-border/70 bg-card/95 shadow-panel">
             <div className="space-y-1 p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Equipe total</p>
               <p className="text-2xl font-semibold text-foreground">{professionals.length}</p>
               <p className="text-xs text-muted-foreground">Total carregado na página atual.</p>
             </div>
           </Card>
-          <Card className="border-green-200/70 bg-green-50/70 shadow-none dark:border-green-500/20 dark:bg-green-500/10">
+          <Card className="border-success/25 bg-success/8 shadow-panel">
             <div className="space-y-1 p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-green-700 dark:text-green-300">Ativos</p>
-              <p className="text-2xl font-semibold text-green-800 dark:text-green-50">{activeProfessionalsCount}</p>
-              <p className="text-xs text-green-700/80 dark:text-green-200/80">Disponíveis para a operação do dia.</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-success">Ativos</p>
+              <p className="text-2xl font-semibold text-success">{activeProfessionalsCount}</p>
+              <p className="text-xs text-success/80">Disponíveis para a operação do dia.</p>
             </div>
           </Card>
-          <Card className="border-slate-200/70 bg-slate-50/70 shadow-none dark:border-slate-700 dark:bg-slate-900/40">
+          <Card className="border-border/70 bg-muted/30 shadow-panel">
             <div className="space-y-1 p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700 dark:text-slate-300">Inativos</p>
-              <p className="text-2xl font-semibold text-slate-800 dark:text-slate-50">{inactiveProfessionalsCount}</p>
-              <p className="text-xs text-slate-700/80 dark:text-slate-200/80">Fora da operação ativa ou aguardando uso.</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Inativos</p>
+              <p className="text-2xl font-semibold text-foreground">{inactiveProfessionalsCount}</p>
+              <p className="text-xs text-muted-foreground/80">Fora da operação ativa ou aguardando uso.</p>
             </div>
           </Card>
         </div>
 
         <WorkspaceNotice
-          title="Area de trabalho da equipe"
-          description="Busque, alterne a visualizacao e siga para cadastro, edicao, ativacao ou perfil individual."
+          title="Área de trabalho da equipe"
+          description="Busque, alterne a visualização e siga para cadastro, edição, ativação ou perfil individual."
           badge={`${activeProfessionalsCount} ativo(s) no momento`}
         />
 
-        <Alert className="border-emerald-200/70 bg-emerald-50/70 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+        <Alert className="border-primary/25 bg-primary/8">
           <Info className="h-4 w-4" />
           <AlertTitle>Acesso do profissional</AlertTitle>
           <AlertDescription>
-            Novo profissional recebe acesso automatico quando voce informa um e-mail valido. A senha temporaria e enviada por e-mail e pode ser reenviada pela acao <strong>Resetar senha</strong>.
+            Novo profissional recebe acesso automático quando você informa um e-mail válido. A senha temporária é enviada por e-mail e pode ser reenviada pela ação <strong>Resetar senha</strong>.
           </AlertDescription>
         </Alert>
 
@@ -236,10 +247,9 @@ export default function Professionals() {
           actionLabelMobile="Novo"
           actionLabelDesktop="Novo profissional"
           actionIcon={Plus}
-          onAction={() => {
-            setEditingProfessional(null);
-            setIsDialogOpen(true);
-          }}
+          actionDisabled={limitReached}
+          actionDisabledReason="Limite de profissionais do seu plano atingido"
+          onAction={openCreateDialog}
         />
 
         {filteredProfessionals.length === 0 ? (
@@ -247,7 +257,7 @@ export default function Professionals() {
             title={searchTerm ? "Nenhum profissional encontrado para esta busca" : "Nenhum profissional cadastrado"}
             description={
               searchTerm
-                ? "A busca atual nao retornou resultados. Limpe o termo para voltar a ver a lista completa."
+                ? "A busca atual não retornou resultados. Limpe o termo para voltar a ver a lista completa."
                 : "Cadastre o primeiro profissional para montar a equipe, horários e regras operacionais."
             }
             action={{
@@ -257,10 +267,10 @@ export default function Professionals() {
                   setSearchTerm('');
                   return;
                 }
-                setEditingProfessional(null);
-                setIsDialogOpen(true);
+                openCreateDialog();
               },
               variant: searchTerm ? "outline" : "default",
+              disabled: !searchTerm && limitReached,
             }}
           />
         ) : (
@@ -281,16 +291,16 @@ export default function Professionals() {
               ))}
             </div>
           ) : (
-            <Card className="border-border/70 bg-muted/15 shadow-none">
+            <Card className="overflow-hidden border-border/70 bg-card/95 shadow-panel">
               <div className="flex flex-col gap-3 border-b border-border/70 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-foreground">Lista da equipe</p>
                   <p className="text-sm text-muted-foreground">
-                    Leia status, contato e especialidades em uma visualizacao mais previsivel para manutencao.
+                    Leia status, contato e especialidades em uma visualização mais previsível para manutenção.
                   </p>
                 </div>
                 <Badge variant="outline" className="w-fit bg-background/80">
-                  {filteredProfessionals.length} visivel(is)
+                  {filteredProfessionals.length} visível(is)
                 </Badge>
               </div>
               <div className="overflow-x-auto">
@@ -340,7 +350,7 @@ export default function Professionals() {
                         <TableCell className="text-center">
                           <Badge
                             variant={professional.isActive ? 'default' : 'outline'}
-                            className={professional.isActive ? 'bg-green-100 text-green-700' : undefined}
+                            className={professional.isActive ? 'border-success/25 bg-success/12 text-success' : undefined}
                           >
                             {professional.isActive ? 'Ativo' : 'Inativo'}
                           </Badge>
@@ -352,7 +362,7 @@ export default function Professionals() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8"
-                                aria-label={`Abrir acoes do profissional ${professional.name}`}
+                                aria-label={`Abrir ações do profissional ${professional.name}`}
                               >
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
@@ -383,7 +393,7 @@ export default function Professionals() {
                                 Resetar senha
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="text-red-600"
+                                className="text-destructive"
                                 onClick={() => setProfessionalToDelete(professional.id)}
                               >
                                 Remover
@@ -417,6 +427,7 @@ export default function Professionals() {
         onOpenChange={handleDialogOpenChange}
         editingProfessional={editingProfessional}
         hasLinkedCurrentUserProfessional={hasLinkedCurrentUserProfessional}
+        creationLimitReached={limitReached}
         specialties={specialties}
         isLoadingSpecialties={isLoadingSpecialties}
         specialtiesError={specialtiesError}
@@ -431,11 +442,11 @@ export default function Professionals() {
         description={
           professionalToReset ? (
             <>
-              Uma senha temporaria sera gerada para <strong>{professionalToReset.name}</strong>{' '}
+              Uma senha temporária será gerada para <strong>{professionalToReset.name}</strong>{' '}
               ({professionalToReset.email}).
             </>
           ) : (
-            'Uma senha temporaria sera gerada e enviada.'
+            'Uma senha temporária será gerada e enviada.'
           )
         }
         cancelLabel="Cancelar"
@@ -448,7 +459,7 @@ export default function Professionals() {
         open={!!professionalToDelete}
         isLoading={isDeletingProfessional}
         title="Remover profissional?"
-        description="Tem certeza que deseja remover este profissional? Esta acao nao pode ser desfeita."
+        description="Tem certeza que deseja remover este profissional? Esta ação não pode ser desfeita."
         onOpenChange={(open) => { if (isDeletingProfessional) return; if (!open) setProfessionalToDelete(null); }}
         onConfirm={handleDelete}
       />

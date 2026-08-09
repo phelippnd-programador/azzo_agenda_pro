@@ -26,6 +26,7 @@ import { SaleRegisterForm } from '@/components/sales/SaleRegisterForm';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { useCheckoutProducts } from '@/hooks/useCheckoutProducts';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { getEnv } from '@/config/env';
 
 const scrollToSection = (id: string, source?: string) => {
   if (source) {
@@ -110,11 +111,11 @@ const dailyFlowSteps = [
   },
 ];
 
-const socialStats = [
-  { stat: '200+', label: 'Salões ativos' },
-  { stat: '15 mil+', label: 'Agendamentos por mês' },
-  { stat: '98%', label: 'Taxa média de satisfação' },
-  { stat: '< 5 min', label: 'Tempo para começar' },
+const productStats = [
+  { stat: 'Agenda + PDV + Financeiro', label: 'Tudo em um só lugar' },
+  { stat: 'NFS-e nativa', label: 'Sem planilha nem ferramenta externa' },
+  { stat: 'WhatsApp com IA', label: 'Agendamento por conversa' },
+  { stat: 'PWA instalável', label: 'Funciona no celular do dia a dia' },
 ];
 
 const faqItems = [
@@ -140,7 +141,7 @@ export default function SalePage() {
   const { products } = useCheckoutProducts();
   const selectedProduct = products[0] ?? null;
   const appUrl =
-    (import.meta.env.NEXT_PUBLIC_APP_URL as string | undefined)?.replace(/\/$/, '') ||
+    (getEnv("NEXT_PUBLIC_APP_URL") || import.meta.env.NEXT_PUBLIC_APP_URL as string | undefined)?.replace(/\/$/, '') ||
     'https://www.azzoholding.com.br';
   const canonicalUrl = `${appUrl}/compras`;
   const ogImageUrl = `${appUrl}${heroImage}`;
@@ -253,6 +254,18 @@ export default function SalePage() {
     },
   };
 
+  const selectedProductPrice = selectedProduct
+    ? new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: selectedProduct.currency ?? 'BRL',
+      }).format(selectedProduct.price)
+    : null;
+  const selectedProductValidity = selectedProduct?.validityMonths
+    ? selectedProduct.validityMonths === 1
+      ? 'por mês'
+      : `por ${selectedProduct.validityMonths} meses`
+    : null;
+
   const faqStructuredData = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -339,29 +352,31 @@ export default function SalePage() {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/26 via-sky-400/16 to-cyan-300/12" />
             <div className="absolute inset-0 bg-gradient-to-r from-slate-950/78 via-slate-950/48 to-slate-950/24" />
 
-            <div className="relative mx-auto flex min-h-[560px] w-full max-w-6xl items-center px-4 py-16 md:min-h-[640px] md:px-6 md:py-20">
+            <div className="relative mx-auto grid min-h-[620px] w-full max-w-6xl items-center gap-10 px-4 py-16 md:min-h-[680px] md:px-6 md:py-20 lg:grid-cols-[0.95fr_1.05fr]">
               <header className="max-w-2xl">
-                <span className="brand-orbit-badge">
-                  <span className="brand-orbit-dot" />
-                  Plataforma operacional para saloes
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90">
-                  <Star className="h-3.5 w-3.5 fill-white text-white" />
-                  Teste gratis e configuracao em minutos
-                </span>
+                <div className="flex flex-wrap gap-2">
+                  <span className="brand-orbit-badge">
+                    <span className="brand-orbit-dot" />
+                    Plataforma operacional para saloes
+                  </span>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90">
+                    <Star className="h-3.5 w-3.5 fill-white text-white" />
+                    Teste gratis e configuracao em minutos
+                  </span>
+                </div>
                 <h1
                   id="sale-hero-title"
-                  className="mt-6 font-display text-[2rem] font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl lg:text-6xl"
+                  className="mt-6 font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl lg:text-6xl"
                 >
                   Pare de perder agendamentos e organize seu salao em um unico sistema
                 </h1>
                 <p className="mt-5 max-w-xl text-base text-white/85 md:text-lg">
-                  O Azzo Agenda Pro centraliza agenda, clientes, equipe e financeiro para voce sair
-                  da improvisacao e operar com mais previsibilidade.
+                  Agenda, clientes, equipe, financeiro e WhatsApp com IA em um painel feito para
+                  o dono que precisa operar sem improviso.
                 </p>
                 <p className="mt-3 max-w-xl text-sm text-white/70">
-                  Ideal para saloes de beleza, barbearias e esteticas que precisam reduzir faltas,
-                  melhorar a experiencia do cliente e crescer com controle.
+                  Crie sua conta primeiro. Depois escolha o plano e avance para o checkout com os
+                  dados do salao ja preparados.
                 </p>
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -377,36 +392,103 @@ export default function SalePage() {
                     size="lg"
                     variant="outline"
                     className="border-white/60 bg-transparent text-white hover:bg-white/10"
-                    onClick={() => scrollToSection('funcionalidades', 'hero_secondary')}
+                    onClick={() => scrollToSection('precos', 'hero_pricing')}
                   >
-                    Ver como funciona
+                    Ver plano e garantia
                   </Button>
                 </div>
 
                 <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/75">
-                  {['Sem cartao agora', 'Primeira etapa em 2 passos', 'Garantia de 7 dias'].map((text) => (
+                  {['Sem cartao agora', 'Cadastro em 2 passos', 'Garantia de 7 dias'].map((text) => (
                     <span key={text} className="inline-flex items-center gap-1.5">
                       <CheckCircle2 className="h-3.5 w-3.5 text-cyan-300" />
                       {text}
                     </span>
                   ))}
                 </div>
-                <p className="mt-4 max-w-xl text-xs text-white/70">
-                  Comece criando sua conta e avance para a escolha do plano so depois de concluir o cadastro basico.
-                </p>
               </header>
+
+              <aside className="relative hidden lg:block" aria-label="Previa do sistema Azzo Agenda Pro">
+                <div className="rounded-[2rem] border border-white/16 bg-white/10 p-3 shadow-elevated backdrop-blur-xl">
+                  <img
+                    src="/images/experiencia_cliente.png"
+                    alt="Tela real do Azzo Agenda Pro com agenda e operacao do salao"
+                    className="h-[360px] w-full rounded-[1.5rem] border border-white/15 object-cover object-left-top"
+                  />
+                  <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_0.8fr]">
+                    <div className="rounded-[1.25rem] border border-white/12 bg-slate-950/55 p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">
+                        Operacao conectada
+                      </p>
+                      <p className="mt-2 text-sm text-white/82">
+                        Agenda, atendimento, caixa e equipe aparecem como um fluxo unico.
+                      </p>
+                    </div>
+                    <div className="rounded-[1.25rem] border border-white/12 bg-white/12 p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/65">
+                        Proximo passo
+                      </p>
+                      <p className="mt-2 text-sm font-semibold text-white">Criar conta e ativar plano</p>
+                    </div>
+                  </div>
+                </div>
+              </aside>
             </div>
           </section>
 
-          <section aria-label="Indicadores de uso da plataforma" className="bg-muted/40">
+          <section aria-label="O que o Azzo entrega" className="bg-muted/40">
             <ul className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-4 px-4 py-7 md:grid-cols-4 md:gap-6 md:px-6 md:py-8">
-              {socialStats.map((item) => (
+              {productStats.map((item) => (
                 <li key={item.label} className="text-center">
-                  <p className="font-display text-3xl font-bold text-primary">{item.stat}</p>
+                  <p className="font-display text-lg font-bold text-primary sm:text-xl">{item.stat}</p>
                   <p className="mt-1 text-sm text-muted-foreground">{item.label}</p>
                 </li>
               ))}
             </ul>
+          </section>
+
+          <section aria-labelledby="decisao-compra-title" className="border-b border-border/70 bg-card/80">
+            <div className="mx-auto grid w-full max-w-6xl gap-5 px-4 py-8 md:px-6 lg:grid-cols-[1fr_360px] lg:items-center">
+              <div>
+                <p className="section-eyebrow">Compra sem desvio</p>
+                <h2 id="decisao-compra-title" className="mt-2 font-display text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+                  Veja o plano, crie a conta e continue para o checkout no mesmo fluxo.
+                </h2>
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">
+                  A pagina deixa claro o que voce contrata antes do formulario. O cadastro prepara
+                  o salao e envia voce para a licenca sem repetir informacao.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-primary/18 bg-primary/5 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {selectedProduct?.name ?? 'Azzo Agenda Pro'}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">Plano disponivel para assinatura</p>
+                  </div>
+                  <span className="rounded-full border border-primary/20 bg-background/80 px-2.5 py-1 text-xs font-medium text-primary">
+                    Garantia 7 dias
+                  </span>
+                </div>
+                {selectedProductPrice ? (
+                  <p className="mt-4 font-display text-3xl font-bold tracking-tight text-foreground">
+                    {selectedProductPrice}
+                    {selectedProductValidity ? (
+                      <span className="ml-1 text-sm font-medium text-muted-foreground">{selectedProductValidity}</span>
+                    ) : null}
+                  </p>
+                ) : (
+                  <p className="mt-4 text-sm font-medium text-muted-foreground">
+                    O valor aparece assim que o plano estiver carregado.
+                  </p>
+                )}
+                <Button className="mt-4 w-full" onClick={() => scrollToSection('cadastro', 'decision_band_primary')}>
+                  Comecar cadastro
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </section>
 
           <SalesSection
