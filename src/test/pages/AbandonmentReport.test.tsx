@@ -24,6 +24,12 @@ vi.mock("@/components/layout/MainLayout", () => ({
   ),
 }));
 
+vi.mock("@/contexts/MenuPermissionsContext", () => ({
+  useMenuPermissions: () => ({
+    allowedRoutes: ["/relatorio/abandono"],
+  }),
+}));
+
 vi.mock("@/components/dashboard/WhatsAppReactivationQueue", () => ({
   WhatsAppReactivationQueue: () => <div>WhatsAppReactivationQueueMock</div>,
 }));
