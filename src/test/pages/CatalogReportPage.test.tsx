@@ -30,6 +30,12 @@ vi.mock("@/components/layout/MainLayout", () => ({
   ),
 }));
 
+vi.mock("@/contexts/MenuPermissionsContext", () => ({
+  useMenuPermissions: () => ({
+    allowedRoutes: ["/relatorio/catalogo"],
+  }),
+}));
+
 vi.mock("@/lib/api/professionals", () => ({
   professionalsApi: {
     getAll: getProfessionalsMock,

@@ -27,6 +27,12 @@ vi.mock("@/components/layout/MainLayout", () => ({
   ),
 }));
 
+vi.mock("@/contexts/MenuPermissionsContext", () => ({
+  useMenuPermissions: () => ({
+    allowedRoutes: ["/relatorio/agendamento"],
+  }),
+}));
+
 vi.mock("@/lib/api", async () => {
   const actual = await vi.importActual<typeof import("@/lib/api")>("@/lib/api");
   return {
