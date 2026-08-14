@@ -31,9 +31,9 @@ describe("ReportsHubPage", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByRole("link", { name: "Estoque" })).toHaveAttribute("href", "/relatorio/estoque");
-    expect(screen.getByRole("link", { name: "Clientes" })).toHaveAttribute("href", "/relatorio/clientes");
-    expect(screen.queryByRole("link", { name: "Financeiro" })).not.toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Estoque" })).toHaveAttribute("href", "/relatorio/estoque");
+    expect(screen.getByRole("tab", { name: "Clientes" })).toHaveAttribute("href", "/relatorio/clientes");
+    expect(screen.queryByRole("tab", { name: "Financeiro" })).not.toBeInTheDocument();
     expect(screen.queryByText("Abrir relatorio")).not.toBeInTheDocument();
   });
 });
